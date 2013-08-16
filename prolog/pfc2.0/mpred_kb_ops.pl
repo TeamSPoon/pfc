@@ -743,6 +743,7 @@ to_physical_mpa(PSE,M,P,A):- strip_module(PSE,M,PA),to_physical_pa(PA,P,A).
 to_physical_pa(PA,P,A):-PA=..[P,A],!. to_physical_pa(PA,call,PA).
 
 
+:- meta_predicate(db_op_call(*,1,?)).
 db_op_call(_What,How,Data):- call(How,Data).
 
 % attempt_side_effect_mpa(M,OpA,Data):- record_se,!,add_side_effect(OpA,M:Data).

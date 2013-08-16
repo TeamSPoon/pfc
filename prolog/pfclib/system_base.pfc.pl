@@ -108,6 +108,8 @@
 :- meta_predicate t(*,?,?,?,?,?,?).
 :- meta_predicate t(*,?,?,?,?,?,?,?).
 
+:- forall(between(4,9,N),kb_shared(elmt:exactlyAssertedELMT/N)).
+
 :- begin_pfc.
 
 :- mpred_notrace_exec.
@@ -595,7 +597,7 @@ t(CALL):- cwc, call(into_plist_arities(3,10,CALL,[P|LIST])),mpred_plist_t(P,LIST
 t(A,B):- atom(A),!,ABC=..[A,B],call_u(ABC).
 %t(A,B):- (atom(A)->true;(no_repeats(arity(A,1)),atom(A))),ABC=..[A,B],loop_check(call_u(ABC)).
 %t(A,B):- call_u(call(A,B)).
-t(P,A1):- cwc,  mpred_fa_call(P,1,call(P,A1)).
+t(P,A1):-  mpred_fa_call(P,1,call(P,A1)).
 
 
 %% t( ?P, ?A1, ?A2) is semidet.
@@ -839,6 +841,8 @@ rtArgsVerbatum('loop_check_term').
 rtArgsVerbatum('loop_check_term_key').
 rtArgsVerbatum('xQuoteFn').
 rtArgsVerbatum('$VAR').
+rtArgsVerbatum('NART').
+rtArgsVerbatum(X):-atom(X),atom_concat(_,'Fn',X).
 
 rtArgsVerbatum(ain).
 rtArgsVerbatum(meta_argtypes).
@@ -1030,7 +1034,7 @@ doRedelMe.
 do_and_undo(mpred_post_exactly,mpred_remove_exactly).
 
 %:- if( \+ flag_call(runtime_speed==true)).
-%(((CI,{was_mpred_isa(CI,I,C)},\+ ~isa(I,C)) ==> actn(mpred_post_exactly(isa(I,C))))).
+%(((CI,{was_isa(CI,I,C)},\+ ~isa(I,C)) ==> actn(mpred_post_exactly(isa(I,C))))).
 %:- endif.
 
 % :- abolish(system:arity,2).

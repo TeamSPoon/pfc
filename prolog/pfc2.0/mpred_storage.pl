@@ -368,6 +368,7 @@ doEachArg(Str,DAT,F,N,[A|RGS]):-
 
 
 skipped_doArgType(Var):- is_ftVar(Var),!.
+skipped_doArgType(F):- clause_b(rtArgsVerbatum(F)).
 skipped_doArgType(tRelation).
 skipped_doArgType(meta_argtypes).
 skipped_doArgType(isa).
