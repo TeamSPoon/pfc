@@ -728,7 +728,7 @@ mpred_t_storage_op(Op,(:-(Body))):-!,loop_check(mpred_op(Op,(:-(Body))),true),!.
 
 % HOOK for ISA alt-forms
 mpred_t_storage_op(_,isa(_,_)):- !,fail. % <- keeps u out of isa hybrids hairs
-mpred_t_storage_op(Op,X):- was_mpred_isa(X,I,C),!,mpred_op(Op,isa(I,C)).
+mpred_t_storage_op(Op,X):- was_isa(X,I,C),!,mpred_op(Op,isa(I,C)).
 
 % HOOK MOST ALL CALLS
 mpred_t_storage_op(Op,HeadBodyI):- quietly(((expand_term(HeadBodyI,HeadBodyM)),HeadBodyI\=@=HeadBodyM)),!,mpred_t_storage_op(Op,HeadBodyM).

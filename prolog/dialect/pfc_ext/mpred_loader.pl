@@ -1783,7 +1783,7 @@ with_delayed_chaining(Goal):-
 %
 % use was  (isa/2).
 %
-use_was_isa(G,I,C):-call((current_predicate(_,_:mpred_types_loaded/0),if_defined(was_mpred_isa(G,I,C)))).
+use_was_isa(G,I,C):-call((current_predicate(_,_:mpred_types_loaded/0),if_defined(was_isa(G,I,C)))).
 
 
 

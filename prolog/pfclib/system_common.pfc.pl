@@ -866,6 +866,7 @@ arity('tThing',1).
 % genls(ttExpressionType,rtAvoidForwardChain).
 isa('tThing',rtAvoidForwardChain).
 
+
 %isa('CycLTerm',rtAvoidForwardChain).
 prologHybrid(quotedIsa(ftTerm,ttExpressionType)).
 
