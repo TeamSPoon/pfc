@@ -1580,7 +1580,7 @@ maybe_support_bt(F,Condition):-
    maybeSupport(F,(Condition,g)).
 
 
-mpred_memo_bc(Call):- 
+mpred_why_all(Call):- !,
       call_u(Call),
       doall((
         lookup_u(Call),
@@ -2180,8 +2180,8 @@ ruleBackward0(F,Condition):- call_u((  '<-'(F,Condition),\+ (is_true(Condition);
 %
 
 assert_mu(MH):- fix_mp(clause(assert,assert_u),MH,M,H),get_consequent_functor(H,F,A),assert_mu(M,H,F,A).
-asserta_mu(MH):- fix_mp(clause(assert,assert_u),MH,M,H),asserta_mu(M,H).
-assertz_mu(MH):- fix_mp(clause(assert,assert_u),MH,M,H),assertz_mu(M,H).
+asserta_mu(MH):- fix_mp(clause(assert,asserta_u),MH,M,H),asserta_mu(M,H).
+assertz_mu(MH):- fix_mp(clause(assert,assertz_u),MH,M,H),assertz_mu(M,H).
 
 
 :- kb_shared(baseKB:singleValuedInArg/2).
@@ -2214,6 +2214,8 @@ assert_mu(M,Pred,_,_):- asserta_mu(M,Pred).
 % assertz_mu(_,X):- must(defaultAssertMt(M)),!,must((expire_tabled_list(M:X),show_call(attvar_op(db_op_call(assertz,assertz_i),M:X)))).
 
 
+%assertz_mu(M,M2:Pred,F,A):- M == M2,!, assertz_mu(M,Pred,F,A).
+%assertz_mu(M,spft(P,mfl(KB,F,L),T)):-M\==KB,!,assertz_mu(KB,spft(P,mfl(KB,F,L),T)).
 assertz_mu(M,X):- strip_module(X,_,P), %sanity(check_never_assert(M:P)), 
     must((expire_tabled_list(M:P),show_failure(attvar_op(db_op_call(assertz,assertz_i),M:P)))).
    %(clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(db_op_call(assertz,assertz_i),M:P))))).

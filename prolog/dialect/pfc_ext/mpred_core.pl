@@ -502,6 +502,7 @@ fix_mp(Why,I,UO):- quietly_must(fix_mp(Why,I,U,O)),maybe_prepend_mt(U,O,UO).
 fix_mp(Why,G,M,GOO):-
   must((mnotrace((fix_mp0(Why,G,M,GO),strip_module(GO,_,GOO))))).
 
+meta_split(PQ,P,OP,Q):-PQ =..[OP,P,Q],arg(_,v('<-','==>','<==>','==>',(','),(';')),OP).
 
 fix_mp0(Nonvar,Var,ABox,VarO):- sanity(nonvar(Nonvar)), is_ftVar(Var),!,Var=VarO,defaultAssertMt(ABox),!.
 fix_mp0(Why, '~'(G0), M, '~'(CALL)):-nonvar(G0),!,fix_mp0(Why,G0,M,CALL).
@@ -509,12 +510,12 @@ fix_mp0(Why,'?-'(G0),M, '?-'(CALL)):-nonvar(G0),!,fix_mp0(Why,G0,M,CALL).
 fix_mp0(Why,':-'(G0),M, ':-'(CALL)):-nonvar(G0),!,fix_mp0(Why,G0,M,CALL).
 fix_mp0(Why,(G :- B),M,( GO :- B)):- !, fix_mp0(Why,G,M,GO).
 fix_mp0(Why,_:(G :- B),M,( GO :- B)):- !, fix_mp0(Why,G,M,GO).
-fix_mp0(_Why,Mt:P,Mt,P):- clause_b(mtCycL(Mt)),!.
 fix_mp0(_Why,Mt:P,Mt,P):- clause_b(mtExact(Mt)),!.
-fix_mp0(_Why,P,S,GO):- predicate_property(P,imported_from(S)),!,strip_module(P,_,GO).
-fix_mp0(Why,M:P,MT,P):- to_real_mt(Why,M,MT)->M\==MT,!.
+fix_mp0(_Why,Mt:P,Mt,P):- clause_b(mtCycL(Mt)),!.
+% fix_mp0(Why,PQ,M,PPQQ):- meta_split(PQ,P,OP,Q),!,fix_mp(Why,P,M1,PP),fix_mp(Why,Q,M2,QQ),(M1\==M2 -> (QQ\==Q->M=M2;M=M1) ; M=M1),!,meta_split(PPQQ,PP,OP,QQ).
+fix_mp0(_Why,P,S,GO):- current_predicate(_,P),predicate_property(P,imported_from(S)),!,strip_module(P,_,GO).
+fix_mp0(Why,M:P,MT,P):- to_real_mt(Why,M,MT)->M\==MT,!,fix_mp0(Why,MT:P,MT,P).
 fix_mp0(Why,G,M,GO):- strip_module(G,_,GO),get_consequent_functor(GO,F,A),loop_check(convention_to_mt(Why,F,A,M),fail),!.
-
 fix_mp0(_Why,I,ABox,I):- defaultAssertMt(ABox),!.
 
 /*
