@@ -88,7 +88,7 @@ erase_w_attvars(Data0,Ref):- attempt_side_effect(erase(Ref)),add_side_effect(era
 :- meta_predicate(maybe_ensure_abox(:)).
 
 maybe_ensure_abox(Mt):- 
- strip_module(Mt,I,M),
+ strip_module(Mt,I,M), 
  dmsg(maybe_ensure_abox(strip_module(Mt,I,M))),
  must(maybe_ensure_abox(M,M)).
 
@@ -140,6 +140,7 @@ kb_shared_local(M,I,F/A):- I:kb_local(M:F/A),functor(P,F,A),
    CM==M))))).
  
 maybe_ensure_abox(M,I) :-
+  add_import_module(Mt,pfc_lib,end),
   M:import(pfccore:pfcDefault/2),
   I:import(pfccore:pfcDefault/2),
  % pfc_umt:abox_pred_list(PREDS)-> must_maplist(kb_shared_local(M,I),PREDS),

@@ -11,20 +11,15 @@
 
 */
 :- if(('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'using_pfc'(M,CM,SM,pfc_lib)))).
-:- module(pfc_lib,[]).
-:- set_prolog_flag(gc,false).
 :- endif.
+:- if((prolog_load_context(source,File),prolog_load_context(file,File))).
+:- module(pfc_lib,[]).
+:- endif.
+%:- set_prolog_flag(gc,false).
+:- set_prolog_flag(pfc_version,2.0).
 :- set_prolog_flag(retry_undefined, kb_shared).
 
-:- use_module(library(each_call_cleanup)).
-:- user:use_module(library(must_trace)).
-:- user:use_module(library(file_scope)).
-:- set_prolog_flag_until_eof(access_level,system).
-:- user:use_module(library(virtualize_source)).
-:- ensure_loaded(library(attvar_reader)).
-:- ensure_loaded(library(no_repeats)).
-
-kb_wankage(M:F/A):- 
+kb_global_w(M:F/A):- 
    M:multifile(M:F/A),
    M:module_transparent(M:F/A),
    M:dynamic(M:F/A),
@@ -33,20 +28,38 @@ kb_wankage(M:F/A):-
    do_import(user,M,F,A),
    do_import(pfc_lib,M,F,A),
    do_import(header_sane,M,F,A),
-   M:kb_global(M:F/A).
-
-:- dynamic(rdf_rewrite:(~)/1).
-:- kb_wankage(rdf_rewrite:arity/2).
-:- kb_wankage(baseKB:genlMt/2).
-:- kb_wankage(baseKB:mpred_prop/4).
-:- kb_wankage(baseKB:mtHybrid/1).
-:- kb_wankage(baseKB:mtProlog/1).
-:- kb_wankage(baseKB:tCol/1).
+   M:kb_global(M:F/A),
+   system:import(M:F/A).
 
 
+:- user:use_module(library(file_scope)).
+:- set_prolog_flag_until_eof(access_level,system).
+
+:- user:use_module(library(attvar_reader)).
+:- user:use_module(library(each_call_cleanup)).
+:- user:use_module(library(must_trace)).
+:- user:use_module(library(virtualize_source)).
 :- user:use_module(library(hook_hybrid)).
 :- user:use_module(library(no_repeats)).
 :- user:use_module(library(logicmoo_util_strings)).
+:- user:use_module(library(loop_check)).
+:- user:use_module(library(attvar_serializer)).
+
+:- dynamic(rdf_rewrite:(~)/1).
+:- kb_global_w(rdf_rewrite:arity/2).
+:- kb_global_w(baseKB:genlMt/2).
+:- kb_global_w(baseKB:mpred_prop/4).
+:- kb_global_w(baseKB:mtHybrid/1).
+:- kb_global_w(baseKB:mtProlog/1).
+:- kb_global_w(baseKB:tCol/1).
+:- kb_global_w(baseKB:mpred_database_term/3).
+:- kb_global_w(baseKB:mtNoPrologCode/1).
+:- kb_global_w(baseKB:ftText/1).
+:- kb_global_w(baseKB:mtNotInherits/1).
+:- kb_global_w(baseKB:mtInherits/1).
+:- kb_global_w(baseKB:rtArgsVerbatum/1).
+
+
 
 
 
@@ -66,6 +79,7 @@ kb_wankage(M:F/A):-
 :- kb_shared(baseKB:pm/1).
 :- kb_shared(baseKB:spft/3).
 :- kb_shared(baseKB:tms/1).
+
 
 
 
@@ -94,9 +108,6 @@ kb_global_base(FA):- kb_local(baseKB:FA).
 
 :- baseKB:forall(between(1,11,A),kb_local(t/A)).
 :- baseKB:forall(between(5,7,A),kb_local(mpred_f/A)).
-
-:- user:use_module(library(loop_check)).
-:- use_module(library(attvar_serializer)).
 
 % :- kb_shared_base(baseKB:admittedArgument/3).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
@@ -145,6 +156,7 @@ input_from_file:- prolog_load_context(stream,Stream),current_input(Stream).
 :- module_transparent(intern_predicate/1).
 :- module_transparent(intern_predicate/2).
 intern_predicate(MFA):- '$current_typein_module'(To),intern_predicate(To,MFA).
+intern_predicate(To,F/A):- !, '$current_source_module'(M),intern_predicate(To,M:F/A).
 intern_predicate(To,From:F/A):-!,
   From:module_transparent(From:F/A),
   From:export(From:F/A),To:export(From:F/A),To:export(From:F/A),
@@ -154,7 +166,6 @@ intern_predicate(To,From:F/A):-!,
   user:export(From:F/A),user:export(From:F/A),
   baseKB:export(From:F/A),baseKB:export(From:F/A),
   system:export(From:F/A),system:export(From:F/A),!.
-intern_predicate(To,F/A):- '$current_source_module'(M),intern_predicate(To,M:F/A).
 
 scan_missed_source:-!.
 scan_missed_source:-
@@ -204,7 +215,6 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg(visit_pfc_non_file_r
 */
 
 
-% :- use_module(library(logicmoo_utils)).
 :- if( \+ current_predicate(each_call_cleanup/3)).
 :- user:use_module(library(each_call_cleanup)).
 :- endif.
@@ -431,6 +441,7 @@ is_pfc_file(M,Other):- prolog_load_context(source, File),Other\==File,!,is_pfc_f
 %is_pfc_file(M,_):- prolog_load_context(module, SM), SM\==M,!, is_pfc_module(SM).
 %is_pfc_file(M,_):- is_pfc_module(M).
 
+:- fixup_exports.
 
 sub_atom(F,C):- sub_atom(F,_,_,_,C).
 

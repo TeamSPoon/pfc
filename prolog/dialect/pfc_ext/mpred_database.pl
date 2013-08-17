@@ -881,14 +881,17 @@ mpred_update_literal(P,N,Q,R):-
 :- module_transparent( (update_single_valued_arg)/3).
 
 update_single_valued_arg(M,M:Pred,N):-!,update_single_valued_arg(M,Pred,N).
+update_single_valued_arg(_,M:Pred,N):-!,update_single_valued_arg(M,Pred,N).
 
 update_single_valued_arg(world,P,N):- !, update_single_valued_arg(baseKB,P,N).
-update_single_valued_arg(M,P,N):- \+ clause_b(mtHybrid(M)), clause_b(mtHybrid(M2)),!,update_single_valued_arg(M2,P,N).
+update_single_valued_arg(M,P,N):- break, \+ clause_b(mtHybrid(M)), trace, clause_b(mtHybrid(M2)),!,
+   update_single_valued_arg(M2,P,N).
 
 update_single_valued_arg(M,P,N):- 
   get_assertion_head_arg(N,P,UPDATE),
   is_relative(UPDATE),!,
   dtrace,
+  break,
   replace_arg(P,N,OLD,Q),
   must_det_l((clause_u(Q),update_value(OLD,UPDATE,NEW),\+ is_relative(NEW), replace_arg(Q,N,NEW,R))),!,
   update_single_valued_arg(M,R,N).
@@ -2229,8 +2232,8 @@ assertz_mu(MH):- fix_mp(clause(assert,assertz_u),MH,M,H),assertz_mu(M,H).
 %
 assert_mu(M,M2:Pred,F,A):- M == M2,!, assert_mu(M,Pred,F,A).
 assert_mu(M,_:Pred,F,A):- dtrace,sanity(\+ is_ftVar(Pred)),!, assert_mu(M,Pred,F,A).
-assert_mu(M,Pred,F,_):- clause_b(singleValuedInArg(F,SV)),!,must(update_single_valued_arg(M,Pred,SV)),!.
-assert_mu(M,Pred,F,A):- a(prologSingleValued,F),!,must(update_single_valued_arg(M,Pred,A)),!.
+%assert_mu(M,Pred,F,_):- clause_b(singleValuedInArg(F,SV)),!,must(update_single_valued_arg(M,Pred,SV)),!.
+%assert_mu(M,Pred,F,A):- a(prologSingleValued,F),!,must(update_single_valued_arg(M,Pred,A)),!.
 assert_mu(M,Pred,F,_):- a(prologOrdered,F),!,assertz_mu(M,Pred).
 assert_mu(M,Pred,_,_):- t_l:assert_to(Where),!, (Where = a -> asserta_mu(M,Pred); assertz_mu(M,Pred)).
 assert_mu(M,Pred,_,1):- !, assertz_mu(M,Pred),!.

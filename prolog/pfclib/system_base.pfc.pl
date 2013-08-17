@@ -3,8 +3,13 @@
 %:- mpred_unload_file.
 :- '$set_source_module'(baseKB).
 :- ensure_abox(baseKB).
+:- baseKB:export(baseKB:never_assert_u/1).
+:- baseKB:export(baseKB:never_assert_u/2).
+:- rdf_rewrite:import(baseKB:never_assert_u/1).
+:- rdf_rewrite:import(baseKB:never_assert_u/2).
 :- use_module(library(rtrace)).
-:- use_module(library(pfc_lib)).
+:- pfc_lib:use_module(library(pfc_lib)).
+:- add_import_module(baseKB,pfc_lib,end).
 :- use_module(library(no_repeats)).
 %:- use_module(library(dictoo)).
 % ensure this file does not get unloaded with mpred_reset
@@ -526,9 +531,8 @@ without_depth_limit(G):-
       call_cleanup(G,'$depth_limit'(Was,_,_))))).
 */
 
-~(singleValuedInArg(arity,2)).
-~(prologSingleValued(arity)).
-~(prologSingleValued(support_hilog)).
+~(singleValuedInArg(arity,_)).
+~(singleValuedInArg(support_hilog,_)).
 
 
 %:- rtrace,dtrace.

@@ -249,6 +249,8 @@ set_fileAssertMt(M):-
   asserta_until_eof(t_l:current_defaultAssertMt(M)),!,
   (is_pfc_file -> set_current_modules(M) ; true).
 
+
+:- import(pfc_lib:is_pfc_file/0).
 % :- '$hide'(set_fileAssertMt(_)).
 
 
@@ -331,16 +333,16 @@ makeConstant(_Mt).
 
 is_pfc_module_file(M):- is_pfc_module_file(M,F,TF),!, (F \== (-)), TF = true.
 
-is_pfc_module_file(M,F,TF):- (module_property(M,file(F)),is_pfc_file(F)) *-> TF=true ; 
+is_pfc_module_file(M,F,TF):- (module_property(M,file(F)),pfc_lib:is_pfc_file(F)) *-> TF=true ; 
   (module_property(M,file(F))*->TF=false ; (F= (-), TF=false)).
 
 maybe_ensure_abox(M):- is_pfc_module_file(M,F,_), (F \== (-)), !, 
-  (is_pfc_file(F)->show_call(is_pfc_file(F),ensure_abox(M));dmsg(not_is_pfc_module_file(M,F))).
+  (pfc_lib:is_pfc_file(F)->show_call(pfc_lib:is_pfc_file(F),ensure_abox(M));dmsg(not_is_pfc_module_file(M,F))).
 maybe_ensure_abox(M):- show_call(not_is_pfc_file,ensure_abox(M)).
 
 
 :- module_transparent((ensure_abox)/1).
-ensure_abox(M):- dynamic(M:defaultTBoxMt/1),must(ensure_abox_support(M,baseKB)),!.
+ensure_abox(M):- add_import_module(M,pfc_lib,end), dynamic(M:defaultTBoxMt/1),must(ensure_abox_support(M,baseKB)),!.
 :- module_transparent((ensure_abox_support)/2).
 ensure_abox_support(M,TBox):- clause_b(M:defaultTBoxMt(TBox)),!.
 ensure_abox_support(M,TBox):- asserta(M:defaultTBoxMt(TBox)),

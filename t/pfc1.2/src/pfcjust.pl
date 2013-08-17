@@ -84,7 +84,7 @@ assumptions1([X|Rest],L) :-
 %%          [J11, J12,... J1n]      a list of proof trees.
 
 
-%% pfcChild0(+P,?Q) is nondet.
+%% pfcChild(+P,?Q) is nondet.
 %
 % pfcChild(P,Q) is true iff P is an immediate justifier for Q.
 %

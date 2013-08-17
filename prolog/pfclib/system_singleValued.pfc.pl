@@ -31,22 +31,33 @@ mpred_sv_shared(singleValuedInArgDefault,3).
 
 arity(singleValuedInArgDefault, 3).
 prologHybrid(singleValuedInArgDefault(prologSingleValued,ftInt,ftTerm)).
+singleValuedInArg(singleValuedInArgDefault,3).
 
 ((singleValuedInArg(Pred,_))==>(prologSingleValued(Pred))).
 
-(singleValuedInArgDefault(SingleValued,ArgN,S1)/ground(S1) ==> singleValuedInArg(SingleValued,ArgN)).
+((singleValuedInArgDefault(SingleValued,ArgN,S1)/ground(S1)) ==> singleValuedInArg(SingleValued,ArgN)).
 
-((singleValuedInArg(F, N)/must(atom(F))), arity(F,A), 
-  ( \+ singleValuedInArgDefault(F, N, Q_SLOT),
-   {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)}))
-       ==> (( P ==> 
-          {call(dif:dif(Q_SLOT,P_SLOT)), call_u(Q), ground(Q)}, \+Q, P)).
+((singleValuedInArg(F, N)/(must((atom(F),arity(F,A))))),
+  ( \+ singleValuedInArgDefault(F, N, _)))
+     ==> singleValuedInArgAX(F,A,N).
 
+(singleValuedInArgAX(F,A,N), 
+   {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)})
+       ==> 
+  (( P ==> 
+        ({call(dif:dif(Q_SLOT,P_SLOT)),call_u(Q),ground(Q)}, single_override(P,Q)))).
 
+(single_override(P,Q), {retract(Q)}) ==>
+   (\+ P ==> ({mpred_supported(Q)},  Q, \+ single_override(P,Q))).
 
+/*
+(singleValuedInArgAX(F,A,N), 
+   {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)})
+       ==> 
+  (( P ==> 
+        ({call(dif:dif(Q_SLOT,P_SLOT)),call_u(Q),ground(Q)}, single_override(P,Q)))).
 
-
-
+*/
 
 
 

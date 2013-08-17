@@ -33,25 +33,30 @@
 
 :- include(test_header).
 
+:- set_fileAssertMt(header_sane).
 
-% :- flag_call(runtime_debug=true).
+:- file_begin(pfc).
 
-:- dynamic(someSV_testing/3).
+                 
+baseKB:prologSingleValued(inChair/1).
 
-someSV_testing(a,b,1).
-someSV_testing(a,b,2).
-someSV_testing(a,c,3).
+:- import(baseKB:inChair/1).
 
-:- mpred_trace_exec.
-arity(someSV_testing,3).
-singleValuedInArg(someSV_testing,3).
+dmilesWorld.
+dmilesWorld ==> inChair(a).
 
-someSV_testing(a,c,4).
+:- listing_u(inChair).
 
-:- listing(someSV_testing/3).
-:- sanity(someSV_testing(a,c,4)).
-:- sanity(someSV_testing(a,b,2)).
-:- sanity( \+ someSV_testing(a,b,1)).
-:- mpred_notrace_exec.
+dmilesWorld ==> inChair(b).
 
+:- listing(inChair/1).
+
+:- mpred_test(inChair(b)).
+:- mpred_test(\+ inChair(a)).
+
+:- ain(\+ (dmilesWorld ==> inChair(b))).
+
+:- listing(inChair/1).
+
+:- mpred_test(inChair(a)).
 
