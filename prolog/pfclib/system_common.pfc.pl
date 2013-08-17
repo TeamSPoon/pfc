@@ -59,6 +59,18 @@
 
 :- kb_shared(startup_option/2).
 
+:- meta_predicate(without_depth_limit(0)).
+without_depth_limit(G):- call_with_depth_limit(G,72057594037927935,Result),sanity(Result\==depth_limit_exceeded).
+
+/*
+without_depth_limit(G):-
+   ('$depth_limit'(72057594037927935,Was,_), 
+    (Was == -1 -> call(G);  % Not inside cwdl
+    (Was > 72000000000000000 -> call(G);  % We left Depth limit slightly messed
+      call_cleanup(G,'$depth_limit'(Was,_,_))))).
+*/
+
+
 :- use_module(library(rtrace)).
 :- mpred_unload_file.
 :- begin_pfc.

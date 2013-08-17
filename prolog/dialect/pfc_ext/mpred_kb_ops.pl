@@ -528,8 +528,8 @@ get_consequent(P,P).
 %
 % Check Context Module. (throws if it turns out wrong)
 %
-check_context_module:- !.
-check_context_module:- is_release,!.
+% check_context_module:- !.
+% check_context_module:- is_release,!.
 check_context_module:- sanity((source_context_module(M1),defaultAssertMt(M2),must(M1==M2))).
 
 %% check_real_context_module is semidet.

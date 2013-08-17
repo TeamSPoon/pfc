@@ -1017,19 +1017,16 @@ is_ftOpenSentence(P):- compound(P), functor(P,F,N), \+ leave_some_vars_at_el(F),
    (arg(N,P,A);(N\==1,arg(1,P,A))),is_ftOpen(A).
 is_ftOpenSentence(P):- is_ftOpen(P).
 
-mpred_post12(P, _):- sanity(must_be(nonvar,P)),P==true,!.
+mpred_post12(P, _):- P==true,!.
 % mpred_post12(P, S):- notrace((is_ftOpenSentence(P)->wdmsg((warn((var_mpred_post1(P, S))))))),fail.
 
-mpred_post12( \+ P,   S):- sanity(must_be(nonvar,P)), !, must(mpred_post1_rem(P,S)).
+mpred_post12( \+ P,   S):- nonvar(P), !, must(mpred_post1_rem(P,S)).
 
 % TODO - FIGURE OUT WHY THIS IS NEEDED
-mpred_post12( ~ P,   S):- sanity(must_be(nonvar,P)), 
-   notrace(( sanity((ignore(show_failure(\+ is_ftOpenSentence(P))))), \+ mpred_unique_u(P))),
+mpred_post12( ~ P,   S):- notrace(( sanity((ignore(show_failure(\+ is_ftOpenSentence(P))))), \+ mpred_unique_u(P))),
    with_current_why(S,with_no_mpred_breaks((nonvar(P),doall(mpred_remove(P,S)),must(mpred_undo(P))))),fail.
 
 mpred_post12(P,S):- notrace((maybe_updated_value(P,RP,OLD))),!,subst(S,P,RP,RS),mpred_post12(RP,RS),ignore(mpred_retract(OLD)).
-
-mpred_post12(P,S):- (skip_post(P);skip_post(S)),!.
 
 %  TODO MAYBE mpred_post12(actn(P),S):- !, with_current_why(S,call(P)).
 % Two versions exists of this function one expects for a clean database (fresh_mode) and adds new information.
@@ -1051,7 +1048,7 @@ mpred_post12(P,S):- fail,
   plus_fwc(P),!.
 
 
-% this for complete repropagation
+% this would be for complete repropagation
 mpred_post12(P,S):- t_l:is_repropagating(_),!,
  ignore(( %  db mpred_ain_db_to_head(P,P2),
   % mpred_remove_old_version(P),
@@ -1063,20 +1060,6 @@ mpred_post12(P,S):- t_l:is_repropagating(_),!,
   !,
   mpred_enqueue(P,S))),
   !.
-
-% this would be the very inital by Tim Finnin...
-mpred_post12(P,S):- % current_prolog_flag(unsafe_speedups , true) , 
- !,
- ignore(( %  db mpred_ain_db_to_head(P,P2),
-  % mpred_remove_old_version(P),
-  mpred_add_support(P,S),
-  mpred_unique_u(P),
-  assert_u_confirm_if_missing(P),
-  mpred_trace_op(add,P,S),
-  !,
-  mpred_enqueue(P,S))),
-  !.
-
 
 % this would be the very inital by Tim Finnin...
 mpred_post12(P,S):- fail, fresh_mode,
@@ -1119,7 +1102,7 @@ mpred_post12(P,S):- !,
   gripe_time(0.1, must(get_mpred_support_status(P,S,PP,SS,Was))),!,
  %  if we''ve asserted what we''ve compiled
   gripe_time(0.1, must(get_mpred_assertion_status(P,PP,WasA))),!,
-  gripe_time(0.5, must(mpred_post_update4(WasA,P,S,Was))),!.
+  gripe_time(0.4, must(mpred_post_update4(WasA,P,S,Was))),!.
 
 
 get_mpred_assertion_status(P,PP,Was):-
@@ -1138,12 +1121,6 @@ get_mpred_support_status(P,_S, PP,(FF,TT),Was):-
 same_file_facts(mfl(M,F,_),mfl(M,FF,_)):-nonvar(M),!, FF=@=F.
 same_file_facts(F,FF):- FF=@=F,!.
 
-
-
-skip_post(S):-ground(S),skip_post_ground(S).
-
-skip_post_ground(PA):- PA=..[THING,_], clause_b((isa(THING,rtAvoidForwardChain))).
-skip_post_ground(isa(_,THING)):- clause_b((isa(THING,rtAvoidForwardChain))).
 
 %% mpred_post_update4(++AssertionStatus, +Ps, +S, ++SupportStatus) is det.
 %
@@ -1446,9 +1423,9 @@ mpred_ain_trigger_reprop(PT,Support):-
   %  (debugging(logicmoo(_))->dtrace;true),
   mpred_assert_w_support(PT,Support),
   copy_term(PT,Tcopy),!,
-  doall((call_u_no_bc(Trigger),
+  call_u_no_bc(Trigger),
   mpred_eval_lhs(Body,(Trigger,Tcopy)),
-  fail)),fail.
+  fail.
 
 mpred_ain_trigger_reprop(nt(Trigger,Test,Body),Support):-
   copy_term_vn(Trigger,TriggerCopy),
@@ -1602,22 +1579,22 @@ mpred_remove(P,S):- each_E(mpred_remove1,P,[S]).
 
 mpred_remove1(P,S):-
   mpred_withdraw(P,S),
-  ((call_with_depth_limit(call_u_no_bc(P),700,Result),Result\==depth_limit_exceeded )
+  call_u_no_bc(P)
      -> mpred_blast(P)
-      ; true).
+      ; true.
 
 
 mpred_post1_rem(P,S):-
-  clause_asserted_u(P),!,
-  must((mpred_post1_rem1(P,S), \+ clause_asserted_u(P))),!.
-mpred_post1_rem(P,_S):- if_defined(kif_hook(P),fail),!.
+  clause_asserted_u(P),
+  must((mpred_post1_rem1(P,S), \+ clause_asserted_u(P))).
+
 mpred_post1_rem(P,S):- mpred_post1_rem1(P,S),!.
 
 mpred_post1_rem1(P,S):-
    must(mpred_withdraw(P, S)),
    must(mpred_remove(P,S)),
    doall(mpred_undo(P)),
-   retract_u(P).
+   ignore(retract_u(P)).
 
 
 
@@ -1845,21 +1822,12 @@ mpred_do_rule(Fact):-
   % check negative triggers
   mpred_do_fcnt(Fact,F).
 
-lookup_spft(A,B,C):- nonvar(A),!,lookup_spft_p(A,B,C).
-lookup_spft(A,B,C):- var(B),!,lookup_spft_t(A,B,C).
-lookup_spft(A,B,C):- lookup_spft_f(A,B,C).
 
-lookup_spft_p(A,B,C):- baseKB:spft(A,B,C).
-lookup_spft_p(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,show_success(baseKB:spft(AA,B,C)).
 
-lookup_spft_f(A,B,C):- baseKB:spft(A,B,C).
-lookup_spft_f(A,B,C):- full_transform(lookup,B,BB),!,B\=@=BB,!,show_success(baseKB:spft(A,BB,C)).
-
-lookup_spft_t(A,B,C):- baseKB:spft(A,B,C).
 
 
 mpred_do_fcpt(Fact,F):-
-  clause_b(pt(F,Body)),
+  lookup_u(pt(F,Body)),
   mpred_trace_msg('~N~n\tFound positive trigger: ~p~n\t\tbody: ~p~n',
 		[F,Body]),
   mpred_eval_lhs(Body,(Fact,pt(F,Body))),
@@ -1872,9 +1840,12 @@ mpred_do_fcpt(Fact,F):-
 
 mpred_do_fcpt(_,_).
 
+lookup_spft(A,B,C):- baseKB:spft(A,B,C).
+lookup_spft(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,baseKB:spft(AA,B,C).
+
+
 mpred_do_fcnt(_ZFact,F):-
   NT = nt(F,Condition,Body),
-  clause_b(nt(F,Condition,Body)),
   lookup_spft(X,F1,NT),
   %clause(SPFT,true),
   mpred_trace_msg('~N~n\tFound negative trigger: ~p~n\t\tcond: ~p~n\t\tbody: ~p~n\tSupport: ~p~n',
@@ -1909,12 +1880,11 @@ mpred_define_bc_rule(Head,Body,Parent_rule):-
 
 :-nb_setval('$pfc_current_choice',[]).
 
-push_current_choice:- \+ current_prolog_flag(pfc_support_cut,true),!.
-push_current_choice:- prolog_current_choice(CP),push_current_choice(CP).
-push_current_choice(CP):- nb_current('$pfc_current_choice',Was)->b_setval('$pfc_current_choice',[CP|Was]);b_setval('$pfc_current_choice',[CP]).
+push_current_choice(CP):- (nb_current('$pfc_current_choice',Was);Was=[]), b_setval('$pfc_current_choice',[CP|Was]),!.
 
-% cut_c:- \+ current_prolog_flag(pfc_support_cut,true),!.
-cut_c:- must(nb_current('$pfc_current_choice',[CP|_WAS])),prolog_cut_to(CP).
+cut_c:-!.
+cut_c:-
+  must(nb_current('$pfc_current_choice',[CP|_WAS])),prolog_cut_to(CP).
 
 
 %% mpred_eval_lhs(X,Support) is nondet.
@@ -1922,7 +1892,7 @@ cut_c:- must(nb_current('$pfc_current_choice',[CP|_WAS])),prolog_cut_to(CP).
 %  eval something on the LHS of a rule.
 %
 mpred_eval_lhs(X,S):-
-   push_current_choice,
+   % prolog_current_choice(CP),push_current_choice(CP),
    with_current_why(S,loop_check(mpred_eval_lhs_0(X,S),fail)).
 
 
@@ -1946,12 +1916,11 @@ mpred_eval_lhs_0(rhs(X),Support):- !,
 %  snip(Support),
 %  mpred_eval_lhs_0(X,Support).
 
-mpred_eval_lhs_0(X,Support):- mpred_db_type(X,trigger), !, gripe_time(0.4,mpred_ain_trigger_reprop(X,Support)).
+mpred_eval_lhs_0(X,Support):- mpred_db_type(X,trigger), !, mpred_ain_trigger_reprop(X,Support).
 mpred_eval_lhs_0(X,_):- mpred_warn("Unrecognized item found in trigger body, namely ~p.",[X]).
 
 
-args_swapped(~ P1, ~P2):-!,args_swapped(P1,P2).
-args_swapped(\+ P1, \+ P2):-!,args_swapped(P1,P2).
+args_swapped(~P1,~P2):-!,args_swapped(P1,P2).
 args_swapped(P1,P2):- P1 =.. [F,Y,X], P2 =.. [F,X,Y].
 fxy_args_swapped(F,X,Y,P1,P2):- P1 =.. [F,X,Y], P2 =.. [F,Y,X].
 
@@ -1965,10 +1934,10 @@ mpred_eval_rhs([Head|Tail],Support):-
   mpred_eval_rhs1(Head,Support),
   mpred_eval_rhs(Tail,Support).
 
-mpred_eval_rhs1({Prolog},Support):-
+mpred_eval_rhs1({Action},Support):-
  % evaluable Prolog code.
  !,
- fc_eval_action(Prolog,Support).
+ fc_eval_action(Action,Support).
 
 % Dmiles replaced with this
 mpred_eval_rhs1( P,Support):-
@@ -2150,20 +2119,15 @@ mpred_BC_CACHE0(_,P):-
   mpred_eval_lhs(CTrigger,(F,T)),
   fail)).
 
-without_depth_limit(G):-
-   ('$depth_limit'(72057594037927935,Was,_), 
-    (Was == -1 -> call(G);  % Not inside cwdl
-    (Was > 72000000000000000 -> call(G);  % We left Depth limit slightly messed
-      call_cleanup(G,'$depth_limit'(Was,_,_))))).
 
 
 % I''d like to remove this soon
 call_u_no_bc(P0):- strip_module(P0,_,P), sanity(stack_check),var(P),!, mpred_fact(P).
 call_u_no_bc(_:true):-!.
-call_u_no_bc(P):- lookup_u(P)*->true;call_with_bc_triggers(P). % locally(t_l:no_backchaing,no_repeats(call_u(P))).
+call_u_no_bc(P):- no_repeats(call_u(P)).
 % call_u_no_bc(P):- no_repeats(loop_check(mpred_METACALL(call_u, P))).
 
-mpred_call_no_bc0(P):- lookup_u(P).
+% mpred_call_no_bc0(P):- lookup_u(P).
 % mpred_call_no_bc0(P):-  defaultAssertMt(Mt), Mt:lookup_u(P).
 % mpred_call_no_bc0((A,B)):-!, mpred_call_no_bc0(A),mpred_call_no_bc0(B).
 %mpred_call_no_bc0(P):-  defaultAssertMt(Mt),current_predicate(_,Mt:P),!,Mt:call(P).
@@ -2278,7 +2242,7 @@ mpred_nf(LHS,List):-
 %  Out.  Backtracking into this predicate will produce additional clauses.
 
 % handle a variable.
-                                      
+
 mpred_nf1(P,[P]):- is_ftVar(P), !.
 
 % these next two rules are here for upward compatibility and will go
@@ -3332,10 +3296,6 @@ bagof_or_nil(T,G,B):- (bagof_nr(T,G,B) *-> true; B=[]).
 %
 %  predicates for manipulating support relationships
 %
-
-mpred_add_support(P,(Fact,Trigger)):- % current_prolog_flag(unsafe_speedups , true) , 
-  SPFT = spft(P,Fact,Trigger),!,  
-  (clause_asserted(SPFT)-> true; assertz_mu(SPFT)).
 
 %  mpred_add_support(+Fact,+Support)
 mpred_add_support(P,(Fact,Trigger)):-
