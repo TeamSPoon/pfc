@@ -7,13 +7,12 @@
 % Dec 13, 2035
 % Douglas Miles
 */
-:- module(mt_01,[]).
+%  was_module(header_sane,[]).
 
-:- user:ensure_loaded(system:library(logicmoo_utils)).
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 
 
-%:- add_import_module(mt_01,baseKB,end).
+%:- add_import_module(header_sane,baseKB,end).
 
 :- set_defaultAssertMt(myMt).
 
@@ -23,7 +22,7 @@ mtCycL(kb2).
 
 
 
-code1: (a:- printAll('$current_source_module'(M)),b).
+code1: (a:- printAll('$current_source_module'(_M)),b).
 
 kb2: (b).
 
@@ -42,7 +41,7 @@ genlMt(kb2,code1).
 
 
 % run the test
-kb2: (?- a).
+kb2: (:- a).
 
 
 % to make sure a does not get accdently defined in kb2

@@ -40,7 +40,8 @@ exitPrompt(){
                         # // sanity tests
                            "*_01*.p*" "*_02*.p*" 
                         # // full tests
-                        # "*_02*.p*" "*_03*.p*" "_04*.p*" "*_05*.p*" "*_06*.p*" "*_07*.p*" "*_08*.p*" "*_09*.p*" "*_10*.p*" "*_11*.p*" "*_12*.p*" 
+                         "*_03*.p*" "*_04*.p*" "*_05*.p*" "*_06*.p*" "*_07*.p*" 
+						 "*_08*.p*" "*_09*.p*" "*_10*.p*" "*_11*.p*" "*_12*.p*" 
                         # // feature tests
                         # "*_f01*.p*" "*_f02*.p*" "*_f03*.p*" "_f04*.p*" "*_f05*.p*" "*_f06*.p*" "*_f07*.p*" "*_f08*.p*" "*_f09*.p*" "*_f10*.p*" "*_f11*.p*" "*_f12*.p*" 
 )                           
@@ -49,6 +50,8 @@ exitPrompt(){
 
 if [ $# -ne 0 ]; then
     listOfNames=( "$@" )
+else
+   cls
 fi
 
 #cls=1
@@ -69,7 +72,7 @@ for ele2 in "${listOfNames[@]}"
         
 		exitcode=$?                 
         if [ $exitcode -eq $good_exit ]; then
-			[ $cls == 1 ] && cls
+			[ "${cls}" == 1 ] && cls
 			echo -e "\\n\\nSUCCESS: $0 ${keep_going} ${ele} (returned ${exitcode})\\n\\n"		
 			continue			
 	    fi
@@ -97,6 +100,7 @@ for ele2 in "${listOfNames[@]}"
 				r) break;;
 				y) break;;
 				n) break;;
+				e) break;;
 				E) break;;
 			esac
 			echo ans=$ans
@@ -104,8 +108,8 @@ for ele2 in "${listOfNames[@]}"
 
 		[ "$ans" == 'y' ] && continue
 		[ "$ans" == 'B' ] && continue # down arrow
-		[ "$ans" == 'A' ] && retry=1 && continue  # up arrow
-		[ "$ans" == 'r' ] && retry=1 && continue
+		[ "$ans" == 'A' ] && retry=1 && cls && continue  # up arrow
+		[ "$ans" == 'r' ] && retry=1 && cls && continue
 		echo "Exiting the script. Have a nice day!"
 		exit $exitcode    
 	  done

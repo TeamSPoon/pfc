@@ -5,9 +5,9 @@
 % Dec 13, 2035
 % Douglas Miles
 
-:- module(sanity_attvar_02,[]).
+%  was_module(sanity_attvar_02,[]).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- debug_logicmoo(_).
 :- nodebug_logicmoo(http(_)).

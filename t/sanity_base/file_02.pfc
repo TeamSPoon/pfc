@@ -8,28 +8,28 @@
 
 %  cls ; kill -9 %1 ; swipl -g "ensure_loaded(pack(logicmoo_base/t/examples/base/'sanity_abc.pfc'))."
 
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 :- make.
 
 :- begin_pfc.
 
-user_sanity:(must_clause_asserted(G):- cwc, must(clause_asserted_u(G))).
-:- user_sanity:ain((must_clause_asserted(G):- cwc, must(clause_asserted_u(G)))).
+header_sane:(must_clause_asserted(G):- cwc, must(clause_asserted_u(G))).
+:- header_sane:ain((must_clause_asserted(G):- cwc, must(clause_asserted_u(G)))).
 
 
-:- user:listing(must_clause_asserted).
+:- listing(must_clause_asserted).
 
-user_sanity:must_clause_asserted(G):- cwc, must(clause_asserted_u(G)).
+header_sane:must_clause_asserted(G):- cwc, must(clause_asserted_u(G)).
 
-:- user:listing(must_clause_asserted).
+:- listing(must_clause_asserted).
 
-:- sanity(predicate_property(user_sanity:must_clause_asserted(_),number_of_clauses(1))).
+:- sanity(predicate_property(header_sane:must_clause_asserted(_),number_of_clauses(1))).
 
 a.
 
-:- user:listing(a).
+:- listing(a).
 
-:- user_sanity:must_clause_asserted(a).
+:- header_sane:must_clause_asserted(a).
 
 
 

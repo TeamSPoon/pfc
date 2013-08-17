@@ -6,12 +6,12 @@
 % Douglas Miles
 %  cls ; kill -9 %1 ; fg ; swipl -g "ensure_loaded(pack(logicmoo_base/t/examples/base/'sanity_abc.pfc'))."
 
-:- module(sanity,[]).
+%  was_module(sanity,[]).
 
 
 :- dynamic((foob/1,if_missing/2,good/1)).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- begin_pfc.
 

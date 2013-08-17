@@ -7,10 +7,9 @@
 % Dec 13, 2035
 % Douglas Miles
 */
-:- module(mt_01,[]).
+%  was_module(mt_01,[]).
 
-:- user:ensure_loaded(system:library(logicmoo_utils)).
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 
 
 %:- add_import_module(mt_01,baseKB,end).
@@ -23,7 +22,7 @@ mtCycL(kb2).
 
 
 
-code1: (a:- printAll('$current_source_module'(M)),b).
+code1: (a:- printAll('$current_source_module'(_M)),b).
 
 kb2: (b).
 

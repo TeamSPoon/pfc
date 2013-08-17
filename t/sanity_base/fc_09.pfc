@@ -7,12 +7,12 @@
 
 
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- file_begin(pfc).
 
-:- flag_call(runtime_debug=true).
-:- flag_call(unsafe_speedups=false).
+:- flag_call(runtime_debug=4).
+:- set_prolog_flag(unsafe_speedups,false).
 
 :- abolish(a,1).
 :- abolish(b,1).

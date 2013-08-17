@@ -8,9 +8,9 @@
 
 %  cls ; kill -9 %1 ; swipl -g "ensure_loaded(pack(logicmoo_base/t/examples/base/'sanity_abc.pfc'))."
 
-:- module(sanity,[]).
+%  was_module(sanity,[]).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 :- make.
 
 :- wdmsg(test_was_dupe).

@@ -5,9 +5,9 @@
 % Dec 13, 2035
 % Douglas Miles
 
-:- module(sanity_attvar_11,[printAll/1]).
+%  was_module(sanity_attvar_11,[printAll/1]).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 
 

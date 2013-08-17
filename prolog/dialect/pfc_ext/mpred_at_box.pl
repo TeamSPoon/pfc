@@ -38,7 +38,8 @@
          is_parent_goal/2,
           has_parent_goal/1,
           has_parent_goal/2,
-         fileAssertMt/1,
+         get_fileAssertMt/1,
+         set_fileAssertMt/1,
           setup_module_ops/1,
 
          in_mpred_kb_module/0,
@@ -234,6 +235,12 @@ mtCanAssert(Module):- (loading_source_file(File),get_file_type_local(File,pfc),p
 mtCanAssert(Module):- clause_b(mtProlog(Module)),!,fail.
 mtCanAssert(_).
 
+
+% :- ensure_loaded(mpred_loader).
+
+%% get_fileAssertMt(-ABox) is det.
+%
+get_fileAssertMt(MT):- fileAssertMt(MT).
 
 % :- ensure_loaded(mpred_loader).
 
@@ -616,7 +623,6 @@ baseKB:hybrid_support(mtCycL,1).
 baseKB:hybrid_support(mtCycLBroad,1).
 baseKB:hybrid_support(genlMt,2).
 
-%predicateConventionMt(genlMt,baseKB).
 
 % baseKBOnly mark_mark/3 must be findable from every module (dispite the fact that baseKB is not imported)
 :- dynamic baseKB:mpred_prop/3.

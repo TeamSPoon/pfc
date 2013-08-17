@@ -211,7 +211,8 @@
 :- asserta_if_new((prolog:make_hook(BA, C):- wdmsg(prolog:make_hook(BA, C)),fail)).
 % prolog:make_hook(before, FileS):- maplist(mpred_loader:mpred_unload_file,FileS).
 
-mpred_unload_file:- \+ prolog_load_context(reload,true),!.
+% Avoid Warning: mpred_loader:prolog_load_context(reload,true), which is called from
+mpred_unload_file:- \+ call(call,prolog_load_context(reload,true)),!.
 mpred_unload_file:- source_location(File,_),mpred_unload_file(File).
 mpred_unload_file(File):-
   findall(
@@ -1107,12 +1108,6 @@ check_clause_counts:- ((forall(checked_clause_count(Mask),sanity(check_clause_co
 check_clause_counts.
 :- sexport(check_clause_counts/0).
 
-%% begin_pfc is det.
-%
-% Begin Prolog Forward Chaining.
-%
-begin_pfc:-file_begin(pfc).
-
 
 
 %% mpred_begin is det.
@@ -1188,18 +1183,29 @@ simplify_language_name(W,W).
 %
 % File Begin.
 %
-file_begin(W):- enable_mpred_expansion,mpred_ops,!,set_file_lang(W).
+
+file_begin(WIn):- simplify_language_name(WIn,pfc), !, begin_pfc,op_lang(WIn).
 file_begin(WIn):- 
+ simplify_language_name(WIn,Else), 
  must_det_l((   
-   simplify_language_name(WIn,W),
-   %set_lang(W),
-   set_file_lang(W),   
-   find_and_call(fileAssertMt(Mt)),
-   set_fileAssertMt(Mt),
-   nop(wdmsg(set_fileAssertMt(Mt->W))),
-   %op_lang(W),
+   op_lang(WIn),
+   set_file_lang(Else),
+   disable_mpred_expansion)),!,
+   sanity(get_lang(Else)).
+
+
+%% begin_pfc is det.
+%
+% Begin Prolog Forward Chaining.
+%
+begin_pfc:- 
+ must_det_l((   
+   mpred_ops,
+   op_lang(pfc),
+   set_file_lang(pfc),   
+   get_fileAssertMt(Mt),set_fileAssertMt(Mt),
    enable_mpred_expansion)),!,
-   sanity(get_lang(W)).
+   sanity(get_lang(pfc)).
 
 :- nodebug(logicmoo(loader)).
 

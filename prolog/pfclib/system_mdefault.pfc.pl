@@ -34,12 +34,11 @@
 
 :- mpred_unload_file.
 
-
 :- file_begin(pfc).
 
-%:- set_fileAssertMt(baseKB).
+:- set_fileAssertMt(baseKB).
 
-:- dynamic(mdefault/1).
+:- kb_local(mdefault/1).
 
 meta_argtypes(mdefault(ftAssertable)).
 
@@ -52,14 +51,15 @@ mdefault(P==>Q)/nonvar(Q) ==> (((P ==> mdefault(Q)))).
 % NEG chaining
 mdefault(~Q)/mpred_positive_literal(Q)  ==>  (( \+ Q ) ==> ~ Q ).
 
-% POS chaining 1
+
+% POS chaining 1 (Neg Trigger)
 mdefault(Q)/(mpred_positive_literal(Q),if_missing_mask(Q,R,Test)) ==> (  ( ( \+R /(ground(R),Test), (\+ ~Q )) ==> Q )).
 
-% POS chaining 2
+% POS chaining 2 (Pos Trigger)
 mdefault(Q)/(mpred_positive_literal(Q),if_missing_mask(Q,R,Test)) ==> ( ((R/(ground(R), Test, \+(R=Q))) ==> (\+ Q))).
 
-% mdefault(Q) ==> if_missing(Q,Q).
 
+% mdefault(Q) ==> if_missing(Q,Q).
 %(mdefault(P=>Q)/(mpred_literal_nv(Q),if_missing_mask(Q,R,Test)))  ==> ((P, \+ R/Test) => Q).
 %(mdefault(P=>Q)/nonvar(Q)) ==> (P => mdefault(Q)).
 

@@ -2093,17 +2093,17 @@ fix_negations(C,CO):-C=..[F|CL],must_maplist(fix_negations,CL,CLO),!,CO=..[F|CLO
 %
 % Reduce Clause Converted From Forward Repropigated.
 %
-reduce_clause_from_fwd(_Op,H,H):- (\+is_ftCompound(H)),!.
+reduce_clause_from_fwd(_Op,H,H):- notrace(\+is_ftCompound(H)),!.
 reduce_clause_from_fwd(Op,(H:-B),HH):-B==true,reduce_clause_from_fwd(Op,H,HH).
 reduce_clause_from_fwd(Op,(B==>H),HH):-B==true,reduce_clause_from_fwd(Op,H,HH).
-reduce_clause_from_fwd(Op,I,O):- fixed_negations(I,M),reduce_clause_from_fwd(Op,M,O).
+reduce_clause_from_fwd(Op,I,O):- notrace(fixed_negations(I,M)),!,reduce_clause_from_fwd(Op,M,O).
 reduce_clause_from_fwd(Op,(==>H),HH):-!,reduce_clause_from_fwd(Op,H,HH).
 reduce_clause_from_fwd(Op,(H<- B),HH):-B==true,reduce_clause_from_fwd(Op,H,HH).
 reduce_clause_from_fwd(Op,(B<==> H),HH):-B==true,reduce_clause_from_fwd(Op,'==>'(H),HH).
 reduce_clause_from_fwd(Op,(H<==> B),HH):-B==true,reduce_clause_from_fwd(Op,H,HH).
 reduce_clause_from_fwd(Op,(H,B),(HH,BB)):-!,reduce_clause_from_fwd(Op,H,HH),reduce_clause_from_fwd(Op,B,BB).
 reduce_clause_from_fwd(_Op,H,H).
-
+        
 
 
 %% append_as_first_arg( +C, ?I, ?V) is semidet.

@@ -5,9 +5,9 @@
 % Dec 13, 2035
 % Douglas Miles
 
-:- module(sanity_if_missing_02,[]).
+%  was_module(sanity_if_missing_02,[]).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- dynamic((foob/1,good/0,if_missing/2)).
 
@@ -28,7 +28,7 @@ good.
 
 % :- break.
 
-\+ good.
+( \+ good).
 
 :- mpred_test(\+foob(a)).
 

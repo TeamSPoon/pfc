@@ -6,9 +6,9 @@
 % Douglas Miles
 %  cls ; kill -9 %1 ; fg ; swipl -g "ensure_loaded(pack(logicmoo_base/t/examples/base/'sanity_abc.pfc'))."
 
-:- module(sanity,[]).
+%  was_module(sanity,[]).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- begin_pfc.
 
@@ -58,13 +58,14 @@ a(X) ==> c(X).
 most(c(X) ==> ~b(X)) .
 a(1).
 
-:- mpred_test( ~ b(1) ).
+:- mpred_test( b(1) ).
 
-b(1).
+\+ b(1).
 
 :- listing([(==>)/2,most/1,pt,nt,bt,a/1,b/1,c/1,(~)/1]).
 
-:- mpred_test( \+ ~ b(1) ).
+:- mpred_test( ~ b(1) ).
+
 
 
 

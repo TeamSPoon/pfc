@@ -1,6 +1,6 @@
-:- module(red_test03,[]).
+%  was_module(red_test03,[]).
 
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 % :- use_listing_vars.
 
 
@@ -11,9 +11,9 @@
 
 % :- set_prolog_flag(umt_local,false).
 % :- ensure_loaded(library(logicmoo/mpred/mpred_core)).
-% :- ensure_loaded(library(pfc)).
-%:- ensure_loaded(library(pfc)).
-% :- use_module(library(pfc)).
+% :- include(test_header).
+%:- include(test_header).
+% :- include(test_header).
 
 % :- rtrace(mpred_reset).
 
@@ -103,7 +103,7 @@
 
 :- mpred_ain(~ current_ooTt(fooTt)).
 
-:- pp_DB.
+%:- pp_DB.
 
 :- mpred_test(~current_ooTt(fooTt)).
 
@@ -111,7 +111,6 @@
 
 :- mpred_test(current_ooTt(defaultValueTt)).
 
-:- kb_shared(genlPreds/2).
 
 
 

@@ -1,7 +1,6 @@
 
 
-
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 
 :- begin_pfc.
 

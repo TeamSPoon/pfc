@@ -6,9 +6,9 @@
 % Douglas Miles
 %  cls ; kill -9 %1 ; fg ; swipl -g "ensure_loaded(pack(logicmoo_base/t/examples/base/'sanity_abc.pfc'))."
 
-:- module(df_include_1,[]).
+%  was_module(df_include_1,[]).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- debug_logicmoo(logicmoo(_)).
  % :- mpred_trace_exec.

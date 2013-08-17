@@ -1052,19 +1052,21 @@ if_missing1(Q):- mpred_literal_nv(Q), call_u( \+ ~ Q), if_missing_mask(Q,R,Test)
 % If Missing Mask.
 %
 
-if_missing_mask(_M:Q,R,Test):- nonvar(Q),!,if_missing_mask(Q,R,Test).
+if_missing_mask(M:Q,M:R,M:Test):- nonvar(Q),!,if_missing_mask(Q,R,Test).
 if_missing_mask(Q,~Q,\+Q):- \+ is_ftCompound(Q),!.
-if_missing_mask(PQ,RO,TestO):- once(mpred_rule_hb(PQ,Q,P)),P\==true,PQ\==Q,!,if_missing_mask(Q,R,TestO),subst(PQ,Q,R,RO).
+
+if_missing_mask(ISA, ~ ISA, \+ ISA):- functor(ISA,F,1),(F==tSwim;call_u(functorDeclares(F))),!.
+if_missing_mask(HB,RO,TestO):- once(mpred_rule_hb(HB,H,B)),B\==true,HB\==H,!,if_missing_mask(H,R,TestO),subst(HB,H,R,RO).
 if_missing_mask(Q,R,Test):-
    which_missing_argnum(Q,N),
-   if_missing_mask(Q,N,R,Test),!.
+   if_missing_n_mask(Q,N,R,Test),!.
 if_missing_mask(ISA, ~ ISA, \+ ISA).
 
-%% if_missing_mask( +Q, ?N, ?R, ?Test) is semidet.
+%% if_missing_n_mask( +Q, ?N, ?R, ?Test) is semidet.
 %
 % If Missing Mask.
 %
-if_missing_mask(Q,N,R,Test):-
+if_missing_n_mask(Q,N,R,Test):-
   consequent_arg(N,Q,Was),
   (nonvar(R)-> (which_missing_argnum(R,RN),consequent_arg(RN,R,NEW));replace_arg(Q,N,NEW,R)),!,
    Test=dif:dif(Was,NEW).
@@ -1088,7 +1090,8 @@ which_missing_argnum(Q,N):-
  must((acyclic_term(Q),is_ftCompound(Q),get_functor(Q,F,A))),
  F\=t,
   (call_u(singleValuedInArg(F,N)) -> true;
-    ((consequent_arg(N,Q,Was),is_ftNonvar(Was)) -> true; N=A)).
+    ((consequent_arg(N,Q,Was),is_ftNonvar(Was)) -> true; ( A>1 -> N=A ; fail))).
+
 mpred_run_pause:- asserta(t_l:mpred_run_paused).
 mpred_run_resume:- retractall(t_l:mpred_run_paused).
 

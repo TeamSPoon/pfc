@@ -1,8 +1,7 @@
 #!/usr/bin/env swipl
 
-:- module(attvar_01,[]).
+:- include(test_header).
 
-:- ensure_loaded(library(pfc)).
 :- ensure_loaded(library(attvar_reader)).
 
 sk:attr_unify_hook(_,_).

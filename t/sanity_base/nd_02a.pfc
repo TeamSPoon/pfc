@@ -5,10 +5,10 @@
 % Dec 13, 2035
 % Douglas Miles
 
-:- module(test_nd_02a,[]).
+%  was_module(header_sane,[]).
 
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- abolish(a,1).
 :- abolish(b,2).
