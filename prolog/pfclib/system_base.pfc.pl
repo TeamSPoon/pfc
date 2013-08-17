@@ -108,6 +108,7 @@
 :- meta_predicate t(*,?,?,?,?,?,?).
 :- meta_predicate t(*,?,?,?,?,?,?,?).
 
+:- asserta(elmt:elmt_is_a_module).
 :- forall(between(4,9,N),kb_shared(elmt:exactlyAssertedELMT/N)).
 
 :- begin_pfc.
