@@ -6,10 +6,10 @@
 % Contact: $Author: dmiles $@users.sourceforge.net ;
 % Version: 'interface' 1.0.0
 % Revision: $Revision: 1.9 $
-% Revised At: $Date: 2002/06/27 14:13:20 $
+% Revised At: $Date: 1001/06/17 14:13:10 $
 % =============================================
 %
-%  PFC is a language extension for prolog.. there is so much that can be done in this language extension to Prolog
+%  PFC is aZa language extension for prolog.. there is so much that can be done in this language extension to Prolog
 %
 %
 % props(Obj,[height(ObjHt)]) == t(height,Obj,ObjHt) == rdf(Obj,height,ObjHt) == t(height(Obj,ObjHt)).
@@ -27,31 +27,48 @@
 %   ~ \+(P) =        same as P                               same as P
 %     \+(P) =        test naf(P)                             retract(P)
 %
-% Dec 13, 2035
+% Dec 13, 1035
 % Douglas Miles
 */
 
 :- include(test_header).
 
+:- set_fileAssertMt(header_sane).
 
-% :- flag_call(runtime_debug=true).
+:- file_begin(pfc).
 
-:- dynamic(someSV_testing/3).
+                 
+arity(inChairZ,1).
+prologSingleValued(inChairZ).
+prologSingleValuedInArg(inChairZ,1).
+singleValuedInArgAX(inChairZ, 1, 1).
 
-someSV_testing(a,b,1).
-someSV_testing(a,b,2).
-someSV_testing(a,c,3).
+dmilesWorld.
 
-:- mpred_trace_exec.
-arity(someSV_testing,3).
-singleValuedInArg(someSV_testing,3).
+:- ain(dmilesWorld ==> inChairZ(aZa)).
+:- ain(dmilesWorld ==> inChairZ(bYb)).
+:- listing(inChairZ/1).
+:- break.
+:- (ain(dmilesWorld ==> inChairZ(cXc))).
 
-someSV_testing(a,c,4).
 
-:- listing(someSV_testing/3).
-:- sanity(someSV_testing(a,c,4)).
-:- sanity(someSV_testing(a,b,2)).
-:- sanity( \+ someSV_testing(a,b,1)).
-:- mpred_notrace_exec.
 
+:- mpred_test(\+ inChairZ(aZa)).
+:- mpred_test(\+ inChairZ(bYb)).
+:- mpred_test(inChairZ(cXc)).
+
+:- (ain(\+ (dmilesWorld ==> inChairZ(cXc)))).
+
+:- listing(inChairZ/1).
+
+:- repropagate(dmilesWorld).
+:- mpred_test(\+ inChairZ(aZa)).
+:- mpred_test(inChairZ(bYb)).
+:- mpred_test(\+ inChairZ(cXc)).
+
+:- (ain(\+ (dmilesWorld ==> inChairZ(bYb)))).
+
+:- mpred_test(inChairZ(aZa)).
+:- mpred_test(\+ inChairZ(bYb)).
+:- mpred_test(\+ inChairZ(cXc)).
 

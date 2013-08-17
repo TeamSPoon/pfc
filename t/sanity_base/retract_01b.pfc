@@ -27,13 +27,11 @@
 :- file_begin(pfc).
 
 dmilesWorld.
-
-:- mpred_test(dmilesWorld).
+dmilesWorld ==> inChair(a).
 
 :- ain(\+ dmilesWorld).
 
-:- listing_u(dmilesWorld).
+:- listing_u(inChair).
 
-:- mpred_test(\+ dmilesWorld).
-
+:- mpred_test(\+ inChair(a)).
 

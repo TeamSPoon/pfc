@@ -36,7 +36,7 @@
 % Douglas Miles
 */
 
-:- use_module(library(no_repeats)).
+%:- use_module(library(no_repeats)).
 
  
 :- add_to_search_path(pfclib,'.').

@@ -38,20 +38,25 @@
 :- file_begin(pfc).
 
                  
-prologSingleValued(inChair/1).
+prologSingleValued(inChairX/2).
+
+:- import(inChairX/2).
 
 dmilesWorld.
-dmilesWorld ==> inChair(a).
-dmilesWorld ==> inChair(b).
 
-:- listing(inChair/1).
+:- (ain(dmilesWorld ==> inChairX(xx,a))).
+:- (ain(dmilesWorld ==> inChairX(xx,b))).
 
-:- mpred_test(inChair(b)).
-:- mpred_test(\+ inChair(a)).
 
-:- ain(\+ (dmilesWorld ==> inChair(b))).
 
-:- listing(inChair/1).
+:- listing(inChairX/2).
 
-:- mpred_test(inChair(a)).
+:- mpred_test(inChairX(xx,b)).
+:- mpred_test(\+ inChairX(xx,a)).
+
+:- (ain(\+ (dmilesWorld ==> inChairX(xx,b)))).
+
+:- listing(inChairX/2).
+
+%:- mpred_test(inChairX(xx,a)).
 

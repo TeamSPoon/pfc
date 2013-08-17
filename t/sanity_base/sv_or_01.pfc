@@ -33,25 +33,14 @@
 
 :- include(test_header).
 
+:- set_fileAssertMt(header_sane).
 
-% :- flag_call(runtime_debug=true).
+:- file_begin(pfc).
 
-:- dynamic(someSV_testing/3).
+p(a).
+p(b).
 
-someSV_testing(a,b,1).
-someSV_testing(a,b,2).
-someSV_testing(a,c,3).
+single_override(p(a),p(b)).
 
-:- mpred_trace_exec.
-arity(someSV_testing,3).
-singleValuedInArg(someSV_testing,3).
-
-someSV_testing(a,c,4).
-
-:- listing(someSV_testing/3).
-:- sanity(someSV_testing(a,c,4)).
-:- sanity(someSV_testing(a,b,2)).
-:- sanity( \+ someSV_testing(a,b,1)).
-:- mpred_notrace_exec.
-
+:- prolog.
 

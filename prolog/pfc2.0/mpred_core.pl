@@ -361,7 +361,7 @@ mpred_core_database_term(predicateConventionMt,2,fact(_)).
 % :- dynamic(baseKB:que/2).
 
 :- meta_predicate show_mpred_success(*,*).
-show_mpred_success(Type,G):- G*->mpred_trace(success(Type,G)) ; fail.
+show_mpred_success(Type,G):- G*->mpred_trace_msg(success(Type,G)) ; fail.
 
 % :- ensure_loaded(library(logicmoo_utils)).
 
@@ -718,7 +718,16 @@ same_modules(MH,MHH):- strip_module(MH,HM,_),strip_module(MHH,HHM,_),!,
 
 %:- if(\+ current_prolog_flag(umt_local,false)).
 
-listing_u(P):-call_u_no_bc(xlisting((P,-lmcache,-spft,-xlisting))),!.
+listing_i(MP):- % strip_module(MP,M,P),!,
+ forall(to_mpi_matcher(MP,MM:PI),
+   listing_mpi(MP,MM:PI)). 
+
+%listing_mpi(_MP,MMPI):-  (predicate_property(MMPI,number_of_clauses(NC))->NC==0;true),!,
+%  unify_listing_header(MMPI),prolog_listing_list_clauses(MMPI, none),!.
+listing_mpi(_MP,MMPI):- !,unify_listing_header(MMPI), prolog_listing_list_clauses(MMPI, none).
+listing_mpi(_MP,MM:PI):- forall(clause(MM:PI,B,R),foo:once(portray_hbr(MM:PI,B,R))).
+
+listing_u(P):-call_u_no_bc(xlisting((P,-lmcache,/*-spft,*/-xlisting))),!.
 
 attvar_op_fully(What,MH):- !, attvar_op(What,MH).
 %attvar_op_fully(What,M:H):- must_notrace_pfc(full_transform_warn_if_changed(change(What,attvar_op_fully),H,true,HH,true)),!,each_E(attvar_op(What),M:HH,[]).
@@ -848,7 +857,7 @@ clause_u_attv_mhbr(MH,B,R):-
 %clause_u(pfc,H,B,Proof):-clause_u(H,B,Proof).
 
 
-clause_ref_module(M,Ref):- (clause_property(Ref,module(CM))-> M==CM; true).  % clause_ref_module(Ref) ?
+clause_ref_module(M,Ref):- (clause_property(Ref,module(CM))-> M=CM; false).  % clause_ref_module(Ref) ?
 clause_ref_module(Ref):- clause_property(Ref,module(CM)),module_direct(CM).
 
 module_direct(CM):- t_l:exact_kb(M)*->CM=M; true.
@@ -1234,20 +1243,15 @@ is_ftOpenSentence(P):- compound(P), functor(P,F,N), \+ leave_some_vars_at_el(F),
    (arg(N,P,A);(N\==1,arg(1,P,A))),is_ftOpen(A).
 is_ftOpenSentence(P):- is_ftOpen(P).
 
-mpred_post12a_neg(~P,S):- mpred_post13(~P,S).
 
+mpred_post12_remove( P,   S):- show_call(mpred_withdraw(P,S)), \+ mpred_supported(P),!.
+mpred_post12_remove( P,   S):- is_user_reason(S), show_call(mpred_withdraw(P)), \+ mpred_supported(P),!.
+mpred_post12_remove( P,   S):- is_user_reason(S),!, (mpred_withdraw_fail_if_supported(P,S) -> true ;  show_call(mpred_remove2(P,S))).
+mpred_post12_remove( P,   S):- ignore(show_call(mpred_withdraw_fail_if_supported(P,S))),!.
 
-mpred_post12(P, _):- (must_be(nonvar,P)),P==true,!.
-% mpred_post12(P, S):- quietly_ex((is_ftOpenSentence(P)->wdmsg((warn((var_mpred_post1(P, S))))))),fail.
-
-mpred_post12( \+ P,   S):- show_call(mpred_withdraw(P,S)), \+ mpred_supported(P),!.
-mpred_post12( \+ P,   S):- is_user_reason(S), show_call(mpred_withdraw(P)), \+ mpred_supported(P),!.
-mpred_post12( \+ P,   S):- is_user_reason(S),!, (mpred_withdraw_fail_if_supported(P,S) -> true ;  show_call(mpred_remove2(P,S))).
-mpred_post12( \+ P,   S):- ignore(show_call(mpred_withdraw_fail_if_supported(P,S))),!.
-
-mpred_post12( ~ P,   S):- mpred_withdraw_fail_if_supported(P,S), show_call( mpred_post12a_neg(~P,S)),!.
-mpred_post12( ~ P,   S):- mpred_remove2(P,S), show_call( \+ mpred_supported(P)),!,show_call( mpred_post12a_neg(~P,S)),!.
-mpred_post12( ~ P,   S) :- mpred_get_support(P,S2), 
+mpred_post12_negated( P,   S):- mpred_withdraw_fail_if_supported(P,S), show_call( mpred_post13(~P,S)),!.
+mpred_post12_negated( P,   S):- mpred_remove2(P,S), show_call( \+ mpred_supported(P)),!,show_call( mpred_post13(~P,S)),!.
+mpred_post12_negated( P,   S) :- mpred_get_support(P,S2), 
     color_line(magenta,2),
     dmsg((mpred_post12( ~ P,   S) :- get_support(P,S2))),
     color_line(magenta,1),color_line(green,1),color_line(yellow,1),
@@ -1259,6 +1263,12 @@ mpred_post12( ~ P,   S) :- mpred_get_support(P,S2),
     show_call(mpred_post13(~P,S)),!.
 
 
+
+
+mpred_post12(P, _):- (must_be(nonvar,P)),P==true,!.
+% mpred_post12(P, S):- quietly_ex((is_ftOpenSentence(P)->wdmsg((warn((var_mpred_post1(P, S))))))),fail.
+mpred_post12( \+  P,   S):- mpred_post12_remove( P,   S),!.
+mpred_post12(  ~  P,   S):- mpred_post12_negated( P,   S),!.
 
 /*
 mpred_post12( \+ P,   S):- (must_be(nonvar,P)), !,doall( must_ex(mpred_post1_rem(P,S))).
@@ -1879,18 +1889,33 @@ mpred_withdraw(P,S) :-
   (SS \== unKnown_suppoRt ->
   % pfcDebug(format("~Nremoving support ~p from ~p",[SS,P])),
   (mpred_trace_msg('    Removing support: ~p~n',[SS]),
-  mpred_trace_msg('     Which was for: ~p~n',[P])); true),
+  mpred_trace_msg('     Which was for: ~p~n',[P])); 
+    true),
   ignore(mpred_withdraw_fail_if_supported(P,S)).
 
 mpred_withdraw_fail_if_supported(mfl(_,_,_),_):-!.
 mpred_withdraw_fail_if_supported(P,S):-
   maybe_user_support(P,S,SS),
-  (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg(found(mpred_rem_support(P,S))))
+  (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg(found(mpred_rem_support1(P,S))))
      -> (remove_if_unsupported(P),retractall(t_l:busy(_)))
       ; ((mpred_withdraw_fail_if_supported_maybe_warn(SS,P),
             \+ show_still_supported(P))))).
-                
+
+mpred_withdraw_fail_if_supported_maybe_warn(_,P):- P== singleValuedInArg(arity, 2).
+mpred_withdraw_fail_if_supported_maybe_warn(_,P):- P= prologSingleValued(_Arity).
 mpred_withdraw_fail_if_supported_maybe_warn(_,~P):- nonvar(P),!.
+mpred_withdraw_fail_if_supported_maybe_warn(unKnown_suppoRt,P):- 
+  maybe_user_support(P,S,SS),
+        (((lookup_spft(P,F,T), S= (F,T), call(mpred_rem_support(P,S)),dmsg(found(mpred_rem_support2(P,S))))
+           -> (remove_if_unsupported(P),retractall(t_l:busy(_)))
+            ; (( nop(mpred_withdraw_fail_if_supported_maybe_warn(SS,P)),
+                  \+ show_still_supported(P))))).
+mpred_withdraw_fail_if_supported_maybe_warn(S,P):- 
+  get_support(P,S,SS),
+        (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg(found(mpred_rem_support3(P,S))))
+           -> (remove_if_unsupported(P),retractall(t_l:busy(_)))
+            ; (( nop(mpred_withdraw_fail_if_supported_maybe_warn(SS,P)),
+                  \+ show_still_supported(P))))).
 mpred_withdraw_fail_if_supported_maybe_warn(SS,P):-
   mpred_trace_msg("mpred_withdraw/2 Could not find support ~p to remove (fact): ~p",[SS,P]).
 
@@ -1960,8 +1985,8 @@ mpred_retract1(P):-
   must_maplist(mpred_retract_if_fact,WhyS).
 
 
-mpred_retract_if_fact(P):- \+ mpred_db_type(P,fact(_)),!.
-mpred_retract_if_fact(P):- mpred_retract1(P).
+mpred_retract_if_fact(P):-  mpred_db_type(P,fact(_)),!, mpred_retract1(P).
+mpred_retract_if_fact(_).
 
 %
 %  mpred_blast(+F) retracts fact F from the DB and removes any dependent facts
@@ -1974,9 +1999,10 @@ mpred_blast(F) :-
 
 % removes any remaining supports for fact F, complaining as it goes.
 
-mpred_remove_supports_whine(F) :- 
-  mpred_rem_support_if_exists(F,S),
+mpred_remove_supports_whine(P) :- 
+  lookup_spft(P,F,S),
   mpred_trace_msg("~p was still supported by ~p",[F,S]),
+  %  mpred_retract_i_or_warn(spft(P,F,S)).
   fail.
 mpred_remove_supports_whine(_).
 
@@ -2067,13 +2093,18 @@ mpred_unfwc_check_triggers(F):-
     (mpred_warn(looped_mpred_unfwc_check_triggers0(F)), mpred_run)).
 
 mpred_unfwc_check_triggers0(F):-
-  mpred_db_type(F,fact(_FT)),
-  copy_term_vn(F,Fcopy),
+  mpred_db_type(F,_),
+ doall(( copy_term_vn(F,Fcopy),
   lookup_u(nt(Fcopy,Condition,Action)),
   \+ call_u_no_bc(Condition),
-  mpred_eval_lhs(Action,((\+F),nt(F,Condition,Action))),
-  fail.
-mpred_unfwc_check_triggers0(_).
+  mpred_eval_lhs(Action,((\+F),nt(F,Condition,Action))))),
+ !.
+
+
+mpred_unfwc_check_triggers0(F):-
+  mpred_db_type(F,FT),
+  dmsg(unknown_rule_type(mpred_db_type(F,FT))),!.
+
 
 
 mpred_retract_supported_relations(Fact):-
@@ -2096,8 +2127,10 @@ mpred_retract_supported_relations(_).
 %  remove_if_unsupported(+Ps) checks to see if all Ps are supported and removes
 %  it from the DB if they are not.
 remove_if_unsupported(P):-
+  loop_check(remove_if_unsupported0(P),true).
+remove_if_unsupported0(P):-
    mpred_supported(P) 
-     -> mpred_trace_msg('~p',[still_supported(P)]) ;  doall(must_ex(mpred_undo(P))).
+     -> mpred_trace_msg('~p',[still_supported(P)]) ;  doall((mpred_undo(P))).
 
 
 
@@ -2161,6 +2194,8 @@ mpred_reduced_chain(P1,==>(Fact),P1):- sanity(nonvar(Fact)),!,
 mpred_fwc1(clause_asserted_u(Fact)):-!,sanity(clause_asserted_u(Fact)).
 mpred_fwc1(P):- mpred_reduced_chain(mpred_fwc1,P),!.
 mpred_fwc1(support_hilog(_,_)):-!.
+mpred_fwc1(mpred_unload_option(_,_)):-!.
+
 % mpred_fwc1(singleValuedInArg(_, _)):-!.
 % this line filters sequential (and secondary) dupes
 % mpred_fwc1(Fact):- current_prolog_flag(unsafe_speedups , true) , ground(Fact),fwc1s_post1s(_One,Two),Six is Two * 3,filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact),!.
@@ -2437,8 +2472,11 @@ mpred_eval_rhs1({Action},Support):-
  !,
  fc_eval_action(Action,Support).
 
+mpred_eval_rhs1( \+ ~P, _Support):-  !,mpred_withdraw(~P).
+
+
 % Dmiles replaced with this
-mpred_eval_rhs1( P,Support):-
+mpred_eval_rhs1( P,Support):- 
  % predicate to remove.
   mpred_unnegate( P , PN),
   %TODO Shouldn''t we be mpred_withdrawing the Positive version?  (We are)
@@ -3749,6 +3787,7 @@ break_ex:- quietly((log_failure_red,dumpST,log_failure_red)),
   (t_l:no_breaks -> ansifmt(red,"NO__________________DUMP_BREAK/0") ;dbreak).
 
 maybe_mpred_break(Info):- (t_l:no_breaks->true;(debugging(logicmoo(pfc))->dtrace(dmsg(Info));(dmsg(Info)))),break_ex.
+maybe_mpred_break(Info):- (t_l:no_breaks->true;(debugging(logicmoo(pfc))->dtrace(dmsg(Info));(dmsg(Info)))),break_ex.
 
 % if the correct flag is set, dtrace exection of Pfc
 mpred_trace_msg(Info):- not_not_ignore_quietly_ex(((((clause_asserted_u(mpred_is_tracing_exec);tracing)->(show_wdmsg(Info));true)))).
@@ -3760,7 +3799,7 @@ show_wdmsg(A):- current_prolog_flag(mpred_pfc_silent,true)-> true; wdmsg(A).
 
 mpred_warn(Info):- not_not_ignore_quietly_ex((((color_line(red,1), lookup_u(mpred_warnings(true));tracing) ->
   wdmsg(warn(logicmoo(pfc),Info)) ; mpred_trace_msg('WARNING/PFC:  ~p ',[Info])),
-  maybe_mpred_break(Info))).
+  nop(maybe_mpred_break(Info)))).
 
 mpred_warn(Format,Args):- not_not_ignore_quietly_ex((((format_to_message(Format,Args,Info),mpred_warn(Info))))).
 
