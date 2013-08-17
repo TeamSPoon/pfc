@@ -5,9 +5,9 @@
 % Dec 13, 2035
 % Douglas Miles
 
-:- module(sanity_attvar_07 ,[]).
+%  was_module(sanity_attvar_07 ,[]).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- debug_logicmoo(_).
 :- nodebug_logicmoo(http(_)).
@@ -24,6 +24,9 @@
 sk_in(Ex)==>sk_out(Ex).
 sk_in(avar([vn='ExIn',sk='SKF-666'])).
 sk_in(fl(X,Y,X,Y)).
+
+:- listing(sk_in/1).
+:- listing(sk_out/1).
 
 :- must((sk_out(FOUND),get_attr(FOUND,sk,What),What='SKF-666')),dmsg(fOUND=FOUND).
 

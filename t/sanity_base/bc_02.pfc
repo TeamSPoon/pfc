@@ -6,9 +6,9 @@
 % Douglas Miles
 
 
-:- module(sanity_bc,[]).
+%  was_module(sanity_bc,[]).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- flag_call(runtime_debug=true).
 :- set_prolog_flag(retry_undefined,true).

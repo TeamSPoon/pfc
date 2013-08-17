@@ -5,7 +5,7 @@
 % Dec 13, 2035
 % Douglas Miles
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- debug_logicmoo(_).
 :- nodebug_logicmoo(http(_)).

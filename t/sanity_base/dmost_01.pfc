@@ -6,9 +6,9 @@
 % Douglas Miles
 %  cls ; kill -9 %1 ; fg ; swipl -g "ensure_loaded(pack(logicmoo_base/t/examples/base/'dmost_01.pfc'))."
  
-:- module(sanity,[]).
+%  was_module(sanity,[]).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- asserta((was_missing(Q):- mpred_literal_nv(Q), \+ ~Q, if_missing_mask(Q,R,Test),!, lookup_u(R), Test)).
 

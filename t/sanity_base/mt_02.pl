@@ -7,14 +7,15 @@
 % Dec 13, 2035
 % Douglas Miles
 */
-:- module(mt_02,[]).
+%  was_module(header_sane,[]).
 
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 
 % :- set_defaultAssertMt(myMt).
 
-% :- begin_pfc.
+:- begin_pfc.
 
+arity(loves,2).
 baseKB:predicateConventionMt(loves,socialMt).
 
 :- if(true).
@@ -29,13 +30,13 @@ mt1:like(sally,joe).
 :- endif.
 
 :- mt1:export(mt1:like/2).
-:- mt_02:import(mt1:like/2).
+:- header_sane:import(mt1:like/2).
 :- xlisting(like/2).
 
 genlMt(mt1,socialMt).
 
 % this will raise upward the assertion.. is this OK?
-like(A,B)==>loves(B,A).
+:- (ain(like(A,B)==>loves(B,A))).
 
 :- xlisting(loves/2).
 

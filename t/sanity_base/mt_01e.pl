@@ -7,9 +7,9 @@
 % Dec 13, 2035
 % Douglas Miles
 */
-:- module(mt_01e,[]).
+%  was_module(header_sane,[]).
 
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 
 :- mpred_trace_exec.
 :- begin_pfc.
@@ -17,11 +17,11 @@
 %:- sanity(current_prolog_flag(retry_undefined,true)).
 %:- set_prolog_flag(retry_undefined,true).
 
-:- mpred_test(mtCycL(mt_01e)).
-:- mpred_test(\+ mtProlog(mt_01e)).
-%:- mpred_test(tMicrotheory(mt_01e)).
+:- mpred_test(mtCycL(header_sane)).
+:- mpred_test(\+ mtProlog(header_sane)).
+%:- mpred_test(tMicrotheory(header_sane)).
 
-genlMt(kb1,mt_01e).
+genlMt(kb1,header_sane).
 
 :- mpred_test(\+ mtProlog(kb1)).
 :- mpred_test(\+ mtCycL(kb1)).

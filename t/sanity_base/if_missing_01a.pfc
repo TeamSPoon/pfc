@@ -5,9 +5,9 @@
 % Dec 13, 2035
 % Douglas Miles
 
-:- module(sanity_if_missong_01a,[]).
+%  was_module(sanity_if_missong_01a,[]).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- dynamic(foob/1).
 :- dynamic(good/0).

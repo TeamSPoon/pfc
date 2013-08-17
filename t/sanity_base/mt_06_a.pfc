@@ -1,4 +1,3 @@
-end_of_file.
 /* <module>
 %
 %  PFC is a language extension for prolog.
@@ -8,10 +7,9 @@ end_of_file.
 % Dec 13, 2035
 % Douglas Miles
 */
-:- module(mt_06a,[]).
+%  was_module(mt_06a,[]).
 
-% :- user:ensure_loaded(system:library(logicmoo_utils)).
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 
 
 %:- add_import_module(mt_01,baseKB,end).
@@ -23,7 +21,7 @@ mtCycL(kb2).
 mtCycL(kb3).
 
 % code1: (a <- b).
-code1: (a:- printAll('$current_source_module'(_M)),b).
+code1: (a:- printAll('$current_source_module'(_M))).
 
 
 kb2: (b).
@@ -41,4 +39,5 @@ predicateConventionMt(a,kb2).
 
 :- ain((kb3: (a==>c))).
 
-:- mpred_must(clause(kb2:a,_)).
+
+% :- mpred_must(clause(kb2:a,_)).

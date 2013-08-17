@@ -1,10 +1,11 @@
 
-:- module(nd_01,[]).
+%  was_module(nd_01,[]).
 
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
+
 % :- use_listing_vars.
 
-:- nd_01:dynamic((nd_01:p/0,nd_01:px/0,nd_01:py/0,nd_01:pz/0,p1/0,p1x/0,p1y/0,p1z/0,p2/0,p2x/0,p2y/0,p2z/0)).
+:- dynamic((p/0,px/0,py/0,pz/0,p1/0,p1x/0,p1y/0,p1z/0,p2/0,p2x/0,p2y/0,p2z/0)).
 
 functor_foo(P,F,A):- ground(P),functor(P,F,A).
 
@@ -23,7 +24,7 @@ p1.
 
 :- set_fc_mode(depth).
 
-(P0/(copy_term(P0,P),nonvar(P),writeln(start(functor(P,F,A))),functor_foo(P,F,A)) ==> {writeln(done(functor(P,F,A)))}).
+((foobar, P0/(copy_term(P0,P),nonvar(P),writeln(start(functor(P,F,A))),functor_foo(P,F,A))) ==> {writeln(done(functor(P,F,A)))}).
 
 /*
 % :- rtrace,trace.
@@ -32,6 +33,6 @@ p1.
 */
 
 
-:- pp_DB.
+% :- pp_DB.
 
 

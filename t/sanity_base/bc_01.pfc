@@ -6,11 +6,9 @@
 % Douglas Miles
 
 
-:- module(bc_01,[]).
+%  was_module(bc_01,[]).
 
-:- make.
-
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- flag_call(runtime_debug=true).
 
@@ -26,7 +24,7 @@
 :- mpred_trace_msg("after trace").
 
 :- debug_logicmoo(logicmoo(_)).
- % :- mpred_trace_exec.
+:- mpred_trace_exec.
 
 
 :- ain((bc_q(N) <- bc_p(N))).

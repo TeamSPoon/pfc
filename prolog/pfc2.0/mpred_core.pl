@@ -208,7 +208,7 @@ push_current_choice/1,
       clause_u(*),
       clause_u(*,*,-),
       clause_u(*,-),
-      each_E(+,+,+),
+      each_E(*,+,+),
       fc_eval_action(*,*),
       fix_mp(+,+,-,-),
       foreachl_do(*,?),
@@ -431,10 +431,15 @@ is_user_reason((_,U)):-atomic(U).
 
 is_user_fact(P):-get_first_user_reason(P,UU),is_user_reason(UU).
 
+
+get_first_real_user_reason(P,UU):- nonvar(P), UU=(F,T),
+  ((((lookup_spft(P,F,T))),is_user_reason(UU))*-> true;
+    ((((lookup_spft(P,F,T))), \+ is_user_reason(UU))*-> (!,fail) ; fail)).
+
 get_first_user_reason(P,(F,T)):-
   UU=(F,T),
   ((((lookup_spft(P,F,T))),is_user_reason(UU))*-> true;
-    ((((lookup_spft(P,F,T))), \+ is_user_reason(UU))*-> true ;
+    ((((lookup_spft(P,F,T))), \+ is_user_reason(UU))*-> (!,fail) ;
        (clause_asserted_u(P),get_source_ref(UU),is_user_reason(UU)))),!.
 get_first_user_reason(_,UU):-get_source_ref_stack(UU),is_user_reason(UU),!.
 get_first_user_reason(_,UU):- get_source_ref_stack(UU),!.
@@ -875,7 +880,7 @@ mpred_add(P):-mpred_ain(P).
 %  asserts P into the dataBase with support from S.
 %
 
-decl_assertable_module(AM):- dynamic(AM:spft/3).
+decl_assertable_module(AM):- must(dynamic(AM:spft/3)).
 
 % mpred_ain_cm(SM:(==>(AM:P)),P,AM,SM):- SM\==AM, current_predicate(SM:spft/3),!,decl_assertable_module(SM).
 mpred_ain_cm(SM:(==>(AM:P)),P,AM,SM):- AM==SM,!.
@@ -1077,8 +1082,8 @@ mpred_post12(P, _):- sanity(must_be(nonvar,P)),P==true,!.
 mpred_post12( \+ P,   S):- sanity(must_be(nonvar,P)), !,doall( must(mpred_post1_rem(P,S))).
 
 % TODO - FIGURE OUT WHY THIS IS NEEDED
-mpred_post12( ~ P,   S):- sanity(must_be(nonvar,P)), 
-   mnotrace(( sanity((ignore(show_failure(\+ is_ftOpenSentence(P))))), \+ mpred_unique_u(P))),
+mpred_post12( ~ P,   S):- sanity(must_be(nonvar,P)), sanity((ignore(show_failure(\+ is_ftOpenSentence(P))))),
+   mnotrace((  \+ mpred_unique_u(P))),
    with_current_why(S,with_no_mpred_breaks((nonvar(P),doall(mpred_remove(P,S)),must(mpred_undo(P))))),fail.
 
 mpred_post12(P,S):- mnotrace((maybe_updated_value(P,RP,OLD))),!,subst(S,P,RP,RS),mpred_post12a(RP,RS),ignore(mpred_retract(OLD)).
@@ -1182,7 +1187,7 @@ mpred_post12a(P,S):- !,
 get_mpred_support_status(P,_S, PP,(FF,TT),Was):-
   Simular=simular(none),
   ((((lookup_spft_p(PP,F,T),P=@@=PP)) *->
-     ((TT=@@=T,same_file_facts(F,FF)) -> (Was = exact , ! ) ; 
+     ((TT=@@=T,same_file_facts0(F,FF)) -> (Was = exact , ! ) ; 
       (nb_setarg(1,Simular,(F,T)),!,fail))
     ; Was = none) -> true ; ignore(Was=Simular)).
 
@@ -1199,9 +1204,12 @@ get_mpred_assertion_status(P,PP,Was):-
           Was= unique)))).
 
 
-same_file_facts(mfl(M,F,_),mfl(M,FF,_)):-nonvar(M),!, FF=@=F.
-same_file_facts(F,FF):- FF=@=F,!.
+same_file_facts(S1,S2):-reduce_to_mfl(S1,MFL1),reduce_to_mfl(S2,MFL2),!,same_file_facts0(MFL1,MFL2).
+same_file_facts0(mfl(M,F,_),mfl(M,FF,_)):-nonvar(M),!, FF=@=F.
+same_file_facts0(F,FF):- FF=@=F,!.
 
+reduce_to_mfl(MFL,MFL):- MFL=mfl(_,_,_),!.
+reduce_to_mfl((MFL,_),MFLO):- !,reduce_to_mfl(MFL,MFLO).
 
 %% mpred_post_update4(++AssertionStatus, +Ps, +S, ++SupportStatus) is det.
 %
@@ -1640,15 +1648,47 @@ mpred_withdraw(P,S):-
   each_E(mpred_withdraw1,P,[S]).
 
 mpred_withdraw1(P,S):-
+   sanity(is_ftNonvar(P)),
+   (mpred_withdraw1_maybe(P,S)*->true;
+         (mpred_trace_msg("FAILURE: mpred_withdraw1/2 Could not find support ~p to remove from fact ~p",
+                [S,P]))).
+   
+
+mpred_withdraw1_maybe(P,S):-
+  is_user_reason(S),!,
+   (mpred_withdraw1_maybe_user1(P,S)*->true;
+     (mpred_trace_msg("MISSING: mpred_withdraw1_maybe_user1/2 Could not find support ~p to remove from fact ~p",
+                [S,P]),
+       nop(mpred_withdraw1_maybe(P,_SS)))).
+
+mpred_withdraw1_maybe(P,S):-
   % TODO this is for idiomatic withdrawls sanity(is_ftNonvar(S)),
-  (get_first_user_reason(P,S)*->true;true),
-  sanity(is_ftNonvar(P)),
+   (get_first_real_user_reason(P,S)*->mpred_withdraw1_maybe_user1(P,S);
+     mpred_withdraw1_maybe_any(P,S)).
+
+
+mpred_withdraw1_maybe_user1(P,S):- is_user_reason(S),!,
+  (get_first_real_user_reason(P,S)*->mpred_withdraw1_maybe_user2(P,S);
+    ((get_first_real_user_reason(P,SS),same_file_facts(SS,S))*->mpred_withdraw1_maybe_user2(P,SS);fail)).
+
+mpred_withdraw1_maybe_user2(P,S):-
+  sanity((is_user_reason(S))),
+  mpred_trace_msg('~N~n\tRemoving (withdraw1 get_first_real_user_reason)~n\t\tterm: ~p~n\t\tsupport (was): ~p~n',[P,S]),
+  must((
+   mpred_rem_support(P,S)
+     *-> with_current_why(S,must(remove_if_unsupported(P)))
+      ; mpred_trace_msg("mpred_withdraw1_maybe_user/2 Could not find support ~p to remove from fact ~p",
+                [S,P]))).
+
+mpred_withdraw1_maybe_any(P,S):- S = (F,T),  
+  (lookup_spft(P,F,T)*->true;true),
   mpred_trace_msg('~N~n\tRemoving (withdraw1)~n\t\tterm: ~p~n\t\tsupport (was): ~p~n',[P,S]),
   must((
    mpred_rem_support(P,S)
      *-> with_current_why(S,must(remove_if_unsupported(P)))
-      ; mpred_trace_msg("mpred_withdraw/2 Could not find support ~p to remove from fact ~p",
+      ; mpred_trace_msg("mpred_withdraw1_maybe_any/2 Could not find support ~p to remove from fact ~p",
                 [S,P]))).
+
 
 %%  mpred_remove(+P) is det.
 %
@@ -1667,13 +1707,17 @@ mpred_remove1(P,S):-
 
 mpred_post1_rem(P,S):-
   clause_asserted_u(P),
-  must((mpred_post1_rem2(P,S), \+ clause_asserted_u(P))),!.
+  must((mpred_post1_rem2(P,S))),
+  remove_if_unsupported(P),
+  ( \+ clause_asserted_u(P) -> ! ;
+   (ignore(retract_u(P)),
+    doall(mpred_undo(P)))).
+
 % mpred_post1_rem(P,_S):- if_defined(kif_hook(P),fail),!.
-mpred_post1_rem(P,S):- mpred_post1_rem2(P,S).
+mpred_post1_rem(P,S):- !, must((mpred_post1_rem2(P,S))),doall(mpred_undo(P)).
 
-
-mpred_post1_rem2(P,S):-must(mpred_withdraw(P, S)),!.
-mpred_post1_rem2(P,S):-
+mpred_post1_rem2(P,S):- mpred_withdraw(P, S)*-> true; mpred_post1_rem3(P,S).
+mpred_post1_rem3(P,S):-
    must(mpred_withdraw(P, S)),
    must(mpred_remove(P,S)),
    doall(mpred_undo(P)),
@@ -1974,11 +2018,11 @@ mpred_define_bc_rule(Head,Body,Parent_rule):-
 
 :-nb_setval('$pfc_current_choice',[]).
 
-push_current_choice:- \+ current_prolog_flag(pfc_support_cut,true),!.
+push_current_choice:- current_prolog_flag(pfc_support_cut,false),!.
 push_current_choice:- prolog_current_choice(CP),push_current_choice(CP).
 push_current_choice(CP):- nb_current('$pfc_current_choice',Was)->b_setval('$pfc_current_choice',[CP|Was]);b_setval('$pfc_current_choice',[CP]).
 
-% cut_c:- \+ current_prolog_flag(pfc_support_cut,true),!.
+cut_c:- current_prolog_flag(pfc_support_cut,false),!.
 cut_c:- must(nb_current('$pfc_current_choice',[CP|_WAS])),prolog_cut_to(CP).
 
 
@@ -3087,7 +3131,7 @@ mpred_untrace:- mpred_untrace(_).
 mpred_untrace(Form0):- get_head_term(Form0,Form), retractall_u(mpred_is_spying_pred(Form,print)).
 
 
-not_not_ignore_mnotrace(G):- ignore((\+ \+ G)).
+not_not_ignore_mnotrace(G):- ignore(notrace(\+ \+ G)).
 % not_not_ignore_mnotrace(G):- ignore(quietly(\+ \+ G)).
 
 % needed:  mpred_trace_rule(Name)  ...
@@ -3178,7 +3222,7 @@ mpred_is_silient :- mnotrace(( \+ t_l:mpred_debug_local, \+ lookup_u(mpred_is_tr
 %
 mpred_test(_):- (compiling; current_prolog_flag(xref,true)),!.
 mpred_test(G):- mpred_is_silient,!, with_no_mpred_trace_exec(must(mpred_test_fok(G))).
-mpred_test(G):- current_prolog_flag(runtime_debug,D),D<2,!,with_no_mpred_trace_exec(must((G))).
+mpred_test(G):- current_prolog_flag(runtime_debug,D),D<1,!,with_no_mpred_trace_exec(must((G))).
 mpred_test(G):- with_mpred_trace_exec(must(mpred_test_fok(G))).
 
 oinfo(O):- xlisting((O, - spft, - ( ==> ), - pt , - nt , - bt , - mdefault, - lmcache)).
@@ -3187,7 +3231,9 @@ why_was_true(P):- mpred_why(P),!.
 why_was_true(P):- dmsg(justfied_true(P)),!.
 
 mpred_test_fok(\+ G):-!, ( \+ call_u(G) -> wdmsg(passed_mpred_test(\+ G)) ; (log_failure(failed_mpred_test(\+ G)),!,ignore(why_was_true(G)),!,fail)).
-mpred_test_fok(G):- (call_u(G) -> ignore(sanity(why_was_true(G))) ; (log_failure(failed_mpred_test(G))),!,fail).
+% mpred_test_fok(G):- (call_u(G) -> ignore(sanity(why_was_true(G))) ; (log_failure(failed_mpred_test(G))),!,fail).
+mpred_test_fok(G):- (call_u(G) *-> ignore(must(why_was_true(G))) ; (log_failure(failed_mpred_test(G))),!,fail).
+
 
 mpred_must(\+ G):-!, ( \+ call_u(G) -> true ; (log_failure(failed_mpred_test(\+ G)),!,ignore(why_was_true(G)),!,dtrace,break)).
 mpred_must(G):- (call_u(G) -> true ; (ignore(sanity(why_was_true(\+ G))),(log_failure(failed_mpred_test(G))),!,dtrace,break)).

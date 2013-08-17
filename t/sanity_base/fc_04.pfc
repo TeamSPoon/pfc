@@ -8,9 +8,9 @@
 
 %  cls ; kill -9 %1 ; swipl -g "ensure_loaded(pack(logicmoo_base/t/examples/base/'sanity_abc.pfc'))."
 
-:- module(fc_04,[]).
+%  was_module(fc_04,[]).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- dmsg(begin_abc).
 
@@ -28,7 +28,7 @@ a(X) ==> b(X).
 %a(1).
 :- ain_expanded(a(1)).
 
-:- user:listing([a,b]).
+:- header_sane:listing([a,b]).
 :- mpred_test(a(1)).
 :- mpred_test(b(1)).
 

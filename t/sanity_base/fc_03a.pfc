@@ -5,13 +5,13 @@
 % Dec 13, 2035
 % Douglas Miles
 
-:- module(fc_03a,[]).
+%  was_module(fc_03a,[]).
 
 %  cls ; kill -9 %1 ; swipl -g "ensure_loaded(pack(logicmoo_base/t/examples/base/'sanity_abc.pfc'))."
 
-:- flag_call(runtime_debug=true).
+:- include(test_header).
 
-:- use_module(library(pfc)).
+:- flag_call(runtime_debug=4).
 
 :- dmsg(begin_abc).
               

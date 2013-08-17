@@ -131,6 +131,7 @@ assert_if_newt(G):- cwc,clause_asserted_i(G)->true;call(assert,G).
 
 :- ensure_loaded('system_base.pfc').
 :- ensure_loaded('system_mdefault.pfc').
+:- ensure_loaded('system_module_inheritance.pfc').
 :- ensure_loaded('system_singleValued.pfc').
 
 :- multifile(baseKB:locked_baseKB/0).

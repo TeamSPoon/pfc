@@ -7,32 +7,29 @@
 % Dec 13, 2035
 % Douglas Miles
 */
-:- module(mt_04,[]).
+%  was_module(mt_04,[]).
 
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 
-:- begin_pfc.
+%:- file_begin(pfc).
 
-:- set_defaultAssertMt(myMt).
+%:- set_defaultAssertMt(myMt).
 
-mtProlog(code1).
-mtCycL(kb2).
-mtCycL(kb3).
+baseKB:mtProlog(code1).
+baseKB:mtCycL(kb2).
+baseKB:mtCycL(kb3).
 
+baseKB:genlMt(kb3,code1).
+baseKB:genlMt(kb3,kb2).
+
+% code1: (a <- b).
+code1:a:- kb2:b.
+:- export(code1:a/0).
 
 kb2:b.
-
-baseKB:genlMt(kb2,code1).
-
-kb2: (?- a).
-
-genlMt(kb3,kb2).
 
 kb3: (a==>c).
 
 
-
-% code1: (a <- b).
-:- ain((code1: (a:-b))).
 
 

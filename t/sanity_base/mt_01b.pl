@@ -7,15 +7,15 @@
 % Dec 13, 2035
 % Douglas Miles
 */
-:- module(mt_01b,[]).
+%  was_module(header_sane,[]).
 
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 
 :- begin_pfc.
 
 loves(sally,joe).
 
-:- mpred_test(clause_u(mt_01b:loves(_,_))).
+:- mpred_test(clause_u(header_sane:loves(_,_))).
 
 :- mpred_test(\+clause_u(baseKB:loves(_,_))).
 

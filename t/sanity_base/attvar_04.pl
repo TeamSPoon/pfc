@@ -1,8 +1,8 @@
 #!/usr/bin/env swipl
 
-:- module(sanity_ks_two,[]).
+%  was_module(sanity_ks_two,[]).
 
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 
 :- debug_logicmoo(_).
 :- nodebug_logicmoo(http(_)).

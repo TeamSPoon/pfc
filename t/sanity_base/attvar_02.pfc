@@ -6,7 +6,11 @@
 % Douglas Miles
 
 
-:- module(attvar_02,[]).
+%  was_module(attvar_02,[]).
+
+:- if(autoload([verbose(false)])).
+:- endif.
+:- include(test_header).
 
 :- ensure_loaded(library(dictoo)).
 :- ensure_loaded(library(attvar_reader)).
@@ -16,8 +20,6 @@
 
 % :- process_this_script.
 
-:- autoload([verbose(false)]).
-:- use_module(library(pfc)).
 :- autoload([verbose(false)]).
 
 
@@ -38,7 +40,7 @@ sk:attr_unify_hook(_,_).
 :- assert_mu(sk_in(avar([vn='Ex',sk='SKF-6667']))).
 % :- listing_u(sk_in/1).
 
-:- user:listing(sk_in/1).
+:- header_sane:listing(sk_in/1).
 
 :- must((sk_in(Ex),get_attr(Ex,sk,What),What=='SKF-6667')).
 

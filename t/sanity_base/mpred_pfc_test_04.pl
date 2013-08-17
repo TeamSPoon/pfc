@@ -1,5 +1,5 @@
 
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 
 % :- use_listing_vars.
 
@@ -8,11 +8,11 @@
 
 % :- set_prolog_flag(umt_local,false).
 % :- ensure_loaded(library(logicmoo/mpred/mpred_core)).
-%:- ensure_loaded(library(pfc)).
-% :- ensure_loaded(library(pfc)).
-%:- use_module(library(pfc)).
+%:- include(test_header).
+% :- include(test_header).
+%:- include(test_header).
 
-:- use_module('mpred_pfc_test_03').
+:- include('mpred_pfc_test_03').
 
 :- mpred_reset.
 
@@ -31,9 +31,11 @@
 
 :- mpred_why(default_ooQ1(whenMissingQ1)).
 
-:- rtrace(mpred_test(default_ooQ1(whenMissingQ1))).
+:- %rtrace
+   (mpred_test(default_ooQ1(whenMissingQ1))).
 
-:- rtrace(mpred_ain(\+default_ooQ1(whenMissingQ1))).
+:- %rtrace
+   (mpred_ain(\+default_ooQ1(whenMissingQ1))).
 % this should have been ok
 % (if_mooQ1(Missing,Create) ==> ((\+ Missing/(Missing\==Create), \+ Create , \+ ~(Create)) ==> Create)).
 :- ((mpred_ain((if_mooQ1(Missing,Create) ==> 
@@ -86,7 +88,7 @@
 
 :- mpred_ain(default_ooTt(defaultValueTt)).
 
-:- make,check,ensure_loaded(library(pfc)),make,check.
+:- make,check,use_module(library(pfc)),make,check.
 
 :- wdmsg(warning(outdated_tests)).
 
@@ -111,7 +113,7 @@ end_of_file.
 
 :- mpred_ain(~ current_ooTt(fooTt)).
 
-:- pp_DB.
+%:- pp_DB.
 
 :- mpred_test(~current_ooTt(fooTt)).
 
@@ -137,5 +139,5 @@ end_of_file.
 % local_testing
 
 
-:- make,check,ensure_loaded(library(pfc)),make,check.
+:- make,check,use_module(test_header),make,check.
 

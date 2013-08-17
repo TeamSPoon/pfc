@@ -6,9 +6,9 @@
 % Douglas Miles
 
 % Still amodule scoping bug? Nope
-:- module(y_p_x_t,[]).
+%  was_module(y_p_x_t,[]).
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 n3(':A',p,':B').
 n3(':B',p,':C'). 

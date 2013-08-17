@@ -6,12 +6,13 @@
 % Douglas Miles
 %  cls ; kill -9 %1 ; swipl -g "ensure_loaded(pack(logicmoo_base/t/examples/base/'sanity_abc.pfc'))."
 
-:- module(fc_01,[]).
-% :- '$set_source_module'(baseKB).
-:- set_prolog_flag(runtime_debug,3).
-:- ensure_loaded(library(pfc)).
+%  was_module(header_sane,[]).
+:- include(test_header).
 
-%:- add_import_module(fc_01,baseKB,start).
+% :- '$set_source_module'(baseKB).
+% :- set_prolog_flag(runtime_debug,3).
+
+%:- add_import_module(header_sane,baseKB,start).
 
 %:- rtrace(show_kb_structure).
 
@@ -34,7 +35,7 @@
 
 /*
 :- dynamic(baseKB:a11/0).
-:- dynamic(fc_01:a11/0).
+:- dynamic(header_sane:a11/0).
 :- mpred_ain((a11 ==> b11)).
 :- break.
 :- mpred_ain(a11).

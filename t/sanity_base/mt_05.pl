@@ -7,10 +7,9 @@
 % Dec 13, 2035
 % Douglas Miles
 */
-:- module(mt_01,[]).
+%  was_module(mt_01,[]).
 
-:- user:ensure_loaded(system:library(logicmoo_utils)).
-:- ensure_loaded(library(pfc)).
+:- include(test_header).
 
 
 %:- add_import_module(mt_01,baseKB,end).
@@ -27,9 +26,11 @@ code1: (a:-b).
 
 kb2: (b).
 
-genlMt(kb2,code1).
+genlMt(code1,kb2).
 
-kb2: (?- a).
+:- code1:import(kb2:b/0).
+
+kb2: (:- a).
 
 genlMt(kb3,kb2).
 

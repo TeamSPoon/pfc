@@ -7,7 +7,7 @@
 
 
 
-:- use_module(library(pfc)).
+:- include(test_header).
 
 :- file_begin(pfc).
 

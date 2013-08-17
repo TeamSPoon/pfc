@@ -5,10 +5,10 @@
 % Dec 13, 2035
 % Douglas Miles
 
-:- module(sanity_attvar_03,[]).
+%  was_module(sanity_attvar_03,[]).
 
 :- use_module(library(attvar_reader)).
-:- use_module(library(pfc)).
+:- include(test_header).
 % :- '$set_source_module'(ABox),'$set_typein_module'(ABox).
 
 
