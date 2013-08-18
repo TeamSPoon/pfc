@@ -82,8 +82,6 @@ bc_p(b).
 
 :- listing(bc_q/1).
 
-end_of_file.
-
 :- mpred_test(((mpred_withdraw(((bc_q(N) <- bc_p(N))))))).
 
 %= nothing cached
