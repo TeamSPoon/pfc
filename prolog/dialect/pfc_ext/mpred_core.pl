@@ -768,11 +768,13 @@ clause_u(H,B,Ref):-var(H),!,trace_or_throw_ex(var_clause_u(H,B,Ref)).
 clause_u((H:-BB),B,Ref):- is_true(B),!, trace_or_throw_ex(malformed(clause_u((H:-BB),B,Ref))),clause_u(H,BB,Ref).
 clause_u((H:-B),BB,Ref):- is_true(B),!, trace_or_throw_ex(malformed(clause_u((H:-B),BB,Ref))),clause_u(H,BB,Ref).
 
-clause_u(M:H,B,R):- !, clause_i(M:H,B,R),clause_property(R,module(M)).
+clause_u(M:H,B,R):- !, clause_i(M:H,B,R),clause_property(R,module(M)). % need? \+ reserved_body_helper(B) 
 clause_u(MH,B,R):- Why = clause(clause,clause_u),
- ((quietly_ex(fix_mp(Why,MH,M,H)),
+ ((notrace(fix_mp(Why,MH,M,H)),
   clause(M:H,B,R))*->true;
-           (fix_mp(Why,MH,M,CALL)->clause_i(M:CALL,B,R))), B \= inherit_above(M,_).
+           (fix_mp(Why,MH,M,CALL)->clause_i(M:CALL,B,R))),
+ \+ reserved_body_helper(B).
+
 % clause_u(H,B,Why):- has_cl(H),clause_u(H,CL,R),mpred_pbody(H,CL,R,B,Why).
 %clause_u(H,B,backward(R)):- R=(<-(H,B)),clause_u(R,true).
 %clause_u(H,B,equiv(R)):- R=(<==>(LS,RS)),clause_u(R,true),(((LS=H,RS=B));((LS=B,RS=H))).
@@ -1807,7 +1809,7 @@ mpred_withdraw(P,S) :-
   ((ignore(mpred_get_support(P,S)),frozen(S,Goals),(Goals == true  -> SS=S ; SS = freeze(S,Goals)))),
   % pfcDebug(format("~Nremoving support ~p from ~p",[SS,P])),
   (mpred_trace_msg('    Removing support: ~p~n',[SS]),
-     mpred_trace_msg('     Which was: ~p~n',[P])),
+     mpred_trace_msg('     Which was for: ~p~n',[P])),
   ignore(mpred_withdraw_fail_if_supported(P,S)).
 
 mpred_withdraw_fail_if_supported(P,S):-
@@ -1879,11 +1881,11 @@ mpred_undo_unfwd(Fact):-
   (mpred_unfwc(Fact) *-> mpred_trace_msg(mpred_unfwc(Fact));mpred_trace_msg( \+ mpred_unfwc(Fact))).
 % mpred_undo(X):- doall(mpred_undo1(X)).
 
-mpred_undo1((H:-B)):- reduce_clause(unpost,(H:-B),HB), HB\=@= (H:-B),!,mpred_undo1((HB)).
+mpred_undo1((H:-B)):- reduce_clause(unpost,(H:-B),HB), HB\=@= (H:-B),!,mpred_undo((HB)).
 mpred_undo1(actn(A)):-
   % undo an action by finding a method and successfully executing it.
   !,
-  mpred_undo_action(actn(A)).
+  show_call(mpred_undo_action(actn(A))).
 
 mpred_undo1(pt(Key,Head,Body)):-
   % undo a positive trigger 3.
@@ -1926,7 +1928,7 @@ mpred_undo1(Fact):-
 %  should stay in the database or should also be removed.
 %
 
-mpred_unfwc(P):- mpred_reduced_chain(mpred_unfwc,P),!.
+mpred_unfwc(P):- show_success(mpred_reduced_chain(mpred_unfwc,P)),!.
 mpred_unfwc(F):-
   show_failure(mpred_retract_supported_relations(F)),
   mpred_unfwc1(F).
@@ -2110,11 +2112,13 @@ mpred_do_hb_catchup(H,B):- %is_head_LHS(H),
                      
 % mpred_do_hb_catchup(H,B):- !,mpred_do_hb_catchup_now(H,B).
 
-mpred_do_hb_catchup_now_maybe(_,_):-!.
-mpred_do_hb_catchup_now_maybe(H,B):- B\=(cwc,_),with_exact_assertions((mpred_do_hb_catchup_now(H,B))).
+% mpred_do_hb_catchup_now_maybe(_,_):-!.
+mpred_do_hb_catchup_now_maybe(H,B):- B\=(cwc,_),
+  mpred_do_hb_catchup_now(H,B).
 
-mpred_do_hb_catchup_now(_,_):-!.
-mpred_do_hb_catchup_now(H,B):- B\=(cwc,_),nonvar(B),with_exact_assertions(catch( (forall(call_u(B),mpred_fwc(H));true),_,true)),!.
+% mpred_do_hb_catchup_now(_,_):-!.
+mpred_do_hb_catchup_now(H,B):- B\=(cwc,_),nonvar(B),
+  with_exact_assertions(catch( (forall(call_u(B),mpred_fwc(H));true),_,true)),!.
 
 
 % prolog_clause mpred_do_clause COMMENTED
@@ -3764,7 +3768,7 @@ bases_union([X|Rest],L):-
 %  mpred_get_support(F,(_,ax)).
 mpred_axiom(F):-
   mpred_get_support(F,UU),
-  is_user_reason(UU).
+  is_user_reason(UU),!.
 
 %% mpred_assumption(P)
 %
@@ -3893,7 +3897,11 @@ notify_if_neg_trigger(spft(P,Fact,Trigger)):-
 
 
 mpred_get_support((H:-B),(Fact,Trigger)):- lookup_u(spft((H <- B),_,_),Ref),clause(spft(HH<-BB,Fact,Trigger),true,Ref),H=@=HH,B=@=BB.
-mpred_get_support(P,FT):-
+mpred_get_support(P,(Fact,Trigger)):-
+      lookup_spft(P,Fact,Trigger).
+
+
+mpred_get_support_why(P,FT):-
   (mpred_get_support_perfect(P,FT)*->true;
    (mpred_get_support_deeper(P,FT))).
 
@@ -4119,7 +4127,7 @@ pfcWhy0(N) :-
 
 pfcWhy0(P) :-
   justifications(P,Js),  
-  assert(t_l:whybuffer(P,Js)),                     +
+  assert(t_l:whybuffer(P,Js)),
   pfcWhyBrouse(P,Js).
 
 pfcWhy1(P) :-
@@ -4172,14 +4180,14 @@ pfcWhyCommand0(X,_,_) :-
  fail.
   
 pfcShowJustifications(P,Js) :-
-  format("~N~nJustifications for ~p:~n",[P]),
+  format("~nJustifications for ~p:",[P]),
   pfcShowJustification1(Js,1).
 
 pfcShowJustification1([],_).
 
 pfcShowJustification1([J|Js],N) :-
   % show one justification and recurse.
-  % nl,
+  nl,
   pfcShowJustifications2(J,N,1),
   N2 is N+1,
   pfcShowJustification1(Js,N2).
@@ -4187,9 +4195,9 @@ pfcShowJustification1([J|Js],N) :-
 pfcShowJustifications2([],_,_).
 
 pfcShowJustifications2([C|Rest],JustNo,StepNo) :- 
-  (clause_asserted(t_l:shown_why(C)) -> true;
-   ( format("~N    ~w.~w ~p",[JustNo,StepNo,C]),assert(t_l:shown_why(C)))),
-  % ((justifications(C,Js),Js\==[],\+subset(Js,[C|Rest]))-> pfcShowJustification1(Js,1.1); true),
+  copy_term(C,CCopy),
+  numbervars(CCopy,0,_),
+  format("~N    ~w.~w ~p",[JustNo,StepNo,CCopy]),
   StepNext is 1+StepNo,
   pfcShowJustifications2(Rest,JustNo,StepNext).
 
@@ -4359,7 +4367,7 @@ well_founded_0(F,Descendants):-
   % first make sure we aren't in a loop.
   (\+ memberchk(F,Descendants)),
   % find a justification.
-  supporters_list0(F,Supporters),!,
+  supporters_list(F,Supporters),!,
   % all of whose members are well founded.
   well_founded_list(Supporters,[F|Descendants]),
   !.
@@ -4378,123 +4386,21 @@ well_founded_list([X|Rest],L):-
 % where ListOfSupports is a list of the
 % supports for one justification for fact F -- i.e. a list of facts which,
 % together allow one to deduce F.  One of the facts will typically be a rule.
-% The supports for a user-defined fact are: [ax].
+% The supports for a user-defined fact are: [u].
 %
-
-supporters_list(F,ListO):- no_repeats_cmp(same_sets,ListO,supporters_list_each(F,ListO)).
-
-same_sets(X,Y):-
-  flatten(X,FX),sort(FX,XS),
-  flatten(Y,FY),sort(FY,YS),!,
-  YS=@=XS.
-
-supporters_list_each(F,ListO):-   
-   supporters_list0(F,ListM),
-   expand_supporters_list(ListM,ListM,ListO).
-
-expand_supporters_list(_, [],[]):-!.
-expand_supporters_list(Orig,[F|ListM],[F|NewListOO]):-
-   supporters_list0(F,FList),
-   list_difference_variant(FList,Orig,NewList),
-   % NewList\==[],
-   append(Orig,NewList,NewOrig),
-   append(ListM,NewList,NewListM),!,
-   expand_supporters_list(NewOrig,NewListM,ListO),
-   append(ListO,NewList,NewListO),
-   list_to_set_variant(NewListO,NewListOO).
-expand_supporters_list(Orig,[F|ListM],[F|NewListO]):-
-  expand_supporters_list(Orig,ListM,NewListO).
-
-
-list_to_set_variant(List, Unique) :-
-    list_unique_1(List, [], Unique),!.
-
-list_unique_1([], _, []).
-list_unique_1([X|Xs], So_far, Us) :-
-    memberchk_variant(X, So_far),!,
-    list_unique_1(Xs, So_far, Us).
-list_unique_1([X|Xs], So_far, [X|Us]) :-
-    list_unique_1(Xs, [X|So_far], Us).
-
-% dif_variant(X,Y):- freeze(X,freeze(Y, X \=@= Y )).
-
-
-
-%%	list_difference_variant(+List, -Subtract, -Rest)
-%
-%	Delete all elements of Subtract from List and unify the result
-%	with Rest.  Element comparision is done using =@=/2.
-
-list_difference_variant([],_,[]).
-list_difference_variant([X|Xs],Ys,L) :-
-	(   memberchk_variant(X,Ys)
-	->  list_difference_variant(Xs,Ys,L)
-	;   L = [X|T],
-	    list_difference_variant(Xs,Ys,T)
-	).
-
-
-%%	memberchk_variant(+Val, +List)
-%
-%	Deterministic check of membership using =@= rather than
-%	unification.
-
-memberchk_variant(X, [Y|Ys]) :-
-   (   X =@= Y
-   ->  true
-   ;   memberchk_variant(X, Ys)
-   ).
-
-supporters_list0(F,OUT):- 
-  (((mpred_get_support(F,(Fact,Trigger)),
-    triggerSupports(Fact,Trigger,MoreFacts)))*-> OUT=[Fact|MoreFacts] ; supporters_list1(F,OUT)).
-
-supporters_list1(Var,[is_ftVar(Var)]):-is_ftVar(Var),!.
-supporters_list1(U,[]):- axiomatic_supporter(U),!.
-supporters_list1((H:-B),[MFL]):- !, clause_match(H,B,Ref),find_mfl(H,B,Ref,MFL).
-supporters_list1((H),[((H:-B))]):- clause_match(H,B,_Ref).
-
-uses_call_only(H):- predicate_property(H,foreign),!.
-uses_call_only(H):- \+ predicate_property(H,interpreted),!.
-
-clause_match(H,_B,uses_call_only(H)):- uses_call_only(H),!.
-clause_match(H,B,Ref):- clause_asserted(H,B,Ref),!.
-clause_match(H,B,Ref):- ((copy_term(H,HH),clause_u(H,B,Ref),H=@=HH)*->true;clause_u(H,B,Ref)), \+ reserved_body_helper(B).
-
-find_mfl(_H,_B,Ref,mfl(M,F,L)):- atomic(Ref),clause_property(Ref,line_count(L)),clause_property(Ref,file(F)),clause_property(Ref,module(M)). 
-find_mfl(H,_B,uses_call_only(H),MFL):- !,call_only_based_mfl(H,MFL).
-find_mfl(H,B,_,mfl(M,F,L)):- lookup_spft_match_first( (H:-B),mfl(M,F,L),_),!.
-find_mfl(H,B,_Ref,mfl(M,F,L)):- lookup_spft_match_first(H,mfl(M,F,L),_),ground(B).
-
-call_only_based_mfl(H,mfl(M,F,L)):- 
-  ignore(predicate_property(H,imported_from(M));predicate_property(H,module(M))),
-  ignore(predicate_property(H,line_count(L))),
-  ignore(source_file(M:H,F);predicate_property(H,file(F));(predicate_property(H,foreign),F=foreign)).
-
-axiomatic_supporter(Var):-is_ftVar(Var),!,fail.
-axiomatic_supporter(is_ftVar(_)).
-axiomatic_supporter(clause_u(_)).
-axiomatic_supporter(U):- is_file_ref(U),!.
-axiomatic_supporter(ax):-!.
+supporters_list(F,[Fact|MoreFacts]):-
+  mpred_get_support(F,(Fact,Trigger)),
+  triggerSupports(Trigger,MoreFacts).
 
 is_file_ref(A):-compound(A),A=mfl(_,_,_).
 
-triggerSupports(_,Var,[is_ftVar(Var)]):-is_ftVar(Var),!.
-triggerSupports(_,U,[]):- axiomatic_supporter(U),!.
-triggerSupports(FactIn,Trigger,OUT):-
-  mpred_get_support(Trigger,(Fact,AnotherTrigger))*->
-  (triggerSupports(Fact,AnotherTrigger,MoreFacts),OUT=[Fact|MoreFacts]);
-  triggerSupports1(FactIn,Trigger,OUT).
-
-triggerSupports1(_,X,[X]).
-/*
-triggerSupports1(_,X,_):- mpred_db_type(X,trigger),!,fail.
-triggerSupports1(_,uWas(_),[]):-!.
-triggerSupports1(_,U,[(U)]):- is_file_ref(U),!.
-triggerSupports1(_,U,[uWas(U)]):- get_source_ref((U1,U2))->member(U12,[U1,U2]),U12=@=U.
-triggerSupports1(_,X,[X]):- \+ mpred_db_type(X,trigger).
-*/
-
+triggerSupports(uWas(_),[]):-!.
+triggerSupports(ax,[]):-!.
+triggerSupports(U,[(U)]):- is_file_ref(U),!.
+triggerSupports(U,[uWas(U)]):- get_source_ref((U1,U2))->member(U12,[U1,U2]),U12=@=U.
+triggerSupports(Trigger,[Fact|MoreFacts]):-
+  mpred_get_support(Trigger,(Fact,AnotherTrigger)),
+  triggerSupports(AnotherTrigger,MoreFacts).
 
 :-module_transparent(mpred_ain/1).
 :-module_transparent(mpred_aina/1).
@@ -4567,6 +4473,5 @@ end_of_file.
 :- mpred_test(current_ooZz(booZz)).
 
 :- mpred_reset_kb.
-
 
 
