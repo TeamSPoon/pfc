@@ -195,6 +195,7 @@ push_current_choice/1,
 
 %:- use_module(mpred_kb_ops).
 %:- use_module(library(listing_vars)).
+:- use_module(library(no_repeats)).
 
 :- include('mpred_header.pi').
 
@@ -4067,6 +4068,7 @@ pp_why(A):-mpred_why(A).
 clear_proofs:- retractall(t_l:whybuffer(_P,_Js)).
 
 
+:- thread_local(t_l:shown_why/1).
 
 % see pfc_why
 
@@ -4074,9 +4076,12 @@ mpred_why(\+ P):- mpred_why(~P)*->true;(call_u(\+ P),wdmsgl(why:- \+ P)),!.
 mpred_why(M:P):-atom(M),!,call_from_module(M,mpred_why(P)).
 mpred_why(P):-  
   quietly_ex((must((
+  retractall(t_l:shown_why(_)),
   color_line(green,2),!,
-  forall(no_repeats(P-Js,deterministically_must(justifications(P,Js))),
-    ((color_line(yellow,1),pfcShowJustifications(P,Js)))),
+  findall(Js,((no_repeats(P-Js,deterministically_must(justifications(P,Js))),
+    ((color_line(yellow,1),
+      pfcShowJustifications(P,Js))))),Count),
+  (Count==[]-> format("~N No justifications for ~p:~n",[P]) ; true),
   color_line(green,2))))),!.
 
 mpred_why(NX):- 
@@ -4095,7 +4100,7 @@ pfcWhy0(N) :-
 
 pfcWhy0(P) :-
   justifications(P,Js),  
-  assert(t_l:whybuffer(P,Js)),
+  assert(t_l:whybuffer(P,Js)),                     +
   pfcWhyBrouse(P,Js).
 
 pfcWhy1(P) :-
@@ -4124,7 +4129,8 @@ Justification Brouser Commands:
  N   focus on Nth justification.
  N.M brouse step M of the Nth justification
  u   up a level
-",[]).
+",
+ []).
 
 pfcWhyCommand0(N,_P,Js) :-
   float(N),
@@ -4147,14 +4153,14 @@ pfcWhyCommand0(X,_,_) :-
  fail.
   
 pfcShowJustifications(P,Js) :-
-  format("~nJustifications for ~p:",[P]),
+  format("~N~nJustifications for ~p:~n",[P]),
   pfcShowJustification1(Js,1).
 
 pfcShowJustification1([],_).
 
 pfcShowJustification1([J|Js],N) :-
   % show one justification and recurse.
-  nl,
+  % nl,
   pfcShowJustifications2(J,N,1),
   N2 is N+1,
   pfcShowJustification1(Js,N2).
@@ -4162,9 +4168,9 @@ pfcShowJustification1([J|Js],N) :-
 pfcShowJustifications2([],_,_).
 
 pfcShowJustifications2([C|Rest],JustNo,StepNo) :- 
-  copy_term(C,CCopy),
-  numbervars(CCopy,0,_),
-  format("~N    ~w.~w ~p",[JustNo,StepNo,CCopy]),
+  (clause_asserted(t_l:shown_why(C)) -> true;
+   ( format("~N    ~w.~w ~p",[JustNo,StepNo,C]),assert(t_l:shown_why(C)))),
+  % ((justifications(C,Js),Js\==[],\+subset(Js,[C|Rest]))-> pfcShowJustification1(Js,1.1); true),
   StepNext is 1+StepNo,
   pfcShowJustifications2(Rest,JustNo,StepNext).
 
@@ -4334,7 +4340,7 @@ well_founded_0(F,Descendants):-
   % first make sure we aren't in a loop.
   (\+ memberchk(F,Descendants)),
   % find a justification.
-  supporters_list(F,Supporters),!,
+  supporters_list0(F,Supporters),!,
   % all of whose members are well founded.
   well_founded_list(Supporters,[F|Descendants]),
   !.
@@ -4353,21 +4359,123 @@ well_founded_list([X|Rest],L):-
 % where ListOfSupports is a list of the
 % supports for one justification for fact F -- i.e. a list of facts which,
 % together allow one to deduce F.  One of the facts will typically be a rule.
-% The supports for a user-defined fact are: [u].
+% The supports for a user-defined fact are: [ax].
 %
-supporters_list(F,[Fact|MoreFacts]):-
-  mpred_get_support(F,(Fact,Trigger)),
-  triggerSupports(Trigger,MoreFacts).
+
+supporters_list(F,ListO):- no_repeats_cmp(same_sets,ListO,supporters_list_each(F,ListO)).
+
+same_sets(X,Y):-
+  flatten(X,FX),sort(FX,XS),
+  flatten(Y,FY),sort(FY,YS),!,
+  YS=@=XS.
+
+supporters_list_each(F,ListO):-   
+   supporters_list0(F,ListM),
+   expand_supporters_list(ListM,ListM,ListO).
+
+expand_supporters_list(_, [],[]):-!.
+expand_supporters_list(Orig,[F|ListM],[F|NewListOO]):-
+   supporters_list0(F,FList),
+   list_difference_variant(FList,Orig,NewList),
+   % NewList\==[],
+   append(Orig,NewList,NewOrig),
+   append(ListM,NewList,NewListM),!,
+   expand_supporters_list(NewOrig,NewListM,ListO),
+   append(ListO,NewList,NewListO),
+   list_to_set_variant(NewListO,NewListOO).
+expand_supporters_list(Orig,[F|ListM],[F|NewListO]):-
+  expand_supporters_list(Orig,ListM,NewListO).
+
+
+list_to_set_variant(List, Unique) :-
+    list_unique_1(List, [], Unique),!.
+
+list_unique_1([], _, []).
+list_unique_1([X|Xs], So_far, Us) :-
+    memberchk_variant(X, So_far),!,
+    list_unique_1(Xs, So_far, Us).
+list_unique_1([X|Xs], So_far, [X|Us]) :-
+    list_unique_1(Xs, [X|So_far], Us).
+
+% dif_variant(X,Y):- freeze(X,freeze(Y, X \=@= Y )).
+
+
+
+%%	list_difference_variant(+List, -Subtract, -Rest)
+%
+%	Delete all elements of Subtract from List and unify the result
+%	with Rest.  Element comparision is done using =@=/2.
+
+list_difference_variant([],_,[]).
+list_difference_variant([X|Xs],Ys,L) :-
+	(   memberchk_variant(X,Ys)
+	->  list_difference_variant(Xs,Ys,L)
+	;   L = [X|T],
+	    list_difference_variant(Xs,Ys,T)
+	).
+
+
+%%	memberchk_variant(+Val, +List)
+%
+%	Deterministic check of membership using =@= rather than
+%	unification.
+
+memberchk_variant(X, [Y|Ys]) :-
+   (   X =@= Y
+   ->  true
+   ;   memberchk_variant(X, Ys)
+   ).
+
+supporters_list0(F,OUT):- 
+  (((mpred_get_support(F,(Fact,Trigger)),
+    triggerSupports(Fact,Trigger,MoreFacts)))*-> OUT=[Fact|MoreFacts] ; supporters_list1(F,OUT)).
+
+supporters_list1(Var,[is_ftVar(Var)]):-is_ftVar(Var),!.
+supporters_list1(U,[]):- axiomatic_supporter(U),!.
+supporters_list1((H:-B),[MFL]):- !, clause_match(H,B,Ref),find_mfl(H,B,Ref,MFL).
+supporters_list1((H),[((H:-B))]):- clause_match(H,B,_Ref).
+
+uses_call_only(H):- predicate_property(H,foreign),!.
+uses_call_only(H):- \+ predicate_property(H,interpreted),!.
+
+clause_match(H,_B,uses_call_only(H)):- uses_call_only(H),!.
+clause_match(H,B,Ref):- clause_asserted(H,B,Ref),!.
+clause_match(H,B,Ref):- ((copy_term(H,HH),clause_u(H,B,Ref),H=@=HH)*->true;clause_u(H,B,Ref)), \+ reserved_body_helper(B).
+
+find_mfl(_H,_B,Ref,mfl(M,F,L)):- atomic(Ref),clause_property(Ref,line_count(L)),clause_property(Ref,file(F)),clause_property(Ref,module(M)). 
+find_mfl(H,_B,uses_call_only(H),MFL):- !,call_only_based_mfl(H,MFL).
+find_mfl(H,B,_,mfl(M,F,L)):- lookup_spft_match_first( (H:-B),mfl(M,F,L),_),!.
+find_mfl(H,B,_Ref,mfl(M,F,L)):- lookup_spft_match_first(H,mfl(M,F,L),_),ground(B).
+
+call_only_based_mfl(H,mfl(M,F,L)):- 
+  ignore(predicate_property(H,imported_from(M));predicate_property(H,module(M))),
+  ignore(predicate_property(H,line_count(L))),
+  ignore(source_file(M:H,F);predicate_property(H,file(F));(predicate_property(H,foreign),F=foreign)).
+
+axiomatic_supporter(Var):-is_ftVar(Var),!,fail.
+axiomatic_supporter(is_ftVar(_)).
+axiomatic_supporter(clause_u(_)).
+axiomatic_supporter(U):- is_file_ref(U),!.
+axiomatic_supporter(ax):-!.
 
 is_file_ref(A):-compound(A),A=mfl(_,_,_).
 
-triggerSupports(uWas(_),[]):-!.
-triggerSupports(ax,[]):-!.
-triggerSupports(U,[(U)]):- is_file_ref(U),!.
-triggerSupports(U,[uWas(U)]):- get_source_ref((U1,U2))->member(U12,[U1,U2]),U12=@=U.
-triggerSupports(Trigger,[Fact|MoreFacts]):-
-  mpred_get_support(Trigger,(Fact,AnotherTrigger)),
-  triggerSupports(AnotherTrigger,MoreFacts).
+triggerSupports(_,Var,[is_ftVar(Var)]):-is_ftVar(Var),!.
+triggerSupports(_,U,[]):- axiomatic_supporter(U),!.
+triggerSupports(FactIn,Trigger,OUT):-
+  mpred_get_support(Trigger,(Fact,AnotherTrigger))*->
+  (triggerSupports(Fact,AnotherTrigger,MoreFacts),OUT=[Fact|MoreFacts]);
+  triggerSupports1(FactIn,Trigger,OUT).
+
+triggerSupports1(_,X,[X]).
+/*
+triggerSupports1(_,X,_):- mpred_db_type(X,trigger),!,fail.
+triggerSupports1(_,uWas(_),[]):-!.
+triggerSupports1(_,U,[(U)]):- is_file_ref(U),!.
+triggerSupports1(_,U,[uWas(U)]):- get_source_ref((U1,U2))->member(U12,[U1,U2]),U12=@=U.
+triggerSupports1(_,X,[X]):- \+ mpred_db_type(X,trigger).
+*/
+
 
 :-module_transparent(mpred_ain/1).
 :-module_transparent(mpred_aina/1).
