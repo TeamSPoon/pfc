@@ -2085,7 +2085,7 @@ mpred_do_rule((H:-B)):- fail,
 is_head_LHS(H):- nonvar(H),get_functor(H,F,A),must(suggest_m(M)),lookup_u(mpred_prop(M,F,A,pfcLHS)).
 body_clause(SK,Cont):-nonvar(SK),SK=Cont.
 
-mpred_do_hb_catchup(_H, _B):-!.
+mpred_do_hb_catchup(H, _B):- \+ is_head_LHS(H),!.
 mpred_do_hb_catchup(_H, B):- \+ \+ (B=true),!.
 mpred_do_hb_catchup(_H, B):- compound(B), \+ \+ reserved_body_helper(B),!. 
 
@@ -2126,10 +2126,8 @@ mpred_do_clause(H,B):-
  with_exact_assertions(mpred_do_clause0(H,B)).
 
 mpred_do_clause0(Var, B):- is_ftVar(Var),!,trace_or_throw(var_mpred_do_clause0(Var, B)).
-
-
-mpred_do_clause0((=>),_):-!.
-mpred_do_clause0((==>),_):-!.
+mpred_do_clause0((=>(_,_)),_):-!.
+mpred_do_clause0((==>(_,_)),_):-!.
 mpred_do_clause0(H,B):-
   % F = {clause(H,B)},
   F = (H :- B),  B\=(cwc,_),!,
@@ -2156,6 +2154,17 @@ mpred_do_fact(Fact):-
   % check negative triggers
   mpred_do_fcnt(Fact,F),
   nop(mpred_do_clause(F,true)).
+
+lookup_spft_match(A,B,C):- copy_term(A,AA),lookup_spft_p(A,B,C),A=@=AA.
+
+lookup_spft_match_deeper(H,Fact,Trigger):-
+  copy_term(H,HH),
+  lookup_spft((H:- _B),Fact,Trigger),
+  H=@=HH.
+
+lookup_spft_match_first(A,B,C):- nonvar(A),!, 
+  no_repeats(((lookup_spft_match(A,B,C);lookup_spft(A,B,C)))).
+lookup_spft_match_first(A,B,C):- lookup_spft(A,B,C).
 
 lookup_spft(A,B,C):- nonvar(A),!,lookup_spft_p(A,B,C).
 lookup_spft(A,B,C):- var(B),!,lookup_spft_t(A,B,C).
@@ -3884,8 +3893,18 @@ notify_if_neg_trigger(spft(P,Fact,Trigger)):-
 
 
 mpred_get_support((H:-B),(Fact,Trigger)):- lookup_u(spft((H <- B),_,_),Ref),clause(spft(HH<-BB,Fact,Trigger),true,Ref),H=@=HH,B=@=BB.
-mpred_get_support(P,(Fact,Trigger)):-
-      lookup_spft(P,Fact,Trigger).
+mpred_get_support(P,FT):-
+  (mpred_get_support_perfect(P,FT)*->true;
+   (mpred_get_support_deeper(P,FT))).
+
+mpred_get_support_perfect(P,(Fact,Trigger)):-
+    lookup_spft_match_first(P,Fact,Trigger).
+
+mpred_get_support_deeper((H:-B),(Fact,Trigger)):- !,
+ lookup_u(spft((H <- B),_,_),Ref),
+  clause(spft(HH<-BB,Fact,Trigger),true,Ref),H=@=HH,B=@=BB.
+mpred_get_support_deeper(P,(Fact,Trigger)):-
+    lookup_spft_match_deeper(P,Fact,Trigger).
 
 /*
 %  TODO MAYBE
