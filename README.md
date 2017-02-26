@@ -1,5 +1,27 @@
 # Pfc -- forward chaining in Prolog
 
+Installation using SWI-Prolog 7.1 or later:
+
+    `?- pack_install('https://github.com/TeamSPoon/pfc.git').`
+
+
+
+This is a modification of Tim Finin's PFC.
+
+Notable changes are:
+
+ * Forward chaining `=>` is renamed to `==>` to avoid conflict with extensive downstream use of =>/2 to mean logical implication.
+ * Bidirectional Forward chaining `<=>` renamed to `<==>` to avoid conflict with logical equivance `<=>`
+ * Memoized backchain `<=` is renamed to `<-` to avoid conflict with extensive downstream use of <=/2 to mean reverse implication..  Historically '<-' had meant what is now know as ":-" being unused it was borrowed as it means "Backchaining"
+ * Added Cutted Forward Chaining =!=> as a signal to stop processing rules on first success
+ * Added Macro Transform =@=> so instead of asserting the Anteceedant to assert the Consequent
+
+ @TODO - MANY MORE CHANGES TO WRITE - for now back to coding...
+
+
+    
+# Original README
+
 The Pfc system is a package that provides a forward reasoning capability to be used together with conventional Prolog programs.  The Pfc inference rules are Prolog terms which are asserted as clauses into the regular Prolog database.  When new facts or forward reasoning rules are added to the Prolog database (via a special predicate add/1, forward reasoning is triggered and additional facts that can be deduced via the application of the forward chaining rules are also added to the database.  A simple justification-based truth-maintenance system is provided as well as simple predicates to explore the resulting proof trees.
 
 It was originally written circa 1988 at the [Unisys Paoli Research Center](https://en.wikipedia.org/wiki/Paoli_Research_Center).  For more information, see
