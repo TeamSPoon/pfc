@@ -894,6 +894,6 @@ roll_dice(Rolls,Sided,Bonus,Result):- LessRolls is Rolls-1, roll_dice(LessRolls,
 
 % call_argIsa_ForAssert(F,N,Type):-argIsa(F,N,Type),atom(Type),!,not(nonusefull_deduction_type(Type)),tCol(Type).
 
-
+:- fixup_exports.
 
 mpred_type_args_file.

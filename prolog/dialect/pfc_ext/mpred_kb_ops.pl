@@ -272,9 +272,9 @@ mpred_facts_and_universe/1
 
 %:- endif.
 % :- ensure_loaded(library('logicmoo/util/logicmoo_util_bugger.pl')).
-:- use_module(mpred_core).
-:- use_module(mpred_type_isa).
-:- use_module(library(listing_vars)).
+:- use_module(system:mpred_core).
+:- use_module(system:mpred_type_isa).
+:- use_module(system:library(listing_vars)).
 
 :- module_transparent retract_mu/1,
                assert_mu/4,
@@ -633,7 +633,7 @@ set_prolog_stack_gb(Six):-set_prolog_stack(global, limit(Six*10**9)),set_prolog_
 %
 :- multifile(baseKB:mpred_hook_rescan_files/0).
 :- dynamic(baseKB:mpred_hook_rescan_files/0).
-baseKB:module_local_init:-set_prolog_stack_gb(16).
+:- during_boot(set_prolog_stack_gb(16)).
 %:- was_dynamic(use_presently/0).
 % used to annotate a predciate to indicate PFC support
 
@@ -651,12 +651,14 @@ is_mpred_action(P):-is_static_predicate(P).
 % PFC If Is A Builtin.
 %
 mpred_is_builtin(P):- predicate_property(P,built_in), \+ predicate_property(P,dynamic).
+mpred_is_builtin(P):- callable(P),functor(P,F,_),clause_b(prologBuiltin(F)).
+mpred_is_builtin(F):- current_predicate(F/A),A>0,functor(P,F,A),mpred_is_builtin(P).
 
 /* UNUSED TODAY
 
-:- use_module(library(mavis)).
-:- use_module(library(type_check)).
-:- use_module(library(typedef)).
+:- use_module(system:library(mavis)).
+:- use_module(system:library(type_check)).
+:- use_module(system:library(typedef)).
 */
 
 
@@ -1888,7 +1890,7 @@ baseKB:hook_one_minute_timer_tick:-mpred_cleanup.
 %
 % PFC Cleanup.
 %
-mpred_cleanup:- forall((no_repeats(F-A,(call_u(mpred_mark(pfcRHS,F,A)),A>1))),mpred_cleanup(F,A)).
+mpred_cleanup:- forall((no_repeats(F-A,(call_u(mpred_prop(F,A,pfcRHS)),A>1))),mpred_cleanup(F,A)).
 
 
 %% mpred_cleanup( +F, ?A) is semidet.
@@ -1986,7 +1988,7 @@ is_reprop_0(X):-get_functor(X,repropagate,_).
 mpred_non_neg_literal(X):- is_reprop(X),!,fail.
 mpred_non_neg_literal(X):- atom(X),!.
 mpred_non_neg_literal(X):- sanity(stack_check),
-    mpred_positive_literal(X), X \= ~(_), X \= mpred_mark(_,_,_), X \= conflict(_).
+    mpred_positive_literal(X), X \= ~(_), X \= mpred_prop(_,_,_), X \= conflict(_).
 
 % ======================= mpred_file('pfcsupport').	% support maintenance
 
@@ -2042,7 +2044,6 @@ mpred_trigger_key(X,X).
 %	restore, reset, etc).
 
 
-baseKB:module_local_init:- mpred_set_default(mpred_warnings(_), mpred_warnings(true)).
 
 
 
@@ -2073,8 +2074,8 @@ should_call_for_facts(H):- get_functor(H,F,A),call_u(should_call_for_facts(H,F,A
 %
 should_call_for_facts(_,F,_):- a(prologSideEffects,F),!,fail.
 should_call_for_facts(H,_,_):- modulize_head(H,HH), \+ predicate_property(HH,number_of_clauses(_)),!.
-should_call_for_facts(_,F,A):- clause_b(mpred_mark(pfcRHS,F,A)),!,fail.
-should_call_for_facts(_,F,A):- clause_b(mpred_mark(pfcMustFC,F,A)),!,fail.
+should_call_for_facts(_,F,A):- clause_b(mpred_prop(F,A,pfcRHS)),!,fail.
+should_call_for_facts(_,F,A):- clause_b(mpred_prop(F,A,pfcMustFC)),!,fail.
 should_call_for_facts(_,F,_):- a(prologDynamic,F),!.
 should_call_for_facts(_,F,_):- \+ a(pfcControlled,F),!.
 
@@ -2443,7 +2444,7 @@ assert_mu(M,Pred,F,_):- a(prologOrdered,F) -> assertz_mu(M,Pred) ; asserta_mu(M,
 % assertz_mu(M,X):- correct_module(M,X,T),T\==M,!,assertz_mu(T,X).
 % assertz_mu(_,X):- must(defaultAssertMt(M)),!,must((expire_tabled_list(M:X),show_call(attvar_op(assertz_i,M:X)))).
 assertz_mu(M,X):- strip_module(X,_,P), check_never_assert(M:P), 
-   (clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_call(attvar_op(assertz_i,M:P))))).
+   (clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(assertz_i,M:P))))).
 
 %% asserta_mu(+M, ?X) is semidet.
 %
@@ -2451,10 +2452,10 @@ assertz_mu(M,X):- strip_module(X,_,P), check_never_assert(M:P),
 %
 %asserta_mu(abox,X):-!,defaultAssertMt(M),!,asserta_mu(M,X).
 % asserta_mu(M,X):- correct_module(M,X,T),T\==M,!,asserta_mu(T,X).
-% asserta_mu(_,X):- must(defaultAssertMt(M)),!,must((expire_tabled_list(M:X),show_call(attvar_op(asserta_i,M:X)))).
+% asserta_mu(_,X):- must(defaultAssertMt(M)),!,must((expire_tabled_list(M:X),show_failure(attvar_op(asserta_i,M:X)))).
 
 asserta_mu(M,X):- strip_module(X,_,P), check_never_assert(M:P), 
-   (clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_call(attvar_op(asserta_i,M:P))))).
+   (clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(asserta_i,M:P))))).
 
 
 
@@ -2679,6 +2680,8 @@ retract_mu((H:-B)):-!, clause_u(H,B,R),erase(R).
 % :- kb_shared(infoF/1).
 :- dynamic(system:infoF/1).
 :- export(system:infoF/1).
+
+:- fixup_exports.
 
 
 mpred_kb_ops_file.

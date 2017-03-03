@@ -210,6 +210,7 @@
 :- asserta_if_new((prolog:make_hook(BA, C):- wdmsg(prolog:make_hook(BA, C)),fail)).
 % prolog:make_hook(before, FileS):- maplist(mpred_loader:mpred_unload_file,FileS).
 
+mpred_unload_file:- \+ prolog_load_context(reload,true),!.
 mpred_unload_file:- source_location(File,_),mpred_unload_file(File).
 mpred_unload_file(File):-
   findall(mpred_withdraw(Data,(mfl(Module, File, LineNum),AX)),
@@ -2223,6 +2224,7 @@ push_predicates(M:F/A,STATE):- functor(H,F,A),findall((H:-B), (M:clause(H,B,Ref)
 pop_predicates(M:F/A,STATE):- functor(H,F,A),forall(member((H:-B),STATE),M:assert((H:-B))).
 
 
+:- fixup_exports.
 
 mpred_loader_file.
 %system:term_expansion(end_of_file,_):-must(check_clause_counts),fail.

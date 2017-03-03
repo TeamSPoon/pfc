@@ -11,6 +11,8 @@
 :- load_files(library(prolog_stack), [silent(true)]).
 %prolog_stack:stack_guard(none).
 
+:- multifile(baseKB:'already_decl_kb_shared'/3).
+:- dynamic(baseKB:'already_decl_kb_shared'/3).
 
 :- multifile(system:goal_expansion/4).
 :- dynamic(system:goal_expansion/4).
@@ -128,7 +130,7 @@ baseKB:mpred_skipped_module(eggdrop).
 :- set_prolog_flag(virtual_stubs,true).
 :- set_prolog_flag(mpred_te,false).
 
-:- dmsg("Ensuring loaded logicmoo/[snark|mpred[online]] ",[]).
+:- dmsg("Ensuring PFC Loaded",[]).
 
 :- ensure_loaded(system:library('pfc2.0/mpred_core.pl')).
 :- ensure_loaded(system:library('pfc2.0/mpred_at_box.pl')).
@@ -146,29 +148,10 @@ baseKB:mpred_skipped_module(eggdrop).
 :- ensure_loaded(system:library('pfc2.0/mpred_type_wff.pl')).
 :- ensure_loaded(system:library('pfc2.0/mpred_type_args.pl')).
 :- ensure_loaded(system:library('pfc2.0/mpred_hooks.pl')).
-
-/*
 :- ensure_loaded(system:library('pfc2.0/mpred_prolog_file.pl')).
 
 
-:- ensure_loaded(system:library('logicmoo/snark/common_logic_snark.pl')). 
-:- ensure_loaded(system:library('logicmoo/snark/common_logic_boxlog.pl')).
-:- ensure_loaded(system:library('logicmoo/snark/common_logic_skolem.pl')).
-:- ensure_loaded(system:library('logicmoo/snark/common_logic_compiler.pl')). 
-:- ensure_loaded(system:library('logicmoo/snark/common_logic_kb_hooks.pl')).
-*/
-
-:- add_library_search_path('./pfc2.0/',[ 'mpred_*.pl']).
-
-/*
-%:- add_library_search_path('./logicmoo/pttp/',[ 'dbase_i_mpred_*.pl']).
-%:- add_library_search_path('./logicmoo/../',[ 'logicmoo_*.pl']).
-%:- add_library_search_path('./logicmoo/',[ '*.pl']).
-%:- must(add_library_search_path('./logicmoo/mpred_online/',[ '*.pl'])).
-*/
-:- add_library_search_path('./logicmoo/snark/',[ '*.pl']).
-:- add_library_search_path('./logicmoo/plarkc/',[ '*.pl']).
-% :- autoload([verbose(false)]).
+:- autoload([verbose(false)]).
 
 
 %baseKB:sanity_check:- findall(U,(current_module(U),default_module(U,baseKB)),L),must(L==[baseKB]).
@@ -246,7 +229,7 @@ maybe_should_rename(O,O).
 :- dynamic(baseKB:expect_file_mpreds/1).
 
 :- if( \+ prolog_load_context(reload,true)).
-:- source_location(File, _)->asserta(baseKB:ignore_file_mpreds(File)).
+:- during_boot(source_location(File, _)->asserta(baseKB:ignore_file_mpreds(File))).
 :- doall((module_property(M,file(File)),module_property(M,class(library)),asserta(baseKB:ignore_file_mpreds(File)))).
 :- doall((source_file(File),asserta(baseKB:ignore_file_mpreds(File)))).
 :- doall((virtualize_ereq(F,A),base_kb_dynamic(F,A))).
@@ -263,7 +246,7 @@ baseKB:ignore_file_mpreds(File):- asserta(baseKB:expect_file_mpreds(File)),!,fai
 cannot_expand_current_file:- prolog_load_context(module,M),module_property(M,class(library)),!.
 cannot_expand_current_file:- source_location(File,_)->baseKB:ignore_file_mpreds(File),!.
 
-base_kb_dynamic(F,A):- kb_shared(F/A), ain(mpred_prop(F,A,prologHybrid)),kb_shared(F/A).
+base_kb_dynamic(F,A):- ain(mpred_prop(F,A,prologHybrid)),kb_shared(F/A).
 
 in_dialect_pfc:- \+ current_prolog_flag(dialect_pfc,false),
   ((current_prolog_flag(dialect_pfc,true); 
@@ -294,9 +277,8 @@ base_clause_expansion_fa(I,O,F,A):-
 base_clause_expansion_fa(_,_,F,A):- ain(mpred_prop(F,A,prologBuiltin)),!,fail.
 
 :- module_transparent(needs_pfc/2).
-needs_pfc(F,_):- (clause_b(functorIsMacro(F));clause_b(functorDeclares(F));clause_b(prologHybrid(F))),!.
-needs_pfc(F,A):- (clause_b(mpred_prop(F,A,prologHybrid));clause_b(safe_wrap(F,A,ereq))),!.
-needs_pfc(F,A):- A\=1, (clause_b(mpred_prop(F,1,prologHybrid));clause_b(safe_wrap(F,1,ereq))),!.
+needs_pfc(F,_):- (clause_b(functorIsMacro(F));clause_b(functorDeclares(F))).
+needs_pfc(F,A):- clause_b(mpred_prop(F,_,prologHybrid)), \+ clause_b(mpred_prop(F,A,prologBuiltin)).
 /*
 maybe_builtin(I) :- nonvar(I),get_consequent_functor(I,F,A),
    \+ (clause_b(functorIsMacro(F));clause_b(functorDeclares(F));clause_b(mpred_prop(F,A,prologHybrid))),
@@ -357,4 +339,6 @@ user:exception(undefined_predicate, MFA, Action):- fail, current_prolog_flag(ret
 % prolog:message(Into)--> { nonvar(Into),functor(Into,_F,A),A>1,arg(1,Into,N),\+ number(N),dtrace(wdmsg(Into)),fail}.
 
 :- ensure_loaded(baseKB:library(logicmoo/pfc/'system_base.pfc')).
+
+:- fixup_exports.
 

@@ -411,7 +411,7 @@ define_maybe_exact(M,PI):- % a(mtExact,M),!,
       system:import(M:F/A),
       system:export(M:F/A),
       once((M==baseKB->true;ain(baseKB:predicateConventionMt(F,M)))),
-      asserta_if_new(baseKB:safe_wrap(F,A,ereq)),
+      % asserta_if_new(baseKB:safe_wrap(F,A,ereq)),
       kb_shared(M:PI),     
       sanity(\+is_static_predicate(M:PI)),
       maybe_define_if_not_static(M,PI))),!.
@@ -494,6 +494,8 @@ get_arity(FA,F,A):- get_functor(FA,F,A),must(A>0).
 
 % arity_no_bc(F,A):- call_u(arity(F,A)).
 arity_no_bc(F,A):- clause_b(arity(F,A)).
+arity_no_bc(completeExtentAsserted,1).
+arity_no_bc(F,A):- clause_b(mpred_prop(F,AA,_)),nonvar(AA),A=AA.
 %= 	 	 
 
 %% ensure_arity( ?VALUE1, ?VALUE2) is semidet.
@@ -719,6 +721,7 @@ add_mpred_prop_gleaned_4(Arg1,_F,[ARG|_],FRGS):-nonvar(ARG),!,ain_expanded(meta_
 add_mpred_prop_gleaned_4(Arg1,_F,_,FRGS):-decl_mpred(Arg1,FRGS).
 
 
+:- fixup_exports.
 
 % user:term_expansion(G,_):- current_predicate(logicmoo_bugger_loaded/0),\+ t_l:disable_px, not(t_l:into_form_code),quietly((once(glean_pred_props_maybe(G)),fail)).
 

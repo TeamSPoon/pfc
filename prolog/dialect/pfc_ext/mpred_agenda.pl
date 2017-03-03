@@ -106,7 +106,7 @@ time_tick(*,0),
 :- volatile(lmcache:after_mpred_load/0).
 
 
-%= 	 	 
+	 
 
 %% register_timer_thread( ?Name, ?Seconds, :GoalOnTick) is semidet.
 %
@@ -117,7 +117,7 @@ register_timer_thread(Name,Seconds,OnTick):-
    thread_create(tick_every(Name,Seconds,OnTick),_ID,[alias(Name)]). 
 
 
-%= 	 	 
+	 
 
 %% tick_every( ?Name, ?Seconds, :GoalOnTick) is semidet.
 %
@@ -140,7 +140,7 @@ lmcache:after_mpred_load:- baseKB:( \+(t_l:loading_mpred_file(_,_)),clause(baseK
 
 % when all previous tasks have completed
 
-%= 	 	 
+	 
 
 %% after_mpred_load_pass2 is semidet.
 %
@@ -150,7 +150,7 @@ after_mpred_load_pass2:- \+ (baseKB:will_call_after(lmcache:after_mpred_load,_))
 :- meta_predicate(call_after_mpred_load(0)).
 % call_after_mpred_load(Code):- lmcache:after_mpred_load,!, call_after_next(after_mpred_load_pass2,Code).
 
-%= 	 	 
+	 
 
 %% call_after_mpred_load( :GoalCode) is semidet.
 %
@@ -160,7 +160,7 @@ call_after_mpred_load(Code):- call_after_next(lmcache:after_mpred_load,Code).
 
 :- was_export(rescan_mpred_loaded/0).
 
-%= 	 	 
+	 
 
 %% rescan_mpred_loaded is semidet.
 %
@@ -170,7 +170,7 @@ rescan_mpred_loaded:- ignore((lmcache:after_mpred_load, loop_check(call_after(lm
 
 :- was_export(rescan_mpred_loaded_pass2/0).
 
-%= 	 	 
+	 
 
 %% rescan_mpred_loaded_pass2 is semidet.
 %
@@ -183,7 +183,7 @@ rescan_mpred_loaded_pass2:- ignore((lmcache:after_mpred_load, loop_check(call_af
 % ================================================
 :- was_dynamic(suspend_timers/0).
 
-%= 	 	 
+	 
 
 %% time_tick( ?Time, :GoalPred) is semidet.
 %
@@ -192,7 +192,7 @@ rescan_mpred_loaded_pass2:- ignore((lmcache:after_mpred_load, loop_check(call_af
 time_tick(Time,Pred):- repeat,sleep(Time), (suspend_timers->true;(once(doall(on_x_log_throw(call_no_cuts(Pred)))))),fail.
 
 
-%= 	 	 
+	 
 
 %% hook_one_second_timer_tick is semidet.
 %
@@ -202,7 +202,7 @@ time_tick(Time,Pred):- repeat,sleep(Time), (suspend_timers->true;(once(doall(on_
 baseKB:hook_one_second_timer_tick.
 
 
-%= 	 	 
+	 
 
 %% mpred_one_second_timer is semidet.
 %
@@ -210,7 +210,7 @@ baseKB:hook_one_second_timer_tick.
 %
 mpred_one_second_timer:- repeat,time_tick(1.0,baseKB:hook_one_second_timer_tick),fail.
 
-%= 	 	 
+	 
 
 %% start_one_second_timer is semidet.
 %
@@ -224,7 +224,7 @@ start_one_second_timer:-
 % :-initialization(start_one_second_timer).
 
 
-%= 	 	 
+	 
 
 %% hook_one_minute_timer_tick is semidet.
 %
@@ -234,7 +234,7 @@ start_one_second_timer:-
 baseKB:hook_one_minute_timer_tick.
 
 
-%= 	 	 
+	 
 
 %% mpred_one_minute_timer is semidet.
 %
@@ -242,7 +242,7 @@ baseKB:hook_one_minute_timer_tick.
 %
 mpred_one_minute_timer:- repeat,sleep(60.0),time_tick(60.0,baseKB:hook_one_minute_timer_tick),fail.
 
-%= 	 	 
+	 
 
 %% start_one_minute_timer is semidet.
 %
@@ -254,7 +254,7 @@ start_one_minute_timer:-thread_property(_,alias(mpred_one_minute_timer))-> true 
 
 
 
-%= 	 	 
+	 
 
 %% agenda_do_prequery is semidet.
 %
@@ -273,7 +273,7 @@ agenda_do_prequery:- loop_check(agenda_rescan_mpred_ops,true),!.
 
 % agenda_slow_op_restart:-!.
 
-%= 	 	 
+	 
 
 %% agenda_slow_op_restart is semidet.
 %
@@ -289,7 +289,7 @@ agenda_slow_op_restart:-
 
 :- was_export(agenda_rescan_mpred_ops/0).
 
-%= 	 	 
+	 
 
 %% agenda_rescan_mpred_ops is semidet.
 %
@@ -300,7 +300,7 @@ agenda_rescan_mpred_ops:- agenda_rescan_for_module_ready,!.
 
 :- thread_local(t_l:in_agenda_rescan_for_module_ready/0).
 
-%= 	 	 
+	 
 
 %% agenda_rescan_for_module_ready is semidet.
 %
@@ -312,7 +312,7 @@ agenda_rescan_for_module_ready:- locally(t_l:in_agenda_rescan_for_module_ready,l
 :- was_export(agenda_slow_op_todo/1).
 :- was_dynamic(agenda_slow_op_todo/1).
 
-%= 	 	 
+	 
 
 %% agenda_slow_op_enqueue( :GoalSlow) is semidet.
 %
@@ -324,7 +324,7 @@ agenda_slow_op_enqueue(Slow):- assertz_if_new(agenda_slow_op_todo(Slow)),!.
 
 
 
-%= 	 	 
+	 
 
 %% expire_pre_change( ?VALUE1, ?VALUE2) is semidet.
 %
@@ -333,7 +333,7 @@ agenda_slow_op_enqueue(Slow):- assertz_if_new(agenda_slow_op_todo(Slow)),!.
 expire_pre_change(change(assert,_),_):-expire_tabled_list(all),!. 
 expire_pre_change(_,_).
 
-%= 	 	 
+	 
 
 %% expire_post_change( ?VALUE1, ?VALUE2) is semidet.
 %
@@ -348,7 +348,7 @@ expire_post_change(_,_).
 
 
 
-%= 	 	 
+	 
 
 %% call_after( :GoalWhen, :GoalC) is semidet.
 %
@@ -358,7 +358,7 @@ call_after(When,C):- When,!,do_all_of(When),must_det(C),!.
 call_after(When,C):- assert_next(When,C),!.
 
 
-%= 	 	 
+	 
 
 %% assert_next( ?When, ?C) is semidet.
 %
@@ -371,7 +371,7 @@ assert_next(When,C):- clause_asserted(baseKB:will_call_after(When,logOnFailure(C
 assert_next(When,C):- retractall(baseKB:will_call_after(When,logOnFailure(C))),!, assertz_if_new(baseKB:will_call_after(When,logOnFailure(C))).
 
 
-%= 	 	 
+	 
 
 %% call_after_next( :GoalWhen, ?C) is semidet.
 %
@@ -381,7 +381,7 @@ call_after_next(When,C):- ignore((When,!,do_all_of(When))),assert_next(When,C).
 
 
 
-%= 	 	 
+	 
 
 %% do_all_of_when( :GoalWhen) is semidet.
 %
@@ -391,7 +391,7 @@ do_all_of_when(When):- ignore((more_to_do(When),When,do_all_of(When))).
 
 :- was_export(do_all_of/1).
 
-%= 	 	 
+	 
 
 %% do_all_of( ?When) is semidet.
 %
@@ -399,7 +399,7 @@ do_all_of_when(When):- ignore((more_to_do(When),When,do_all_of(When))).
 %
 do_all_of(When):- ignore(loop_check(do_all_of_ilc(When),true)),!.
 
-%= 	 	 
+	 
 
 %% do_all_of_ilc( ?When) is semidet.
 %
@@ -409,7 +409,7 @@ do_all_of_ilc(When):- not(baseKB:will_call_after(When,_)),!.
 do_all_of_ilc(When):-  repeat,do_stuff_of_ilc(When), not(more_to_do(When)).
 
 
-%= 	 	 
+	 
 
 %% more_to_do( ?When) is semidet.
 %
@@ -418,7 +418,7 @@ do_all_of_ilc(When):-  repeat,do_stuff_of_ilc(When), not(more_to_do(When)).
 more_to_do(When):-predicate_property(baseKB:will_call_after(When,_),number_of_clauses(N)),!,N>0.
 
 
-%= 	 	 
+	 
 
 %% do_stuff_of_ilc( ?When) is semidet.
 %
@@ -430,7 +430,7 @@ do_stuff_of_ilc(When):- baseKB:will_call_after(When,A),!,retract(baseKB:will_cal
 
 
 
-%= 	 	 
+	 
 
 %% show_cgoal( :GoalG) is semidet.
 %
@@ -441,7 +441,7 @@ show_cgoal(G):- slow_sanity((stack_check(9600,dmsg(warning(maybe_overflow(stack_
 
 :- was_export(add_later/1).
 
-%= 	 	 
+	 
 
 %% add_later( ?Fact) is semidet.
 %
@@ -465,7 +465,7 @@ add_later(Fact):- call_after_mpred_load(ain(Fact)).
 %        baseKB:decl_database_hook(change( retract,One_or_All),Fact):- ...
 
 
-%= 	 	 
+	 
 
 %% run_database_hooks( ?Type, ?Hook) is semidet.
 %
@@ -476,7 +476,7 @@ run_database_hooks(Type,HookIn):-run_database_hooks_0(Type,HookIn).
 
 % non recusive of the above
 
-%= 	 	 
+	 
 
 %% run_database_hooks_depth_1( ?Type, ?Hook) is semidet.
 %
@@ -486,7 +486,7 @@ run_database_hooks_depth_1(Type,Hook):- trace_or_throw(use_pfc(run_database_hook
 run_database_hooks_depth_1(Type,Hook):- locally(t_l:noDBaseHOOKS(_),run_database_hooks_0(Type,Hook)).
 
 
-%= 	 	 
+	 
 
 %% kb_db_op( ?KBDB, ?KBDB) is semidet.
 %
@@ -498,7 +498,7 @@ kb_db_op(KBDB,KBDB).
 
 % next line exists because mpred_form allows modules (maybe will change that soon)
 
-%= 	 	 
+	 
 
 %% run_database_hooks_0( ?TypeIn, ?HookIn) is semidet.
 %
@@ -519,7 +519,7 @@ run_database_hooks_0(TypeIn,HookIn):-  trace_or_throw(use_pfc(run_database_hooks
 
 %:-meta_predicate(rescan_all/0).
 
-%= 	 	 
+	 
 
 %% rescan_all is semidet.
 %
@@ -535,7 +535,7 @@ rescan_all:- doall_and_fail(agenda_rescan_mpred_props).
 rescan_all.
 
 
-%= 	 	 
+	 
 
 %% ensure_at_least_one_region is semidet.
 %
@@ -545,7 +545,7 @@ ensure_at_least_one_region:- call_u(isa(_,tRegion)->true;ain(isa(iRegion1,tRegio
 
 % :-meta_predicate(finish_processing_dbase).
 
-%= 	 	 
+	 
 
 %% finish_processing_dbase is semidet.
 %
@@ -566,7 +566,7 @@ baseKB:hook_one_minute_timer_tick:-agenda_slow_op_restart.
 %:-meta_predicate(rescandb/0).
 % rescandb:- forall(defaultAssertMt(World),(findall(File,baseKB:loaded_file_world_time(File,World,_),Files),forall(member(File,Files),ensure_plmoo_loaded_each(File)),call_u(finish_processing_world))).
 
-%= 	 	 
+	 
 
 %% rescandb is semidet.
 %
@@ -579,7 +579,7 @@ rescandb:- call_u(finish_processing_world).
 :- was_export((agenda_mpred_repropigate/0, rescan_duplicated_facts/0, rerun_database_hooks/0 , gather_fact_heads/2)).
 
 
-%= 	 	 
+	 
 
 %% agenda_mpred_repropigate is semidet.
 %
@@ -588,7 +588,7 @@ rescandb:- call_u(finish_processing_world).
 agenda_mpred_repropigate:-  loop_check(rescan_mpred_facts_local).
 
 
-%= 	 	 
+	 
 
 %% rescan_mpred_facts_local is semidet.
 %
@@ -597,7 +597,7 @@ agenda_mpred_repropigate:-  loop_check(rescan_mpred_facts_local).
 rescan_mpred_facts_local:-locally_hide(baseKB:use_cyc_database,(must_det(rescan_duplicated_facts),must_det(rerun_database_hooks))).
 
 
-%= 	 	 
+	 
 
 %% rescan_duplicated_facts is semidet.
 %
@@ -605,7 +605,7 @@ rescan_mpred_facts_local:-locally_hide(baseKB:use_cyc_database,(must_det(rescan_
 %
 rescan_duplicated_facts:- !, notrace( forall(member(M,[moo,user,world,hook]), forall((predicate_property(M:H,dynamic),call_u(arity(F,A)),functor(H,F,A)), rescan_duplicated_facts(M,H)))).
 
-%= 	 	 
+	 
 
 %% rescan_duplicated_facts( ?M, ?H) is semidet.
 %
@@ -615,7 +615,7 @@ rescan_duplicated_facts(_M,_H):-!.
 rescan_duplicated_facts(M,H):-!,rescan_duplicated_facts(M,H,true).
 rescan_duplicated_facts(M,H):-findall(H,(clause_safe(M:H,B),B==true),CF1), once((list_to_set(CF1,CF2),reduce_fact_heads(M,H,CF1,CF2))).
 
-%= 	 	 
+	 
 
 %% rescan_duplicated_facts( ?M, ?H, ?BB) is semidet.
 %
@@ -624,7 +624,7 @@ rescan_duplicated_facts(M,H):-findall(H,(clause_safe(M:H,B),B==true),CF1), once(
 rescan_duplicated_facts(M,H,BB):-notrace(doall((gather_fact_heads(M,H),BB=true,once((findall(C,(clause_safe(H,B),B=@=BB,reduce_clause(clause_u,(H:-B),C)),CF1),
                                                                      list_to_set(CF1,CF2),once(reduce_fact_heads(M,H,CF1,CF2))))))).
 
-%= 	 	 
+	 
 
 %% rerun_database_hooks is semidet.
 %
@@ -636,7 +636,7 @@ rerun_database_hooks:-time_call(doall((clause_u(genls(I,C)),run_database_hooks(c
 rerun_database_hooks:-time_call(doall((isa_asserted(I,C),run_database_hooks(change(assert,z),isa(I,C))))),fail.
 
 
-%= 	 	 
+	 
 
 %% reduce_fact_heads( ?M, ?H, ?CF1, ?CF1) is semidet.
 %
@@ -653,7 +653,7 @@ reduce_fact_heads(M,H,CF1,CF2):-
    forall(member(C,CF2),assertz(M:C)))).
 
 
-%= 	 	 
+	 
 
 %% gather_fact_heads( ?VALUE1, ?VALUE2) is semidet.
 %
@@ -673,7 +673,7 @@ end_prolog_source:- mpred_modify(change( retract,_),t_l:in_prolog_source_code).
 
 
 
-%= 	 	 
+	 
 
 %% assertOnLoad( ?X) is semidet.
 %
@@ -682,7 +682,7 @@ end_prolog_source:- mpred_modify(change( retract,_),t_l:in_prolog_source_code).
 assertOnLoad(X):-add_later(X).
 
 
-%= 	 	 
+	 
 
 %% setTemplate( ?X) is semidet.
 %
@@ -691,7 +691,7 @@ assertOnLoad(X):-add_later(X).
 setTemplate(X):-ain(X).
 
 
-%= 	 	 
+	 
 
 %% englishServerInterface( ?SomeEnglish) is semidet.
 %
@@ -702,7 +702,7 @@ englishServerInterface(SomeEnglish):-dmsg(todo(englishServerInterface(SomeEnglis
 
 :- was_export(onLoad/1).
 
-%= 	 	 
+	 
 
 %% onLoad( :GoalC) is semidet.
 %
@@ -711,7 +711,7 @@ englishServerInterface(SomeEnglish):-dmsg(todo(englishServerInterface(SomeEnglis
 onLoad(C):-call_after_mpred_load(C).
 :- was_export(baseKB:onEachLoad/1).
 
-%= 	 	 
+	 
 
 %% onEachLoad( ?C) is semidet.
 %
@@ -721,7 +721,7 @@ onEachLoad(C):-assert_if_new(baseKB:call_OnEachLoad(C)).
 
 
 
-%= 	 	 
+	 
 
 %% call_after_mpred_load_slow( ?A) is semidet.
 %
@@ -730,7 +730,7 @@ onEachLoad(C):-assert_if_new(baseKB:call_OnEachLoad(C)).
 call_after_mpred_load_slow(A):-dmsg(call_after_mpred_load_slow(A)).
 
 
-%= 	 	 
+	 
 
 %% do_call_OnEachLoad is semidet.
 %
@@ -740,13 +740,16 @@ do_call_OnEachLoad:-forall(call_OnEachLoad(C),doall(C)).
 
 
 
-%= 	 	 
+	 
 
 %% wfAssert( ?X) is semidet.
 %
 % Wf Assert.
 %
 wfAssert(X):-ain(X). % add_later(X).
+
+
+:- fixup_exports.
 
 
 mpred_agenda_file.

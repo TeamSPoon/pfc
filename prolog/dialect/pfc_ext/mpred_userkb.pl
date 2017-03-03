@@ -109,7 +109,7 @@ resultIsa/2,
 % lmcache:isCycAvailable_known/0,
 isCycUnavailable_known/1,
 lambda/5,
-mpred_select/2,
+mpred_select_hook/1,
 localityOfObject/2,
 meta_argtypes/1,
 mpred_action/1,
@@ -118,7 +118,7 @@ mdefault/1, % pfc
 mpred_do_and_undo_method/2,
 %mpred_isa/2,
 %mpred_manages_unknowns/0,
-mpred_mark/3,
+mpred_prop/3,
 predicateConventionMt/2,
 mudKeyword/2,
 mudDescription/2,
@@ -366,7 +366,7 @@ on_modules_changed :-
 %
 % Never Assert For User Code Primary Helper.
 %
-never_assert_u0(mpred_mark(pfcPosTrigger,F,A),Why):- fail,
+never_assert_u0(mpred_prop(F,A,pfcPosTrigger),Why):- fail,
   functor(P,F,A),
   ignore(predicate_property(M:P,exported)),
   defined_predicate(M:P),  
@@ -410,4 +410,5 @@ bad_thing_to_do:- doall((clause(baseKB:safe_wrap(F,A,ereq),Body),
 
 */
 
+:- fixup_exports.
 

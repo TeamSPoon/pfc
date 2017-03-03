@@ -577,7 +577,7 @@ baseKB:hybrid_support(genlMt,2).
 %predicateConventionMt(genlMt,baseKB).
 
 % baseKBOnly mark_mark/3 must be findable from every module (dispite the fact that baseKB is not imported)
-:- dynamic baseKB:mpred_mark/3.
+:- dynamic baseKB:mpred_prop/3.
 
 % hybrid_support (like spft/3) must be defined directly in every module and then aggregated thru genlMts (thus to baseKB)
 
@@ -845,12 +845,7 @@ import_predicate(CM,M:F/A):- show_call(nop(CM:z333import(M:F/A))),CM:multifile(M
   on_xf_cont(CM:discontiguous(M:F/A)).
 
 
-:- ignore((source_location(S,_),prolog_load_context(module,M),
- forall(source_file(M:H,S),
- ignore((functor(H,F,A),
-  ignore(((\+ atom_concat('$',_,F),(export(F/A) , current_predicate(system:F/A)->true; system:import(M:F/A))))),
-  ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
-
+:- fixup_exports.
  
 :- include('mpred_header.pi').
 /*

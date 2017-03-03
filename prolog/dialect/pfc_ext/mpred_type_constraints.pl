@@ -688,6 +688,7 @@ isac:attribute_goals(X) -->
       { get_attr(X, isac, List) },
       [isac(X, List)].
 
+:- fixup_exports.
 
 mpred_type_constraints_file.
 

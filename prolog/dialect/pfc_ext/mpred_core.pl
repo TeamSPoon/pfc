@@ -337,6 +337,28 @@ get_head_term(Form0,Form):- get_consequent(Form0,Form).
 
 :- thread_local(t_l:no_mpred_breaks/0).
 
+decl_rt(RT) :- 
+ '@'((
+   sanity(atom(RT)),
+   Head=..[RT,FP],
+   AIN = ((Head :- cwc, /* dmsg(warn(call(Head))), */ mpred_prop(FP,_,RT))),
+   (clause_asserted(AIN) -> 
+    (listing(RT),
+     sanity((predicate_property(RHead,number_of_clauses(CL)),predicate_property(RHead,number_of_rules(RL)))));
+     
+  ((
+   (current_predicate(RT/1)->
+   ( listing(RT),
+     RHead=..[RT,F/A],
+     forall(retract(RHead),ain(mpred_prop(F,A,RT))),
+     forall(retract(Head),(get_arity(FP,F,A),sanity(atom(F)),sanity(integer(A)),ain(mpred_prop(F,A,RT)))),
+     sanity((predicate_property(RHead,number_of_clauses(CL)),CL==0)),
+     sanity((predicate_property(RHead,number_of_rules(RL)),RL==0)),
+     abolish(RT,1));true),
+
+   asserta(AIN),
+   compile_predicates([Head]),
+   decl_rt(RT))))),baseKB).
 
 mnotrace(G):- (quietly(G)),!.
 
@@ -846,7 +868,7 @@ mpred_ain(PIn,S):-
   must(full_transform(ain,P,P0)),!,
   % P=P0,
   must(ain_fast(P0,S)),!,
-  ignore((P\=@=P0, mpred_db_type(P,fact(_)),show_call(mpred_fwc(P)))).
+  ignore((P\=@=P0, mpred_db_type(P,fact(_)),show_failure(mpred_fwc(P)))).
 
 mpred_ain(P,S):- mpred_warn("mpred_ain(~p,~p) failed",[P,S]),!,fail.
 
@@ -903,8 +925,10 @@ remove_negative_version(P):-
   once((get_source_ref_stack(S),!,
   must(mpred_ain(\+ (~(P)), S)))))),!.
 
+fwc1s_post1s(0,0):-!.
+fwc1s_post1s(1,2):-!.
 fwc1s_post1s(3,0):-!.
-%fwc1s_post1s(1,2):-!.
+fwc1s_post1s(3,0):-!.
 %fwc1s_post1s(1,2):- flag_call(unsafe_speedups == false) ,!.
 
 fwc1s_post1s(1,3):- fresh_mode,!.
@@ -958,7 +982,7 @@ mpred_post1( tCol(','),   _):- dumpST,dtrace.
 
 mpred_post1(P, S):- each_E(mpred_post2,P,[S]).
 
-mpred_post2( P,   S):- sanity(nonvar(P)),fixed_negations(P,P0),!, mpred_post2( P0,   S).
+mpred_post2( P,   S):- sanity(nonvar(P)),fixed_negations(P,P0),P\=@=P0,!, mpred_post2( P0,   S).
 
 mpred_post2(Fact, _):- (true;current_prolog_flag(unsafe_speedups , true)) , ground(Fact),fwc1s_post1s(One,_Two),Three is One * 1,
    filter_buffer_n_test('$last_mpred_post1s',Three,Fact),!.
@@ -1237,7 +1261,10 @@ mpred_enqueue(P,_):- lookup_u(que(P,_)),!.
 %mpred_enqueue(P,_):- clause_asserted(t_l:current_local_why(_,P)),!.
 mpred_enqueue(P,_):- clause_asserted(t_l:busy(P)),!.
 % mpred_enqueue(P,S):- !, assert_u_confirm_if_missing(que(P,S)).
-mpred_enqueue(P,S):-
+
+mpred_enqueue(P,S):- locally(t_l:busy(P),mpred_enqueue0(P,S)).
+
+mpred_enqueue0(P,S):-
  ( (must(get_fc_mode(P,S,Mode))
     -> (Mode=direct  -> loop_check_term(mpred_fwc(P),mpred_enqueueing(P),true) ;
 	Mode=depth   -> mpred_asserta_w_support(que(P,S),S) ;
@@ -1309,10 +1336,10 @@ get_next_fact(P):-
   remove_selection(P).
 
 remove_selection(P):-
-  lookup_u(que(P),Ref),
+  lookup_u(que(P,_),Ref),
   erase(Ref),
-  % must(mpred_retract(que(P))),
-  mpred_remove_supports_quietly(que(P)),
+  % must(mpred_retract(que(P,_))),
+  mpred_remove_supports_quietly(que(P,_)),
   !.
 remove_selection(P):-
   brake(format("~Nmpred_:get_next_fact - selected fact not on Queue: ~p",
@@ -1704,9 +1731,9 @@ mpred_fwc1(Fact):-
 % does some special, built in forward chaining if P is
 %  a rule.
 
-% mpred_do_rule((H:-attr_bind(B,_))):- get_functor(H,F,A),lookup_u(mpred_mark(pfcLHS,F,A)), sanity(nonvar(B)), repropagate(H),!.
+% mpred_do_rule((H:-attr_bind(B,_))):- get_functor(H,F,A),lookup_u(mpred_prop(F,A,pfcLHS)), sanity(nonvar(B)), repropagate(H),!.
 mpred_do_rule((H:-B)):- var(H),sanity(nonvar(B)),forall(call_u(B),mpred_ain(H)),!.
-mpred_do_rule((H:-B)):- get_functor(H,F,A),lookup_u(mpred_mark(pfcLHS,F,A)), sanity(nonvar(B)),forall(call_u(B),mpred_fwc(H)),!.
+mpred_do_rule((H:-B)):- get_functor(H,F,A),lookup_u(mpred_prop(F,A,pfcLHS)), sanity(nonvar(B)),forall(call_u(B),mpred_fwc(H)),!.
 %   !,dtrace,ignore((lookup_u(H),mpred_fwc1(H),fail)).
 
 % mpred_do_rule((H:-B)):- !,ignore((call_u(B),mpred_fwc1(H),fail)).
@@ -2459,7 +2486,7 @@ mpred_mark_as(Sup,~(P),Type):- !,mpred_mark_as(Sup,P,Type).
 mpred_mark_as(Sup,-(P),Type):- !,mpred_mark_as(Sup,P,Type).
 mpred_mark_as(Sup,not(P),Type):- !,mpred_mark_as(Sup,P,Type).
 mpred_mark_as(Sup,[P|PL],Type):- is_list(PL), !,must_maplist(mpred_mark_as_ml(Sup,Type),[P|PL]).
-mpred_mark_as(Sup,( P / CC ),Type):- !, mpred_mark_as(Sup,P,Type),mpred_mark_as(Sup,( CC ),pfcCallCodePreCond).
+mpred_mark_as(Sup,( P / CC ),Type):- !, mpred_mark_as(Sup,P,Type),mpred_mark_as(Sup,( CC ),pfcCallCodeAnte).
 mpred_mark_as(Sup,'{}'(  CC ), _Type):- mpred_mark_as(Sup,( CC ),pfcCallCodeBody).
 mpred_mark_as(Sup,( A , B), Type):- !, mpred_mark_as(Sup,A, Type),mpred_mark_as(Sup,B, Type).
 mpred_mark_as(Sup,( A ; B), Type):- !, mpred_mark_as(Sup,A, Type),mpred_mark_as(Sup,B, Type).
@@ -2477,22 +2504,24 @@ mpred_mark_as(Sup,P,Type):-get_functor(P,F,A),ignore(mpred_mark_fa_as(Sup,P,F,A,
 
 % mpred_mark_fa_as(_Sup,_P,'\=',2,_):- dtrace.
 % BREAKS SIMPLE CASES
-mpred_mark_fa_as(_Sup,_P,_,_,Type):- Type \== pfcLHS, Type \== pfcRHS, current_prolog_flag(unsafe_speedups , true) ,!.
+% mpred_mark_fa_as(_Sup,_P,_,_,Type):- Type \== pfcLHS, Type \== pfcRHS, current_prolog_flag(unsafe_speedups , true) ,!.
 mpred_mark_fa_as(_Sup,_P,isa,_,_):- !.
-mpred_mark_fa_as(_Sup,_P,_,_,pfcCallCodeBody):- !.
-mpred_mark_fa_as(_Sup,_P,_,_,pfcCallCodeTst):- !.
+%mpred_mark_fa_as(_Sup,_P,_,_,pfcCallCodeBody):- !.
+%mpred_mark_fa_as(_Sup,_P,_,_,pfcCallCodeAnte):- !.
 mpred_mark_fa_as(_Sup,_P,t,_,_):- !.
 mpred_mark_fa_as(_Sup,_P,argIsa,N,_):- !,must(N=3).
 mpred_mark_fa_as(_Sup,_P,arity,N,_):- !,must(N=2).
-mpred_mark_fa_as(_Sup,_P,mpred_mark,N,_):- !,must(N=3).
+mpred_mark_fa_as(_Sup,_P,mpred_prop,N,_):- !,must(N=3).
 mpred_mark_fa_as(_Sup,_P,mpred_isa,N,_):- must(N=2).
 mpred_mark_fa_as(_Sup,_P,'[|]',N,_):- dtrace,must(N=2).
 mpred_mark_fa_as(_Sup,_P,_:mpred_isa,N,_):- must(N=2).
 mpred_mark_fa_as(Sup, _P,F,A,Type):- really_mpred_mark(Sup,Type,F,A),!.
 
-really_mpred_mark(_  ,Type,F,A):- call_u_no_bc(mpred_mark(Type,F,A)),!.
+% i hope i am not exagerating but anniepoo used to enter this yearly contest for whom could build graphical assets the most pretty and complex the quickest in secondlife.. (now it makes sense she used a 3d mouse)  she won so much, they and she had to ban herself becasue she always won hands down.. so with this agility to create the physical aspects of a wolrd veery easily .. we realized we could make a fun leanring inpiring world for AIs .. however 
+
+really_mpred_mark(_  ,Type,F,A):- call_u_no_bc(mpred_prop(F,A,Type)),!.
 really_mpred_mark(Sup,Type,F,A):-
-  MARK = mpred_mark(Type,F,A),
+  MARK = mpred_prop(F,A,Type),
   check_never_assert(MARK),
   with_no_mpred_trace_exec(with_fc_mode(direct,mpred_post1(MARK,(s(Sup),ax)))).
   % with_no_mpred_trace_exec(with_fc_mode(direct,mpred_fwc1(MARK,(s(Sup),ax)))),!.
@@ -2524,7 +2553,7 @@ build_code_test(WS,Test,TestO):- is_list(Test),must_maplist(build_code_test(WS),
 build_code_test(_WS,(H:-B),clause_asserted_u(H,B)):- !.
 build_code_test(_WS,M:(H:-B),clause_asserted_u(M:H,B)):- !.
 build_code_test(WS,Test,TestO):- code_sentence_op(Test),Test=..[F|TestL],must_maplist(build_code_test(WS),TestL,TestLO),TestO=..[F|TestLO],!.
-build_code_test(WS,Test,Test):- must(mpred_mark_as(WS,Test,pfcCallCodeTst)),!.
+build_code_test(WS,Test,Test):- must(mpred_mark_as(WS,Test,pfcCallCodeAnte)),!.
 build_code_test(_,Test,Test).
 
 
@@ -2768,6 +2797,7 @@ mpred_retract_i_or_warn(X):-
 :-dynamic(baseKB:spft/3).
 :-asserta(baseKB:spft(a,b,c)).
 :-retractall(baseKB:spft(a,b,c)).
+% :- during_boot(mpred_set_default(mpred_warnings(_), mpred_warnings(true))).
 
 %  mpred_fact(P) is true if fact P was asserted into the database via add.
 
@@ -3579,6 +3609,9 @@ triggerSupports(Trigger,[Fact|MoreFacts]):-
 :- set_prolog_flag(mpred_pfc_file,true).
 % local_testing
 
+:- fixup_exports.
+
+ 
 end_of_file.
 
 
