@@ -198,10 +198,6 @@
 
 :- style_check(+singleton).
 
-:- multifile baseKB:prologBuiltin/1.
-:- discontiguous baseKB:prologBuiltin/1.
-:- dynamic baseKB:prologBuiltin/1.
-
 %% default_te( ?IF, ?VAR, ?VAL) is semidet.
 %
 % Default Te.
@@ -929,7 +925,7 @@ is_unit(A):-notrace(is_unit_like(A)).
 is_unit_like(A):- atomic(A),!.
 is_unit_like(C):-is_unit_like0(C).
 
-is_unit_like0(C):- var(C),!,oo_get_attr(C,sk,_),!.
+is_unit_like0(C):- var(C),!, dictoo:oo_get_attr(C,sk,_),!.
 is_unit_like0(C):- \+ compound(C),!.
 is_unit_like0(C):- C\='VAR'(_),C\='$VAR'(_),C\=(_:-_),C\=ftRest(_),C\=ftListFn(_),get_functor(C,F),is_unit_functor(F).
 
@@ -1011,7 +1007,7 @@ db_expand_final(Op,M:Sent,SentO):- atom(M),is_stripped_module(M),!,db_expand_fin
 db_expand_final(_,Sent,_):- arg(_,Sent,E),compound(E),functor(E,isEach,_),throw(hasEach).
 db_expand_final(_,[_|_],_):- !,fail.
 db_expand_final(_,Arg,Arg):- functor(Arg,s,_),!.
-db_expand_final(_,Sent,Sent):- Sent=..[_,A],(atom(A);var(A);number(A)),!.
+db_expand_final(_,Sent,Sent):- Sent=..[_,A],!,fail,(atom(A);var(A);number(A)),!.
 
 db_expand_final(_ ,isa(Args,Meta_argtypes),  meta_argtypes(Args)):-Meta_argtypes==meta_argtypes,!,is_ftCompound(Args),!,functor(Args,Pred,A),assert_arity(Pred,A).
 % covered db_expand_final(Op,Sent,Sent):- Sent=..[_,A],atom(A),!.
@@ -1019,7 +1015,7 @@ db_expand_final(_ ,isa(Args,Meta_argtypes),  meta_argtypes(Args)):-Meta_argtypes
 % covered db_expand_final(_ ,NC,NC):-functor(NC,_,1),arg(1,NC,T),(not_ftCompound(T)),!.
 db_expand_final(_, Sent,Sent):-is_true(Sent).
 % covered db_expand_final(_,Term,Term):- is_ftCompound(Term),functor(Term,F,_),(cheaply_u(prologBuiltin(F));cheaply_u(argsQuoted(F))).
-% covered db_expand_final(_, arity(F,A),arity(F,A)):- not_ftCompound(F),not_ftCompound(A),!.
+% covered db_expand_final(_, arity(F,A),arity(F,A)):- not_ftCompound(F),not_ftCompound(A),!, (maybe_ain_arity(F,A)).
 %unused db_expand_final(_, tPred(V),tPred(V)):-!,fail, not_ftCompound(V),!.
 %db_expand_final(_ ,NC,NC):-functor(NC,_,1),arg(1,NC,T),db_expand_final(_,T,_),!.
 db_expand_final(_ ,isa(Atom,PredArgTypes), tRelation(Atom)):-PredArgTypes==meta_argtypes,atom(Atom),!.
@@ -1142,7 +1138,9 @@ db_expand_0(Op,Sent,SentO):- cyclic_break(Sent),db_expand_final(Op ,Sent,SentO),
 db_expand_0(Op,pkif(SentI),SentO):- nonvar(SentI),!,must((any_to_string(SentI,Sent),must(expand_kif_string_or_fail(Op,Sent,SentM)),SentM\=@=Sent,!,db_expand_0(Op,SentM,SentO))).
 db_expand_0(_Op,kif(Sent),SentO):- nonvar(Sent),!, must(expand_kif_string(Sent,SentM)),if_defined(sexpr_sterm_to_pterm(SentM,SentO),SentM=SentO).
 
-db_expand_0(_,{Sent},{Sent}):-!.
+db_expand_0(Op,{Sent},{SentO}):- !,fully_expand_goal(Op,Sent,SentO),!.
+db_expand_0(Op,~(Sent),SentO):- !,fully_expand(Op,Sent,SentM)-> 
+  (Sent\=@=SentM -> db_expand_0(Op,~(SentM),SentO) ; SentO = ~(SentM)).
 
 db_expand_0(Op,t(Sent),SentO):- is_ftNonvar(Sent),!,fully_expand_head(Op,Sent,SentO).
 
@@ -1202,6 +1200,10 @@ db_expand_0(_Op,pddlSorts(I,EL),O):- listToE(EL,E),expand_isEach_or_fail(==>genl
 db_expand_0(_Op,pddlTypes(EL),O):- listToE(EL,E),expand_isEach_or_fail(==>isa(E,tCol),O).
 db_expand_0(_Op,pddlPredicates(EL),O):- listToE(EL,E),expand_isEach_or_fail(==>prologHybrid(E),O).
 
+db_expand_0(_,Sent,mpred_prop(F,A,RT)):- compound(Sent),functor(Sent,RT,1),Sent=..[RT,F],atom(F),
+  clause_b(ttRelationType(RT)),must(arity_no_bc(F,A)).
+db_expand_0(_,prop_mpred(RT,F,A),mpred_prop(F,A,RT)).
+
 db_expand_0(Op,DECL,OUT):- 
     compound(DECL)->
     DECL=..[D,FA|Args0] ->
@@ -1216,9 +1218,10 @@ flat_list(Args,Args).
 functor_declares_instance_not_ft(F,C):- functor_declares_instance_0(F,C0),!,C=C0. % , nop(sanity(F\=C0)).
 
 % tSet(tMySet,comment("this was my set"))
-db_expand_set(Op,[TPRED,F,A|Args],OUT):- atom(F),number(A),!,db_expand_set(Op,[TPRED,F/A|Args],OUT),!.
-db_expand_set(Op,[TPRED,F/A|Args],(arity(F,A),OUT)):- is_ftNameArity(F,A),
-   db_expand_set(Op,[TPRED,F| Args],OUT),!.
+db_expand_set(Op,[TPRED,F,A|Args],OUT):- atom(F),number(A),!,db_expand_set(Op,[TPRED,F/A|Args],OUT),!, (maybe_ain_arity(F,A)).
+db_expand_set(Op,[TPRED,F/A|Args],OUT):- is_ftNameArity(F,A),
+   db_expand_set(Op,[TPRED,F| Args],OUT),!,
+    (maybe_ain_arity(F,A)).
 db_expand_set(Op,[TPRED,F|Args],OUT):- atom(F),!,db_expand_0(Op,props(F,[TPRED|Args]),OUT).
 db_expand_set(Op,[TPRED,FARGS|Args],(meta_argtypes(FARGS),OUT)):- 
    compound(FARGS), \+ ((arg(_,FARGS,E),is_ftVar(E))),functor(FARGS,F,A),!,
@@ -1235,19 +1238,22 @@ db_expand_props(Op,DECL,O):- fail, arg(_,DECL,S),string(S),DECL=..[F|Args],mapli
   ArgsO\=@=Args,!,DECLM=..[F|ArgsO],db_expand_0(Op,DECLM,O).
 
 
-db_expand_props(Op,DECL,((arity(F,A),isa(F,TPRED),O))):-DECL=..[D,FA|Args],compound(FA),FA= (F/A),
+db_expand_props(Op,DECL,((isa(F,TPRED),O))):-DECL=..[D,FA|Args],compound(FA),FA= (F/A),
   is_ftNameArity(F,A),functor_declares_instance(D,TPRED),
-  is_ftNonvar(TPRED),is_relation_type(TPRED),expand_props(_Prefix,Op,props(F,[D|Args]),O),!.
+  is_ftNonvar(TPRED),is_relation_type(TPRED),expand_props(_Prefix,Op,props(F,[D|Args]),O),!,
+   (maybe_ain_arity(F,A)).
 
-db_expand_props(Op,DECL,(arity(F,A),isa(F,TPRED),O)):-DECL=..[D,F,A|Args],is_ftNameArity(F,A),functor_declares_instance(D,TPRED),
+db_expand_props(Op,DECL,(isa(F,TPRED),O)):-DECL=..[D,F,A|Args],is_ftNameArity(F,A),functor_declares_instance(D,TPRED),
   arity_zor(D,1),
-  is_ftNonvar(TPRED),is_relation_type(TPRED),expand_props(_Prefix,Op,props(F,[D|Args]),O),!.
+  is_ftNonvar(TPRED),is_relation_type(TPRED),expand_props(_Prefix,Op,props(F,[D|Args]),O),!,
+   (maybe_ain_arity(F,A)).
 
-db_expand_props(Op,DECL,(arity(F,A),isa(F,TPRED),O)):-DECL=..  [D,C|Args],is_ftCompound(C),functor_declares_instance(D,TPRED),
+db_expand_props(Op,DECL,(isa(F,TPRED),O)):-DECL=..  [D,C|Args],is_ftCompound(C),functor_declares_instance(D,TPRED),
   \+ is_ftVar(C),is_non_unit(C)->get_functor(C,F,A),  
   arity_zor(D,1),
   is_ftNonvar(TPRED),expand_props(_Prefix,Op,props(F,[D|Args]),M),!,
-  (\+((arg(_,C,Arg),is_ftVar(Arg))) -> O = (meta_argtypes(C),M) ; (O= (M))).
+  (\+((arg(_,C,Arg),is_ftVar(Arg))) -> O = (meta_argtypes(C),M) ; (O= (M))),
+   (maybe_ain_arity(F,A)).
 
 db_expand_props(Op,DECL,O):-DECL=..[D,F,A1|Args], functor_declares_instance(D,DType),
    arity_zor(D,1),
@@ -1302,6 +1308,8 @@ db_expand_props(Op,typeProps(C,Props),(isa(I,C)=>OOUT)):- (is_ftNonvar(C);is_ftN
 db_expand_props(Op,ClassTemplate,OUT):- ClassTemplate=..[props,Inst,Second,Third|Props],!,
    must(expand_props(_Prefix,Op,props(Inst,[Second,Third|Props]),OUT)),!.
 db_expand_props(Op,arity(F,A),O):-expand_props(_Prefix,Op,props(F,arity(A)),O),!.
+
+maybe_ain_arity(F,A):- ignore((atom(F),integer(A),ain(arity(F,A)))).
 
 db_expand_0(Op,IN,OUT):- IN=..[F|Args],F==t,!,must(from_univ(_,Op,Args,OUT)).
 db_expand_0(Op,isa(A,F),OO):-atom(F),O=..[F,A],!,db_expand_0(Op,O,OO).
@@ -1593,8 +1601,7 @@ into_mpred_form_ilc(G,O):- functor(G,F,A),G=..[F,P|ARGS],!,into_mpred_form6(G,F,
 % ========================================
 % was_mpred_isa(Goal,I,C) recognises isa/2 and its many alternative forms
 % ========================================
-:- was_dynamic decided_not_was_isa/2.
-baseKB:prologBuiltin(was_mpred_isa/3).
+:- dynamic decided_not_was_isa/2.
 
 %= 	 	 
 
@@ -2011,7 +2018,7 @@ exact_args_f(dynamic).
 exact_args_f(dmsg).
 exact_args_f(call_u).
 exact_args_f(call).
-exact_args_f(mpred_mark).
+exact_args_f(mpred_prop).
 exact_args_f(assertz_if_new).
 exact_args_f(asserts_eq_quitely).
 exact_args_f(asserted).
@@ -2232,4 +2239,5 @@ into_functor_form(Dbase_t,_X,HFDS,A,Call):- is_holds_true(HFDS), Call=..[Dbase_t
 into_functor_form(Dbase_t,_X,F,A,Call):-Call=..[Dbase_t,F|A].
 
 
+:- fixup_exports.
 

@@ -904,7 +904,7 @@ out_of_mpred_t(HEAD):-clause_safe(HEAD,true)*->true;show_success(why,call_u(fact
 % Call Rule Database.
 %
 call_rule_db(F,_A,_HEAD):- a(completelyAssertedCollection,F),!,fail.
-call_rule_db(_F,_A,HEAD):- call_u(use_kif(HEAD,_)),!,kif_ask(HEAD).
+call_rule_db(_F,_A,HEAD):- if_defined(use_kif(HEAD,_)),!,call_u(kif_ask(HEAD)).
 call_rule_db(_F,_A,HEAD):- ruleBackward(HEAD,BODY),call_mpred_body(HEAD,BODY).
 
 :- style_check(+singleton).
@@ -1135,5 +1135,6 @@ ensure_universal_stub_plus_mt_why(F,A2):-
    kb_shared(M,F,AMinus2).
 
 
+:- fixup_exports.
 
 mpred_stubs_file.

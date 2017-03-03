@@ -404,5 +404,6 @@ convertToInstance(Name,FunctArgType,Inst):- createByNameMangle(Name,Inst,TypeA),
   %  assert_isa(Inst,FunctArgType),
     call_u(ain(genls(TypeA,FunctArgType))),!.
 
+:- fixup_exports.
 
 mpred_type_naming_file.

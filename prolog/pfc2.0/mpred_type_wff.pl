@@ -30,7 +30,7 @@
             get_kv/3,
             get_pred/2,
             hilog_functor/1,
-
+            fresh_varname/2,
             logical_functor_pttp/1,
             pttp_nnf_pre_clean_functor/3,
             isBodyConnective/1,
@@ -256,16 +256,6 @@ isNonVar(Denotation):-not(isSlot(Denotation)).
 % ===============================================================================================
 % ===============================================================================================
 
-:- if(\+ current_predicate(isSlot/1)).
-
-
-
-%% isSlot( ?Denotation) is semidet.
-%
-% If Is A Slot.
-%
-other:isSlot(Denotation):-((isVarProlog(Denotation);isVarObject(Denotation))),!.
-:- endif.
 
 
 
@@ -727,7 +717,7 @@ is_log_op(OP):- atomic(OP),to_dlog_ops(OPS),!,(member(OP=_,OPS);member(_=OP,OPS)
 put_singles(Wff,_,[],Wff).
 put_singles(Wff,Exists,[S|Singles],NewWff):-   
    (((each_subterm(Wff,SubTerm),compound(SubTerm),
-    SubTerm=..[OtherExists,SO,_],same_var(SO,S),
+    SubTerm=..[OtherExists,SO,_],same_vars(SO,S),
      member(OtherExists,[all,exists])))
  -> WffM = Wff ; WffM =..[Exists,S,Wff]),
    put_singles(WffM,Exists,Singles,NewWff),!.
@@ -1212,5 +1202,22 @@ function_to_predicate(Function,NewVar,PredifiedFunction):-
 function_to_predicate(Function,NewVar,mudEquals(NewVar,Function)):- \+ t_l:dont_use_mudEquals, fresh_varname(Function,NewVar),!.
 
 
+
+
+%= 	 	 
+
+%% fresh_varname( :TermF, ?NewVar) is semidet.
+%
+% Fresh Varname.
+%
+fresh_varname(F,NewVar):-is_ftVar(F),NewVar=F.
+fresh_varname(F,NewVar):-var(F),fresh_varname('mudEquals',NewVar).
+fresh_varname([F0|_],NewVar):-!,fresh_varname(F0,NewVar).
+fresh_varname(F,NewVar):- compound(F),arg(_,F,F1),atom(F1),!,functor(F,F0,_),atom_concat(F0,F1,FN),upcase_atom(FN,FUP),gensym(FUP,VARNAME),NewVar = '$VAR'(VARNAME),!.
+fresh_varname(F,NewVar):- functor(F,FN,_),!, upcase_atom(FN,FUP),gensym(FUP,VARNAME),NewVar = '$VAR'(VARNAME),!.
+
+
+
+:- fixup_exports.
 
 mpred_type_wff_file.

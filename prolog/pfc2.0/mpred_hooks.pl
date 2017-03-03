@@ -26,6 +26,7 @@ lmcache:agent_session/2,
 lmcache:session_agent/2,
 lmcache:session_io/4,
 */
+differentTerms/2,
 relax_term/6,
 fix_sentence/2,
 holds_f/1,
@@ -1547,4 +1548,7 @@ assertion_f(_):- \+(lmcache:loaded_external_kbs(_)),!,fail.
 % ================================================================================
 % end holds_f 
 % ================================================================================
+
+:- fixup_exports.
+
 

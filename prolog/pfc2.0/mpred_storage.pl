@@ -929,7 +929,7 @@ update_single_valued_arg(P,N):- arg(N,P,UPDATE),replace_arg(P,N,OLD,Q),
 
 db_assert_sv(C):- get_functor(C,F,A), db_assert_sv(must,C,F,A),!.
 
-db_assert_sv(Must,C,F,A):- ex, ignore(( loop_check(db_assert_sv_ilc(Must,C,F,A),true))).
+db_assert_sv(Must,C,F,A):-  ignore(( loop_check(db_assert_sv_ilc(Must,C,F,A),true))).
 
 :- was_export((db_assert_sv_ilc/4)).
 db_assert_sv_ilc(Must,C,F,A):- arg(A,C,UPDATE),is_relative(UPDATE),db_assert_sv_now(Must,C,F,A,UPDATE),!.
@@ -1310,6 +1310,8 @@ ensure_dynamic(Head):- Head\=isa(_,_),
    (\+ predicate_property(PF,_)->show_call(why,(dynamic(F/A),multifile(F/A),export(F/A)));
    (is_static_pred(PF)-> 
      ((listing(F/A),dmsg(want_to_assert(ensure_dynamic(Head),decl_mpred_prolog(F,A,Head))),nop(dtrace))); true)).
+
+:- fixup_exports.
 
 mpred_storage_file.
 

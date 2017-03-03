@@ -325,4 +325,5 @@ user:prolog_load_file(Module:Spec, Options):- fail,
 %user:prolog_load_file(_,_):- get_lang(pl),!,fail.
 %user:prolog_load_file(_,_):- set_file_lang(pl),set_lang(pl),fail.
    
-  
+:- fixup_exports.
+

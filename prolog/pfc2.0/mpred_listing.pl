@@ -75,7 +75,7 @@
 %
 % Lqu.
 %
-lqu :- listing(que/1).
+lqu :- listing(que/2).
 
 
  
@@ -260,7 +260,7 @@ pp_supports :-
 pp_filtered(P):-var(P),!,fail.
 pp_filtered(_:P):- !, pp_filtered(P).
 pp_filtered(P):- functor(P,F,A),F\==(/),!,pp_filtered(F/A).
-pp_filtered(F/_):-F==mpred_mark.
+pp_filtered(F/_):-F==mpred_prop.
 
 
 
@@ -448,7 +448,7 @@ mpred_list_triggers_1(What):-
    print_db_items_and_neg('Instances: ',isa(_,IWhat),IWhat),
    print_db_items_and_neg('Subclass Of',genls(IWhat,_),IWhat),
    print_db_items_and_neg('Subclasses: ',genls(_,IWhat),IWhat))),
-   print_db_items('PFC Watches', mpred_mark(_,_,_),What),
+   print_db_items('PFC Watches', mpred_prop(_,_,_),What),
    print_db_items('Triggers Negative', nt(_,_,_,_),What),
    print_db_items('Triggers Goal',bt(_,_,_),What),
    print_db_items('Triggers Positive',pt(_,_,_),What),
@@ -484,7 +484,7 @@ mpred_list_triggers_1(What):-
 
 pinfo(F/A):- listing(F/A),functor(P,F,A),findall(Prop,predicate_property(P,Prop),List),wdmsg(pinfo(F/A)==List),!.
 
-:- source_location(S,_),forall(source_file(M:P,S),(functor(P,F,A),(export(M:F/A),multifile(M:F/A),module_transparent(M:F/A)))).
+:- fixup_exports.
 
 mpred_listing_file.
 

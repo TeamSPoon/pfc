@@ -293,6 +293,7 @@ type_prefix(role,ttKnowledgeType).
 type_prefix(item,ttItemType).
 type_prefix(t,tCol).
 type_prefix(v,vtValue).
+type_prefix(i,tIndividual).
 type_prefix(i,ftID).
 type_prefix(pred,tPred).
 type_prefix(act,ftAction).
@@ -454,8 +455,8 @@ is_known_true(F):-is_known_trew(F),!.
 is_known_true(genls(G,G)).
 is_known_true(isa(apathFn(_,_),tPathway)).
 
-is_known_true(isa(_,ftTerm)).
-is_known_true(isa(_,ftID)).
+%is_known_true(isa(_,ftTerm)).
+%is_known_true(isa(_,ftID)).
 
 
 :- dynamic(is_known_trew/1).
@@ -467,7 +468,7 @@ is_known_true(isa(_,ftID)).
 % If Is A Known Trew.
 %
 is_known_trew(genls(tRegion,tChannel)).
-is_known_trew(genls('MaleAnimal',tAgent)).
+% is_known_trew(genls('tMaleAnimal',tAgent)).
 is_known_trew(genls(prologSingleValued, extentDecidable)).
 is_known_trew(genls(tAgent,tChannel)).
 is_known_trew(genls(completelyAssertedCollection, extentDecidable)).
@@ -653,7 +654,8 @@ not_mud_isa(G,tCol,Why):-never_type_why(G,Why).
 %
 % True Structure Col Gen.
 %
-tSetOrdered(T):- no_repeats(T,call_u(baseKB:(atom(T);ttTemporalType(T);completelyAssertedCollection(T);tSet(T)))). % ,atom(T). ;tCol(T)
+tSetOrdered(T):- nonvar(T),!.
+tSetOrdered(T):- no_repeats(T,(clause_b(ttTemporalType(T));clause_b(completelyAssertedCollection(T));clause_b(tSet(T)))). % ,atom(T). ;tCol(T)
 tCol_gen(T):- tSetOrdered(T). % no_repeats(T,call_u(baseKB:(atom(T);ttTemporalType(T);completelyAssertedCollection(T);tSet(T);tCol(T)))). % ,atom(T).
 % ==========================
 % isa_backchaing(i,c)
@@ -778,7 +780,6 @@ isa_backchaing_1(I,C):- fail,
 %  (isa/2) asserted.
 %
 
-isa_asserted(I,C):-  clause_b(mudIsa(I,C)).
 isa_asserted(I,C):-  compound(I),!,no_repeats(loop_check(isa_asserted_0(I,C))).
 isa_asserted(I,C):-  ground(I:C),!,no_loop_check(no_repeats(loop_check(isa_asserted_0(I,C)))).
 isa_asserted(I,C):-  no_repeats(loop_check(isa_asserted_0(I,C))).
@@ -801,21 +802,24 @@ isa_complete(I,C):- compound(I),is_non_unit(I),is_non_skolem(I),!,get_functor(I,
 isa_asserted_0(isInstFn(I),C):-nonvar(I),dtrace,!,C=I.
 isa_asserted_0(aRelatedFn(C,_),I):-nonvar(C),!,C=I.
 isa_asserted_0(aRelatedFn(C,_,_),I):-nonvar(C),!,C=I.
+isa_asserted_0(I,C):-  clause_b(mudIsa(I,C)).
 isa_asserted_0(I,C):- ((t_l:useOnlyExternalDBs,!);baseKB:use_cyc_database),(kbp_t([isa,I,C]);kbp_t([C,I])).
 
 isa_asserted_0(I,C):- atom(I),isa_from_morphology(I,C).
 isa_asserted_0(I,C):- (atom(I);atom(C)),type_isa(I,C).
 
 isa_asserted_0(I,C):- var(C),!,tCol_gen(C),nonvar(C),isa_asserted_0(I,C).
-isa_asserted_0(I,C):- sanity(tCol(C)), call_u(mpred_univ(C,I,CI)),call_u(CI).
+isa_asserted_0(I,C):- clause_b(ttExpressionType(C)),!,fail.
 isa_asserted_0(ttRelationType, completelyAssertedCollection):-!.
+isa_asserted_0(I,tCol):- !, clause_b(tCol(C)).
+isa_asserted_0(I,tSet):- !, clause_b(tSet(C)).
+isa_asserted_0(I,C):- atom(C),current_predicate(C,_:G),G=..[C,I],(predicate_property(G,number_of_clauses(_))->clause(G,true);on_x_fail(call_u(G))).
 isa_asserted_0(I,_):- nonvar(I),sanity(\+ is_ftVar(I)), clause_b(completeIsaAsserted(I)),!,fail.
 isa_asserted_0(_,C):- sanity(\+ is_ftVar(C)), clause_b(completelyAssertedCollection(C)),!,fail.
 % isa_asserted_0(I,C):-  not_mud_isa(I,C),!,fail.
 % isa_asserted_0(I,C):- I == ttTypeByAction, C=ttTypeByAction,!,fail.
 % isa_asserted_0(I,C):- HEAD= isa(I, C),ruleBackward(HEAD,BODY),dtrace,call_mpred_body(HEAD,BODY).
 
-% isa_asserted_0(I,C):- atom(C),current_predicate(C,_:G),G=..[C,I],(predicate_property(G,number_of_clauses(_))->clause(G,true);on_x_fail(call_u(G))).
 % isa_asserted_0(I,C):- ( ((is_ftVar(C);chk_ft(C)),if_defined(term_is_ft(I,C)))*->true;type_deduced(I,C) ).
 isa_asserted_0(I,C):- is_ftCompound(I),is_non_unit(I),is_non_skolem(I),!,get_functor(I,F),compound_isa(F,I,C).
 isa_asserted_0(I,C):- isa_asserted_compound(I,C).
@@ -1304,6 +1308,15 @@ call_u_t(DB,P,L,A1,A2):-call_u(call(DB,P,L,A1,A2)).
 call_u_t(DB,P,L,A1):-call_u(call(DB,P,L,A1)).
 call_u_t(DB,P,L):-call_u(call(DB,P,L)).
 call_u_t(DB,P):-call_u(call(DB,P)).
+
+%% mpred_univ( ?C, ?I, ?Head) is det.
+%
+% Managed Predicate Univ.
+%
+% TODO decide if still needed 
+mpred_univ(C,I,Head):- atom(C),!,Head=..[C,I],predicate_property(Head,number_of_clauses(_)).
+
+:- fixup_exports.
 
 mpred_type_isa_file.
 
