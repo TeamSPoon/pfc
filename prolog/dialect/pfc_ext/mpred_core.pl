@@ -1005,11 +1005,11 @@ leave_some_vars_at_el(==>).
 
 is_ftOpen(A):- member(A,['$VAR'('????????????'),'$VAR'(_)]).
 
-is_ftOpenSentence(P):- is_ftOpen(P).
 is_ftOpenSentence(P):- compound(P), functor(P,F,N), \+ leave_some_vars_at_el(F),
    (arg(N,P,A);(N\==1,arg(1,P,A))),is_ftOpen(A).
+is_ftOpenSentence(P):- is_ftOpen(P).
 
-mpred_post12(P, S):- is_ftOpenSentence(P)->wdmsg((error(trace_or_throw(var_mpred_post1(P, S))))),!.
+mpred_post12(P, S):- is_ftOpenSentence(P)->wdmsg((warn((var_mpred_post1(P, S))))),fail.
 
 mpred_post12( \+ P,   S):- nonvar(P), !, must(mpred_post1_rem(P,S)).
 
