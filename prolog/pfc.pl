@@ -4,12 +4,11 @@
 % Douglas Miles
 
 */
-%:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )). 
-:- module(logicmoo_base_file,[]).
-:- '$set_source_module'(baseKB).
-%:- endif.
+:- module(pfc_loader,[]).
 :- load_files(library(prolog_stack), [silent(true)]).
-%prolog_stack:stack_guard(none).
+prolog_stack:stack_guard(none).
+:- use_module(library(attvar_serializer)).
+
 
 :- multifile(baseKB:'already_decl_kb_shared'/3).
 :- dynamic(baseKB:'already_decl_kb_shared'/3).
@@ -56,23 +55,19 @@
    tms/1, %basePFC
    prologSingleValued/1)).
 
-:- baseKB:ensure_loaded(library(logicmoo_utils)).
+:- use_module(library(logicmoo_utils)).
 :- if( \+ current_predicate(system:each_call_cleanup/3)).
-:- ensure_loaded(system:library(each_call_cleanup)).
+:- use_module(system:library(each_call_cleanup)).
 :- endif.
 
-% Kill YALL
-:- ensure_loaded(system:library(yall)).
-:- locally(set_prolog_flag(access_level,system),
-   doall(( source_file(yall:lambda_functor(_),O),source_file(M:X,O),M\==yall,
-   clause(M:X,_,Ref),clause_property(Ref,file(O)),on_x_fail(erase(Ref))))).
+% Make YALL require ">>" syntax (the problem was it autoloads when its sees PFC code containing "/" and gripes all the time)
+disable_yall:- multifile(yall:lambda_functor/1),
+   dynamic(yall:lambda_functor/1),
+   use_module(yall:library(yall)),
+   retract(yall:lambda_functor('/')).
 
-:- locally(set_prolog_flag(access_level,system),
-   doall(( source_file(yall:lambda_functor(_),O),source_file(M:X,O),M\==yall,
-   clause(M:X,B,Ref),clause_property(Ref,file(O)),wdmsg((M:X :- B)),on_x_fail(erase(Ref))))).
+:- disable_yall.
 
-:- abolish(yall:lambda_functor,1),dynamic(yall:lambda_functor/1).
-:- abolish(yall:lambda_like,1),dynamic(yall:lambda_like/1).
 
 /*
 % baseKB:startup_option(datalog,sanity). %  Run datalog sanity tests while starting
@@ -106,7 +101,7 @@ lmbase:skip_module_decl:-
    (current_prolog_flag(xref,true)-> false ;
     (current_prolog_flag(logicmoo_autoload,true)-> false ;
       ((prolog_load_context(file,F),  prolog_load_context(source,F))
-             -> throw(error(format(":- include(~w).",[F]),ensure_loaded(F))) ; true))). 
+             -> throw(error(format(":- include(~w).",[F]),reexport(F))) ; true))). 
 
 %%% TODO one day :- set_prolog_flag(logicmoo_include,fail).
 
@@ -124,31 +119,29 @@ baseKB:mpred_skipped_module(eggdrop).
 :- multifile(baseKB:safe_wrap/3).
 :- dynamic(baseKB:safe_wrap/3).
 
-:- set_prolog_flag(lm_expanders,false).
-:- autoload([verbose(false)]).
-:- set_prolog_flag(lm_expanders,true).
-:- set_prolog_flag(virtual_stubs,true).
-:- set_prolog_flag(mpred_te,false).
 
-:- dmsg("Ensuring PFC Loaded",[]).
+:- dmsg("Ensuring PFC Loaded").
 
-:- ensure_loaded(system:library('pfc2.0/mpred_core.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_at_box.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_type_isa.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_expansion.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_loader.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_props.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_kb_ops.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_agenda.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_storage.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_listing.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_stubs.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_type_constraints.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_type_naming.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_type_wff.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_type_args.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_hooks.pl')).
-:- ensure_loaded(system:library('pfc2.0/mpred_prolog_file.pl')).
+:- use_module(library(subclause_expansion)).
+:- use_module(library(virtualize_source)).
+:- reexport(system:library('pfc2.0/mpred_core.pl')).
+:- reexport(system:library('pfc2.0/mpred_at_box.pl')).
+:- set_prolog_flag_until_eof(virtual_stubs,true).
+:- reexport(system:library('pfc2.0/mpred_type_isa.pl')).
+:- reexport(system:library('pfc2.0/mpred_expansion.pl')).
+:- reexport(system:library('pfc2.0/mpred_loader.pl')).
+:- reexport(system:library('pfc2.0/mpred_props.pl')).
+:- reexport(system:library('pfc2.0/mpred_kb_ops.pl')).
+:- reexport(system:library('pfc2.0/mpred_agenda.pl')).
+:- reexport(system:library('pfc2.0/mpred_storage.pl')).
+:- reexport(system:library('pfc2.0/mpred_listing.pl')).
+:- reexport(system:library('pfc2.0/mpred_stubs.pl')).
+:- reexport(system:library('pfc2.0/mpred_type_constraints.pl')).
+:- reexport(system:library('pfc2.0/mpred_type_naming.pl')).
+:- reexport(system:library('pfc2.0/mpred_type_wff.pl')).
+:- reexport(system:library('pfc2.0/mpred_type_args.pl')).
+:- reexport(system:library('pfc2.0/mpred_hooks.pl')).
+:- reexport(system:library('pfc2.0/mpred_prolog_file.pl')).
 
 
 :- autoload([verbose(false)]).
@@ -187,10 +180,10 @@ baseKB:sanity_check:- doall((baseKB:mtProlog(M),
 % Load boot base file
 user:lmbf:- 
  locally( set_prolog_flag(mpred_te,true),
-  locally( set_prolog_flag(lm_expanders,true),
+  locally( set_prolog_flag(subclause_expansion,true),
    locally(set_prolog_flag(pfc_booted,false),
      with_umt(baseKB,
-  prolog_statistics:time((ensure_loaded(baseKB:library(logicmoo/pfc/'system_base.pfc')))))))),
+  prolog_statistics:time((reexport(baseKB:library(logicmoo/pfc/'system_base.pfc')))))))),
   set_prolog_flag(pfc_booted,true).
 
 :- module_transparent(user:exception/3).
@@ -219,7 +212,8 @@ in_clause_expand(I):-
 in_clause_expand(_).
 
 
-maybe_should_rename(M,O):-current_prolog_flag(do_renames,term_expansion),do_renames(M,O),!.
+% SHOULD NOT NEED THIS 
+%          maybe_should_rename(M,O):-current_prolog_flag(do_renames,term_expansion),if_defined(do_renames(M,O)),!.
 maybe_should_rename(O,O).
 
 
@@ -229,57 +223,66 @@ maybe_should_rename(O,O).
 :- dynamic(baseKB:expect_file_mpreds/1).
 
 :- if( \+ prolog_load_context(reload,true)).
-:- during_boot(source_location(File, _)->asserta(baseKB:ignore_file_mpreds(File))).
+:- source_location(File, _)-> during_boot((asserta(baseKB:ignore_file_mpreds(File)))).
 :- doall((module_property(M,file(File)),module_property(M,class(library)),asserta(baseKB:ignore_file_mpreds(File)))).
 :- doall((source_file(File),asserta(baseKB:ignore_file_mpreds(File)))).
 :- doall((virtualize_ereq(F,A),base_kb_dynamic(F,A))).
 :- endif.
 
+:- discontiguous(baseKB:'$pldoc'/4).
+
 % file late late joiners
-baseKB:ignore_file_mpreds(File):- atom(File), module_property(M,file(File)),module_property(M,class(library)),asserta(baseKB:ignore_file_mpreds(File)),!.
-baseKB:ignore_file_mpreds(File):- atom(File),( atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File)),!,asserta(baseKB:expect_file_mpreds(File)),fail.
-baseKB:ignore_file_mpreds(File):- atom(File), baseKB:expect_file_mpreds(File),!,fail.
-baseKB:ignore_file_mpreds(File):- baseKB:expect_file_mpreds(Stem),atom_concat(Stem,_,File),!,asserta(baseKB:expect_file_mpreds(File)),!,fail.
-baseKB:ignore_file_mpreds(File):- baseKB:ignore_file_mpreds(Stem),atom_concat(Stem,_,File),!,asserta(baseKB:ignore_file_mpreds(File)).
-baseKB:ignore_file_mpreds(File):- asserta(baseKB:expect_file_mpreds(File)),!,fail.
+
+baseKB:ignore_file_mpreds(File):- atom(File),check_ignore_file_mpreds(File).
+
+check_ignore_file_mpreds(File):- baseKB:expect_file_mpreds(File),!,fail.
+check_ignore_file_mpreds(File):- ( atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File)),!,asserta(baseKB:expect_file_mpreds(File)),fail.
+check_ignore_file_mpreds(File):- baseKB:expect_file_mpreds(Stem),atom_concat(Stem,_,File),!,asserta(baseKB:expect_file_mpreds(File)),!,fail.
+check_ignore_file_mpreds(File):- baseKB:ignore_file_mpreds(Stem),atom_concat(Stem,_,File),!,asserta(baseKB:ignore_file_mpreds(File)).
+%check_ignore_file_mpreds(File):- module_property(M,file(File)),module_property(M,class(library)),asserta(baseKB:ignore_file_mpreds(File)),!.
+% check_ignore_file_mpreds(File):- baseKB:ignore_file_mpreds(File),!.
+% check_ignore_file_mpreds(File):- asserta(baseKB:expect_file_mpreds(File)),!,fail.
 
 cannot_expand_current_file:- prolog_load_context(module,M),module_property(M,class(library)),!.
 cannot_expand_current_file:- source_location(File,_)->baseKB:ignore_file_mpreds(File),!.
 
 base_kb_dynamic(F,A):- ain(mpred_prop(F,A,prologHybrid)),kb_shared(F/A).
 
-in_dialect_pfc:- \+ current_prolog_flag(dialect_pfc,false),
-  ((current_prolog_flag(dialect_pfc,true); 
-  is_pfc_file)),!.
 
-is_pfc_file:- source_location(F,_W),( atom_concat(_,'.pfc.pl',F);atom_concat(_,'.plmoo',F);atom_concat(_,'.pfc',F)).
+in_dialect_pfc:- is_pfc_file. % \+ current_prolog_flag(dialect_pfc,false),!.
+
+is_pfc_file:- source_location(File,_W),( atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File)),!.
+
 
 :- module_transparent(base_clause_expansion/2).
-base_clause_expansion(_,_):- in_goal_expansion, !, fail.
-base_clause_expansion(I,O):- base_clause_expansion_r(I,M),!,
-   notrace((maybe_should_rename(M,O), ignore(( I\==O , nop(dmsg(base_clause_expansion(I)-->O)))))).
+base_clause_expansion('==>'(I),':-'(ain_expanded('==>'(I)))):- !.
+base_clause_expansion('==>'(I,M),':-'(ain_expanded('==>'(I,M)))):- !.
+base_clause_expansion('<==>'(I,M),':-'(ain_expanded('<==>'(I,M)))):- !.
+base_clause_expansion('?=>'(I), ':-'(O)):- !, sanity(nonvar(I)), fully_expand('==>'(I),O),!. % @TODO NOT NEEDED REALY UNLESS DO mpred_expansion:reexport(library('pfc2.0/mpred_expansion.pl')),
+base_clause_expansion(':-'(I), ':-'(I)):- !.
+base_clause_expansion(IN, ':-'(ain_expanded(IN))):- compound(IN),is_pfc_file.
 
-:- module_transparent(base_clause_expansion_r/2).
-base_clause_expansion_r(':-'(IN), ':-'(O)):- !, IN = ('==>'(I)), sanity(nonvar(I)), fully_expand('==>'(I),O),!. % @TODO NOT NEEDED REALY UNLESS DO mpred_expansion:ensure_loaded(library('pfc2.0/mpred_expansion.pl')),
-base_clause_expansion_r('==>'(I),  ':-'(ain_expanded('==>'(O)))):- !, sanity(nonvar(I)),must( fully_expand('==>'(I),O)), mpred_core:get_consequent_functor(O,F,A),kb_shared(F/A),ain(mpred_prop(F,A,prologHybrid)).
-base_clause_expansion_r('==>'(I,M),':-'(ain_expanded('==>'(I,M)))):- !.
-base_clause_expansion_r('<==>'(I,M),':-'(ain_expanded('<==>'(I,M)))):- !.
-base_clause_expansion_r('<-'(I,M),':-'(ain_expanded('<-'(I,M)))):- !,mpred_core:get_consequent_functor(I,F,A),base_kb_dynamic(F,A).
-base_clause_expansion_r(':-'(I,(Cwc,O)),':-'(ain_expanded(':-'(I,(Cwc,O))))):- Cwc == cwc,!,mpred_core:get_consequent_functor(I,F,A),base_kb_dynamic(F,A).
-base_clause_expansion_r(I, O):- mpred_core:get_consequent_functor(I,F,A)->base_clause_expansion_fa(I,O,F,A),!. % @TODO NOT NEEDED REALY UNLESS DO mpred_core:ensure_loaded(library('pfc2.0/mpred_core.pl')),
+/*
+
+
+base_clause_expansion('==>'(I),  ':-'(ain_expanded('==>'(O)))):- !, sanity(nonvar(I)),must( fully_expand('==>'(I),O)),
+   mpred_core:get_consequent_functor(O,F,A),kb_shared(F/A),ain(mpred_prop(F,A,prologHybrid)).
+base_clause_expansion('<-'(I,M),':-'(ain_expanded('<-'(I,M)))):- !,mpred_core:get_consequent_functor(I,F,A),base_kb_dynamic(F,A).
+base_clause_expansion(':-'(I,(Cwc,O)),':-'(ain_expanded(':-'(I,(Cwc,O))))):- Cwc == cwc,!,mpred_core:get_consequent_functor(I,F,A),base_kb_dynamic(F,A).
+base_clause_expansion(I, O):- mpred_core:get_consequent_functor(I,F,A)->base_clause_expansion_fa(I,O,F,A),!. % @TODO NOT NEEDED REALY UNLESS DO mpred_core:reexport(library('pfc2.0/mpred_core.pl')),
 
 % Checks if **should** be doing base_expansion or not      
 :- module_transparent(base_clause_expansion_fa/4).
 base_clause_expansion_fa(_,_,F,A):- clause_b(mpred_prop(F,A,prologBuiltin)),!,fail.
-base_clause_expansion_fa(I,O,F,A):- 
-  (needs_pfc(F,A) -> true ; (in_dialect_pfc, \+ cannot_expand_current_file, !, base_kb_dynamic(F,A))),!,
-  base_clause_expansion_r('==>'(I),O).
+base_clause_expansion_fa(I,O,F,A):- (needs_pfc(F,A) -> true ; base_kb_dynamic(F,A)),
+  base_clause_expansion('==>'(I),O).
 base_clause_expansion_fa(_,_,F,A):- ain(mpred_prop(F,A,prologBuiltin)),!,fail.
 
 :- module_transparent(needs_pfc/2).
 needs_pfc(F,_):- (clause_b(functorIsMacro(F));clause_b(functorDeclares(F))).
+needs_pfc(F,A):- base_kb_dynamic(F,A).
 needs_pfc(F,A):- clause_b(mpred_prop(F,_,prologHybrid)), \+ clause_b(mpred_prop(F,A,prologBuiltin)).
-/*
+
 maybe_builtin(I) :- nonvar(I),get_consequent_functor(I,F,A),
    \+ (clause_b(functorIsMacro(F));clause_b(functorDeclares(F));clause_b(mpred_prop(F,A,prologHybrid))),
    ain(prologBui sltin(F/A)).
@@ -288,14 +291,13 @@ maybe_builtin(I) :- nonvar(I),get_consequent_functor(I,F,A),
 
 % :- ( defaultAssertMt(_)->true;set_defaultAssertMt(baseKB)).
 
-% :- ensure_loaded(system:library('pfc2.0/mpred_userkb.pl')).
+% :- reexport(system:library('pfc2.0/mpred_userkb.pl')).
 
 
 :- sanity((clause(baseKB:ignore_file_mpreds(_),B),compound(B))).
 
-:- autoload([verbose(false)]).
+%:- autoload([verbose(false)]).
 :- statistics.
-:- set_prolog_flag(lm_expanders,true).
 
 :- ain(arity(functorDeclares, 1)).
 % Load boot base file
@@ -318,27 +320,35 @@ system:term_expansion_UNUSED(:-module(M,List),Pos,ExportList,Pos):- nonvar(Pos),
 %system:goal_expansion(I,P1,O,P2):- current_prolog_flag(mpred_te,true),mpred_te(goal,system,I,P1,O,P2).
 %system:term_expansion(I,P1,O,P2):- current_prolog_flag(mpred_te,true),mpred_te(term,system,I,P1,O,P2).
 
-% system:clause_expansion(I,PosI,O,PosI):- base_clause_expansion(I,O),!.
-system:term_expansion(I,PosI,O,PosI):- compound(I),nonvar(PosI), \+ current_prolog_flag(lm_expanders,false),
-      in_clause_expand(I) -> base_clause_expansion(I,O) ->I\==O,!.
-      
+
 % Enable System
-% system:exception(undefined_predicate,MFA, Action):- trace, current_prolog_flag(retry_undefined,true),ensure_loaded(library('pfc2.0/mpred_at_box.pl')), must(loop_check(mpred_at_box:uses_predicate(MFA, Action),Action=error)).
+% system:exception(undefined_predicate,MFA, Action):- trace, current_prolog_flag(retry_undefined,true),reexport(library('pfc2.0/mpred_at_box.pl')), must(loop_check(mpred_at_box:uses_predicate(MFA, Action),Action=error)).
 user:exception(undefined_predicate, MFA, Action):- fail, current_prolog_flag(retry_undefined,true),
-  ensure_loaded(library('pfc2.0/mpred_at_box.pl')), 
+  reexport(library('pfc2.0/mpred_at_box.pl')), 
     must(loop_check(mpred_at_box:uses_predicate(MFA, Action),Action=error)).
 
-:- set_prolog_flag(mpred_te,true).
-:- set_prolog_flag(lm_expanders,true).
-:- set_prolog_flag(read_attvars,false).
-:- set_prolog_flag(pfc_booted,false).
-:- set_prolog_flag(virtual_stubs,true).
-:- retractall(t_l:disable_px).
+pfc_clause_expansion(I,O):- compound(I),base_clause_expansion(I,M),!,I\=@=M,
+   notrace((maybe_should_rename(M,MO), ignore(( (:-ain_expanded(I))\==MO , dmsg(pfc_clause_expansion(I)-->MO))))),
+   maybe_directive_to_clauses(MO,O),ignore(( O\==MO , (dmsg(pfc_clause_expansion(I)-->O)))),!.
+
+%maybe_directive_to_clauses(:- ain(A),Clauses):- loader_side_effect_capture_only(ain(A),Clauses).
+%maybe_directive_to_clauses(:- ain_expanded(A),Clauses):- loader_side_effect_capture_only(ain(A),Clauses).
+maybe_directive_to_clauses(O,O):-!.
+
 
 % prolog:message(ignored_weak_import(Into, From:PI))--> { nonvar(Into),Into \== system,dtrace(dmsg(ignored_weak_import(Into, From:PI))),fail}.
 % prolog:message(Into)--> { nonvar(Into),functor(Into,_F,A),A>1,arg(1,Into,N),\+ number(N),dtrace(wdmsg(Into)),fail}.
 
-:- ensure_loaded(baseKB:library(logicmoo/pfc/'system_base.pfc')).
-
 :- fixup_exports.
+
+% % :- set_prolog_flag(mpred_te,true).
+ % :- set_prolog_flag(subclause_expansion,true).
+:- set_prolog_flag(read_attvars,false).
+:- set_prolog_flag(pfc_booted,false).
+%:- set_prolog_flag_until_eof(virtual_stubs,true).
+:- retractall(t_l:disable_px).
+
+system:clause_expansion(I,O):- pfc_clause_expansion(I,O).
+% system:term_expansion(I,P1,O,P2):- is_pfc_file,mpred_te(term,system,I,P1,O,P2).
+:- ensure_loaded(baseKB:library(logicmoo/pfc/'system_base.pfc')).
 

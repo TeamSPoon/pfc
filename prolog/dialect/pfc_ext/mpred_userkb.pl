@@ -220,8 +220,8 @@ prologEquality/1,pfcBcTrigger/1,meta_argtypes/1,pfcDatabaseTerm/1,pfcControlled/
 :- set_fileAssertMt(baseKB).
 */
 
-:- '$set_source_module'(baseKB).
-:- '$set_typein_module'(baseKB).
+%:- '$set_source_module'(baseKB).
+%:- '$set_typein_module'(baseKB).
 
 
 kb_shared_m(E):- must(with_source_module(baseKB,decl_as(kb_shared,E))).
@@ -254,9 +254,10 @@ kb_shared_m(E):- must(with_source_module(baseKB,decl_as(kb_shared,E))).
       resolverConflict_robot(+).
 
 
-
+:- multifile(baseKB:ignore_file_mpreds/1).
+:- dynamic(baseKB:ignore_file_mpreds/1).
 :- source_location(F,_),asserta(baseKB:ignore_file_mpreds(F)).
-:- '$set_source_module'(baseKB).
+%:- '$set_source_module'(baseKB).
 
 
 %% skolem( ?X, ?SK) is semidet.

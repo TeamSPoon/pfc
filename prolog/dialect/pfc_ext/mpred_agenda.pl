@@ -736,7 +736,7 @@ call_after_mpred_load_slow(A):-dmsg(call_after_mpred_load_slow(A)).
 %
 % Do Call On Each Load.
 %
-do_call_OnEachLoad:-forall(call_OnEachLoad(C),doall(C)).
+do_call_OnEachLoad:-forall(ereq(call_OnEachLoad(C)),doall(C)).
 
 
 

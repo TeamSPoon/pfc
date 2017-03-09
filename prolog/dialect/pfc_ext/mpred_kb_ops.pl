@@ -633,6 +633,7 @@ set_prolog_stack_gb(Six):-set_prolog_stack(global, limit(Six*10**9)),set_prolog_
 %
 :- multifile(baseKB:mpred_hook_rescan_files/0).
 :- dynamic(baseKB:mpred_hook_rescan_files/0).
+:- use_module(library(logicmoo_util_common)).
 :- during_boot(set_prolog_stack_gb(16)).
 %:- was_dynamic(use_presently/0).
 % used to annotate a predciate to indicate PFC support
@@ -741,15 +742,18 @@ attvar_op(Op,MData):-
    add_side_effect(OpA,M:Data),
    (current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0))),
    (==(Data,Data0)->
-     physical_side_effect(call(M:OpA,M:Data0));
+     physical_side_effect_call(M,OpA,Data0);
 
-   ((atom_concat(assert,_,OpA) -> physical_side_effect(M:call(M:OpA,M:Data0)));
+   ((atom_concat(assert,_,OpA) -> physical_side_effect_call(M,OpA,Data0));
    ((
     % nop((expand_to_hb(Data0,H,B),split_attrs(B,BA,G))),
     dtrace, 
-    physical_side_effect(M:call(M:OpA,M:Data0))
+    physical_side_effect_call(M,OpA,Data0)
     )))).
 
+physical_side_effect_call(M,OpA,Data0):- is_side_effect_disabled,!,mpred_warn('no_physical_side_effects ~p',M:call(M:OpA,M:Data0)).
+physical_side_effect_call(M,assertz_i,Data0):- compile_aux_clauses(M:Data0),!.
+physical_side_effect_call(M,OpA,Data0):- show_failure(physical_side_effect(M:call(M:OpA,M:Data0))).
 
 
 %% erase_w_attvars( +Data0, ?Ref) is semidet.
