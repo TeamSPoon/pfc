@@ -298,6 +298,7 @@ modality(~,[not],[]).
 modality(~,[never],[]).
 
 
+:- baseKB:kb_shared(onStart/1).
 
 %= 	 	 
 
