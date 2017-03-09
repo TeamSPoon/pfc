@@ -1001,6 +1001,7 @@ equals_call(X,Y):-once((to_word_list(X,XX),to_word_list(Y,YY))),unify_with_occur
 equals_call(X,Y):-compound(X),compound(Y),once((correctArgsIsa(X,XX),correctArgsIsa(Y,YY))),unify_with_occurs_check(XX,YY),!.
 
 
+
 %= 	 	 
 
 %% confirm_hook( :TermCNEW) is semidet.

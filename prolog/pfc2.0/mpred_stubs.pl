@@ -741,21 +741,21 @@ mpred_t_storage_op(Op,(Head:-Body)):-
    (mud_call_store_op(Op2,(Head:-Body))).  
 
 % OLD RULE HOOK (but we are using it in parallel)
-mpred_t_storage_op(Op,(Head:-Body)):- \+ call_u(baseKB:use_kif(Head,Body)),
+mpred_t_storage_op(Op,(Head:-Body)):- \+ if_defined(use_kif(Head,Body)),
   wdmsg(saved_clause_in_hybridRule(Op,Head,Body)),!,
       (mud_call_store_op(Op,ruleBackward(Head,Body))).  
 
 % PTTP RULE HOOK   
 mpred_t_storage_op(Op,(Head:-Body)):- 
-   call_u(baseKB:use_kif(Head,Body)),!, 
+   if_defined(use_kif(Head,Body)),
    reduce_mpred_op(Op,Op2), 
    CALL0 = (call(Op2,ruleBackward(Head,Body))), % remember outside of KIF just in case
-   must(((CALL0,mpred_t_tell_kif(Op2,(Head:-Body))))),!.
+   must(((CALL0,if_defined(mpred_t_tell_kif(Op2,(Head:-Body)))))),!.
 
 % KIF RULE HOOK   
-mpred_t_storage_op(Op,RULE):- call_u(is_kif_clause(RULE)),!,
+mpred_t_storage_op(Op,RULE):- if_defined(is_kif_clause(RULE)),!,
   reduce_mpred_op(Op,Op2),
-  mpred_t_tell_kif(Op2,RULE),!.
+  if_defined(mpred_t_tell_kif(Op2,RULE)),!.
 
 % REOP HOOK mpred_t_storage_op(Op1,HeadBody):- reduce_mpred_op(Op1,Op2), Op1\==Op2, mpred_t_storage_op(Op2,HeadBody).
 % FACT:-true HOOK   
@@ -820,14 +820,13 @@ mpred_t_call_op(_,FACT):- get_functor(FACT, F,A), !,
 % call_for_literal/3
 % ====================================================
 
-:- meta_predicate call_for_literal(?,1,*).
-:- meta_predicate call_for_literal_db(?,1,*).
 
 %% call_for_literal( ?VALUE1, ?VALUE2, ?HEAD) is semidet.
 %
 % Call For Literal.
 %
-call_for_literal(_,_,HEAD):- call_u(baseKB:use_kif(HEAD,true)),!,kif_ask(HEAD).
+:- meta_predicate call_for_literal(?,1,*).
+call_for_literal(_,_,HEAD):- if_defined(use_kif(HEAD,true)),!,call_u(kif_ask(HEAD)).
 call_for_literal(_,_,HEAD):- call_u(use_ideep_swi),!, call_for_literal_ideep_ilc(HEAD),!,loop_check_term(cwdl(CALL,7),HEAD,(CALL)).
 call_for_literal(F,A,HEAD):- call_for_literal_db(F,A,HEAD).
 
@@ -838,6 +837,7 @@ call_for_literal(F,A,HEAD):- call_for_literal_db(F,A,HEAD).
 %
 % Call For Literal Database.
 %
+:- meta_predicate call_for_literal_db(?,1,*).
 call_for_literal_db(F,A,HEAD):- P=F, HEAD=..[P|ARGS],
    ((lmcache:after_mpred_load)->kb_shared(F,A);true),
    constrain_args(P,ARGS),call_for_literal_db0(F,A,HEAD),constrain_args(P,ARGS).
@@ -882,7 +882,7 @@ call_for_literal_db0(F,A,HEAD):-no_repeats(HEAD,call_for_literal_db2(F,A,HEAD)).
 call_for_literal_db2(_,_,HEAD):- clause_u(HEAD).
 call_for_literal_db2(F,_,   _):- (a(completelyAssertedCollection,F);a(completeExtentAsserted,F)),!,fail.
 call_for_literal_db2(F,A,HEAD):- loop_check(call_rule_db(F,A,HEAD)).
-call_for_literal_db2(F,A,HEAD):- \+ call_u(baseKB:use_kif(HEAD,true)),HEAD=..[P1,A1,A2],dif(P2,P1),loop_check_term(clause_u(genlPreds(P2,P1)),gp(P1),fail),
+call_for_literal_db2(F,A,HEAD):- \+ call_u(use_kif(HEAD,true)),HEAD=..[P1,A1,A2],dif(P2,P1),loop_check_term(clause_u(genlPreds(P2,P1)),gp(P1),fail),
    call_u(t(P2,A1,A2)).
 
 
@@ -975,7 +975,7 @@ constrain_args(A,B):- if_defined(constrain_args_pttp(A,B),fail).
 
 body_req_isa(I,C):-isa_backchaing(I,C).
 
-body_call_cyckb(HEAD_T):-el_holds_DISABLED_KB, HEAD_T =.. [t|PLIST], baseKB:use_cyc_database,!, no_repeats(kbp_t(PLIST)).
+body_call_cyckb(HEAD_T):-el_holds_DISABLED_KB, HEAD_T =.. [t|PLIST], baseKB:use_cyc_database,!, no_repeats(if_defined(kbp_t(PLIST))).
 
 % =====================================
 % = body_req

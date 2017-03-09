@@ -191,8 +191,8 @@ push_current_choice/1,
   % trigger_trigger1/2  , trigger_trigger/3,
   ]).
 
-:- use_module(mpred_kb_ops).
-:- use_module(library(listing_vars)).
+%:- use_module(mpred_kb_ops).
+%:- use_module(library(listing_vars)).
 
 :- include('mpred_header.pi').
 
@@ -581,7 +581,7 @@ full_transform(Op,isa(I,C),SentO):- !, must(fully_expand_real(Op,isa(I,C),SentO)
 full_transform(Op,Sent,SentO):- functor(Sent,F,A),may_fully_expand(F,A),!,must(fully_expand_real(Op,Sent,SentO)),!.
 
 */
-:- use_module(mpred_expansion).
+%:- use_module(mpred_expansion).
 
 full_transform(Why,MH,MHH):-
    must(fully_expand_real(change(assert,Why),MH,MHH)),!,
@@ -3392,8 +3392,6 @@ pp_db_supports:- bagof_or_nil((P =< S),mpred_get_support(P,S),Bts),pp_db_items(B
 
 % ***** predicates for brousing justifications *****
 
-:- use_module(library(lists)).
-
 pp_why:-mpred_why.
 
 mpred_why:-
@@ -3606,7 +3604,7 @@ triggerSupports(Trigger,[Fact|MoreFacts]):-
 % :- dynamic(mpred_is_spying_pred/1).
 
 
-:- set_prolog_flag(mpred_pfc_file,true).
+% % :- set_prolog_flag(mpred_pfc_file,true).
 % local_testing
 
 :- fixup_exports.

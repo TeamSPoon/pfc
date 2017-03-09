@@ -200,7 +200,8 @@
 
 :- endif.
 
-:- set_prolog_flag(virtual_stubs,false).
+:- set_prolog_flag_until_eof(virtual_stubs,false).
+
 :- thread_local(t_l:into_form_code).
 :- multifile(t_l:disable_px/0).
 :- thread_local(t_l:disable_px/0).
@@ -334,7 +335,7 @@ mpred_te(Type,Module,I,PosI,O,PosO):-
    mpred_file_term_expansion(Type,Module,I,O)->PosO=PosI.
 
 dont_term_expansion(Type,I):- 
-   current_prolog_flag(lm_expanders,false);
+   current_prolog_flag(subclause_expansion,false);
    var(I);
    I=(_ --> _) ;    
    current_prolog_flag(xref,true);
@@ -401,7 +402,7 @@ mpred_expand_file_module_clause(_,M,I,O):- mpred_expander_now_physically(M,I,O).
 %
 % Managed Predicate Expander Now Physically.
 %
-mpred_expander_now_physically(M,I,OO):- !,fail, 
+mpred_expander_now_physically(M,I,OO):- 
  '$set_source_module'(Old,M),
  call_cleanup(M:((
    quietly_must((source_context_module(CM),CM\==mpred_core,CM\==mpred_loader)),
@@ -916,7 +917,7 @@ make_file_command(_IN,cl_assert(pfc(WHY),PFC),[(:- CMD), NEWSOURCE]):-
   was_exported_content(Orig,WHY,NEWSOURCE),!.
   
 
-make_file_command(IN,cl_assert(WHY,NEWISH),OUT):- get_lang(kif),is_kif_clause(NEWISH),!,must(make_file_command(IN,cl_assert(kif(WHY),NEWISH),OUT)).
+make_file_command(IN,cl_assert(WHY,NEWISH),OUT):- get_lang(kif),if_defined(is_kif_clause(NEWISH)),!,must(make_file_command(IN,cl_assert(kif(WHY),NEWISH),OUT)).
 make_file_command(_IN,cl_assert(WHY,CMD2),SET):- 
   get_original_term_source(Orig),
   was_exported_content(Orig,WHY,NEWSOURCE),list_to_set([(:- cl_assert(WHY,CMD2)), NEWSOURCE],SET).
@@ -932,7 +933,7 @@ make_file_command(_IN,'$si$':'$was_imported_kb_content$'(IN2,WHY),'$si$':'$was_i
 %
 call_file_command(I,CALL,OO,O):- call_file_command0(I,CALL,OO,O),wdmsg(call_file_command(I,CALL,OO,O)).
 
-call_file_command0(I,cl_assert(OTHER,OO),OO,I):- get_lang(kif),is_kif_clause(OO),!,call_file_command(I,cl_assert(kif(OTHER),OO),OO,I).
+call_file_command0(I,cl_assert(OTHER,OO),OO,I):- get_lang(kif),if_defined(is_kif_clause(OO)),!,call_file_command(I,cl_assert(kif(OTHER),OO),OO,I).
 call_file_command0(I,CALL,[(:- quietly_must(CALL2)),(:- quietly_must(CALL)),OO],(:-CALL2)):- CALL2\=@=CALL, 
   was_exported_content(I,CALL,OO),!.
 call_file_command0(I,CALL,[(:- quietly_must(CALL)),OO],(:-CALL)):- was_exported_content(I,CALL,OO),!.
@@ -1140,7 +1141,8 @@ dyn_end:-file_end(dyn).
 %
 % Enable Managed Predicate Expansion.
 %
-enable_mpred_expansion:- set_prolog_flag(lm_expanders,true), set_prolog_flag(mpred_te,true),
+enable_mpred_expansion :- 
+    set_prolog_flag(mpred_te,true),
      (( \+ t_l:disable_px) -> true ;
                  (retractall(t_l:disable_px),
                  call_on_eof(asserta_if_new(t_l:disable_px)))).
@@ -1446,10 +1448,10 @@ expand_in_mpred_kb_module(I,OO):- quietly_must(expand_term_to_load_calls(I,O)),!
 %
 % Load File Term Converted To Command 0c.
 %
-expand_term_to_load_calls(I,OO):- convert_if_kif_string(I,O),!,
+expand_term_to_load_calls(I,OO):- if_defined(convert_if_kif_string(I,O)),!,
    quietly_must(expand_term_to_load_calls(O,OO)).
 
-expand_term_to_load_calls(PI,OO):- PI=..[P,I], convert_if_kif_string(I,O),!,
+expand_term_to_load_calls(PI,OO):- PI=..[P,I], if_defined(convert_if_kif_string(I,O)),!,
    quietly_must((PO=..[P,O], expand_term_to_load_calls(PO,OO))).
 
 expand_term_to_load_calls((H:-B),O):- B==true,!,quietly_must(expand_term_to_load_calls(H,O)).
@@ -1621,6 +1623,16 @@ pl_to_mpred_syntax0(A,{A}):-!.
 
 
 
+%% conjoin_body( ?H, B, ?C) is semidet.
+%
+% Conjoin Body.
+%
+conjoin_body({H},{BB},{C}):-conjoin_body(H,BB,C).
+conjoin_body({H},({BB},D),O):-conjoin_body(H,BB,C),conjoin_body({C},D,O).
+conjoin_body(H,(BB,D),O):-conjoin_body(H,BB,C),conjoin_body(C,D,O).
+conjoin_body(H,BB,C):-conjoin(H,BB,C).
+
+
 %% stream_pos( :TermFile) is det.
 %
 % Stream Pos.
@@ -1698,7 +1710,7 @@ make_dynamic_ilc(C):- % trace_or_throw(make_dynamic_ilc(C)),
 load_language_file(Name0):- 
  forall(filematch_ext('qlf',Name0,Name),
   ((
-   locally([set_prolog_flag(lm_expanders,false),
+   locally([set_prolog_flag(subclause_expansion,false),
          set_prolog_flag(read_attvars,false),
          (user:term_expansion(_,_):-!,fail),
          (user:term_expansion(_,_,_,_):-!,fail),
@@ -1994,7 +2006,7 @@ force_reload_mpred_file2(WorldIn,MFileIn):-
    retractall(baseKB:loaded_file_world_time(File,World,_)),
    system:assert(baseKB:loaded_file_world_time(File,World,NewTime)),    DBASE = DBASE,
    locally_hide(t_l:disable_px,
-     locally(set_prolog_flag(lm_expanders,true),
+     locally(set_prolog_flag(subclause_expansion,true),
       locally(set_prolog_flag(mpred_te,true),
      show_call((with_source_module(NewModule,load_files(NewModule:File, [module(NewModule)]))))))),
          must(force_reload_mpred_file3(File,World))
@@ -2148,7 +2160,7 @@ convert_side_effect(I,OO):-convert_side_effect_0c(I,O),((O=(N-_V),number(N))->OO
 % Convert Side Effect 0a.
 %
 convert_side_effect_0a(asserta(Data), (  a(DataR))):-convert_side_effect_0a(Data,DataR).
-convert_side_effect_0a(assertz(Data), (  (DataR))):-convert_side_effect_0a(Data,DataR).
+convert_side_effect_0a(assertz(Data), (   (DataR))):-convert_side_effect_0a(Data,DataR).
 convert_side_effect_0a(retract(Data), (  r(DataR))):-convert_side_effect_0a(Data,DataR).
 convert_side_effect_0a(cl_assert(Why,Data), (  cl_assert(Why,DataR))):-convert_side_effect_0a(Data,DataR).
 convert_side_effect_0a(attvar_op(Why,Data),Reproduce):-!,convert_side_effect(Why,Data,Reproduce),!.

@@ -488,14 +488,20 @@ listprolog:-listing(mpred_isa(_,prologDynamic)).
 %
 get_arity(Term,F,A):- atom(Term),F=Term,!,ensure_arity(F,A).
 get_arity(F/A,F,A):-!,atom(F),ensure_arity(F,A),!,(A>0).
-get_arity(F // A,F,A2):-!, atom(F), #=(A2 , A+2), ensure_arity(F,A2),!,(A2>0).
+get_arity(F // A,F,A2):- must(integer(A)),!, atom(F), is(A2 , A+2), ensure_arity(F,A2),!,(A2>0).
+get_arity(F // A,F,A2):- use_module(library(clpfd)),!, atom(F), clpfd:call(#=(A2 , A+2)), ensure_arity(F,A2),!,(A2>0).
 get_arity(M:FA,F,A):-atom(M),!,get_arity(FA,F,A).
 get_arity(FA,F,A):- get_functor(FA,F,A),must(A>0).
 
 % arity_no_bc(F,A):- call_u(arity(F,A)).
 arity_no_bc(F,A):- clause_b(arity(F,A)).
+arity_no_bc(F,A):- clause_b(tCol(F)),!,A=1.
 arity_no_bc(completeExtentAsserted,1).
+arity_no_bc(home,2).
+arity_no_bc(record,2).
 arity_no_bc(F,A):- clause_b(mpred_prop(F,AA,_)),nonvar(AA),A=AA.
+arity_no_bc(F,A):- current_predicate(F/A).
+arity_no_bc(F,A):- current_predicate(_:F/A),\+ (current_predicate(_:F/AA),AA\=A).
 %= 	 	 
 
 %% ensure_arity( ?VALUE1, ?VALUE2) is semidet.

@@ -103,7 +103,7 @@
 
 :- flag_call(runtime_debug=false).
 
-:- set_prolog_flag(virtual_stubs,true).
+:- set_prolog_flag_until_eof(virtual_stubs,true).
 
 user_m_check(_Out).
 
@@ -344,6 +344,7 @@ set_defaultAssertMt(ABox):-
 %
 % Sets the File''s Module.
 %
+set_fileAssertMt(ABox):- '$current_source_module'(ABox),!.
 set_fileAssertMt(ABox):-
  '$current_typein_module'(CM),
  '$current_source_module'(SM),

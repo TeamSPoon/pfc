@@ -359,7 +359,8 @@ baseKB:prologBuiltin(asserted_subclass/2).
 %
 % Asserted Subclass.
 %
-asserted_subclass(I,T):- ((t_l:useOnlyExternalDBs,!);baseKB:use_cyc_database),(kbp_t([genls,I,T])).
+
+% asserted_subclass(I,T):- ((t_l:useOnlyExternalDBs,!);baseKB:use_cyc_database),(kbp_t([genls,I,T])).
 asserted_subclass(T,ST):- call_u(t(genls,T,ST)).
 
 
@@ -803,7 +804,7 @@ isa_asserted_0(isInstFn(I),C):-nonvar(I),dtrace,!,C=I.
 isa_asserted_0(aRelatedFn(C,_),I):-nonvar(C),!,C=I.
 isa_asserted_0(aRelatedFn(C,_,_),I):-nonvar(C),!,C=I.
 isa_asserted_0(I,C):-  clause_b(mudIsa(I,C)).
-isa_asserted_0(I,C):- ((t_l:useOnlyExternalDBs,!);baseKB:use_cyc_database),(kbp_t([isa,I,C]);kbp_t([C,I])).
+%isa_asserted_0(I,C):- ((t_l:useOnlyExternalDBs,!);baseKB:use_cyc_database),(kbp_t([isa,I,C]);kbp_t([C,I])).
 
 isa_asserted_0(I,C):- atom(I),isa_from_morphology(I,C).
 isa_asserted_0(I,C):- (atom(I);atom(C)),type_isa(I,C).

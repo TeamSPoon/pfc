@@ -13,7 +13,8 @@
             head_singletons/2, head_singles0/2,head_singles01/2,
             append_termlist/3,            
             call_last_is_var/1,
-
+            is_quantifier/1,
+            same_var/2,
             contains_negs/1,
             contains_no_negs/1,
             contains_t_var/3,
@@ -60,13 +61,11 @@
             is_ftEquality/1,
             is_function/1,
             is_function/3,
-            is_gaf/1,
             is_holds_false/1,
             is_holds_false0/1,
             is_holds_true/1,
             is_holds_true0/1,
             is_holds_true_not_hilog/1,
-            is_kif_clause/1,
             is_log_op/1,
             is_log_sent/1,
             is_logical_functor0/1,
@@ -584,7 +583,6 @@ is_sentence_functor(And):-quietly(is_logical_functor0(And)).
 
 
 
-
 %% is_logical_functor0( ?X) is semidet.
 %
 % If Is A Logical Functor Primary Helper.
@@ -616,6 +614,12 @@ logical_functor_pttp(<=>).
 logical_functor_pttp(=>).
 logical_functor_pttp(v).
 
+
+%% is_quantifier( ?F) is semidet.
+%
+% If Is A Quantifier.
+%
+is_quantifier(F):- pttp_nnf_pre_clean_functor(F,(all),[]);pttp_nnf_pre_clean_functor(F,(ex),[]).
 
 
 
@@ -703,10 +707,8 @@ not_log_op(OP):- not(is_log_op(OP)).
 %
 % If Is A Log Oper..
 %
-is_log_op(OP):- atomic(OP),to_dlog_ops(OPS),!,(member(OP=_,OPS);member(_=OP,OPS)).
-
-% % :- ensure_loaded(logicmoo(plarkc/mpred_kif)).
-
+is_log_op(OP):- current_predicate(OP,M:P),current_predicate(G,meta_predicate(_)),!.
+is_log_op(OP):- atomic(OP),if_defined(to_dlog_ops(OPS)),!,(member(OP=_,OPS);member(_=OP,OPS)).
 
 
 
@@ -866,6 +868,12 @@ is_modal(MODAL,BDT):- arg(_,MODAL,ARG),is_modal(ARG,BDT).
 contains_var_lits(Fml,Var,Lits):- findall(Lit,contains_t_var(Fml,Var,Lit),Lits).
 
 
+%% same_var( ?Var, ?Fml) is semidet.
+%
+% Same Variable.
+%
+same_var(Var,Fml):- Var=@=Fml,!.
+
 
 
 %% contains_type_lits( ?Fml, ?Var, ?Lits) is semidet.
@@ -1010,24 +1018,6 @@ set_is_lit(A):-when(nonvar(A),\+ is_ftVar(A)),!.
 
 
 
-
-%% is_gaf( ?Gaf) is semidet.
-%
-% If Is A Gaf.
-%
-is_gaf(Gaf):-when(nonvar(Gaf), \+ (is_kif_clause(Gaf))).
-
-%= %= :- was_export(is_kif_clause/1).
-
-
-
-%% is_kif_clause( ?Var) is semidet.
-%
-% If Is A Knowledge Interchange Format Rule.
-%
-is_kif_clause(Var):- is_ftVar(Var),!,fail.
-is_kif_clause(R):- kif_hook(R),!.
-is_kif_clause(R):- is_clif(R),!.
 
 
 %= %= :- was_export(term_slots/2).
