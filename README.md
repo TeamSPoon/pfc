@@ -13,11 +13,10 @@ Notable changes are:
  * Forward chaining `=>` is renamed to `==>` to avoid conflict with extensive downstream use of =>/2 to mean logical implication.
  * Bidirectional Forward chaining `<=>` renamed to `<==>` to avoid conflict with logical equivance `<=>`
  * Memoized backchain `<=` is renamed to `<-` to avoid conflict with extensive downstream use of <=/2 to mean reverse implication..  Historically '<-' had meant what is now know as ":-" being unused it was borrowed as it means "Backchaining"
- * Added Cutted Forward Chaining =!=> as a signal to stop processing rules on first success
  * Added Macro Transform =@=> so instead of asserting the Anteceedant to assert the Consequent
 
  @TODO - MANY MORE CHANGES TO WRITE - for now back to coding...
-
+ @TODO = Added Cutted Forward Chaining =!=> as a signal to stop processing rules on first success
 
     
 # Original README
@@ -33,4 +32,31 @@ It was originally written circa 1988 at the [Unisys Paoli Research Center](https
 or contact Tim Finin, finin@umbc.edu
 
 If you use Pfc in your research, please cite the 1989 IEEE CAIA paper.
+
+
+
+# Some TODOs
+
+Document this pack!
+Write tests
+Untangle the 'pack' install deps
+Still in progress (Moving predicates over here from logicmoo_base)
+
+
+[BSD 2-Clause License](LICENSE.md)
+
+Copyright (c) 2017, 
+Douglas Miles <logicmoo@gmail.com> and TeamSPoon
+All rights reserved.
+
+# Not _obligated_ to maintain a git fork just to contribute
+
+Dislike having tons of forks that are several commits behind the main git repo?
+
+Be old school - Please ask to be added to TeamSPoon and Contribute directly !
+Still, we wont stop you from doing it the Fork+PullRequest method
+
+
+
+
 
