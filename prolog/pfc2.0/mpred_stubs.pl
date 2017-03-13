@@ -672,6 +672,7 @@ baseKB:hook_mpred_listing(Match):- fail,
 % Hook To [isa_lmconf:mpred_provide_storage_clauses/3] For Module Mpred_stubs.
 % Managed Predicate Provide Storage Clauses.
 %
+:- multifile(baseKB:mpred_provide_storage_clauses/3).
 baseKB:mpred_provide_storage_clauses(H,B,Proof):-mpred_t_mpred_storage_clauses_facts(H,B,Proof).
 
 
@@ -839,7 +840,7 @@ call_for_literal(F,A,HEAD):- call_for_literal_db(F,A,HEAD).
 %
 :- meta_predicate call_for_literal_db(?,1,*).
 call_for_literal_db(F,A,HEAD):- P=F, HEAD=..[P|ARGS],
-   ((lmcache:after_mpred_load)->kb_shared(F,A);true),
+   ((lmcache:after_mpred_load)->kb_shared(F/A);true),
    constrain_args(P,ARGS),call_for_literal_db0(F,A,HEAD),constrain_args(P,ARGS).
 
 
@@ -1132,7 +1133,7 @@ ensure_universal_stub_plus_mt_why(F,A2):-
    assert_if_new((HEAD:-HEADMinus2)),!,
   % compile_predicates([HEAD]),
    defaultAssertMt(M),
-   kb_shared(M,F,AMinus2).
+   kb_shared(M:F/AMinus2).
 
 
 :- fixup_exports.

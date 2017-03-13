@@ -177,7 +177,7 @@ was_chain_rule/1,
 wid/3,
 use_kif/2,
 never_assert_u/2,
-prologEquality/1,pfcBcTrigger/1,meta_argtypes/1,pfcDatabaseTerm/1,pfcControlled/1,pfcWatched/1,pfcMustFC/1,predIsFlag/1,tPred/1,prologMultiValued/1,
+prologEquality/1,pfcBcTrigger/1,meta_argtypes/1,pfcDatabaseTerm/1,pfcControlled/1,pfcWatches/1,pfcMustFC/1,predIsFlag/1,tPred/1,prologMultiValued/1,
  prologSingleValued/1,functorIsMacro/1,notAssertable/1,prologBuiltin/1,prologDynamic/1,prologOrdered/1,prologNegByFailure/1,prologPTTP/1,prologKIF/1,prologEquality/1,prologPTTP/1,
  prologSideEffects/1,prologHybrid/1,prologListValued/1]).
 

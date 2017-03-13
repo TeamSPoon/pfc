@@ -203,7 +203,7 @@
 :- set_prolog_flag_until_eof(virtual_stubs,false).
 
 :- thread_local(t_l:into_form_code).
-:- multifile(t_l:disable_px/0).
+
 :- thread_local(t_l:disable_px/0).
 :- multifile(prolog:make_hook/2).
 :- dynamic(prolog:make_hook/2).
@@ -215,7 +215,7 @@ mpred_unload_file:- \+ prolog_load_context(reload,true),!.
 mpred_unload_file:- source_location(File,_),mpred_unload_file(File).
 mpred_unload_file(File):-
   findall(mpred_withdraw(Data,(mfl(Module, File, LineNum),AX)),
-     spft(Data, mfl(Module, File, LineNum),ax),ToDo),
+                    spft(Data, mfl(Module, File, LineNum),AX),ToDo),
      length(ToDo,Len),
      wdmsg(mpred_unload_file(File,Len)),
      maplist(call,ToDo),!.
@@ -1189,7 +1189,7 @@ file_begin(WIn):-
    set_file_lang(W),   
    find_and_call(fileAssertMt(Mt)),
    set_fileAssertMt(Mt),
-   wdmsg(set_fileAssertMt(Mt->W)),
+   nop(wdmsg(set_fileAssertMt(Mt->W))),
    %op_lang(W),
    enable_mpred_expansion)),!,
    sanity(get_lang(W)).
@@ -1657,8 +1657,10 @@ compile_clause(CL):- quietly_must((make_dynamic(CL),assertz_if_new(CL),!,clause_
 %
 make_dynamic((H:-_)):- sanity(nonvar(H)),!,must(make_dynamic(H)).
 make_dynamic(M:(H:-_)):- sanity(nonvar(H)),!,must(make_dynamic(M:H)).
-make_dynamic(C):- loop_check(make_dynamic_ilc(C),true).
+make_dynamic(C):- loop_check(make_dynamic_ilc(C),trace_or_throw(looped_make_dynamic(C))).
 
+make_dynamic_ilc(baseKB:C):- predicate_property(baseKB:C, dynamic),!.
+% make_dynamic_ilc(C):- predicate_property(C, dynamic).
 make_dynamic_ilc(C):- % trace_or_throw(make_dynamic_ilc(C)),
    compound(C),strip_module(C,MIn,_),get_functor(C,F,A),quietly_must(F\=='$VAR'),
   (\+ a(mtCycL,MIn) -> must(defaultAssertMt(M)) ; MIn =M),

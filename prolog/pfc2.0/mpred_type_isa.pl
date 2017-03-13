@@ -33,6 +33,7 @@
             decl_type_safe/1,
             disjointWith0/2,
             disjointWithT/2,
+            isa_mpred_provide_storage_clauses/3,
             dont_call_type_arity_one/1,
             get_mpred_arg/3,
             shouldnt_be_set/1,
@@ -73,8 +74,8 @@
             not_mud_isa0/2,
             onLoadPfcRule/1,
             pfcNeverTrue/1,
-            tCol_gen/1,
-			tSetOrdered/1,
+            col_gen/2,
+            tSetOrdered/1,
             
             transitive_P/4,
             transitive_P_l_r/4,
@@ -112,7 +113,7 @@
           ]).
 
 :- include('mpred_header.pi').
-:- multifile(t_l:disable_px/0).
+
 :- thread_local(t_l:disable_px/0).
 
 :- endif.
@@ -288,7 +289,7 @@ type_suffix('Able',ttTypeByAction).
 type_prefix(vt,ttValueType).
 type_prefix(tt,ttTypeType).
 type_prefix(mob,ttAgentType).
-type_prefix(mt,ttModule).
+type_prefix(mt,ttModuleType).
 type_prefix(role,ttKnowledgeType).
 type_prefix(item,ttItemType).
 type_prefix(t,tCol).
@@ -641,7 +642,7 @@ not_mud_isa(I,C):- nonvar(I),nonvar(C),loop_check(not_mud_isa(I,C,_)).
 %
 %  \+  Application  (isa/2).
 %
-not_mud_isa(F, CAC,Why):- baseKB:( cheaply_u(completelyAssertedCollection(CAC)),!,atom(CAC),current_predicate(_:CAC/1),
+not_mud_isa(F, CAC,Why):- baseKB:( cheaply_u(completelyAssertedCollection(CAC)),!,atom(CAC),notrace(current_predicate(_:CAC/1)),
    G=..[CAC,F],\+(call_u(G)),!,Why=completelyAssertedCollection(CAC)).
 not_mud_isa(I,C,Why):-not_mud_isa0(I,C),Why=not_mud_isa0(I,C).
 not_mud_isa(G,tTemporalThing,Why):- baseKB:call_u((a(tCol,G),Why=a(tCol,G));(tPred(G),Why=tPred(G))).
@@ -651,25 +652,61 @@ not_mud_isa(G,tCol,Why):-never_type_why(G,Why).
 
 %= 	 	 
 
-%% tCol_gen( ?T) is nondet.
+%% tSetOrdered( ?T) is nondet.
 %
 % True Structure Col Gen.
 %
-tSetOrdered(T):- nonvar(T),!.
-tSetOrdered(T):- no_repeats(T,(clause_b(ttTemporalType(T));clause_b(completelyAssertedCollection(T));clause_b(tSet(T)))). % ,atom(T). ;tCol(T)
-tCol_gen(T):- tSetOrdered(T). % no_repeats(T,call_u(baseKB:(atom(T);ttTemporalType(T);completelyAssertedCollection(T);tSet(T);tCol(T)))). % ,atom(T).
+tSetOrdered(T):- no_repeats(T,(clause_b(completelyAssertedCollection(T));clause_b(tSet(T));clause_b(ttExpressionType(T)))).
+
+
+col_gen(_,T):- nonvar(T),!.
+col_gen(S,T):- var(S),!,trace_or_throw(col_gen(S,T)).
+col_gen(tCol,T):- !, no_repeats(T,col_type(T)).
+col_gen(tRelation,T):- !, no_repeats(T,rel_type(T)).
+col_gen(tTemporalThing,T):- !, no_repeats(T,inst_type(T)).
+col_gen(vtValue,T):- !, no_repeats(T,val_type(T)).
+col_gen(S,T):- trace_or_throw(col_gen(S,T)).
+
+
+col_type(T):- clause_b(ttTypeType(T)).
+rel_type(T):- clause_b(ttRelationType(T)).
+inst_type(T):- clause_b(ttTemporalType(T)).
+inst_type(T):- clause_b(ttTimeDependentCollection(T)).
+val_type(T):- clause_b(tCol(T)), \+ col_type(T),\+ inst_type(T),\+ rel_type(T).
+
+/*
+  main types
+
+collections/relations (tSet,tCol,predciates)
+spatial/temporals (people,places)
+symbols/values (string/numbers/shapes)
+
+*/
+% main_type(C,_):- is_ftVar(C),!,fail.
+main_type(C,vtValue):- (string(C);number(C)),!.
+main_type(C,_):- \+ atom(C),!,fail.
+main_type(C,tCol):- clause_b(tCol(C)),!.
+main_type(C,tRelation):- clause_b(tRelation(C)),!.
+main_type(C,tTemporalThing):- clause_b(tTemporalThing(C)),!.
+% main_type(C,vtValue):- clause_b(vValue(C)),!.
+main_type(C,tRelation):- (arity(C,_);downcase_atom(C,C)),!.
+main_type(C,tTemporalThing):- atom_concat(i,_,C),!.
+%main_type(C,vtValue):- atom_concat(v,_,C),!.
+main_type(_,vtValue).
+
+
 % ==========================
 % isa_backchaing(i,c)
 % ==========================
 
 %= 	 	 
 
-%% module_local_init() is nondet.
+% module_local_init(+ABox,+TBox) is semidet.
 %
-% Hook To [baseKB:module_local_init/0] For Module Mpred_type_isa.
+% Hook To [module_local_init/2] For Module Mpred_type_isa.
 % Module Local Init.
 %
-baseKB:module_local_init:- ain((isa(I,T):- cwc,isa_backchaing(I,T))).
+module_local_init(_UserModule,_SystemModule):- ain((isa(I,T):- cwc,isa_backchaing(I,T))).
 %a(P,F):-loop_check(isa(F,P)).
 %a(T,I):- baseKB:pfcManageHybrids,clause_safe(isa(I,T),true).
 baseKB:prologBuiltin(isa_asserted/2).
@@ -788,8 +825,8 @@ isa_asserted(I,C):-  no_repeats(loop_check(isa_asserted_0(I,C))).
 %isa_asserted(I,C):- ((call_tabled(isa(I,C),no_repeats(loop_check(isa_asserted_0(I,C)))))).
 %isa_asserted(I,CC):-no_repeats((isa_asserted_0(I,C),call_u(genls(C,CC)))).
 
-isa_complete(I,C):- var(C),!,tSetOrdered(C),isa_backchaing(I,C).
-isa_complete(I,C):- C=..[P|ARGS],G=..[P,I|ARGS],current_predicate(_,G),!,on_x_fail(call_u(G)).
+isa_complete(I,C):- nonvar(I),var(C),!,tSetOrdered(C),isa_backchaing(I,C).
+isa_complete(I,C):- C=..[P|ARGS],G=..[P,I|ARGS],notrace(current_predicate(P,G)),!,on_x_fail(call_u(G)).
 isa_complete(I,C):- compound(I),is_non_unit(I),is_non_skolem(I),!,get_functor(I,F),compound_isa(F,I,C).
 
 %% isa_asserted_0( ?I, ?T) is nondet.
@@ -806,24 +843,30 @@ isa_asserted_0(aRelatedFn(C,_,_),I):-nonvar(C),!,C=I.
 isa_asserted_0(I,C):-  clause_b(mudIsa(I,C)).
 %isa_asserted_0(I,C):- ((t_l:useOnlyExternalDBs,!);baseKB:use_cyc_database),(kbp_t([isa,I,C]);kbp_t([C,I])).
 
-isa_asserted_0(I,C):- atom(I),isa_from_morphology(I,C).
-isa_asserted_0(I,C):- (atom(I);atom(C)),type_isa(I,C).
 
-isa_asserted_0(I,C):- var(C),!,tCol_gen(C),nonvar(C),isa_asserted_0(I,C).
-isa_asserted_0(I,C):- clause_b(ttExpressionType(C)),!,fail.
 isa_asserted_0(ttRelationType, completelyAssertedCollection):-!.
-isa_asserted_0(I,tCol):- !, clause_b(tCol(C)).
-isa_asserted_0(I,tSet):- !, clause_b(tSet(C)).
-isa_asserted_0(I,C):- atom(C),current_predicate(C,_:G),G=..[C,I],(predicate_property(G,number_of_clauses(_))->clause(G,true);on_x_fail(call_u(G))).
+isa_asserted_0(I,C):- atom(C),notrace((G=..[C,I],current_predicate(C,M:G),predicate_property(M:G,number_of_clauses(N)))),N>0,!,on_x_fail((M:G)).
+isa_asserted_0(I,C):- atom(I),isa_from_morphology(I,C).
+isa_asserted_0(_,C):- nonvar(C),sanity(\+ is_ftVar(C)), clause_b(completelyAssertedCollection(C)),!,fail.
 isa_asserted_0(I,_):- nonvar(I),sanity(\+ is_ftVar(I)), clause_b(completeIsaAsserted(I)),!,fail.
-isa_asserted_0(_,C):- sanity(\+ is_ftVar(C)), clause_b(completelyAssertedCollection(C)),!,fail.
+isa_asserted_0(I,_):- var(I),!,fail.
+isa_asserted_0(I,C):- main_type(I,SubType),!,(C=SubType;isa_asserted_3(I,SubType,C)).
+isa_asserted_0(I,C):- is_ftCompound(I),is_non_unit(I),is_non_skolem(I),!,get_functor(I,F),compound_isa(F,I,C).
+isa_asserted_0(I,C):- isa_asserted_compound(I,C).
+
+
+
+isa_asserted_3(I,tCol,C):- (atom(I);atom(C)),type_isa(I,C).
+isa_asserted_3(I,SType,C):- var(C),!,col_gen(SType,C),nonvar(C),SType\==C,isa_asserted_0(I,C).
+
+isa_asserted_3(_,_,C):- clause_b(ttExpressionType(C)),!,fail.
+
 % isa_asserted_0(I,C):-  not_mud_isa(I,C),!,fail.
 % isa_asserted_0(I,C):- I == ttTypeByAction, C=ttTypeByAction,!,fail.
 % isa_asserted_0(I,C):- HEAD= isa(I, C),ruleBackward(HEAD,BODY),dtrace,call_mpred_body(HEAD,BODY).
-
 % isa_asserted_0(I,C):- ( ((is_ftVar(C);chk_ft(C)),if_defined(term_is_ft(I,C)))*->true;type_deduced(I,C) ).
-isa_asserted_0(I,C):- is_ftCompound(I),is_non_unit(I),is_non_skolem(I),!,get_functor(I,F),compound_isa(F,I,C).
-isa_asserted_0(I,C):- isa_asserted_compound(I,C).
+
+
 
 
 
@@ -839,6 +882,8 @@ isa_asserted_compound(I,T):- \+ compound(T),!, isa_w_type_atom(I,T).
 isa_asserted_compound(I,'&'(T1 , T2)):-!,nonvar(T1),is_ftVar(T2),!,dif:dif(T1,T2),isa_backchaing(I,T1),call_u(genls(T1,T2)),isa_backchaing(I,T2).
 isa_asserted_compound(I,'&'(T1 , T2)):-!,nonvar(T1),!,dif:dif(T1,T2),isa_backchaing(I,T1),isa_backchaing(I,T2).
 isa_asserted_compound(I,(T1 ; T2)):-!,nonvar(T1),!,dif:dif(T1,T2),isa_backchaing(I,T1),isa_backchaing(I,T2).
+
+:- create_prolog_flag(retry_undefined,default,[type(term),keep(true)]).
 
 
 %= 	 	 
@@ -1034,22 +1079,24 @@ isa_lmconf:mpred_provide_storage_op(call(_),G):- was_isa(G,I,C),!, (isa_backchai
 
 %= 	 	 
 
-%% clause_u( ?H, ?B, ?What) is nondet.
+%% isa_mpred_provide_storage_clauses( ?H, ?B, ?What) is nondet.
 %
-% Hook To [isa_lmconf:mpred_provide_storage_clauses/3] For Module Mpred_type_isa.
+% Hook To [baseKB:mpred_provide_storage_clauses/3] For Module Mpred_type_isa.
 % Managed Predicate Provide Storage Clauses.
 %
-isa_lmconf:mpred_provide_storage_clauses(isa(I,C),true,hasInstanceIC):-a(C,I).
-isa_lmconf:mpred_provide_storage_clauses(H,true,hasInstanceCI):-
+:- multifile(baseKB:mpred_provide_storage_clauses/3).
+baseKB:mpred_provide_storage_clauses(H,B,(What)):-fail,isa_mpred_provide_storage_clauses(H,B,What).
+
+isa_mpred_provide_storage_clauses(isa(I,C),true,hasInstanceIC):-a(C,I).
+isa_mpred_provide_storage_clauses(H,true,hasInstanceCI):-
    (is_ftCompound(H)-> 
       ((functor(H,C,1)-> H=..[C,I]; H=isa(I,C)), a(C,I)) ; 
       (a(C,I),(nonvar(C)->append_term(C,I,H);H=isa(I,C)))).
 
-%isa_lmconf:mpred_provide_storage_clauses(isa(I,C),B,W):-mpred_t_mpred_storage_clauses_rules(isa(I,C),B,W).
-%isa_lmconf:mpred_provide_storage_clauses(isa(I,C),B,W):-nonvar(C),append_term(C,I,H),mpred_t_mpred_storage_clauses_rules(H,B,W).
+%isa_mpred_provide_storage_clauses(isa(I,C),B,W):-mpred_t_mpred_storage_clauses_rules(isa(I,C),B,W).
+%isa_mpred_provide_storage_clauses(isa(I,C),B,W):-nonvar(C),append_term(C,I,H),mpred_t_mpred_storage_clauses_rules(H,B,W).
 
 
-baseKB:mpred_provide_storage_clauses(H,B,(What)):-fail,isa_lmconf:mpred_provide_storage_clauses(H,B,What).
 
 
 
@@ -1188,7 +1235,7 @@ is_Template(I):- \+ (get_mpred_arg(_,I,Arg1), \+ a(tCol,Arg1)).
 mpred_types_loaded.
 
 % ISA QUERY
-baseKB:module_local_init(_UserModule,_SystemModule):- 
+module_local_init(_UserModule,_SystemModule):- 
   asserta_if_new((system:goal_expansion(ISA,GO) :- \+ t_l:disable_px, \+current_predicate(_,ISA),
   once((is_ftCompound(ISA),was_isa(ISA,I,C))),t_l:is_calling,show_call(why,GO=no_repeats(isa(I,C))))).
 % ISA GOAL
@@ -1282,7 +1329,7 @@ impliedSubClass(T,ST):-predicate_property(transitive_subclass(T,ST),_),!,call_ta
 
 
 % :- ain((baseKB:isa(I,C):-loop_check(isa_backchaing(I,C)))).
-% baseKB:module_local_init:- ain(('$toplevel':isa(I,C):-baseKB:isa(I,C))).
+% module_local_init:- ain(('$toplevel':isa(I,C):-baseKB:isa(I,C))).
 
 
 %= 	 	 
@@ -1294,7 +1341,7 @@ impliedSubClass(T,ST):-predicate_property(transitive_subclass(T,ST),_),!,call_ta
 mpred_types_loaded.
 
 % ISA QUERY
-baseKB:module_local_init(_UserModule,_SystemModule):- 
+module_local_init(_UserModule,_SystemModule):- 
   asserta_if_new((system:goal_expansion(ISA,GO) :- \+ t_l:disable_px, \+current_predicate(_,ISA),
   once((is_ftCompound(ISA),was_isa(ISA,I,C))),t_l:is_calling,show_call(why,GO=no_repeats(isa(I,C))))).
 % ISA GOAL
@@ -1302,8 +1349,8 @@ baseKB:module_local_init(_UserModule,_SystemModule):-
 % ISA EVER
 %mpred_term_expansion(G,GO):-  \+ t_l:disable_px,was_isa(G,I,C),GO=isa(I,C).
 
-baseKB:module_local_init(_UserModule,SystemModule):-ain(SystemModule:tCol(tCol)).
-baseKB:module_local_init(_UserModule,SystemModule):-ain(SystemModule:tCol(ttRelationType)).
+module_local_init(_UserModule,SystemModule):-ain(SystemModule:tCol(tCol)).
+module_local_init(_UserModule,SystemModule):-ain(SystemModule:tCol(ttRelationType)).
 
 call_u_t(DB,P,L,A1,A2):-call_u(call(DB,P,L,A1,A2)).
 call_u_t(DB,P,L,A1):-call_u(call(DB,P,L,A1)).
