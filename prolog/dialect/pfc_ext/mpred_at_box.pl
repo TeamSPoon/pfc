@@ -584,6 +584,7 @@ baseKB:hybrid_support(genlMt,2).
 
 :- dynamic(lmcache:tried_to_retry_undefined/4).
 
+:- create_prolog_flag(retry_undefined,default,[type(term),keep(true)]).
 
 istAbove(Mt,Query):- Mt \== baseKB, genlMt(Mt,MtAbove),MtAbove:Query.
 

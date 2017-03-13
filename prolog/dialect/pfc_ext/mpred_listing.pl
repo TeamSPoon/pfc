@@ -295,7 +295,7 @@ show_pred_info(PI):-
         doall(show_call(why,call_u(isa(F,_)))),
        ((current_predicate(_,M:Head), (\+ predicate_property(M:Head,imported_from(_))))
           -> show_pred_info_0(M:Head); 
-             wdmsg(cannot_show_pred_info(M:Head))))),!.
+             wdmsg(cannot_show_pred_info(Head))))),!.
 
 
 %= 	 	 

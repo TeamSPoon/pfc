@@ -88,8 +88,7 @@
         coerce/3,
         decl_coerce/3,
         deduceFromArgTypes/1,
-   hook_coerce/3,
-        baseKB:module_local_init/0)).
+   hook_coerce/3)).
 */
 
 %% to_format_type( ?COL, ?FT) is semidet.
@@ -407,7 +406,7 @@ correctArgsIsa(Op,G,GG):- must((correctArgsIsa0(Op,G,GG),sanity(nonvar(GG)))).
 correctArgsIsa0(_,NC,NC):- \+ compound(NC),!.
 correctArgsIsa0(Op,G,GG):- is_list(G),!,must_maplist(correctArgsIsa0(Op),G,GG).
 correctArgsIsa0(Op,M:G,MAA):- nonvar(M),!,correctArgsIsa0(Op,G,GG),M:GG=MAA.
-correctArgsIsa0(Op,ISA,GG):- was_isa(ISA,_,_),!,must_equals(ISA,GG).
+correctArgsIsa0(_,ISA,GG):- was_isa(ISA,_,_),!,must_equals(ISA,GG).
 correctArgsIsa0(Op,(A,B),(AA,BB)):-!,correctArgsIsa0(Op,A,AA),correctArgsIsa0(Op,B,BB).
 correctArgsIsa0(Op,(A;B),(AA;BB)):-!,correctArgsIsa0(Op,A,AA),correctArgsIsa0(Op,B,BB).
 correctArgsIsa0(_,G,GG):- get_functor(G,F),functor_no_correct(F),!,must_equals(G,GG).
@@ -532,7 +531,7 @@ is_valuespec(G):-evaluatableArg(G,_).
 %
 % Evaluatable Argument.
 %
-evaluatableArg(AA,Value):-fail,sanity(nonvar(AA)),compound(AA),get_functor(AA,F),!,evaluatableFunctor(F).
+evaluatableArg(AA,_Value):-fail,sanity(nonvar(AA)),compound(AA),get_functor(AA,F),!,evaluatableFunctor(F).
 
 %= 	 	 
 

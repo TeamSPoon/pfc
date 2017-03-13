@@ -626,11 +626,6 @@ w_get_fa(Mask,F,A):-get_functor(Mask,F,A).
 %
 set_prolog_stack_gb(Six):-set_prolog_stack(global, limit(Six*10**9)),set_prolog_stack(local, limit(Six*10**9)),set_prolog_stack(trail, limit(Six*10**9)).
 
-%% module_local_init() is semidet.
-%
-% Hook To [baseKB:module_local_init/0] For Module Mpred_pfc.
-% Module Local Init.
-%
 :- multifile(baseKB:mpred_hook_rescan_files/0).
 :- dynamic(baseKB:mpred_hook_rescan_files/0).
 :- use_module(library(logicmoo_util_common)).
@@ -752,7 +747,7 @@ attvar_op(Op,MData):-
     )))).
 
 physical_side_effect_call(M,OpA,Data0):- is_side_effect_disabled,!,mpred_warn('no_physical_side_effects ~p',M:call(M:OpA,M:Data0)).
-physical_side_effect_call(M,assertz_i,Data0):- compile_aux_clauses(M:Data0),!.
+% BROKEN physical_side_effect_call(M,assertz_i,Data0):- must((compile_aux_clauses(M:Data0))),!.
 physical_side_effect_call(M,OpA,Data0):- show_failure(physical_side_effect(M:call(M:OpA,M:Data0))).
 
 
@@ -2218,6 +2213,7 @@ pred_u1(P):-a(prologDynamic,F),arity_no_bc(F,A),functor(P,F,A).
 %
 % Predicate For User Code Extended Helper.
 %
+pred_u2(P):- compound(P),functor(P,F,A),sanity(no_repeats(support_hilog(F,A);arity_no_bc(F,A))),!,has_db_clauses(P).
 pred_u2(P):- no_repeats(support_hilog(F,A);arity_no_bc(F,A)),functor(P,F,A),has_db_clauses(P).
 
 
@@ -2375,8 +2371,6 @@ mpred_facts_only(P):- (is_ftVar(P)->(pred_head_all(P),\+ meta_wrapper_rule(P));t
 
 :- thread_local(t_l:user_abox/1).
 
-:- was_dynamic(baseKB:module_local_init/0).
-:- discontiguous(baseKB:module_local_init/0).
 % :- ((prolog_load_context(file,F),  prolog_load_context(source,F))-> throw(prolog_load_context(source,F)) ; true). :- include('mpred_header.pi').
 :- style_check(+singleton).
 
@@ -2691,7 +2685,5 @@ retract_mu((H:-B)):-!, clause_u(H,B,R),erase(R).
 mpred_kb_ops_file.
 
 % % :- '$set_source_module'(mpred_kb_ops).
-
-
 
 

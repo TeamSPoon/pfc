@@ -32,12 +32,14 @@
             decl_mpred_2/2,
             decl_mpred_3/3,
             decl_mpred_4/4,
+/*
             define_maybe_exact/2,
           %(kb_shared)/1,
           (kb_shared)/2,
           (kb_shared)/3,
           (kb_shared)/4,
           (kb_shared)/5,
+*/
             decl_mpred_mfa/3,
             decl_mpred_pi/1,
           (decl_mpred_prolog)/1,
@@ -66,16 +68,17 @@
 
 %:- endif.
 
-:- meta_predicate(kb_shared(:,+,+,+,+)).
+% :- meta_predicate(kb_shared(:,+,+,+,+)).
 :- meta_predicate(decl_mpred_prolog(:,+,+,+,+)).
 
+/*
 :- module_transparent((
    %(kb_shared)/1,
    (kb_shared)/2,
    (kb_shared)/3,
    (kb_shared)/4,
    (kb_shared)/5)).
-
+*/
 
 
 /*
@@ -84,9 +87,9 @@
  :- meta_predicate decl_mpred(?,1).
  :- meta_predicate decl_mpred_0(?,1).
  :- meta_predicate decl_mpred(+,+,+).
+:- meta_predicate kb_shared(?,+).
 */
 :- meta_predicate decl_mpred_0(?,+).
-:- meta_predicate kb_shared(?,+).
 :- meta_predicate add_mpred_prop_gleaned(?,1).
 :- meta_predicate add_mpred_prop_gleaned_4(?,*,*,1).
 :- meta_predicate decl_mpred(*,?,+).
@@ -291,167 +294,6 @@ define_maybe_prolog(M,PI,F,A):-
 % ========================================
 
 
-% ========================================
-% (kb_shared)/1/2/3
-% ========================================
-% :- op(0,fx,(kb_shared)).
-% :- was_export((kb_shared)/1).
-% :- meta_predicate(kb_shared(?)).
-
-%= 	 	 
-
-%% kb_shared( ?A) is semidet.
-%
-% Declare Managed Predicate Hybrid.
-%
-
-% kb_shared(A):- \+(compound(A)),!,ain00(prologHybrid(A)).
-% ain_expanded(love(isEach(a/1,b/2,c/1,d),mother)).
-% ain_expanded(loves(isElement(a/1,b/2,c/1,d),mother)).
-/*
-kb_shared(M):- var(M),!,trace_or_throw(var_kb_dynamic(M)).
-kb_shared(M):- M =.. [isEach|List],!,must_maplist(kb_shared,List).
-kb_shared(F/A):- var(F),!,trace_or_throw(var_kb_dynamic(F/A)).
-kb_shared([H|List]):- is_list(List),!,kb_shared(H),must_maplist(kb_shared,List).
-
-% kb_shared(MPI):- must(kb_shared(MPI)),must(dynamic(MPI)),!.
-kb_shared(MPI):- must(kb_shared(MPI)),must((with_pfa(m_fa_to_m_p_fa(kb_shared),MPI))),!.
-
-kb_shared(F/A):- var(A),atom(F),!,
- must(call_u((must(current_smt(SM,CM)),!,
-   forall(between(1,11,A),must((functor(PI,F,A),kb_shared(CM,SM,PI,F,A))))))),!.
-kb_shared(P):- must(call_u(with_pi(P,kb_shared))).
-
-
-:- was_export((kb_shared)/3).
-*/
-%= 	 	 
-
-%% kb_shared( ?M, ?F, ?A) is semidet.
-%
-% Declare Managed Predicate Hybrid.
-%
-kb_shared(M,F,A):-integer(A),!,must(functor(PI,F,A)),kb_shared(M,PI,F/A).
-kb_shared(M,PI,FA):- prolog_load_context(module,CM),must(kb_shared(CM,M,PI,FA)).
-
-
-%= 	 	 
-
-%% kb_shared( ?F, ?A) is semidet.
-%
-% Declare Managed Predicate Hybrid.
-%
-kb_shared(F,A):- integer(A),!,functor(FA,F,A),kb_shared(FA).
-kb_shared(F,Other):- 
-     decl_mpred(F,Other),     
-     get_functor(F,F0),
-     must(arity_no_bc(F0,A)),
-     functor(F0A,F0,A),
-     kb_shared(F0A).
-
-:- was_export((kb_shared)/4).
-
-
-no_need_to_import(baseKB).
-no_need_to_import(lmcache).
-no_need_to_import(t_l).
-no_need_to_import(system).
-no_need_to_import(baseKB).
-
-:- use_module(mpred_at_box).
-
-
-%% kb_shared( ?CM, ?M, ?PIN, :TermF) is semidet.
-%
-% Declare Managed Predicate Hybrid Inside Of Loop Checking.
-%
-kb_shared(Any,M,PI,MFAIn):-
-  must_det_l(( 
-    pi_to_head_l(MFAIn,MFA),
-    strip_module(MFA,_,FA),
-    functor(FA,F,A),
-    kb_shared(Any,M,PI,F,A))).
-
-
-kb_shared(CM:baseKB,M,PI,F,A):- M==abox, defaultAssertMt(Mt)-> M\==Mt,!,must(kb_shared(CM:baseKB,Mt,PI,F,A)).
-
-kb_shared(W:CM,M,PI,F,A):-var(A),!,
-   forall(between(1,11,A),kb_shared(W:CM,M,PI,F,A)),!.
-
-% kb_shared(CM:OM,M,PI,F,A):-M==OM,CM\==OM,kb_shared(CM,M,PI,F,A).
-/*
-kb_shared(CM:Imp,M,PI,F,A):-M==CM,
-   kb_shared(CM,M,PI,F,A),
-   (CM==baseKB->true;((   CM:export(CM:F/A),dmsg(Imp:import(CM:F/A)), Imp:import(CM:F/A)))).
-*/
-% kb_shared(CM,M,PI,F,A):- dmsg(kb_shared(CM,M,PI,F,A)),fail.
-
-% kb_shared(CM:M,baseKB,PI,F,A):- M\==baseKB, must(kb_shared(CM:baseKB,baseKB,PI,F,A)).
-
-
-kb_shared(CM:baseKB,M,PI,F,A):- defaultAssertMt(Mt)-> M\==Mt,!,must(kb_shared(CM:baseKB,Mt,PI,F,A)).
-kb_shared(_:CM,    M,PI,F,A):- atom(PI),A==0,get_arity(PI,F,A),
-   \+(is_static_predicate(F/A)),!,
-   must((forall((arity_no_bc(F,AA),AA\=0),
-   (functor(PIA,F,AA),kb_shared(CM,M,PIA,F,AA))))).
-kb_shared(_:CM,M,PI,F,A):-
-   must_det_l((    
-      ((var(CM),nonvar(M))->CM=M;true),
-      ((var(PI),integer(A))->functor(PI,F,A);true),
-      define_maybe_exact(M,PI),
-      (integer(A)->assert_arity(F,A);true))),!.
-
-define_maybe_exact(system,PI):- !,must((defaultAssertMt(Mt),define_maybe_exact(Mt,PI))),!.
-define_maybe_exact(M,PI):- % a(mtExact,M),!, 
-   must_det_l((    functor(PI,F,A),
-      M:multifile(M:F/A),
-      M:export(M:F/A),
-      baseKB:import(M:F/A),
-      baseKB:export(M:F/A),
-      system:import(M:F/A),
-      system:export(M:F/A),
-      once((M==baseKB->true;ain(baseKB:predicateConventionMt(F,M)))),
-      % asserta_if_new(baseKB:safe_wrap(F,A,ereq)),
-      kb_shared(M:PI),     
-      sanity(\+is_static_predicate(M:PI)),
-      maybe_define_if_not_static(M,PI))),!.
-define_maybe_exact(_,PI):-
-     maybe_define_if_not_static(baseKB,PI).
-
-maybe_define_if_not_static(M,PI):- 
-  must_det_l((              
-              functor_h(PI,F,A),
-              asserta_if_new(baseKB:safe_wrap(F,A,ereq)),
-              M:multifile(M:F/A),
-              M:public(M:F/A),
-            %   on_f_throw( (M:F/A)\== (baseKB:loaded_external_kbs/1)),
-              M:discontiguous(M:F/A),
-              M:module_transparent(M:F/A),      
-      (is_static_predicate(M:PI) -> true ;
-       (predicate_property(M:PI,dynamic) -> true ; on_xf_cont(M:dynamic(M:PI)))))),!.
-
-
-%prologHybrid(X,Y):-dtrace(prologHybrid(X,Y)).
-%:- was_dynamic(prologHybrid(_,_)).
-%:- lock_predicate(prologHybrid(_,_)).
-
-% ========================================
-% mpred_props database
-% ========================================
-
-/*
-
-
-
-% mpred_isa(F,prologDynamic):- \+ (mpred_isa(F,prologHybrid)),(F=ttRelationType;(current_predicate(F/1);not(t(F,tCol)))).
-mpred_isa(G,predProxyAssert(ain)):- atom(G),functorIsMacro(G).
-mpred_isa(G,predProxyQuery(ireq)):- atom(G),functorIsMacro(G).
-mpred_isa(G,predProxyRetract(del)):- atom(G),functorIsMacro(G).
-*/
-
-
-
-
 %= 	 	 
 
 %% get_mpred_prop( ?F, ?A, ?P) is semidet.
@@ -478,7 +320,7 @@ get_mpred_prop(F,P):- mreq(mpred_isa(F,P)).
 %
 listprolog:-listing(mpred_isa(_,prologDynamic)).
 
-
+:- use_module(library(clpfd),[ (#=) /2]).
 
 %= 	 	 
 
@@ -732,3 +574,180 @@ add_mpred_prop_gleaned_4(Arg1,_F,_,FRGS):-decl_mpred(Arg1,FRGS).
 % user:term_expansion(G,_):- current_predicate(logicmoo_bugger_loaded/0),\+ t_l:disable_px, not(t_l:into_form_code),quietly((once(glean_pred_props_maybe(G)),fail)).
 
 mpred_props_file.
+
+
+
+end_of_file.
+
+
+
+% ========================================
+% (kb_shared)/1/2/3
+% ========================================
+% :- op(0,fx,(kb_shared)).
+% :- was_export((kb_shared)/1).
+% :- meta_predicate(kb_shared(?)).
+
+%= 	 	 
+
+%% kb_shared( ?A) is semidet.
+%
+% Declare Managed Predicate Hybrid.
+%
+
+% kb_shared(A):- \+(compound(A)),!,ain00(prologHybrid(A)).
+% ain_expanded(love(isEach(a/1,b/2,c/1,d),mother)).
+% ain_expanded(loves(isElement(a/1,b/2,c/1,d),mother)).
+/*
+kb_shared(M):- var(M),!,trace_or_throw(var_kb_dynamic(M)).
+kb_shared(M):- M =.. [isEach|List],!,must_maplist(kb_shared,List).
+kb_shared(F/A):- var(F),!,trace_or_throw(var_kb_dynamic(F/A)).
+kb_shared([H|List]):- is_list(List),!,kb_shared(H),must_maplist(kb_shared,List).
+
+% kb_shared(MPI):- must(kb_shared(MPI)),must(dynamic(MPI)),!.
+kb_shared(MPI):- must(kb_shared(MPI)),must((with_pfa(m_fa_to_m_p_fa(kb_shared),MPI))),!.
+
+kb_shared(F/A):- var(A),atom(F),!,
+ must(call_u((must(current_smt(SM,CM)),!,
+   forall(between(1,11,A),must((functor(PI,F,A),kb_shared(CM,SM,PI,F,A))))))),!.
+kb_shared(P):- must(call_u(with_pi(P,kb_shared))).
+
+
+:- was_export((kb_shared)/3).
+*/
+%= 	 	 
+
+%% kb_shared( ?M, ?F, ?A) is semidet.
+%
+% Declare Managed Predicate Hybrid.
+%
+kb_shared(M,F,A):-integer(A),!,must(functor(PI,F,A)),kb_shared(M,PI,F/A).
+kb_shared(M,PI,FA):- prolog_load_context(module,CM),must(kb_shared(CM,M,PI,FA)).
+
+
+%= 	 	 
+
+%% kb_shared( ?F, ?A) is semidet.
+%
+% Declare Managed Predicate Hybrid.
+%
+kb_shared(F,A):- integer(A),!,kb_shared(F/A).
+kb_shared(F,Other):- 
+     decl_mpred(F,Other),     
+     get_functor(F,F0),
+     must(arity_no_bc(F0,A)),
+     functor(F0A,F0,A),
+     kb_shared(F0A).
+
+:- was_export((kb_shared)/4).
+
+
+no_need_to_import(baseKB).
+no_need_to_import(lmcache).
+no_need_to_import(t_l).
+no_need_to_import(system).
+no_need_to_import(baseKB).
+
+:- use_module(mpred_at_box).
+
+
+%% kb_shared( ?CM, ?M, ?PIN, :TermF) is semidet.
+%
+% Declare Managed Predicate Hybrid Inside Of Loop Checking.
+%
+kb_shared(Any,M,PI,MFAIn):-
+  must_det_l(( 
+    pi_to_head_l(MFAIn,MFA),
+    strip_module(MFA,_,FA),
+    functor(FA,F,A),
+    kb_shared(Any,M,PI,F,A))).
+
+
+kb_shared(CM:baseKB,M,PI,F,A):- M==abox, defaultAssertMt(Mt)-> M\==Mt,!,must(kb_shared(CM:baseKB,Mt,PI,F,A)).
+
+kb_shared(W:CM,M,PI,F,A):-var(A),!,
+   forall(between(1,11,A),kb_shared(W:CM,M,PI,F,A)),!.
+
+% kb_shared(CM:OM,M,PI,F,A):-M==OM,CM\==OM,kb_shared(CM,M,PI,F,A).
+/*
+kb_shared(CM:Imp,M,PI,F,A):-M==CM,
+   kb_shared(CM,M,PI,F,A),
+   (CM==baseKB->true;((   CM:export(CM:F/A),dmsg(Imp:import(CM:F/A)), Imp:import(CM:F/A)))).
+*/
+% kb_shared(CM,M,PI,F,A):- dmsg(kb_shared(CM,M,PI,F,A)),fail.
+
+% kb_shared(CM:M,baseKB,PI,F,A):- M\==baseKB, must(kb_shared(CM:baseKB,baseKB,PI,F,A)).
+
+
+kb_shared(CM:baseKB,M,PI,F,A):- defaultAssertMt(Mt)-> M\==Mt,!,must(kb_shared(CM:baseKB,Mt,PI,F,A)).
+kb_shared(_:CM,    M,PI,F,A):- atom(PI),A==0,get_arity(PI,F,A),
+   \+(is_static_predicate(F/A)),!,
+   must((forall((arity_no_bc(F,AA),AA\=0),
+   (functor(PIA,F,AA),kb_shared(CM,M,PIA,F,AA))))).
+kb_shared(_:CM,M,PI,F,A):-
+   must_det_l((    
+      ((var(CM),nonvar(M))->CM=M;true),
+      ((var(PI),integer(A))->functor(PI,F,A);true),
+      define_maybe_exact(M,PI),
+      (integer(A)->assert_arity(F,A);true))),!.
+
+define_maybe_exact(M,PI):- M==system, !,must((defaultAssertMt(Mt),define_maybe_exact(Mt,PI))),!.
+
+define_maybe_exact(M,PI):- get_def_modules
+
+define_maybe_exact(M,PI):- current_predicate(_,C:PI), \+ predicate_property(C:PI,imported_from(_)),
+      M\==C,define_maybe_exact(C,PI),      
+      C:export(C:F/A),
+      M:import(M:F/A),
+      M:export(M:F/A),!.
+
+define_maybe_exact(M,PI):- % a(mtExact,M),!, 
+   must_det_l((    functor(PI,F,A),
+      M:multifile(M:F/A),
+      M:export(M:F/A),
+      baseKB:import(M:F/A),
+      baseKB:export(M:F/A),
+      system:import(M:F/A),
+      system:export(M:F/A),
+      once((M==baseKB->true;ain(baseKB:predicateConventionMt(F,M)))),
+      % asserta_if_new(baseKB:safe_wrap(F,A,ereq)),
+      kb_shared(M:PI),     
+      sanity(\+is_static_predicate(M:PI)),
+      maybe_define_if_not_static(M,PI))),!.
+define_maybe_exact(_,PI):-
+     maybe_define_if_not_static(baseKB,PI).
+
+maybe_define_if_not_static(M,PI):- 
+  must_det_l((              
+              functor_h(PI,F,A),
+              asserta_if_new(baseKB:safe_wrap(F,A,ereq)),
+              M:multifile(M:F/A),
+              M:public(M:F/A),
+            %   on_f_throw( (M:F/A)\== (baseKB:loaded_external_kbs/1)),
+              M:discontiguous(M:F/A),
+              M:module_transparent(M:F/A),      
+      (is_static_predicate(M:PI) -> true ;
+       (predicate_property(M:PI,dynamic) -> true ; on_xf_cont(M:dynamic(M:PI)))))),!.
+
+
+%prologHybrid(X,Y):-dtrace(prologHybrid(X,Y)).
+%:- was_dynamic(prologHybrid(_,_)).
+%:- lock_predicate(prologHybrid(_,_)).
+
+% ========================================
+% mpred_props database
+% ========================================
+
+/*
+
+
+
+% mpred_isa(F,prologDynamic):- \+ (mpred_isa(F,prologHybrid)),(F=ttRelationType;(current_predicate(F/1);not(t(F,tCol)))).
+mpred_isa(G,predProxyAssert(ain)):- atom(G),functorIsMacro(G).
+mpred_isa(G,predProxyQuery(ireq)):- atom(G),functorIsMacro(G).
+mpred_isa(G,predProxyRetract(del)):- atom(G),functorIsMacro(G).
+*/
+
+
+
+

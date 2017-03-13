@@ -115,7 +115,6 @@
             functor_declares_instance/2,
             functor_declares_instance_0/2,
             holds_args/2,
-            same_terms/2,
             %if_expands_on/3,
             infix_op/2,
             instTypePropsToType/2,
@@ -142,7 +141,6 @@
             recommify/3,
             reduce_clause/3,
             reduce_clause_from_fwd/3,
-            same_terms/2,
             show_doall/1,
             string_to_mws/2,
             simply_functors/3,
@@ -184,7 +182,7 @@
    transitive_lc_nr(2,*,*),
    simply_functors(2,*,*).
           
-:- multifile(t_l:disable_px/0).
+
 :- thread_local(t_l:disable_px/0).
 
 
@@ -397,7 +395,7 @@ functor_declares_instance(F,C):- fail, functor_declares_instance_0(F,C0),!,C=C0.
 % functor declares instance  Primary Helper.
 %
 
-functor_declares_instance_0(P,P):- arg(_,s(ttExpressionType,ttModule,tSet,ttTypeType,tFunction),P).
+functor_declares_instance_0(P,P):- arg(_,s(ttExpressionType,ttModuleType,tSet,ttTypeType,tFunction),P).
 functor_declares_instance_0(P,P):- arg(_,s(tCol,ftSpec),P).
 functor_declares_instance_0(isa,_):-!,fail.
 functor_declares_instance_0(props,_):-!,fail.
@@ -1612,7 +1610,7 @@ into_mpred_form_ilc(G,O):- functor(G,F,A),G=..[F,P|ARGS],!,into_mpred_form6(G,F,
 % ========================================
 % was_mpred_isa(Goal,I,C) recognises isa/2 and its many alternative forms
 % ========================================
-:- dynamic decided_not_was_isa/2.
+:- kb_shared(decided_not_was_isa/2).
 
 %= 	 	 
 

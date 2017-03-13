@@ -8,6 +8,144 @@
 % Dec 13, 2035
 %
 
+:-
+ op(1199,fx,('==>')), 
+ op(1190,xfx,('::::')),
+ op(1180,xfx,('==>')),
+ op(1170,xfx,'<==>'),  
+ op(1160,xfx,('<-')),
+ op(1150,xfx,'=>'),
+ op(1140,xfx,'<='),
+ op(1130,xfx,'<=>'), 
+ op(600,yfx,'&'), 
+ op(600,yfx,'v'),
+ op(350,xfx,'xor'),
+ op(300,fx,'~'),
+ op(300,fx,'-').
+
+
+:- thread_local(t_l:infSkipFullExpand/0).
+:- thread_local(t_l:deduceArgTypes/1).
+:- thread_local(t_l:noDBaseMODs/1).
+:- thread_local(t_l:side_effect_buffer/3).
+:- thread_local(t_l:loading_mpred_file/2).
+:- thread_local(t_l:consulting_sources/0).
+% HOOKS
+
+:- forall(member(M:F/A,[
+el_assertions:el_holds/10, %el_assertions
+el_assertions:el_holds/11, %el_assertions
+el_assertions:el_holds/12, %el_assertions
+el_assertions:el_holds/13, %el_assertions
+el_assertions:el_holds/14, %el_assertions
+el_assertions:el_holds/4, %el_assertions
+el_assertions:el_holds/5, %el_assertions
+el_assertions:el_holds/6, %el_assertions
+el_assertions:el_holds/7, %el_assertions
+el_assertions:el_holds/8, %el_assertions
+el_assertions:el_holds/9, %el_assertions
+el_assertions:el_holds_pred_impl/1, %el_assertions
+% el_assertions:is_cyckb_t_pred/2, %el_assertions
+lmcache:has_pfc_database_preds/1,
+lmcache:after_mpred_load/0,
+lmcache:loaded_external_kbs/1,
+% baseKB:agent_call_command/2,
+baseKB:decl_coerce/3,
+baseKB:feature_test/0,
+baseKB:hook_coerce/3, 
+baseKB:hook_mpred_listing/1,
+baseKB:hook_one_minute_timer_tick/0,
+baseKB:hook_one_second_timer_tick/0, 
+baseKB:isa_pred_now_locked/0,
+baseKB:loaded_file_world_time/3, 
+baseKB:loaded_mpred_file/2,
+baseKB:module_local_init/0,
+baseKB:mpred_hook_rescan_files/0, 
+baseKB:mpred_provide_read_attributes/3, 
+baseKB:mpred_provide_setup/4, 
+baseKB:mpred_provide_storage_clauses/3, 
+baseKB:mpred_provide_storage_op/2, 
+baseKB:mpred_provide_write_attributes/2, 
+baseKB:mpred_skipped_module/1, 
+baseKB:mud_test/2,
+baseKB:never_reload_file/1, 
+baseKB:pfcManageHybrids/0, 
+baseKB:regression_test/0,
+baseKB:sanity_test/0,
+baseKB:type_action_info/3,
+% mpred_online:semweb_startup/0,
+baseKB:use_ideep_swi/0,
+baseKB:cycPred/2,
+baseKB:isa/2,
+baseKB:cycPlus2/2,
+
+user:portray/1,
+user:prolog_load_file/2, 
+%user:prolog_clause_name/2,
+%user:prolog_list_goal/1,
+%user:prolog_predicate_name/2,
+user:term_expansion/2,user:goal_expansion/2,system:term_expansion/2,system:goal_expansion/2]),
+  (multifile(M:F/A),M:module_transparent(M:F/A),dynamic(M:F/A),discontiguous(M:F/A))). 
+
+:- discontiguous(module_local_init/2).
+% ================================================
+% Thread Locals
+% ================================================
+% DYN KB
+:- thread_local(t_l:repl_to_string/2).
+:- thread_local(t_l:repl_writer/2).
+
+:- thread_local(t_l:agenda_slow_op_do_prereqs/0).
+:- thread_local(t_l:agenda_suspend_scans/0).
+:- thread_local(t_l:agent_current_action/2).
+:- thread_local(t_l:already_in_file_term_expansion/0).
+:- thread_local(t_l:assert_op_override/1).
+:- thread_local(t_l:caller_module/2).
+:- thread_local(t_l:consulting_sources/0).
+:- thread_local(t_l:current_pttp_db_oper/1).
+:- thread_local(t_l:deduceArgTypes/1).
+:- thread_local(t_l:disable_px /0).
+:- thread_local(t_l:enable_src_loop_checking/0).
+:- thread_local(t_l:in_dynamic_reader/1).
+:- thread_local(t_l:in_prolog_source_code/0).
+:- thread_local(t_l:infAssertedOnly/1).
+:- thread_local(t_l:infInstanceOnly/1).
+:- thread_local(t_l:infMustArgIsa/0).
+:- thread_local(t_l:infSecondOrder/0).
+:- thread_local(t_l:infSkipArgIsa/0).
+:- thread_local(t_l:infSkipFullExpand/0).
+:- thread_local(t_l:infThirdOrder/0).
+:- thread_local(t_l:into_form_code/0).
+:- thread_local(t_l:inVoProp/0).
+:- thread_local(t_l:is_calling/0).
+:- thread_local(t_l:mpred_loads_file/0).
+:- thread_local(t_l:mpred_ain_loaded/0).
+:- thread_local(t_l:mpred_opcall/2).
+:- thread_local(t_l:no_arg_type_error_checking/0).
+:- thread_local(t_l:noDBaseHOOKS/1).
+:- thread_local(t_l:noDBaseMODs/1).
+:- thread_local(t_l:noRandomValues/1).
+:- thread_local(t_l:print_mode/1).
+:- thread_local(t_l:side_effect_buffer/3).
+:- thread_local(t_l:side_effect_ok/0).
+:- thread_local(t_l:tracing80/0).
+:- thread_local(t_l:use_side_effect_buffer/0).
+:- thread_local(t_l:useAltPOS/0).
+:- thread_local(t_l:useOnlyExternalDBs/0).
+:- thread_local(t_l:usePlTalk/0).
+:- thread_local(t_l:verify_side_effect_buffer/0).
+:- thread_local(t_l:with_callMPred/1).
+:- thread_local(t_l:infForward).
+:- thread_local(t_l:into_form_code/0).
+:- thread_local(t_l:infSupertypeName/0).
+:- thread_local(t_l:loading_mpred_file/2).
+:- thread_local(t_l:mpred_run_paused/0).
+:- thread_local(t_l:no_kif_var_coroutines/0).
+
+end_of_file.
+
+
+
 :- multifile(baseKB:'$exported_op'/3). 
 :- discontiguous baseKB:'$exported_op'/3. 
 :- dynamic baseKB:'$exported_op'/3. 
@@ -34,20 +172,7 @@
 :- ensure_loaded(library(codesio)).
 % :- ensure_loaded(library(logicmoo_utils)).
 */
-:-
- op(1199,fx,('==>')), 
- op(1190,xfx,('::::')),
- op(1180,xfx,('==>')),
- op(1170,xfx,'<==>'),  
- op(1160,xfx,('<-')),
- op(1150,xfx,'=>'),
- op(1140,xfx,'<='),
- op(1130,xfx,'<=>'), 
- op(600,yfx,'&'), 
- op(600,yfx,'v'),
- op(350,xfx,'xor'),
- op(300,fx,'~'),
- op(300,fx,'-').
+
 
 :- op(1100,fx,(shared_multifile)).
 
@@ -102,61 +227,7 @@ assert_if_new_hh(G):- (catch(G,_,fail)->true;assert(G)).
 :- multifile( baseKB:predicateConventionMt/2).
 :- dynamic( baseKB:predicateConventionMt/2).
 
-% HOOKS
 
-:- forall(member(M:F/A,[
-el_assertions:el_holds/10, %el_assertions
-el_assertions:el_holds/11, %el_assertions
-el_assertions:el_holds/12, %el_assertions
-el_assertions:el_holds/13, %el_assertions
-el_assertions:el_holds/14, %el_assertions
-el_assertions:el_holds/4, %el_assertions
-el_assertions:el_holds/5, %el_assertions
-el_assertions:el_holds/6, %el_assertions
-el_assertions:el_holds/7, %el_assertions
-el_assertions:el_holds/8, %el_assertions
-el_assertions:el_holds/9, %el_assertions
-el_assertions:el_holds_pred_impl/1, %el_assertions
-% el_assertions:is_cyckb_t_pred/2, %el_assertions
-lmcache:has_pfc_database_preds/1,
-lmcache:after_mpred_load/0,
-% baseKB:agent_call_command/2,
-baseKB:decl_coerce/3,
-baseKB:feature_test/0,
-baseKB:hook_coerce/3, 
-baseKB:hook_mpred_listing/1,
-baseKB:hook_one_minute_timer_tick/0,
-baseKB:hook_one_second_timer_tick/0, 
-baseKB:isa_pred_now_locked/0,
-baseKB:loaded_file_world_time/3, 
-baseKB:loaded_mpred_file/2,
-baseKB:module_local_init/0,
-baseKB:mpred_hook_rescan_files/0, 
-baseKB:mpred_provide_read_attributes/3, 
-baseKB:mpred_provide_setup/4, 
-baseKB:mpred_provide_storage_clauses/3, 
-baseKB:mpred_provide_storage_op/2, 
-baseKB:mpred_provide_write_attributes/2, 
-baseKB:mpred_skipped_module/1, 
-baseKB:mud_test/2,
-baseKB:never_reload_file/1, 
-baseKB:pfcManageHybrids/0, 
-baseKB:regression_test/0,
-baseKB:sanity_test/0,
-baseKB:type_action_info/3,
-mpred_online:semweb_startup/0,
-baseKB:use_ideep_swi/0,
-baseKB:cycPred/2,
-baseKB:isa/2,
-baseKB:cycPlus2/2,
-
-user:portray/1,
-user:prolog_load_file/2, 
-%user:prolog_clause_name/2,
-%user:prolog_list_goal/1,
-%user:prolog_predicate_name/2,
-user:term_expansion/2,user:goal_expansion/2,system:term_expansion/2,system:goal_expansion/2]),
-  (multifile(M:F/A),M:module_transparent(M:F/A),dynamic(M:F/A),discontiguous(M:F/A))).
 
 %:- ensure_loaded(library(logicmoo_utils)).
 
@@ -188,59 +259,7 @@ lm_util:register_mpred_impl_file(F):- (current_prolog_flag(xref,true)->true;
 :- prolog_load_context(source,F),lm_util:register_mpred_impl_file(F).
 :- prolog_load_context(file,F),lm_util:register_mpred_impl_file(F).
 
-% ================================================
-% Thread Locals
-% ================================================
-% DYN KB
-:- thread_local(t_l:repl_to_string/2).
-:- thread_local(t_l:repl_writer/2).
 
-:- thread_local(t_l:agenda_slow_op_do_prereqs/0).
-:- thread_local(t_l:agenda_suspend_scans/0).
-:- thread_local(t_l:agent_current_action/2).
-:- thread_local(t_l:already_in_file_term_expansion/0).
-:- thread_local(t_l:assert_op_override/1).
-:- thread_local(t_l:caller_module/2).
-:- thread_local(t_l:consulting_sources/0).
-:- thread_local(t_l:current_pttp_db_oper/1).
-:- thread_local(t_l:deduceArgTypes/1).
-:- thread_local(t_l:disable_px /0).
-:- thread_local(t_l:enable_src_loop_checking/0).
-:- thread_local(t_l:in_dynamic_reader/1).
-:- thread_local(t_l:in_prolog_source_code/0).
-:- thread_local(t_l:infAssertedOnly/1).
-:- thread_local(t_l:infInstanceOnly/1).
-:- thread_local(t_l:infMustArgIsa/0).
-:- thread_local(t_l:infSecondOrder/0).
-:- thread_local(t_l:infSkipArgIsa/0).
-:- thread_local(t_l:infSkipFullExpand/0).
-:- thread_local(t_l:infThirdOrder/0).
-:- thread_local(t_l:into_form_code/0).
-:- thread_local(t_l:inVoProp/0).
-:- thread_local(t_l:is_calling/0).
-:- thread_local(t_l:mpred_loads_file/0).
-:- thread_local(t_l:mpred_ain_loaded/0).
-:- thread_local(t_l:mpred_opcall/2).
-:- thread_local(t_l:no_arg_type_error_checking/0).
-:- thread_local(t_l:noDBaseHOOKS/1).
-:- thread_local(t_l:noDBaseMODs/1).
-:- thread_local(t_l:noRandomValues/1).
-:- thread_local(t_l:print_mode/1).
-:- thread_local(t_l:side_effect_buffer/3).
-:- thread_local(t_l:side_effect_ok/0).
-:- thread_local(t_l:tracing80/0).
-:- thread_local(t_l:use_side_effect_buffer/0).
-:- thread_local(t_l:useAltPOS/0).
-:- thread_local(t_l:useOnlyExternalDBs/0).
-:- thread_local(t_l:usePlTalk/0).
-:- thread_local(t_l:verify_side_effect_buffer/0).
-:- thread_local(t_l:with_callMPred/1).
-:- thread_local(t_l:infForward).
-:- thread_local(t_l:into_form_code/0).
-:- thread_local(t_l:infSupertypeName/0).
-:- thread_local(t_l:loading_mpred_file/2).
-:- thread_local(t_l:mpred_run_paused/0).
-:- thread_local(t_l:no_kif_var_coroutines/0).
 
 :- style_check(-singleton).
 :- set_prolog_flag(generate_debug_info, true).
