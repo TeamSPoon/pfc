@@ -13,7 +13,7 @@
 :- module(mpred_agenda,
           [ 
             add_later/1,
-            
+            expire_dont_add/0,
             after_mpred_load_pass2/0,
             agenda_do_prequery/0,
             agenda_mpred_repropigate/0,
@@ -333,7 +333,14 @@ agenda_slow_op_enqueue(Slow):- assertz_if_new(agenda_slow_op_todo(Slow)),!.
 expire_pre_change(change(assert,_),_):-expire_tabled_list(all),!. 
 expire_pre_change(_,_).
 
-	 
+:- dynamic(baseKB:already_added_this_round/1).
+:- export(baseKB:already_added_this_round/1).
+	
+
+expire_dont_add:-
+  retractall(baseKB:already_added_this_round(_)),
+  expire_tabled_list(all),
+  nop(dmsg(expire_dont_add)).
 
 %% expire_post_change( ?VALUE1, ?VALUE2) is semidet.
 %

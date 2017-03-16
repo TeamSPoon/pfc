@@ -1517,7 +1517,7 @@ ttTypeFacet(ttTypeFacet).
 ttTypeFacet(ttUnverifiableType).
 
 
-%typeGenls(tPred,ttRelationType).
+typeGenls(ttRelationType,tRelation).
 typeGenls(ttExpressionTypeType,ttExpressionType).
 typeGenls(ttTypeFacet,tCol).
 typeGenls(ttTypeType,tCol).

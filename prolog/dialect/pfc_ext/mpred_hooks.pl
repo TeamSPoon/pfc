@@ -920,9 +920,9 @@ relax_term(P,P,Ai,Ac,Bi,Bc):- when_met(pred(nonvar,Ac),when_met(pred(nonvar,Bc),
 
 differentTerms(A,B):- dif:dif(A,B).
 
-admittedArgument(P,N,A):-var(P),!,freeze(P,admittedArgument(P,N,A)).
-admittedArgument(P,N,A):-var(A),!,freeze(A,admittedArgument(P,N,A)).
-admittedArgument(P,N,A):-var(N),!,freeze(N,admittedArgument(P,N,A)).
+admittedArgument(P,N,A):-var_non_attvar(P),!,freeze(P,admittedArgument(P,N,A)).
+admittedArgument(P,N,A):-var_non_attvar(A),!,freeze(A,admittedArgument(P,N,A)).
+admittedArgument(P,N,A):-var_non_attvar(N),!,freeze(N,(number(N),admittedArgument(P,N,A))).
 admittedArgument(P,N,A):-wdmsg(admittedArgument(P,N,A)).
 
 %= 	 	 

@@ -624,7 +624,8 @@ fully_expand(X,Y):- must((fully_expand(clause(unknown,cuz),X,Y))).
 
 fully_expand(_,Var,Var):- \+ compound(Var),!.
 fully_expand(Op,Sent,SentO):- functor(Sent,F,A),should_fully_expand(F,A),!,must(fully_expand_real(Op,Sent,SentO)),!.
-fully_expand(Op,Sent,Sent):- sanity((ignore((fully_expand_real(Op,Sent,SentO)->sanity((Sent=@=SentO)))))).
+fully_expand(Op,Sent,SentO):- must(fully_expand_real(Op,Sent,SentO)),!.
+% fully_expand(Op,Sent,Sent):- sanity((ignore((fully_expand_real(Op,Sent,SentO)->sanity((Sent=@=SentO)))))).
 
 /*
 fully_expand(Op,Sent,SentO):- must(fully_expand_real(Op,Sent,SentO)),!,
