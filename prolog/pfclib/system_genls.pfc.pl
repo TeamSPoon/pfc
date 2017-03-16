@@ -13,6 +13,17 @@ flatTrans(subFormat).
 flatTrans(genlFuncs).
 flatTrans(genlFunctions).
 flatTrans(genlMt).
+
+ttTypeType(ttTemporalType).
+typeGenls(ttRelationType,tRelation).
+typeGenls(ttSpatialType,tSpatialThing).
+genls(tSpatialThing,tTemporalThing).
+genls(ttSpatialType,ttTemporalType).
+
+(((ttTemporalType(T),genls(C,T))==> ttTemporalType(C))).
+(((ttTypeType(T),genls(C,T))==> ttTypeType(C))).
+(((ttRelationType(T),genls(C,T))==> ttRelationType(C))).
+
 /*
 
 tCol(tCol).

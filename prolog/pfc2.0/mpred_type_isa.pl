@@ -668,23 +668,30 @@ col_gen(vtValue,T):- !, no_repeats(T,val_type(T)).
 col_gen(S,T):- trace_or_throw(col_gen(S,T)).
 
 
+:- export(col_type/1).
 col_type(T):- clause_b(ttTypeType(T)).
+:- export(rel_type/1).
 rel_type(T):- clause_b(ttRelationType(T)).
+:- export(inst_type/1).
 inst_type(T):- clause_b(ttTemporalType(T)).
 inst_type(T):- clause_b(ttTimeDependentCollection(T)).
+:- export(val_type/1).
 val_type(T):- clause_b(tCol(T)), \+ col_type(T),\+ inst_type(T),\+ rel_type(T).
 
 /*
   main types
 
-collections/relations (tSet,tCol,predciates)
+collections (tSet,tCol,collection types)
+relations (predciates/function)
 spatial/temporals (people,places)
 symbols/values (string/numbers/shapes)
 
 */
-% main_type(C,_):- is_ftVar(C),!,fail.
+
+:- export(main_type/2).
 main_type(C,vtValue):- (string(C);number(C)),!.
 main_type(C,_):- \+ atom(C),!,fail.
+% main_type(C,_):- is_ftVar(C),!,fail.
 main_type(C,tCol):- clause_b(tCol(C)),!.
 main_type(C,tRelation):- clause_b(tRelation(C)),!.
 main_type(C,tTemporalThing):- clause_b(tTemporalThing(C)),!.
@@ -699,14 +706,14 @@ main_type(_,vtValue).
 % isa_backchaing(i,c)
 % ==========================
 
-%= 	 	 
-
-% module_local_init(+ABox,+TBox) is semidet.
+% isa_module_local_init(+ABox,+TBox) is semidet.
 %
-% Hook To [module_local_init/2] For Module Mpred_type_isa.
+% Hook To [isa_module_local_init/2] For Module Mpred_type_isa.
 % Module Local Init.
 %
-module_local_init(_UserModule,_SystemModule):- ain((isa(I,T):- cwc,isa_backchaing(I,T))).
+
+:- discontiguous isa_module_local_init/2.
+isa_module_local_init(_UserModule,_SystemModule):- ain((isa(I,T):- cwc,isa_backchaing(I,T))).
 %a(P,F):-loop_check(isa(F,P)).
 %a(T,I):- baseKB:pfcManageHybrids,clause_safe(isa(I,T),true).
 baseKB:prologBuiltin(isa_asserted/2).
@@ -848,9 +855,9 @@ isa_asserted_0(ttRelationType, completelyAssertedCollection):-!.
 isa_asserted_0(I,C):- atom(C),notrace((G=..[C,I],current_predicate(C,M:G),predicate_property(M:G,number_of_clauses(N)))),N>0,!,on_x_fail((M:G)).
 isa_asserted_0(I,C):- atom(I),isa_from_morphology(I,C).
 isa_asserted_0(_,C):- nonvar(C),sanity(\+ is_ftVar(C)), clause_b(completelyAssertedCollection(C)),!,fail.
-isa_asserted_0(I,_):- nonvar(I),sanity(\+ is_ftVar(I)), clause_b(completeIsaAsserted(I)),!,fail.
 isa_asserted_0(I,_):- var(I),!,fail.
-isa_asserted_0(I,C):- main_type(I,SubType),!,(C=SubType;isa_asserted_3(I,SubType,C)).
+% isa_asserted_0(I,_):- sanity(\+ is_ftVar(I)), clause_b(completeIsaAsserted(I)),!,fail.
+isa_asserted_0(I,C):- var(C),main_type(I,SubType),!,(C=SubType;isa_asserted_3(I,SubType,C)).
 isa_asserted_0(I,C):- is_ftCompound(I),is_non_unit(I),is_non_skolem(I),!,get_functor(I,F),compound_isa(F,I,C).
 isa_asserted_0(I,C):- isa_asserted_compound(I,C).
 
@@ -1122,11 +1129,12 @@ baseKB:prologBuiltin(decl_type/1).
 %
 % Declare Type.
 %
+
 decl_type(_):-!.
 decl_type(All):- map_list_conj(decl_type,All),!.
-decl_type(Spec):- never_type_why(Spec,Why),!,trace_or_throw(never_type_why(Spec,Why)).
-decl_type(_):-!.
 decl_type(Spec):- show_call(why,ain(tCol(Spec))),!,guess_supertypes(Spec).
+decl_type(Spec):- never_type_why(Spec,Why),!,trace_or_throw(never_type_why(Spec,Why)).
+
 
 
 % ============================================
@@ -1235,7 +1243,7 @@ is_Template(I):- \+ (get_mpred_arg(_,I,Arg1), \+ a(tCol,Arg1)).
 mpred_types_loaded.
 
 % ISA QUERY
-module_local_init(_UserModule,_SystemModule):- 
+isa_module_local_init(_UserModule,_SystemModule):- 
   asserta_if_new((system:goal_expansion(ISA,GO) :- \+ t_l:disable_px, \+current_predicate(_,ISA),
   once((is_ftCompound(ISA),was_isa(ISA,I,C))),t_l:is_calling,show_call(why,GO=no_repeats(isa(I,C))))).
 % ISA GOAL
@@ -1248,6 +1256,8 @@ call_u_t(DB,P,L,A1):-call_u(call(DB,P,L,A1)).
 call_u_t(DB,P,L):-call_u(call(DB,P,L)).
 call_u_t(DB,P):-call_u(call(DB,P)).
 
+:- fixup_exports.
+
 mpred_type_isa_file.
 
 
@@ -1257,6 +1267,135 @@ mpred_type_isa_file.
 end_of_file.
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+end_of_file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+end_of_file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+end_of_file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+end_of_file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+end_of_file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+:- module_transparent(all_source_file_predicates_are_shared/0).
+all_source_file_predicates_are_shared:-
+ source_location(S,_), prolog_load_context(module,LC),
+ all_source_file_predicates_are_shared(S,LC).
+:- module_transparent(all_source_file_predicates_are_shared/2).
+all_source_file_predicates_are_shared(S,LC):-
+ forall(source_file(M:H,S),
+ ignore((functor(H,F,A), \+ atom_concat('$',_,F), kb_shared(M:F/A)))).
+
+% :- all_source_file_predicates_are_shared.
 
 
 
@@ -1329,7 +1468,7 @@ impliedSubClass(T,ST):-predicate_property(transitive_subclass(T,ST),_),!,call_ta
 
 
 % :- ain((baseKB:isa(I,C):-loop_check(isa_backchaing(I,C)))).
-% module_local_init:- ain(('$toplevel':isa(I,C):-baseKB:isa(I,C))).
+% isa_module_local_init:- ain(('$toplevel':isa(I,C):-baseKB:isa(I,C))).
 
 
 %= 	 	 
@@ -1341,7 +1480,7 @@ impliedSubClass(T,ST):-predicate_property(transitive_subclass(T,ST),_),!,call_ta
 mpred_types_loaded.
 
 % ISA QUERY
-module_local_init(_UserModule,_SystemModule):- 
+isa_module_local_init(_UserModule,_SystemModule):- 
   asserta_if_new((system:goal_expansion(ISA,GO) :- \+ t_l:disable_px, \+current_predicate(_,ISA),
   once((is_ftCompound(ISA),was_isa(ISA,I,C))),t_l:is_calling,show_call(why,GO=no_repeats(isa(I,C))))).
 % ISA GOAL
@@ -1349,8 +1488,8 @@ module_local_init(_UserModule,_SystemModule):-
 % ISA EVER
 %mpred_term_expansion(G,GO):-  \+ t_l:disable_px,was_isa(G,I,C),GO=isa(I,C).
 
-module_local_init(_UserModule,SystemModule):-ain(SystemModule:tCol(tCol)).
-module_local_init(_UserModule,SystemModule):-ain(SystemModule:tCol(ttRelationType)).
+isa_module_local_init(_UserModule,SystemModule):-ain(SystemModule:tCol(tCol)).
+isa_module_local_init(_UserModule,SystemModule):-ain(SystemModule:tCol(ttRelationType)).
 
 call_u_t(DB,P,L,A1,A2):-call_u(call(DB,P,L,A1,A2)).
 call_u_t(DB,P,L,A1):-call_u(call(DB,P,L,A1)).
@@ -1363,10 +1502,5 @@ call_u_t(DB,P):-call_u(call(DB,P)).
 %
 % TODO decide if still needed 
 mpred_univ(C,I,Head):- atom(C),!,Head=..[C,I],predicate_property(Head,number_of_clauses(_)).
-
-:- fixup_exports.
-
-mpred_type_isa_file.
-
 
 
