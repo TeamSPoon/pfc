@@ -2136,7 +2136,7 @@ mpred_prove_neg(G):-nop(dtrace), \+ mpred_bc_only(G), \+ mpred_fact(G).
 %
 % Predicate Head.
 %
-pred_head(Type,P):- no_repeats_u(P,(call(Type,P),\+ nonfact_metawrapper(P),is_ftCompound(P))).
+pred_head(Type,P):- no_repeats(P,(call(Type,P),\+ nonfact_metawrapper(P),is_ftCompound(P))).
 
 
 %% pred_head_all( +P) is semidet.

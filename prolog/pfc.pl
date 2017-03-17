@@ -95,7 +95,7 @@ base_message(T,Type,Warn):- dmsg(message_hook(T,Type,Warn)),dumpST,dmsg(message_
 user:message_hook(T,Type,Warn):- ( \+ current_prolog_flag(runtime_debug,0)),
    catch(once(base_message(T,Type,Warn)),_,fail),fail.
 
-:- use_module(library(logicmoo_utils)).
+% :- use_module(library(logicmoo_utils)).
 :- if( \+ current_predicate(each_call_cleanup/3)).
 :- use_module(library(each_call_cleanup)).
 :- endif.
