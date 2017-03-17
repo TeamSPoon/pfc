@@ -829,7 +829,7 @@ isa_asserted(I,C):-  compound(I),!,no_repeats(loop_check(isa_asserted_0(I,C))).
 isa_asserted(I,C):-  ground(I:C),!,no_loop_check(no_repeats(loop_check(isa_asserted_0(I,C)))).
 isa_asserted(I,C):-  no_repeats(loop_check(isa_asserted_0(I,C))).
 % isa_asserted(I,C):- !, call_u(isa(I,C)).
-%isa_asserted(I,C):- ((call_tabled(isa(I,C),no_repeats(loop_check(isa_asserted_0(I,C)))))).
+%isa_asserted(I,C):- ((lc_tcall(isa(I,C),no_repeats(loop_check(isa_asserted_0(I,C)))))).
 %isa_asserted(I,CC):-no_repeats((isa_asserted_0(I,C),call_u(genls(C,CC)))).
 
 isa_complete(I,C):- nonvar(I),var(C),!,tSetOrdered(C),isa_backchaing(I,C).
@@ -1458,7 +1458,7 @@ assert_isa_hooked_after(_,ttExpressionType):-!.
 assert_isa_hooked_after(I,T):-  \+ (completelyAssertedCollection(T)),impliedSubClass(T,ST),completelyAssertedCollection(ST),assert_isa(I,ST).
 baseKB:prologBuiltin(impliedSubClass/2).
 impliedSubClass(T,ST):-ground(T:ST),is_known_false(genls(T,ST)),!,fail.
-impliedSubClass(T,ST):-predicate_property(transitive_subclass(T,ST),_),!,call_tabled((isa(T,ST),transitive_subclass(T,ST))).
+impliedSubClass(T,ST):-predicate_property(transitive_subclass(T,ST),_),!,lc_tcall((isa(T,ST),transitive_subclass(T,ST))).
 */
 
 % one of 4 special cols
