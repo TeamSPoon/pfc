@@ -1855,7 +1855,7 @@ ensure_mpred_file_loaded(M:F0,List):-
 %
 % Declare Load Dbase.
 %
-declare_load_dbase(Spec):- forall(no_repeats_old(File,must_locate_file(Spec,File)),show_call(why,asserta_if_new(baseKB:registered_mpred_file(File)))).
+declare_load_dbase(Spec):- forall(no_repeats(File,must_locate_file(Spec,File)),show_call(why,asserta_if_new(baseKB:registered_mpred_file(File)))).
 
 % :-  /**/ export((is_compiling_sourcecode/1)).
 
@@ -1929,7 +1929,7 @@ load_init_world(World,File):-
 
 ensure_mpred_file_loaded(MFileIn):- strip_module(MFileIn,M,_), 
  forall(must_locate_file(MFileIn,File),
-   must_det_l((time_file_safe(File,NewTime),!,
+   must_det_l((time_file(File,NewTime),!,
    get_last_time_file(File,_World,LastTime),
    (LastTime<NewTime -> force_reload_mpred_file(M:File) ; true)))).
 
@@ -2004,7 +2004,7 @@ force_reload_mpred_file2(WorldIn,MFileIn):-
    sanity((true,defaultAssertMt(World))),
    nop(mpred_remove_file_support(File)),
    assert_if_new(baseKB:registered_mpred_file(File)),
-   quietly_must(time_file_safe(File,NewTime)),
+   quietly_must(time_file(File,NewTime)),
    retractall(baseKB:loaded_file_world_time(File,World,_)),
    system:assert(baseKB:loaded_file_world_time(File,World,NewTime)),    DBASE = DBASE,
    locally_hide(t_l:disable_px,

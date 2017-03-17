@@ -373,7 +373,7 @@ make_module_name_local0(Source,Source):- lmcache:has_pfc_database_preds(Source).
 make_module_name_local0(Source,Source):- clause_b(mtCycL(Source)),!.
 make_module_name_local0(user,KB):- t_l:current_defaultAssertMt(KB),!.
 make_module_name_local0(user,baseKB):-!.
-make_module_name_local0(Source,GetName):- make_module_name(Source,GetName).
+make_module_name_local0(Source,GetName):- make_module_name00(Source,GetName).
 
 
 ensure_tbox(_ABox).

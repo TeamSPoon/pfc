@@ -294,8 +294,8 @@ disabled a(T,I):- rdf_x(I,rdf:type,T).
 % A.
 %
 :- meta_predicate a(+,?).
-% WANT (but will loop) a(C,I):- !, quietly((atom(C),G=..[C,I], no_repeats_old(call_u(G)))).
-a(C,I):- quietly((atom(C),current_predicate(C/1), G=..[C,I], no_repeats_old(lookup_u(G)))).
+% WANT (but will loop) a(C,I):- !, quietly((atom(C),G=..[C,I], no_repeats(call_u(G)))).
+a(C,I):- quietly((atom(C),current_predicate(C/1), G=..[C,I], no_repeats(lookup_u(G)))).
 
 
 %=  :- was_export(alt_calls/1).
@@ -688,7 +688,7 @@ expand_isEach_or_fail_conj(Sent,SentO):- expand_isEach_or_fail_real(Sent,SentM),
 expand_kif_string_or_fail(_Why,I,O):- string(I), 
    input_to_forms(string(I),Wff,Vs)->
    put_variable_names(Vs) ->
-   must(sexpr_sterm_to_pterm(Wff,PTerm))->
+   if_defined(sexpr_sterm_to_pterm(Wff,PTerm))->
    PTerm\=@=I -> 
    O=PTerm.
 

@@ -463,7 +463,7 @@ last_arg_ground(_,A,HEAD):-arg(A,HEAD,Arg),!,ground(Arg).
 % Call Provided Managed Predicate Storage Oper..
 %
 call_provided_mpred_storage_op(call(_),H,true):-was_isa(H,I,C),!,isa_asserted(I,C).
-call_provided_mpred_storage_op(Op,H,true):-!,no_repeats_old(loop_check(may_storage_op(Op,H),clause_u(H))).
+call_provided_mpred_storage_op(Op,H,true):-!,no_repeats(loop_check(may_storage_op(Op,H),clause_u(H))).
 
 
 
@@ -596,7 +596,7 @@ mpred_prop_ordered(Pred,Prop):-local_q_mpred_isa(Pred,Prop),not(first_mpred_prop
 %
 provide_clauses_list(Head,HBLISTO):- get_pifunctor(Head,PHead),  
   findall((PHead :- B),
-   no_repeats_old([PHead:B],((call_no_cuts(baseKB:mpred_provide_storage_clauses(PHead,B,Proof)),is_source_proof(Proof)))),
+   no_repeats([PHead:B],((call_no_cuts(baseKB:mpred_provide_storage_clauses(PHead,B,Proof)),is_source_proof(Proof)))),
    HBLIST),
    create_stub_body(PHead,Stub),
    delete(HBLIST,Stub,HBLISTO),!.
@@ -660,7 +660,7 @@ assert_mpred_t(G):-add_from_file(G).
 baseKB:hook_mpred_listing(Match):- fail,
  (( 
   dif:dif(Proof,prologRef(_)),
-  no_repeats_old([H,B],((baseKB:mpred_provide_storage_clauses(H,B,Proof)),
+  no_repeats([H,B],((baseKB:mpred_provide_storage_clauses(H,B,Proof)),
                 Proof\=prologRef(_))),term_matches_hb(Match,H,B),portray_hb(Proof:H,B))),fail.
 
       
