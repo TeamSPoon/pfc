@@ -489,10 +489,10 @@ is_source_proof(_).
 %
 % Fact Checked.
 %
-fact_checked(Fact,Call):- not(ground(Fact)),!,no_loop_check(call_tabled(Call),clause_u(Fact)).
+fact_checked(Fact,Call):- not(ground(Fact)),!,no_loop_check(lc_tcall(Call),clause_u(Fact)).
 fact_checked(Fact,_):- is_known_false0(Fact),!,fail.
 fact_checked(Fact,_):- is_known_trew(Fact),!.
-fact_checked(Fact,Call):- no_loop_check(call_tabled(Call),clause_u(Fact)).
+fact_checked(Fact,Call):- no_loop_check(lc_tcall(Call),clause_u(Fact)).
 
 :- meta_predicate(fact_loop_checked(+,0)).
 

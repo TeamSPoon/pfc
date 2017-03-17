@@ -813,7 +813,7 @@ mpred_t_call_op(Op,X):- was_isa(X,I,C),!,mpred_op(Op,isa(I,C)).
 
 % FACT CALL HOOK
 mpred_t_call_op(_,FACT):- get_functor(FACT, F,A), !,
-     call_tabled(call_for_literal(F,A,FACT)),!.
+     lc_tcall(call_for_literal(F,A,FACT)),!.
 
 
 
@@ -999,7 +999,7 @@ body_req_normal(HEAD,HEAD_T):- not(ground(HEAD)),!,no_repeats(HEAD_T,body_req_1(
 body_req_normal(HEAD,HEAD_T):- body_req_1(HEAD,HEAD_T),!. 
 
 :- was_export(body_req_1/4).
-body_req_1(HEAD,HEAD_T):- get_functor(HEAD,F), local_q_mpred_isa(F,call_tabled),!, call_tabled(body_req_2(HEAD,HEAD_T)).
+body_req_1(HEAD,HEAD_T):- get_functor(HEAD,F), local_q_mpred_isa(F,lc_tcall),!, lc_tcall(body_req_2(HEAD,HEAD_T)).
 body_req_1(HEAD,HEAD_T):- body_req_2(HEAD,HEAD_T).
 
 body_req_2(HEAD,  _):-   get_functor(HEAD,F), local_q_mpred_isa(F,external(Module)),!,call(Module:HEAD).
