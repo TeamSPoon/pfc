@@ -24,9 +24,9 @@
           current_op_alias/2,
             show_load_call/1,
             add_term/2,
-            assert_kif/1,
+            
             % system:import_module_to_user/1,
-            assert_kif_dolce/1,
+            
             
             make_file_command/3,
             % import_shared_pred/3,
@@ -253,7 +253,7 @@ mpred_unload_file(File):-
         baseKB:loaded_file_world_time(+, +, +).
 :- multifile((t_l:into_form_code/0, t_l:mpred_module_expansion/1, user:term_expansion/2)).
 :- (dynamic   user:term_expansion/2).
-% :- (module_transparent add_from_file/1, add_term/2, assert_kif/1, assert_kif_dolce/1,
+% :- (module_transparent add_from_file/1, add_term/2
  
 %  begin_pfc/0, call_file_command/4, 
 % call_from_module/2, with_source_module/2, can_be_dynamic/1, cl_assert/2, clear_predicates/1, collect_expansions/3, compile_clause/1,
@@ -2033,21 +2033,6 @@ load_mpred_on_file_end(World,File):-
    sanity(atom(File)),   
    asserta_new(baseKB:loaded_mpred_file(World,File)),
    must(signal_eof(File)),!.
-
-
-%% assert_kif( ?String) is det.
-%
-% Assert Knowledge Interchange Format.
-%
-assert_kif(D):- ain(sumoSentenceString(D)).
-
-
-%% assert_kif_dolce( ?String) is det.
-%
-% Assert Knowledge Interchange Format Dolce.
-%
-assert_kif_dolce(String):-input_to_forms(String,Forms,_Vars),dmsg(warn(assert_kif_dolce(Forms))),!,assert_kif(Forms).
-
 
 
 %% finish_processing_world is det.

@@ -11,6 +11,7 @@ requires(loop_check).
 requires(file_scope).
 requires(xlisting).
 requires(no_repeats).
+requires(s_expression).
 requires(each_call_cleanup).
 requires(with_thread_local).
 requires(logicmoo_utils).
