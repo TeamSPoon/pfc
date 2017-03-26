@@ -1,4 +1,4 @@
-/* 
+/*
 % ===================================================================
 % File 'mpred_db_preds.pl'
 % Purpose: Emulation of OpenCyc for SWI-Prolog
@@ -105,7 +105,7 @@
 
 
 
-%= 	 	 
+%=
 
 %% pred_type_test( ?H, ?F) is semidet.
 %
@@ -116,7 +116,7 @@ pred_type_test(H,F):- \+ compound(F), !,atom(F),THFA=..[H,F/_],clause(THFA,true)
 pred_type_test(H,P):-functor(P,F,A),!,THFA=..[H,F/A],HF=..[H,F],(clause(THFA,true);clause(HF,true)).
 
 
-%= 	 	 
+%=
 
 %% pred_type_test2( ?T, :TermP) is semidet.
 %
@@ -127,7 +127,7 @@ pred_type_test2(T,F/A):-!,atom(F),arity_no_bc(F,A),!,pred_type_test(T,F,A).
 pred_type_test2(T,P):-functor(P,F,A),!,pred_type_test(T,F,A).
 
 
-%= 	 	 
+%=
 
 %% pred_type_test( ?H, ?F, ?A) is semidet.
 %
@@ -138,7 +138,7 @@ pred_type_test(H,F,A):- THFA=..[H,F/A],HF=..[H,F],(clause(THFA,true);clause(HF,t
 
 
 
-%= 	 	 
+%=
 
 %% decl_mpred_pi( ?PI) is semidet.
 %
@@ -147,7 +147,7 @@ pred_type_test(H,F,A):- THFA=..[H,F/A],HF=..[H,F],(clause(THFA,true);clause(HF,t
 decl_mpred_pi(PI):-ignore((ground(PI),compound(PI),decl_mpred(PI))).
 :- was_export(decl_mpred_mfa/3).
 
-%= 	 	 
+%=
 
 %% decl_mpred_mfa( ?M, ?FF, ?A) is semidet.
 %
@@ -160,10 +160,10 @@ decl_mpred_mfa(M,FF,A):-
    must_det_l((
      ignore((var(M),source_context_module(M),dmsg(decl_mpred_mfa(M,F,A)))),
      ignore((nonvar(M),asserta_if_new(mpred_isa(F,predicateConventionMt(M))))),
-     assert_arity(F,A),  
+     assert_arity(F,A),
      must_det(nonvar(M)),
     nop(dmsg(('@'((
-     nop((is_static_predicate(M,F,A)->true; (M:dynamic(F/A),M:discontiguous(F/A)))), 
+     nop((is_static_predicate(M,F,A)->true; (M:dynamic(F/A),M:discontiguous(F/A)))),
      nop(M:export(F/A)),
      nop(M:multifile(M:F/A))),M)))) )).
 
@@ -179,7 +179,7 @@ decl_mpred_mfa(M,FF,A):-
 
 :- meta_predicate(decl_mpred_prolog(?)).
 
-%= 	 	 
+%=
 
 %% decl_mpred_prolog( ?A) is semidet.
 %
@@ -204,7 +204,7 @@ decl_mpred_prolog(P):- must(call_u(with_pi(P,decl_mpred_prolog))).
 
 :- was_export((decl_mpred_prolog)/3).
 
-%= 	 	 
+%=
 
 %% decl_mpred_prolog( ?M, ?F, ?A) is semidet.
 %
@@ -214,15 +214,15 @@ decl_mpred_prolog(M,F,A):-integer(A),!,must(functor(PI,F,A)),decl_mpred_prolog(M
 decl_mpred_prolog(M,PI,FA):- must(decl_mpred_prolog(_,M,PI,FA)).
 
 
-%= 	 	 
+%=
 
 %% decl_mpred_prolog( ?F, ?A) is semidet.
 %
 % Declare Managed Predicate Hybrid.
 %
 decl_mpred_prolog(F,A):- integer(A),!,functor(FA,F,A),decl_mpred_prolog(FA).
-decl_mpred_prolog(F,Other):- 
-     decl_mpred(F,Other),     
+decl_mpred_prolog(F,Other):-
+     decl_mpred(F,Other),
      get_functor(F,F0),
      must(arity_no_bc(F0,A)),
      functor(F0A,F0,A),
@@ -237,7 +237,7 @@ decl_mpred_prolog(F,Other):-
 %
 
 decl_mpred_prolog(Any,M,PI,MFAIn):-
-  must_det_l(( 
+  must_det_l((
     pi_to_head_l(MFAIn,MFA),
     strip_module(MFA,_,FA),
     functor(FA,F,A),
@@ -258,7 +258,7 @@ decl_mpred_prolog(_:CM,    M,PI,F,A):- atom(PI),A==0,get_arity(PI,F,A),
    must((forall((arity_no_bc(F,AA),AA\=0),
    (functor(PIA,F,AA),decl_mpred_prolog(CM,M,PIA,F,AA))))).
 decl_mpred_prolog(_:CM,M,PI,F,A):-
-   must_det_l((    
+   must_det_l((
       ((var(CM),nonvar(M))->CM=M;true),
       ((var(PI),integer(A))->functor(PI,F,A);true),
       define_maybe_prolog(M,PI,F,A),
@@ -267,7 +267,7 @@ decl_mpred_prolog(_:CM,M,PI,F,A):-
 
 define_maybe_prolog(M,PI,F,_A):- predicate_property(M:PI,imported_from(system)),ain(prologBuiltin(F)).
 
-define_maybe_prolog(M,PI,F,A):- 
+define_maybe_prolog(M,PI,F,A):-
     (\+ predicate_property(M:PI,_); predicate_property(M:PI,imported_from(OM))),
     ((OM=system;current_module(OM)),predicate_property(OM:PI,_),\+ predicate_property(OM:PI,imported_from(_))),!,
     decl_mpred_prolog(M,OM,PI,F,A).
@@ -294,7 +294,7 @@ define_maybe_prolog(M,PI,F,A):-
 % ========================================
 
 
-%= 	 	 
+%=
 
 %% get_mpred_prop( ?F, ?A, ?P) is semidet.
 %
@@ -302,7 +302,7 @@ define_maybe_prolog(M,PI,F,A):-
 %
 get_mpred_prop(F,_A,P):-get_mpred_prop(F,P).
 
-%= 	 	 
+%=
 
 %% get_mpred_prop( ?F, ?P) is semidet.
 %
@@ -312,7 +312,7 @@ get_mpred_prop(F,P):- mreq(mpred_isa(F,P)).
 
 :- was_export(listprolog/0).
 
-%= 	 	 
+%=
 
 %% listprolog is semidet.
 %
@@ -322,7 +322,7 @@ listprolog:-listing(mpred_isa(_,prologDynamic)).
 
 :- use_module(library(clpfd),[ (#=) /2]).
 
-%= 	 	 
+%=
 
 %% get_arity( :TermTerm, ?F, ?A) is semidet.
 %
@@ -342,9 +342,8 @@ arity_no_bc(completeExtentAsserted,1).
 arity_no_bc(home,2).
 arity_no_bc(record,2).
 arity_no_bc(F,A):- clause_b(mpred_prop(F,AA,_)),nonvar(AA),A=AA.
-arity_no_bc(F,A):- current_predicate(F/A).
-arity_no_bc(F,A):- current_predicate(_:F/A),\+ (current_predicate(_:F/AA),AA\=A).
-%= 	 	 
+%arity_no_bc(F,A):- current_predicate(F/A)
+% arity_no_bc(F,A):- current_predicate(_:F/A),\+(current_predicate(_:F/AA),AA\=A). =
 
 %% ensure_arity( ?VALUE1, ?VALUE2) is semidet.
 %
@@ -354,7 +353,7 @@ ensure_arity(F,A):- one_must(arity_no_bc(F,A),one_must((current_predicate(F/A),
     (A>0),assert_arity(F,A)),(ground(F:A),(A>0),assert_arity(F,A)))),!.
 
 
-%= 	 	 
+%=
 
 %% assert_arity( ?F, :PRED2A) is semidet.
 %
@@ -376,7 +375,7 @@ bad_arity(prologDynamic,2).
 bad_arity(F,A):- \+ good_pred_relation_name(F,A).
 
 
-%= 	 	 
+%=
 
 %% good_pred_relation_name( ?F, ?A) is semidet.
 %
@@ -385,7 +384,7 @@ bad_arity(F,A):- \+ good_pred_relation_name(F,A).
 good_pred_relation_name(F,A):- \+ bad_pred_relation_name0(F,A).
 
 
-%= 	 	 
+%=
 
 %% bad_pred_relation_name0( ?V, ?VALUE2) is semidet.
 %
@@ -399,7 +398,7 @@ bad_pred_relation_name0('{}',_).
 bad_pred_relation_name0(',',_).
 bad_pred_relation_name0('[|]',_).
 
-%= 	 	 
+%=
 
 %% bad_pred_relation_name1( ?X, ?Y) is semidet.
 %
@@ -420,7 +419,7 @@ bad_pred_relation_name1(F,A):-arity_no_bc(F,AO), A \= AO.
 
 :- meta_predicate(decl_mpred(?)).
 
-%= 	 	 
+%=
 
 %% decl_mpred( ?M) is semidet.
 %
@@ -431,13 +430,13 @@ decl_mpred(M):-!,kb_shared(M).
 decl_mpred(M):-loop_check(with_pi(M,decl_mpred_4),true).
 
 
-%= 	 	 
+%=
 
 %% decl_mpred_3( ?VALUE1, ?ARGS, :TermARG3) is semidet.
 %
 % Declare Managed Predicate Helper Number 4..
 %
-decl_mpred_3(user,prologSingleValued(ARGS),prologSingleValued/1):- compound(ARGS),get_functor(ARGS,F,A),!, 
+decl_mpred_3(user,prologSingleValued(ARGS),prologSingleValued/1):- compound(ARGS),get_functor(ARGS,F,A),!,
    ain(arity(F,A)),ain(prologSingleValued(F)),ain_expanded(meta_argtypes(ARGS)),!.
 decl_mpred_3(_,F,F/0):-!,assert_hasInstance(tPred,F).
 decl_mpred_3(M,PI,F/A):-
@@ -447,7 +446,7 @@ decl_mpred_3(M,PI,F/A):-
 
 :- was_export((decl_mpred)/2).
 
-%= 	 	 
+%=
 
 %% decl_mpred( ?C, ?A) is semidet.
 %
@@ -457,7 +456,7 @@ decl_mpred(C,A):- integer(A),!,functor(FA,C,A),decl_mpred(FA).
 decl_mpred(C,More):- ignore(loop_check(decl_mpred_0(C,More),true)).
 
 
-%= 	 	 
+%=
 
 %% decl_mpred_0( ?C, :TermMore) is semidet.
 %
@@ -482,7 +481,7 @@ decl_mpred_0(F,T):-doall(( decl_mpred_2(F,T) )).
 
 
 
-%= 	 	 
+%=
 
 %% decl_mpred_2( ?F, ?A) is semidet.
 %
@@ -498,18 +497,18 @@ decl_mpred_2(F,A):-once(baseKB:mpred_provide_write_attributes(F,A)).
 decl_mpred_2(F,Prop):-ain_expanded(mpred_isa(F,Prop)).
 
 
-%= 	 	 
+%=
 
 %% decl_mpred( ?Mt, ?F, ?A) is semidet.
 %
 % Declare Managed Predicate.
 %
-decl_mpred(Mt,F,A):-decl_mpred(F,A),ignore((nonvar(Mt),     
+decl_mpred(Mt,F,A):-decl_mpred(F,A),ignore((nonvar(Mt),
       (\+ baseKB:mtCycL(Mt)),
-      (\+ Mt == baseKB), 
+      (\+ Mt == baseKB),
       decl_mpred(F,predicateConventionMt(Mt)))).
 
-%= 	 	 
+%=
 
 %% decl_mpred_4( ?CM, ?M, ?PI, :TermF) is semidet.
 %
@@ -519,7 +518,7 @@ decl_mpred_4(_CM,M,PI,FA):- decl_mpred_3(M,PI,FA).
 
 
 
-%= 	 	 
+%=
 
 %% functor_check_univ( ?G1, ?F, ?List) is semidet.
 %
@@ -530,7 +529,7 @@ functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_d
 
 :- was_export(glean_pred_props_maybe/1).
 
-%= 	 	 
+%=
 
 %% glean_pred_props_maybe( ?G) is semidet.
 %
@@ -540,7 +539,7 @@ glean_pred_props_maybe(_:G):-!,compound(G),locally(infConfidence(vWeak),forall(g
 glean_pred_props_maybe(G):-compound(G),locally(infConfidence(vWeak),forall(glean_pred_props_maybe_some(G),true)).
 
 
-%= 	 	 
+%=
 
 %% glean_pred_props_maybe_some( ?VALUE1) is semidet.
 %
@@ -550,7 +549,7 @@ glean_pred_props_maybe_some(G):-compound(G),G=..[F,Arg1|RGS],ttRelationType(F),c
 % glean_pred_props_maybe_some(G):-arg(_,G,Arg1),compound(Arg1),arg(_,Arg1,Col),t(tCol,Col),locally(infConfidence(vWeak),assert_predArgTypes(Arg1)).
 
 
-%= 	 	 
+%=
 
 %% add_mpred_prop_gleaned( ?Arg1, ?FRGS) is semidet.
 %
@@ -559,7 +558,7 @@ glean_pred_props_maybe_some(G):-compound(G),G=..[F,Arg1|RGS],ttRelationType(F),c
 add_mpred_prop_gleaned(M:Arg1,FRGS):-atom(M),!,add_mpred_prop_gleaned(Arg1,FRGS).
 add_mpred_prop_gleaned(Arg1,FRGS):-functor_check_univ(Arg1,F,ARGSISA),add_mpred_prop_gleaned_4(Arg1,F,ARGSISA,FRGS).
 
-%= 	 	 
+%=
 
 %% add_mpred_prop_gleaned_4( ?Arg1, ?F, ?ARG, ?FRGS) is semidet.
 %
@@ -588,7 +587,7 @@ end_of_file.
 % :- was_export((kb_shared)/1).
 % :- meta_predicate(kb_shared(?)).
 
-%= 	 	 
+%=
 
 %% kb_shared( ?A) is semidet.
 %
@@ -615,7 +614,7 @@ kb_shared(P):- must(call_u(with_pi(P,kb_shared))).
 
 :- was_export((kb_shared)/3).
 */
-%= 	 	 
+%=
 
 %% kb_shared( ?M, ?F, ?A) is semidet.
 %
@@ -625,15 +624,15 @@ kb_shared(M,F,A):-integer(A),!,must(functor(PI,F,A)),kb_shared(M,PI,F/A).
 kb_shared(M,PI,FA):- prolog_load_context(module,CM),must(kb_shared(CM,M,PI,FA)).
 
 
-%= 	 	 
+%=
 
 %% kb_shared( ?F, ?A) is semidet.
 %
 % Declare Managed Predicate Hybrid.
 %
 kb_shared(F,A):- integer(A),!,kb_shared(F/A).
-kb_shared(F,Other):- 
-     decl_mpred(F,Other),     
+kb_shared(F,Other):-
+     decl_mpred(F,Other),
      get_functor(F,F0),
      must(arity_no_bc(F0,A)),
      functor(F0A,F0,A),
@@ -656,7 +655,7 @@ no_need_to_import(baseKB).
 % Declare Managed Predicate Hybrid Inside Of Loop Checking.
 %
 kb_shared(Any,M,PI,MFAIn):-
-  must_det_l(( 
+  must_det_l((
     pi_to_head_l(MFAIn,MFA),
     strip_module(MFA,_,FA),
     functor(FA,F,A),
@@ -685,7 +684,7 @@ kb_shared(_:CM,    M,PI,F,A):- atom(PI),A==0,get_arity(PI,F,A),
    must((forall((arity_no_bc(F,AA),AA\=0),
    (functor(PIA,F,AA),kb_shared(CM,M,PIA,F,AA))))).
 kb_shared(_:CM,M,PI,F,A):-
-   must_det_l((    
+   must_det_l((
       ((var(CM),nonvar(M))->CM=M;true),
       ((var(PI),integer(A))->functor(PI,F,A);true),
       define_maybe_exact(M,PI),
@@ -696,12 +695,12 @@ define_maybe_exact(M,PI):- M==system, !,must((defaultAssertMt(Mt),define_maybe_e
 define_maybe_exact(M,PI):- get_def_modules
 
 define_maybe_exact(M,PI):- current_predicate(_,C:PI), \+ predicate_property(C:PI,imported_from(_)),
-      M\==C,define_maybe_exact(C,PI),      
+      M\==C,define_maybe_exact(C,PI),
       C:export(C:F/A),
       M:import(M:F/A),
       M:export(M:F/A),!.
 
-define_maybe_exact(M,PI):- % a(mtExact,M),!, 
+define_maybe_exact(M,PI):- % a(mtExact,M),!,
    must_det_l((    functor(PI,F,A),
       M:multifile(M:F/A),
       M:export(M:F/A),
@@ -711,21 +710,21 @@ define_maybe_exact(M,PI):- % a(mtExact,M),!,
       system:export(M:F/A),
       once((M==baseKB->true;ain(baseKB:predicateConventionMt(F,M)))),
       % asserta_if_new(baseKB:safe_wrap(F,A,ereq)),
-      kb_shared(M:PI),     
+      kb_shared(M:PI),
       sanity(\+is_static_predicate(M:PI)),
       maybe_define_if_not_static(M,PI))),!.
 define_maybe_exact(_,PI):-
      maybe_define_if_not_static(baseKB,PI).
 
-maybe_define_if_not_static(M,PI):- 
-  must_det_l((              
+maybe_define_if_not_static(M,PI):-
+  must_det_l((
               functor_h(PI,F,A),
               asserta_if_new(baseKB:safe_wrap(F,A,ereq)),
               M:multifile(M:F/A),
               M:public(M:F/A),
             %   on_f_throw( (M:F/A)\== (baseKB:loaded_external_kbs/1)),
               M:discontiguous(M:F/A),
-              M:module_transparent(M:F/A),      
+              M:module_transparent(M:F/A),
       (is_static_predicate(M:PI) -> true ;
        (predicate_property(M:PI,dynamic) -> true ; on_xf_cont(M:dynamic(M:PI)))))),!.
 

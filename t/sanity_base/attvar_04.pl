@@ -12,7 +12,7 @@
 :- dynamic(sk_out/1).
 :- dynamic(sk_in/1).
 
-argsQuoted(my_sk).
+rtArgsVerbatum(my_sk).
 
 :- read_attvars(true).
 

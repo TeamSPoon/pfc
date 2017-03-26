@@ -747,7 +747,7 @@ attvar_op(Op,MData):-
     )))).
 
 physical_side_effect_call(M,OpA,Data0):- is_side_effect_disabled,!,mpred_warn('no_physical_side_effects ~p',M:call(M:OpA,M:Data0)).
-% BROKEN physical_side_effect_call(M,assertz_i,Data0):- must((compile_aux_clauses(M:Data0))),!.
+% @TODO BROKEN phys ical_side_effect_call(M,assertz_i,Data0):- must((compile_aux_clauses(M:Data0))),!.
 physical_side_effect_call(M,OpA,Data0):- show_failure(physical_side_effect(M:call(M:OpA,M:Data0))).
 
 
@@ -1548,7 +1548,7 @@ support_ok_via_clause_body(H):- get_functor(H,F,A),support_ok_via_clause_body(H,
 % Support Ok Via Clause Body.
 %
 support_ok_via_clause_body(_,(\+),1):-!,fail.
-support_ok_via_clause_body(_,F,_):- lookup_u(argsQuoted(F)),!,fail.
+support_ok_via_clause_body(_,F,_):- lookup_u(rtArgsVerbatum(F)),!,fail.
 support_ok_via_clause_body(H,F,A):- should_call_for_facts(H,F,A).
 
 
@@ -2441,8 +2441,11 @@ assert_mu(M,Pred,F,_):- a(prologOrdered,F) -> assertz_mu(M,Pred) ; asserta_mu(M,
 %assertz_mu(M,X):- check_never_assert(M:X), clause_asserted_u(M:X),!.
 % assertz_mu(M,X):- correct_module(M,X,T),T\==M,!,assertz_mu(T,X).
 % assertz_mu(_,X):- must(defaultAssertMt(M)),!,must((expire_tabled_list(M:X),show_call(attvar_op(assertz_i,M:X)))).
-assertz_mu(M,X):- strip_module(X,_,P), check_never_assert(M:P), 
-   (clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(assertz_i,M:P))))).
+
+
+assertz_mu(M,X):- strip_module(X,_,P), %sanity(check_never_assert(M:P)), 
+    must((expire_tabled_list(M:P),show_failure(attvar_op(assertz_i,M:P)))).
+   %(clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(assertz_i,M:P))))).
 
 %% asserta_mu(+M, ?X) is semidet.
 %
@@ -2452,9 +2455,9 @@ assertz_mu(M,X):- strip_module(X,_,P), check_never_assert(M:P),
 % asserta_mu(M,X):- correct_module(M,X,T),T\==M,!,asserta_mu(T,X).
 % asserta_mu(_,X):- must(defaultAssertMt(M)),!,must((expire_tabled_list(M:X),show_failure(attvar_op(asserta_i,M:X)))).
 
-asserta_mu(M,X):- strip_module(X,_,P), check_never_assert(M:P), 
-   (clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(asserta_i,M:P))))).
-
+asserta_mu(M,X):- strip_module(X,_,P),!, %sanity(check_never_assert(M:P)), 
+    must((expire_tabled_list(M:P),show_failure(attvar_op(assertz_i,M:P)))).
+   %(clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(asserta_i,M:P))))).
 
 
 %% retract_mu( :TermX) is semidet.

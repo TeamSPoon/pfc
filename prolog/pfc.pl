@@ -5,7 +5,7 @@
 
 */
 :- module(pfc,[clause_expansion/2]).
-:- use_module(library(hook_hybrid)).
+:- system:use_module(library(hook_hybrid)).
 % :- use_module(library(attvar_serializer)).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
 :- set_prolog_flag(runtime_speed, 1). % 1 = default
@@ -19,7 +19,7 @@
 :- include('pfc2.0/mpred_header.pi').
 
 :- kb_shared((
- rtQuotedPred/1,
+ rtArgsVerbatum/1,
    argIsa/3,
    bt/2, %basePFC
    hs/1, %basePFC
@@ -37,10 +37,10 @@
 :- kb_shared( ('~') /1).
 :- kb_shared( rtNotForUnboundPredicates/1).
 :- kb_shared(arity/2).
-:- kb_shared(argsQuoted/1).
-:- kb_shared(col_as_isa/1). % members are used thru  isa(ELEM,COL).
-:- kb_shared(col_as_static/1). % hard coded like: compound/1
-:- kb_shared(col_as_unary/1). % written as COL(ELEM)
+:- kb_shared(rtArgsVerbatum/1).
+%:- kb_shared(col_as_isa/1). % members are used thru  isa(ELEM,COL).
+%:- kb_shared(col_as_static/1). % hard coded like: compound/1
+%:- kb_shared(col_as_unary/1). % written as COL(ELEM)
 :- kb_shared(collectionConventionMt/2).
 :- kb_shared(comment/2).
 :- kb_shared(disjointWith/2).
@@ -97,7 +97,7 @@ user:message_hook(T,Type,Warn):- ( \+ current_prolog_flag(runtime_debug,0)),
 
 % :- use_module(library(logicmoo_utils)).
 :- if( \+ current_predicate(each_call_cleanup/3)).
-:- use_module(library(each_call_cleanup)).
+:- system:use_module(library(each_call_cleanup)).
 :- endif.
 
 % Make YALL require ">>" syntax (the problem was it autoloads when its sees PFC code containing "/" and gripes all the time)
@@ -157,9 +157,9 @@ baseKB:mpred_skipped_module(eggdrop).
 
 
 :- use_module(library(subclause_expansion)).
-:- use_module(library(virtualize_source)).
+:- system:use_module(library(virtualize_source)).
 :- reexport(library('pfc2.0/mpred_core.pl')).
-:- reexport(library('pfc2.0/mpred_at_box.pl')).
+:- system:reexport(library('pfc2.0/mpred_at_box.pl')).
 
 :- set_prolog_flag_until_eof(virtual_stubs,true).
 
@@ -363,7 +363,7 @@ term_expansion_UNUSED(:-module(M,List),Pos,ExportList,Pos):- nonvar(Pos),
 
 :- mutifile(user:exception/3).
 user:exception(undefined_predicate, MFA, Action):- fail, current_prolog_flag(retry_undefined,true),
-  reexport(library('pfc2.0/mpred_at_box.pl')), 
+  system:ensure_loaded(library('pfc2.0/mpred_at_box.pl')), 
     must(loop_check(mpred_at_box:uses_predicate(MFA, Action),Action=error)).
 */
 
@@ -404,7 +404,7 @@ system:clause_expansion(I,O):- pfc_clause_expansion(I,O).
 :- multifile(user:goal_expansion/4).
 :- dynamic(user:goal_expansion/4).
 :- module_transparent(user:goal_expansion/4).
-user:goal_expansion(I,P,O,PO):- \+ source_location(_,_),
+user:goal_expansion(I,P,O,PO):- notrace((\+ source_location(_,_),
      nonvar(I),          
      var(P), % Not a file goal     
      \+ current_prolog_flag(xref,true), \+ current_prolog_flag(mpred_te,false),
@@ -412,7 +412,7 @@ user:goal_expansion(I,P,O,PO):- \+ source_location(_,_),
      (I \= CM:call_u(_)),(I \= call_u(_)),
      fully_expand(I,M),
      O=CM:call_u(M),
-     PO=P.
+     PO=P)).
 
 :- fixup_exports.
 

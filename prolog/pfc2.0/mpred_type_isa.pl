@@ -288,16 +288,8 @@ type_suffix('Able',ttTypeByAction).
 %
 type_prefix(vt,ttValueType).
 type_prefix(tt,ttTypeType).
-type_prefix(mob,ttAgentType).
-type_prefix(mt,ttModuleType).
-type_prefix(role,ttKnowledgeType).
-type_prefix(item,ttItemType).
-type_prefix(t,tCol).
-type_prefix(v,vtValue).
-type_prefix(i,tIndividual).
-type_prefix(i,ftID).
+type_prefix(t,tSet).
 type_prefix(pred,tPred).
-type_prefix(act,ftAction).
 
 type_prefix(format,tPred).
 type_prefix(is,ftSyntaxOperator).
@@ -312,13 +304,26 @@ type_prefix(fn,tFunction).
 type_prefix(mud,rtMudPred).
 type_prefix(mud,tPred).
 type_prefix(prop,tPred).
+type_prefix(ft,ttExpressionType).
+
+
 type_prefix(prolog,ttRelationType).
 type_prefix(pfc,ttRelationType).
 type_prefix(rt,ttRelationType).
 type_prefix(pt,ttRelationType).
-type_prefix(ft,ttExpressionType).
-type_prefix(pred,tPred).
+
+type_prefix(v,vtValue).
+type_prefix(i,tIndividual).
+
+/*
+type_prefix(i,ftID).
+type_prefix(act,ftAction).
+type_prefix(mob,ttAgentType).
+type_prefix(mt,ttModuleType).
+type_prefix(role,ttKnowledgeType).
+type_prefix(item,ttItemType).
 type_prefix(macro,ttMacroType).
+*/
 
 % ========================================
 % was_isa(Goal,I,C) recognises isa/2 and its many alternative forms
@@ -613,7 +618,7 @@ not_mud_isa0(F, functorDeclares):- \+ (clause_asserted(functorDeclares(F))).
 not_mud_isa0(actGossup,tChannel).
 not_mud_isa0(_, blah):-!.
 not_mud_isa0(I,meta_argtypes):- \+ (is_ftCompound(I)).
-not_mud_isa0(_,prologHybrid):-!,fail.
+%not_mud_isa0(_,prologHybrid):-!,fail.
 not_mud_isa0(functorIsMacro, ttExpressionType).
 not_mud_isa0(tAgent,ttExpressionType).
 not_mud_isa0(tCol,ttExpressionType).
@@ -642,7 +647,7 @@ not_mud_isa(I,C):- nonvar(I),nonvar(C),loop_check(not_mud_isa(I,C,_)).
 %
 %  \+  Application  (isa/2).
 %
-not_mud_isa(F, CAC,Why):- baseKB:( cheaply_u(completelyAssertedCollection(CAC)),!,atom(CAC),notrace(current_predicate(_:CAC/1)),
+not_mud_isa(F, CAC,Why):- fail, baseKB:( cheaply_u(completelyAssertedCollection(CAC)),!,atom(CAC),notrace(current_predicate(_:CAC/1)),
    G=..[CAC,F],\+(call_u(G)),!,Why=completelyAssertedCollection(CAC)).
 not_mud_isa(I,C,Why):-not_mud_isa0(I,C),Why=not_mud_isa0(I,C).
 not_mud_isa(G,tTemporalThing,Why):- baseKB:call_u((a(tCol,G),Why=a(tCol,G));(tPred(G),Why=tPred(G))).
@@ -656,6 +661,7 @@ not_mud_isa(G,tCol,Why):-never_type_why(G,Why).
 %
 % True Structure Col Gen.
 %
+tSetOrdered(T):-nonvar(T),!.
 tSetOrdered(T):- no_repeats(T,(clause_b(completelyAssertedCollection(T));clause_b(tSet(T));clause_b(ttExpressionType(T)))).
 
 
@@ -690,16 +696,19 @@ symbols/values (string/numbers/shapes)
 
 :- export(main_type/2).
 main_type(C,vtValue):- (string(C);number(C)),!.
-main_type(C,_):- \+ atom(C),!,fail.
-% main_type(C,_):- is_ftVar(C),!,fail.
+main_type(C,_):- \+ callable(C),!,fail.
 main_type(C,tCol):- clause_b(tCol(C)),!.
-main_type(C,tRelation):- clause_b(tRelation(C)),!.
 main_type(C,tTemporalThing):- clause_b(tTemporalThing(C)),!.
+main_type(C,tRelation):- clause_b(tRelation(C)),!.
+
 % main_type(C,vtValue):- clause_b(vValue(C)),!.
-main_type(C,tRelation):- (arity(C,_);downcase_atom(C,C)),!.
-main_type(C,tTemporalThing):- atom_concat(i,_,C),!.
-%main_type(C,vtValue):- atom_concat(v,_,C),!.
-main_type(_,vtValue).
+
+main_type2(C,_):- \+ atom(C),!,fail.
+% * GUESSES
+main_type2(C,tRelation):- (arity(C,_);downcase_atom(C,C)),!.
+main_type2(C,tTemporalThing):- atom_concat(i,_,C),!.
+% main_type2(C,vtValue):- atom_concat(v,_,C),!.
+main_type2(_,vtValue).
 
 
 % ==========================
@@ -850,25 +859,31 @@ isa_asserted_0(aRelatedFn(C,_,_),I):-nonvar(C),!,C=I.
 isa_asserted_0(I,C):-  clause_b(mudIsa(I,C)).
 %isa_asserted_0(I,C):- ((t_l:useOnlyExternalDBs,!);baseKB:use_cyc_database),(kbp_t([isa,I,C]);kbp_t([C,I])).
 
-
-isa_asserted_0(ttRelationType, completelyAssertedCollection):-!.
-isa_asserted_0(I,C):- atom(C),notrace((G=..[C,I],current_predicate(C,M:G),predicate_property(M:G,number_of_clauses(N)))),N>0,!,on_x_fail((M:G)).
-isa_asserted_0(I,C):- atom(I),isa_from_morphology(I,C).
+isa_asserted_0(I,C):- notrace((atom(C),G=..[C,I],current_predicate(C,M:G))),!,on_x_fail(M:G).
+isa_asserted_0(I,C):-  not_mud_isa(I,C),!,fail.
 isa_asserted_0(_,C):- nonvar(C),sanity(\+ is_ftVar(C)), clause_b(completelyAssertedCollection(C)),!,fail.
-isa_asserted_0(I,_):- var(I),!,fail.
 % isa_asserted_0(I,_):- sanity(\+ is_ftVar(I)), clause_b(completeIsaAsserted(I)),!,fail.
-isa_asserted_0(I,C):- var(C),main_type(I,SubType),!,(C=SubType;isa_asserted_3(I,SubType,C)).
-isa_asserted_0(I,C):- is_ftCompound(I),is_non_unit(I),is_non_skolem(I),!,get_functor(I,F),compound_isa(F,I,C).
-isa_asserted_0(I,C):- isa_asserted_compound(I,C).
+isa_asserted_0(I,C):- var(I),!,tSetOrdered(C),isa_asserted_0(I,C).
+
+isa_asserted_0(I,C):- isa_asserted_1(I,C)*->true;isa_asserted_2(I,C).
+
+isa_asserted_1(I,C):- var(C),main_type(I,SubType),!,isa_asserted_3(I,SubType,C).
+isa_asserted_1(I,C):- var(C),main_type2(I,SubType),!,isa_asserted_3(I,SubType,C),C\==SubType.
+isa_asserted_1(I,C):- is_ftCompound(I),is_non_unit(I),is_non_skolem(I),!,get_functor(I,F),compound_isa(F,I,C).
+isa_asserted_1(I,C):- isa_asserted_compound(I,C).
 
 
+isa_asserted_2(I,C):- atom(I),isa_from_morphology(I,C).
 
-isa_asserted_3(I,tCol,C):- (atom(I);atom(C)),type_isa(I,C).
-isa_asserted_3(I,SType,C):- var(C),!,col_gen(SType,C),nonvar(C),SType\==C,isa_asserted_0(I,C).
 
-isa_asserted_3(_,_,C):- clause_b(ttExpressionType(C)),!,fail.
+% isa_asserted_3(I,tCol,C):- (atom(I);atom(C)),type_isa(I,C).
+isa_asserted_3(_,C,C).
+isa_asserted_3(I,SType,C):- var(C),genls(C,SType),nonvar(C),SType\==C,isa_asserted_0(I,C).
 
-% isa_asserted_0(I,C):-  not_mud_isa(I,C),!,fail.
+
+% isa_asserted_3(I,SType,C):- var(C),!,col_gen(SType,C),nonvar(C),SType\==C,isa_asserted_0(I,C).
+% isa_asserted_3(_,C,_):- clause_b(ttExpressionType(C)),!,fail.
+
 % isa_asserted_0(I,C):- I == ttTypeByAction, C=ttTypeByAction,!,fail.
 % isa_asserted_0(I,C):- HEAD= isa(I, C),ruleBackward(HEAD,BODY),dtrace,call_mpred_body(HEAD,BODY).
 % isa_asserted_0(I,C):- ( ((is_ftVar(C);chk_ft(C)),if_defined(term_is_ft(I,C)))*->true;type_deduced(I,C) ).

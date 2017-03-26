@@ -36,6 +36,7 @@
 % Douglas Miles
 */
 
+ 
 :- add_to_search_path(pfclib,'.').
 
 :-       op(990,xfx,(':=')),
@@ -104,28 +105,90 @@
          op(400,yfx,('xor')),
       %   op(1000,xfy,(',')),
          op(700,xfx,('==')).
+/*
+:-kb_shared((rtSententialOperator/1,
+tReifiableFunction/1,
+rtVariableArityRelation/1,
+rtEvaluatableRelation/1,
+tFunction/1,
+rtCommutativeRelation/1,
+prologHybrid/1,
+rtUnaryPredicate/1,
+first_std_provider/3)).
+*/
 
-%:- ensure_abox(baseKB).
+:- ensure_abox(baseKB).
 
 %:- set_fileAssertMt(baseKB).
 
-:- ensure_loaded(('system_base.pfc')).
 
-:- ensure_loaded(('system_common.pfc')).
+assert_if_newt(G):- clause_asserted_i(G)->true;call(assert,G).
+:-if(exists_file(bkb_neever)).
+
+:- [bkb].
+
+:- else.
+
+:- ensure_loaded('system_base.pfc').
+
+:- ensure_loaded('system_common.pfc').
+
+:- ensure_loaded('system_constraints.pfc').
 
 :- ensure_loaded('system_genls.pfc').
 
-:- ensure_loaded(('system_if_missing.pfc')).
+:- ensure_loaded('system_if_missing.pfc').
 
-:- ensure_loaded(('system_mdefault.pfc')).
+:- ensure_loaded('system_mdefault.pfc').
 
-:- ensure_loaded(('system_singleValued.pfc')).
+:- ensure_loaded('system_singleValued.pfc').
 
 :- multifile(baseKB:locked_baseKB/0).
 :- dynamic(baseKB:locked_baseKB/0).
 :- asserta((baseKB:locked_baseKB)).
 
 
+:- statistics.
+
+
 % :- mpred_test(ensure_loaded('pttpFWC.pfc')).
+
+save_m_ain(UM):- 
+ doall((user:predicate_property(M:P,multifile),
+ (( UM = M,
+   ( \+ predicate_property(M:P, foreign)),
+    once(predicate_property(M:P,imported_from(From))->true;From=M),
+    functor(P,F,A),
+    save_mfa_ain(From,F,A))))).
+
+save_mf_ain(M,F):-
+ forall(current_predicate(F,M:P),
+ (functor(P,F,A),save_mfa_ain(M,F,A))).
+
+:- dynamic(tmp:saved_mfa_ain/3).
+
+save_mfa_ain(M,F,A):- tmp:saved_mfa_ain(M,F,A),!.
+save_mfa_ain(M,F,A):- asserta(tmp:saved_mfa_ain(M,F,A)),
+ functor(P,F,A),
+ doall((system:clause(M:P,Body,_),
+    ((Body==true-> 
+      save_p_ain(M,P); save_p_ain(M,P:-Body))))).
+      
+%save_p_ain(M,(H:-B)):-!, format(':- assert_if_new(~q:',[M]), display(H), write(' :- '), display(B),writeln(').').
+%save_p_ain(M,P):- format(':- assert_if_new(~q:',[M]), display(P),writeln(').').
+save_p_ain(M,P):- display(:- call(assert_if_new(M:P))),writeln('.').
+
+:- if(exists_file(bkb_neever)).
+:- tell(bkb).
+:- forall(predicateConventionMt(F, M),save_mf_ain(M,F)).
+:- save_m_ain(lmconf).
+% :- save_m_ain(lmcache).
+:- save_m_ain(baseKB).
+:- writeln('end_of_file.').
+:- listing(tmp:saved_mfa_ain/3).
+:- told.
+:- endif.
+:- endif.
+
 
 
