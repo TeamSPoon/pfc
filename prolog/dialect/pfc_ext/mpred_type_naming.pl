@@ -103,6 +103,9 @@ to_iname(T,TT):- (not_log_op(T),i_name(t,T,TT))->true;TT=T.
 toUpperCamelcase(Type,TypeUC):-toCamelcase(Type,TypeUC). % ,toPropercase(TypeC,TypeUC),!.
 :- was_export(i_name/2).
 
+
+icn_tcn(I,IC):-atom(I),i_name('t',I,IC)->I\==IC.
+
 %= 	 	 
 
 %% i_name( ?OType, ?IType) is semidet.

@@ -976,7 +976,7 @@ leave_as_is_functor('kbMark').
 leave_as_is_functor('z_unused').
 leave_as_is_functor('genlMt').
 leave_as_is_functor('{}').
-leave_as_is_functor(F):-cheaply_u(argsQuoted(F)).
+leave_as_is_functor(F):-cheaply_u(rtArgsVerbatum(F)).
 leave_as_is_functor(F):-loop_check(cheaply_u(rtReformulatorDirectivePredicate(F))).
 
 

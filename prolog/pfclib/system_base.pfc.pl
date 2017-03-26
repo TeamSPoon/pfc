@@ -1,4 +1,4 @@
-:- if( current_prolog_flag(xref,true) ;  \+ current_prolog_flag(pfc_booted,false) ).
+:- if( current_prolog_flag(xref,true) ).
 :- module(system_base,[]).
 :- else.
 :- '$set_source_module'(baseKB).
@@ -38,6 +38,8 @@
 % :- '$set_typein_module'(baseKB).
 :- set_module(class(development)).
 
+:- mpred_notrace_exec.
+
 :- style_check(-discontiguous).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
 :- set_prolog_flag(runtime_speed, 1). % 1 = default
@@ -45,29 +47,45 @@
 :- set_prolog_flag(runtime_safety, 3).  % 3 = very important
 :- set_prolog_flag(unsafe_speedups, false).
 
+:- kb_shared(ttTypeType/1). 
+:- kb_shared(rtAvoidForwardChain/1).
+:- kb_shared(tCol/1).
+:- kb_shared(tooSlow/0).
+:- kb_shared(completelyAssertedCollection/1).
+:- kb_shared(tAtemporalNecessarilyEssentialCollectionType/1).
+:- kb_shared(ttExpressionType/1).
+
+
+
+:- kb_shared(predicateConventionMt/2).
 :- kb_shared(prologOnly/1).
 :- kb_shared(functorIsMacro/1).
 %:- kb_shared(pfcControlled/1).
 :- kb_shared(arity/2).
 :- kb_shared(tSet/1).
 :- kb_shared( ('~') /1).
-:- kb_shared(tCol/1).
+:- kb_shared(argQuotedIsa/3).
+:- kb_shared(quotedIsa/2).
+
 % :- sanity(listing(tCol/1)).
 
+:- kb_shared(col_as_unary/1).  % never used for arg2 of isa/2
 
-:- kb_shared(collectionConventionMt/2).
-:- kb_shared(col_as_unary/1). % written as COL(ELEM)
-:- kb_shared(col_as_isa/1). % members are used thru  isa(ELEM,COL).
-:- kb_shared(col_as_static/1). % hard coded like: compound/1
+/*
+:- kb_shared(ttExpressionType/1). % hard coded like: compound/1
+*/
 :- kb_shared(meta_argtypes/1).
+:- kb_shared(startup_option/2).
 :- kb_shared(type_checking/0).
 :- kb_shared(mpred_prop/3).
 :- kb_shared(ttRelationType/1).
 :- kb_shared(comment/2).
 :- kb_shared(mudToCyc/2).
 :- kb_shared(mtExact/1).
+
 :- kb_shared(prologHybrid/1).
-:- kb_shared(tAtemporalNecessarilyEssentialCollectionType/1).
+
+((prologHybrid(F),arity(F,A))==>{kb_shared(F/A)}).
 
 :- forall(between(1,11,A),kb_shared(t/A)).
 
@@ -82,9 +100,181 @@
 % :- '$set_source_module'(baseKB).
 :- prolog_load_context(module,Mod),writeq(prolog_load_context(module,Mod)),nl.
 
-:- if(current_predicate(initEnvironment/0)).
-:- must(initEnvironment).
-:- endif.
+arity(arity,2).
+arity(functorIsMacro,1).
+functorIsMacro(functorIsMacro).
+functorDeclares(Decl)==>functorIsMacro(Decl).
+~tCol(functorDeclares).
+
+
+
+% ======================================================================================= %
+% Types/Sets/Collections
+% ======================================================================================= %
+
+% We assume we know our own classification system 
+completelyAssertedCollection(completelyAssertedCollection).
+
+% all completely asserted collections are finite sets
+completelyAssertedCollection(A)==>tSet(A).
+
+% tSets are part of the KR expressions language and are types of collections
+(tSet(A) ==> (tCol(A), \+ ttExpressionType(A))).
+
+% all indiviuals combined make up a set containing individuals
+tSet(tIndividual).
+
+% Types/Sets/Collections are not themselves individuals and are usable always as arity 1
+% tCol(A),{sanity(atom(A))} ==> ~tIndividual(A),{decl_type(A), kb_shared(A/1)}.
+
+~tIndividual(A):- loop_check(tCol(A)).
+tCol(A) ==> {decl_type(A), kb_shared(A/1)}.
+
+
+% KR expressions exists outside of the logic and are types of collections
+ttExpressionType(A)==> ( tCol(A), \+ tSet(A) ).
+
+% ======================================================================================= %
+% ttTypeFacet - Every type (tCol) has at least two facets below
+% ======================================================================================= %
+completelyAssertedCollection(ttTypeFacet).
+
+ttTypeFacet(T)==>tSet(T).
+
+
+% "Type describes aspects of types":::: 
+ttTypeFacet(ttTypeType).
+
+% "Type describes aspects of individuals (non-types)"::::
+ttTypeFacet(ttIndividualType).
+
+% Type describes a quoted expression in KR (has no finite instances)
+ttTypeFacet(ttExpressionType). 
+
+% Type describes finite instance members in KR 
+ttTypeFacet(tSet).             
+
+% New members of this type should not be deduced merely by position in a formula
+ttTypeFacet(ttUnverifiableType).  
+
+% This type exists even in impossible worlds
+ttTypeFacet(tAtemporalNecessarilyEssentialCollectionType).  
+
+% This type''s finite instance members are all known 
+ttTypeFacet(completelyAssertedCollection).  
+
+% ======================================================================================= %
+% ttTypeType - Type types are disjoint from each other (facets are not)
+% ======================================================================================= %
+completelyAssertedCollection(ttTypeType).  % from ttTypeFacet(completelyAssertedCollection). 
+
+% Facets for types are also type types
+ttTypeType(ttTypeFacet). 
+
+% "Facet based" type instances are known to be known
+genls(ttTypeFacet,completelyAssertedCollection). 
+
+% "if something is a type facet, then *that something* is known as set with finite members"
+typeGenls(ttTypeFacet,tCol). 
+
+% All type-types are enumerated eventually
+ttTypeType(RT)==>completelyAssertedCollection(RT). 
+
+% NOTE:  KEEP PREDS AND COLS Separate completelyAssertedCollection(RT)==>completeExtentAsserted(RT).
+
+% ======================================================================================= %
+% Sub-instance caching
+% ======================================================================================= %
+(typeGenls(TT,ST) ==>
+  (ttTypeType(TT) , tSet(ST) , (isa(Inst,TT) ==> genls(Inst,ST)))).
+
+
+tooSlow ==> (((typeGenls(SUBCOLTYPE ,SUBCOL),genls(SUBCOLTYPE,COLTYPE),typeGenls(COLTYPE ,COL)) ==>
+   genls(SUBCOL,COL))).
+
+genls(C,P) ==> (tCol(C), tCol(P)).
+
+tooSlow ==> ((genls(C,P)/(C\=P, \+ ttExpressionType(C) , \+ ttExpressionType(P) , \+ rtAvoidForwardChain(P) )) ==> genlsFwd(C,P)).
+
+% (genls(C,P)/(C\=P), completelyAssertedCollection(P))  ==> genlsFwd(C,P).
+
+tooSlow ==>  ((genlsFwd(C,P)/(C\=P) ==> ((isa(I,C) ==> isa(I,P))))).
+
+%(\+ tooSlow) ==>  ((genls(C,P)/sanity(C\=P) ==> ((isa(I,C) ==> isa(I,P))))).
+(\+ tooSlow) ==>  ((genls(C,P)/(C\=P) ==> ((isa(I,C) ==> isa(I,P))))).
+
+
+tooSlow ==> 
+(((genls(C1,C2), ( \+ genlsFwd(C1,C2)))==>
+ ({get_functor(C1,F1),get_functor(C2,F2), F2\==F1, 
+    P1 =.. [F1,X], P2 =.. [F2,X], 
+   asserta_if_new(baseKB:((P2:-loop_check(P1))))}))).
+
+% genls(ttRelationType,completelyAssertedCollection).
+
+% ======================================================================================= %
+% Instances of ttTypeType
+% ======================================================================================= %
+ttTypeType(TT)==>tSet(TT).
+
+tSet(RT)==>functorDeclares(RT).
+% tCol(P)==>{sanity(atom(P))},functorIsMacro(P).
+
+% ~ ttRelationType(col_as_unary).
+%ttTypeType(ttExpressionType).
+%ttTypeType(ttTypeType).
+
+:-discontiguous(completeExtentAsserted/1).
+ttTypeType(ttActionType,comment("Types of actions such PostureChangingAction")).
+ttTypeType(ttAgentType,comment("Types of agents such tHuman")).
+ttTypeType(ttEventType,comment("Events such StartRaining")).
+ttTypeType(ttExpressionType).
+ttTypeType(ttItemType).
+ttTypeType(ttMicrotheoryType).
+ttTypeType(ttRegionType).
+ttTypeType(ttRelationType).
+ttTypeType(ttSituationType).
+ttTypeType(ttSpatialType).
+ttTypeType(ttTemporalType).
+ttTypeType(ttTopicType).
+ttTypeType(ttValueType).
+% ttTypeType(ttQuantityType).
+% ttTypeType(ttTypeType).
+ttTypeType(ttIndividualType).
+
+tSet(tFunction).
+tSet(tPred).
+
+% ttUnverifiableType(ftDice).
+% ttUnverifiableType(ftDiceFn(ftInt,ftInt,ftInt)).
+% ttUnverifiableType(ftListFn(ftTerm)).
+%ttUnverifiableType(ftListFn).
+:- dynamic(tItem/1).
+:- dynamic(ttItemType/1).
+genls(tSpatialThing,tTemporalThing).
+genls(ttItemType,ttObjectType).
+genls(ttObjectType,ttSpatialType).
+genls(ttRegionType,ttSpatialType).
+
+genls(ttTemporalType,ttIndividualType).
+genls(tTemporalThing,tIndividual).
+
+ttUnverifiableType(vtDirection).
+
+typeGenls(ttRelationType,tRelation).
+typeGenls(ttExpressionTypeType,ttExpressionType).
+typeGenls(ttIndividualType,tIndividual).
+typeGenls(ttTypeFacet,tCol).
+typeGenls(ttValueType,vtValue).
+
+typeGenls(ttSpatialType,tSpatialThing).
+typeGenls(ttAgentType,tAgent).
+typeGenls(ttObjectType,tObj).
+typeGenls(ttRegionType,tRegion).
+typeGenls(ttItemType,tItem).
+tSet(tItem).
+
+ttTypeType(TT)==>(isa(C,TT)==>tCol(C)).
 
 ==> ttRelationType(isEach(
                   prologBuiltin,
@@ -93,33 +283,31 @@
 
                   prologKIF,
                   prologPTTP,
-                  pfcDatabaseTerm,
-                  pfcMustFC,
+                  pfcMustFC, 
 
                   prologListValued,
                   prologMultiValued,
                   prologSingleValued,
                   prologOrdered,
 
+                  prologEquality,
+
                   prologNegByFailure,
                   prologIsFlag,
 
-                  rtQuotedPred,
+                  rtArgsVerbatum,
                   prologSideEffects,
                   rtNotForUnboundPredicates,
                   rtAvoidForwardChain,
+                  rtSymmetricBinaryPredicate,
                   predCanHaveSingletons,
 
                   pfcControlled,  % pfc decides when to forward and backchain this pred
                   pfcWatches,   % pfc needs to know about new assertions
                   pfcCreates,   % pfc asserts 
 
-                  pfcCallCode,
-                  pfcCallCodeAnte,
-
-                  rtReflexiveBinaryPredicate,
-                  rtBinaryPredicate,
-                  rtBinaryRelation,
+                  pfcCallCode,  % called as prolog
+                  pfcCallCodeAnte,   % called as prolog
 
                   pfcNegTrigger,
                   pfcPosTrigger,
@@ -127,12 +315,140 @@
                   pfcRHS,
                   pfcLHS)).
 
-rtQuotedPred(mpred_prop).
-rtQuotedPred(listing).
+genls(prologSideEffects,rtNotForUnboundPredicates).
+
+ttRelationType(RT)==> { decl_rt(RT) },tSet(RT),completelyAssertedCollection(RT).
+% ttRelationType(RT) ==> ( ~genls(RT,tFunction) <==> genls(RT,tPred)).
+
+ttRelationType(tFunction).
+ttRelationType(tPred).
+completelyAssertedCollection(tRelation).
+completelyAssertedCollection(tPred).
+completelyAssertedCollection(tFunction).
+
+tPred(P) :- cwc, tRelation(P), \+ tFunction(P).
+
+
+:- ain(((tRelation(P), \+ tFunction(P)) ==> tPred(P))).
+
+rtArgsVerbatum(mpred_prop).
+rtArgsVerbatum(listing).
 
 rtNotForUnboundPredicates(~).
 rtNotForUnboundPredicates(t).
 rtNotForUnboundPredicates(call).
+
+:- kb_shared(disjointWith/2).
+rtSymmetricBinaryPredicate(disjointWith).
+
+ttRelationType(compilerDirective).
+compilerDirective(F)==>{kb_shared(F/0)}.
+compilerDirective(type_checking,comment("Probably not needed at first")).
+compilerDirective(disjoint_type_checking,comment("Typecheck semantics")).
+
+compilerDirective(pass2,comment("Probably not needed at first")).
+compilerDirective(tooSlow,comment("eeded at first")).
+compilerDirective(redundantMaybe,comment("Probably redundant")).
+compilerDirective(isRedundant,comment("Redundant")).
+compilerDirective(hardCodedExpansion,comment("Is Already Implemented From Code")).
+compilerDirective(codeTooSlow,comment("A faster more incomplete version is filling in for it")).
+compilerDirective(isRuntime,comment("Only use rule at runtime")).
+
+% @TODO decide how to best impl the next line
+
+% propagate and query swapped args - @TODO find a way to enforce as last pred
+rtSymmetricBinaryPredicate(F)==> {fxy_args_swapped(F,X,Y,P1,P2),nop(was_singleton(X,Y))}, 
+                                                                % ( P1 ==>{loop_check(mpred_fwc1( P2),true)}),
+                                                                % (~P1 ==>{loop_check(mpred_fwc1(~P2),true)}),
+                                                                  ( P1/ (X @< Y) ==>{mpred_fwc1( P2)}),
+                                                                  (~P1/ (X @< Y) ==>{mpred_fwc1(~P2)}),
+                                                                  (~P1:- loop_check(~P2)),
+                                                                  ( P1:- loop_check( P2)).
+
+
+
+disjointWith(C,D)==> tCol(C),tCol(D).
+
+:- if(false). % true,false
+:- listing(disjointWith/2).
+:- listing( ~ /1).
+:- break.
+:- endif.
+
+% disjointWith(ttRegionType,ttAgentType).
+% disjointWith(ttRelationType,ttTypeType).
+
+((typeGenls(COLTYPE1,COL1),disjointWith(COL1,COL2),
+  typeGenls(COLTYPE2,COL2)/dif(COLTYPE1,COLTYPE2)) ==> disjointWith(COLTYPE1,COLTYPE2)).
+
+((typeGenls(COLTYPE1,COL1),disjointWith(COLTYPE1,COLTYPE2)/(ttTypeType(COLTYPE2)),
+  typeGenls(COLTYPE2,COL2)/dif(COL1,COL2)) ==> disjointWith(COL1,COL2)).
+
+rtArgsVerbatum(disjointPartition).
+arity(disjointPartition,1).
+
+
+% disjointWith(P1,P2) ==> ((~isa(C,P2):- loop_check(isa(C,P1))), (~isa(C,P1):- loop_check(isa(C,P2)))).
+disjointWith(P1,P2) ==> ((~isa(C,P2):- loop_check(isa(C,P1)))).
+
+disjointWith(ttRelationType,ttTypeType).
+
+:- if(false). % true,false
+:- listing(disjointWith/2).
+:- listing( ~ /1).
+:- break.
+:- endif.
+
+% :- ain((disjointWith(P1,P2) , genls(C1,P1)) ==>  disjointWith(C1,P2)).
+disjointWith(C1,P2):- cwc, C1\=P2,disjointWith(P1,P2),C1\=P1,genls(C1,P1),!.
+
+
+% :- ain(disjointWith(P1,P2) ==> {writeln(disjointWith(P1,P2))}).
+
+disjointPartition(
+ [ttIndividualType, 
+  ttTypeType, 
+  ttValueType]).
+
+(disjointPartition(List), {member(L,List),dif(L,R),member(R,List)})==> disjointWith(L,R).
+
+:- kb_shared(warningsAbout/2).
+
+prologHybrid(warningsAbout/2,rtArgsVerbatum).
+warningsAbout(Msg,Why)==>{wdmsg(error(warningsAbout(Msg,Why))),break}.
+
+disjoint_type_checking ==> (disjointWith(C1,C2) ==> (isa(Inst,C1)/isa(Inst,C2) ==> warningsAbout(isa(Inst,disjointWith(C1,C2)),type_checking))).
+
+% ==> disjoint_type_checking.
+
+disjointPartition(
+ [ttActionType,
+  ttAgentType, 
+  ttEventType, 
+  ttExpressionType, 
+  ttItemType, 
+  ttMicrotheoryType, 
+  ttRegionType, 
+  ttRelationType, 
+  ttSituationType, 
+  ttTopicType, 
+  % ttTypeFacet,
+  ttValueType]).
+
+ttAgentType(tHuman).
+
+:- if(false).
+isa(mobAgent6,tHuman).
+:- xlisting(mobAgent6).
+:- endif.
+/*
+disjointPartition([
+ ttActionType, ttEventType, ttExpressionType, ttIndividualType, ttMicrotheoryType, 
+ ttAgentType,ttItemType, ttRegionType, 
+  ttRelationType, ttSituationType, ttSpatialType, ttTemporalType, ttTopicType, %   ttTypeType, ttValueType]).
+*/
+
+
 
 % :- listing(ttRelationType/1).
 
@@ -141,16 +457,19 @@ rtNotForUnboundPredicates(call).
 do_and_undo(A,U):-cwc,atom(A),atom_concat('assert',Suffix,A),!,atom_concat('delete',Suffix,U),current_predicate(U/_).
 do_and_undo(A,U):-cwc,atom(A),atom_concat('def',_,A),atom_concat('un',A,U),current_predicate(U/_).
 do_and_undo(A,U):-cwc,strip_module(A,M,P),compound(P),P=..[F|ARGS],lookup_u(do_and_undo(F,UF)),UA=..[UF|ARGS], U = (M:UA).
-ll:- cwc,call(listing,[isa/2,mtCycL/1,col_as_unary,col_as_isa,tRRP2/1,tRR/1,tRRP/1]).
+ll:- cwc,call(listing,[isa/2,mtCycL/1,col_as_unary/1, tRRP2/1,tRR/1,tRRP/1]). % ttTypeType,
 
 
-rtQuotedPred(rtQuotedPred).
-rtQuotedPred(completeExtentAsserted).
+~(singleValuedInArg(arity,2)).
+~(prologSingleValued(arity)).
+
+
+isa(iExplorer2,C):- cwc, C==rtArgsVerbatum,!,fail.
+isa(I,C):- cwc, no_repeats(loop_check(isa_backchaing(I,C))), \+ isa(C,ttExpressionType).
 
 ==> nondet.
 
 %  % :- mpred_trace_exec.
-ttRelationType(RT)==> { decl_rt(RT) },tSet(RT).
 :- mpred_notrace_exec.
 
 :- kb_shared(mpred_prop/3).
@@ -159,13 +478,6 @@ ttRelationType(RT)==> { decl_rt(RT) },tSet(RT).
 
 :- kb_shared(hardCodedExpansion/0).
 
-ttRelationType(compilerDirective).
-compilerDirective(F)==>{kb_shared(F/0)}.
-compilerDirective(type_checking,comment("Probably not needed at first")).
-compilerDirective(pass2,comment("Probably not needed at first")).
-compilerDirective(redundantMaybe,comment("Probably redundant")).
-compilerDirective(hardCodedExpansion,comment("Is Already Implemented From Code")).
-compilerDirective(codeTooSlow,comment("A faster more incomplete version is filling in for it")).
 
 /*
 % catching of misinterpreations
@@ -207,36 +519,10 @@ genls(pfcRHS,pfcControlled).
 % becomes         mp_test_agr(+,+,-,?,^,:,0,1,0,0)
 
 
-((prop_mpred(pfcWatches,F,A)/is_ftNameArity(F,A),prologHybrid(F)))==>prop_mpred(pfcVisible,F,A).
-((prop_mpred(pfcWatches,F,A)/(is_ftNameArity(F,A),correct_module(abox,_,F,A,Mt),Mt\=abox,
-   \+ predicateConventionMt(F,_), mtExact(Mt))))==>predicateConventionMt(F,Mt).
-
-% prop_mpred(pfcVisible,F,A) ==>{ nop(must(kb_shared(F/A)))}.
-
-% mtExact(Mt)/module_predicate(Mt,F,A)==>predicateConventionMt(F,Mt),arity(F,A).
+%((prop_mpred(pfcWatches,F,A)/is_ftNameArity(F,A),prologHybrid(F)))==>prop_mpred(pfcVisible,F,A).
 
 
-col_as_isa(tCol).
-col_as_isa(tSet).
-col_as_isa(ttExpressionType).
 
-col_as_isa(ttTypeType).
-col_as_isa(ttRelationType).
-col_as_isa(ttValueType).
-col_as_isa(ttActionType).
-
-col_as_isa(ttMicrotheoryType).
-col_as_isa(ttSituationType).
-col_as_isa(ttEventType).
-
-col_as_isa(ttTopicType).
-
-col_as_isa(ttSpatialType).
-col_as_isa(ttTemporalType).
-
-col_as_isa(ttItemType).
-col_as_isa(ttAgentType).
-col_as_isa(ttRegionType).
 
 
 %% completelyAssertedCollection( ?VALUE1) is semidet.
@@ -244,9 +530,15 @@ col_as_isa(ttRegionType).
 % Completely Asserted Collection.
 %
 
-completelyAssertedCollection(prologNegByFailure).
+completeExtentAsserted(functorIsMacro).
+completelyAssertedCollection(completeExtentAsserted).
+mpred_database_term(F,_,_)==>completeExtentAsserted(F).
 prologNegByFailure(prologNegByFailure).
 
+completelyAssertedCollection(functorIsMacro).  % Items read from a file might be a special Macro Head
+completelyAssertedCollection(ttRelationType).  % Or they might be a predciate declarer
+% completelyAssertedCollection(functorDeclares).  % or they might declare other things
+% completelyAssertedCollection(functorIsMacro).  % or they might declare other things
 
 
 %% ~( ?VALUE1) is semidet.
@@ -336,41 +628,6 @@ t(P,A1,A2,A3,A4,A5,A6,A7):- cwc,  mpred_fa_call(P,7,call(P,A1,A2,A3,A4,A5,A6,A7)
 %t(P,A1,A2,A3,A4,A5,A6,A7):- cwc,  call_u(t(P,A1,A2,A3,A4,A5,A6,A7)).
 
 
-
-
-%denotesTypeType(FT,CT)==>prefered_collection(FT,CT).
-%prefered_collection(ftSubLString,ftString).
-%prefered_collection(rtCycLPredicator,tPred).
-
-
-%  % :- set_prolog_flag(subclause_expansion,true).
-% :- set_prolog_flag(read_attvars,false).
-
-:- set_prolog_flag(logicmoo_motel,false).
-
-% % :- set_prolog_flag(mpred_te,true).
-
-% :- '$set_source_module'(baseKB).
-% :- defprimconcept(naf(tDeleted),tExisting).
-% :- abolish(isa,2).
-
-
-
-mtCycL(baseKB).
-mtCycL(abox).
-
-ttTypeType(col_as_isa).
-ttTypeType(col_as_unary).
-ttTypeType(col_as_static).
-
-col_as_unary(col_as_isa).
-col_as_unary(col_as_unary).
-col_as_unary(col_as_static).
-rtQuotedPred(argsQuoted).
-col_as_unary(mtProlog).
-col_as_unary(mtExact).
-col_as_unary(mtCycL).
-
 % :- rtrace((ain_expanded(tCol(tCol)))).
 
 %prologHybrid(C)==>{must(callable(C))}.
@@ -379,38 +636,11 @@ col_as_unary(mtCycL).
 typeCheckDecl(prologHybrid(C),callable(C)).
 typeCheckDecl(pfcControlled(C),callable(C)).
 
-% :- break.
 
-tSet(rtQuotedPred).
-ttRelationType(rtQuotedPred).
-
-
-%:- start_rtrace,trace.
-:- ain_expanded(mtCycL(baseKB)).
-col_as_isa(tSet).
-col_as_isa(ttSpatialType).
-
-tSet(ttRelationType).
-% ~ ttRelationType(col_as_unary).
-
-col_as_isa(ttRelationType).
-%col_as_isa(completelyAssertedCollection).
-
-:-discontiguous(completeExtentAsserted/1).
-col_as_unary(completelyAssertedCollection).
-
-%:- rtrace.
-% rtQuotedPred(P)==> ~tCol(P).
-col_as_unary(Col)==>tCol(Col).
-col_as_isa(Col)==>tCol(Col).
+%col_as_unary(Col)==>tCol(Col).
 %:- nortrace.
 %:-break.
 
-tCol(tAtemporalNecessarilyEssentialCollectionType).
-
-==>functorIsMacro(functorIsMacro).
-tCol(P)==>{sanity(atom(P))},functorIsMacro(P).
-functorDeclares(Decl)==>functorIsMacro(Decl).
 functorIsMacro(props).
 functorIsMacro(tiProps).
 
@@ -427,23 +657,8 @@ mudEquals(X,Y):-equals_call(X,Y).
 
 
 
-ttRelationType(P)==>(tCol(P),completelyAssertedCollection(P),completeExtentAsserted(P)).
-
 % ((prologHybrid(C),{must(callable(C)),get_functor(C,F,A),C\=F}) ==> arity(F,A)).
 
-
-%% t(?Collection, ?VALUE1) is semidet.
-%
-% Completely Asserted Collection.
-%
-completelyAssertedCollection(tMicrotheory).
-completelyAssertedCollection(mtCycL).
-
-==> t(completeExtentAsserted,pm).
-==> t(completeExtentAsserted,functorIsMacro).
-completeExtentAsserted(pm).
-completeExtentAsserted(functorIsMacro).
-% :- listing_u(completeExtentAsserted/1).
 
 
 
@@ -451,7 +666,6 @@ completeExtentAsserted(functorIsMacro).
 
 % :- break.
 
-genls(ttRelationType,completelyAssertedCollection).
 
 :- do_gc.
 
@@ -463,15 +677,8 @@ genls(ttRelationType,completelyAssertedCollection).
 
 
 :- kb_shared(decided_not_was_isa/2).
-:- kb_shared(mtCycL/1).
-:- kb_shared(mtExact/1).
-:- kb_shared(predicateConventionMt/2).
 
 
-% :- sanity(listing(spft/3)).
-mtCycL(baseKB).
-:- mpred_run.
-%mtExact(baseKB).
 
 % :-  abolish(yall:'/' / 2).
 
@@ -489,17 +696,8 @@ mtCycL(baseKB).
 
 
 
-/*
-:- kb_shared(collectionConventionMt/2).
-:- kb_shared(collectionConventionMt/2).
-tAtemporalNecessarilyEssentialCollectionType(ANECT)==> collectionConventionMt(ANECT,baseKB).
-*/
-
 tAtemporalNecessarilyEssentialCollectionType(ANECT)==>
        decontextualizedCollection(ANECT).
-
-tAtemporalNecessarilyEssentialCollectionType(ANECT)==> 
-        collectionConventionMt(ANECT,baseKB).
 
 
 :- kb_shared(marker_supported/2).
@@ -508,12 +706,14 @@ tAtemporalNecessarilyEssentialCollectionType(ANECT)==>
 :- kb_shared(sometimesBuggy/0).
 :- kb_shared(redundantMaybe/0).
 
+%interArgIsaSome(isa(tRelation,ttRelationType)).
+%interArgIsaSome(isa(tAgent,ttAgentType)).
+%interArgIsa1_2(isa,tAgent,ttAgentType).
 
 % NEVER (P/mpred_non_neg_literal(P) ==> { remove_negative_version(P) } ).
 
 %:- kb_shared(mpred_mark_C/1).
 :- kb_shared(tCol/1).
-:- kb_shared(tAtemporalNecessarilyEssentialCollectionType/1).
 
 :- kb_shared(subFormat/2).
 
@@ -522,7 +722,6 @@ tAtemporalNecessarilyEssentialCollectionType(ANECT)==>
 :- kb_shared(support_hilog/2).
 :- kb_shared(mpred_undo_sys/3).
 :- kb_shared(arity/2).
-:- kb_shared(disjointWith/2).
 :- kb_shared(genlsFwd/2).
 arity(comment,2).
 
@@ -539,137 +738,105 @@ alwaysGaf(pfcRHS).
 alwaysGaf(pfcLHS).
 
 
-% ttExpressionType(A)/atom(A)==> ~tIndividual(A),tCol(A),{decl_type(A), kb_shared(A/1)}.
-tSet(A)/atom(A)==> ~tIndividual(A),tCol(A),{decl_type(A), kb_shared(A/1)}.
-% tCol(C)/(\+ never_isa_syntax(C))==>{decl_as_isa(C)}.
+
 :- mpred_notrace_exec.
 
-% tCol(C)/atom(C)==> functorDeclares(C), ~tRelation(C),{nop(decl_type_unsafe(C)), nop(kb_shared(C/1)),\+ ttExpressionType(C)},tSet(C).
 
 /*
 Unneeded yet
 
-ttExpressionType(C)==>col_as_unary(C).
-col_as_unary(C)==> \+ col_as_isa(C).
-col_as_isa(C)==> \+ col_as_unary(C).
-col_as_isa(C)/( is_never_type(C) ; decided_not_was_isa(C,W)) ==> (conflict((col_as_isa(C)/( decided_not_was_isa(C,W);is_never_type(C))))).
+ttTypeType(C)/( is_never_type(C) ; decided_not_was_isa(C,W)) ==> (conflict((ttTypeType(C)/( decided_not_was_isa(C,W);is_never_type(C))))).
 */
 
-
+/*
 tCol(tCol).
 tCol(tPred).
 % :- sanity(listing(tCol/1)).
-tCol(tFunction).
-tCol(tRelation).
-tCol(ttTemporalType).
-tCol(ttExpressionType).
-~tCol(functorDeclares).
+tSet(ttTemporalType).
+tSet(ttExpressionType).
+*/
 
-
-ttExpressionType(ftList(ftInt)).
+%ttExpressionType(ftList(ftInt)).
 
 %:- sanity((fix_mp(clause(assert,sanity),arity(apathFn,2),M,O),M:O=arity(apathFn,2))).
 
 :- kb_shared(ttRelationType/1).
 
+arity(tCol,1).
 arity(xyzFn,4).
-arity(Prop,1):- cwc, clause_b(ttRelationType(Prop)).
-arity(prologSingleValued,1).
-arity(meta_argtypes,1).
 arity(isKappaFn,2).
 arity(isInstFn,1).
-arity(is_never_type,1).
 arity(ftListFn,1).
-arity(arity,2).
 arity(argsIsa, 2).
 arity(argIsa, 3).
 arity(apathFn,2).
 arity('<=>',2).
 %arity('$VAR',_).
+arity(is_never_type,1).
+%arity(prologSingleValued,1).
+arity(meta_argtypes,1).
+%arity(Prop,1):- cwc, clause_b(ttRelationType(Prop)).
 arity(F,A):- cwc, is_ftNameArity(F,A), current_predicate(F/A),A>1.
-arity(F,1):- cwc, is_ftNameArity(F,1), current_predicate(F/1), (col_as_unary(F);col_as_isa(F)), \+((call((dif:dif(Z,1))), arity(F,Z))).
+arity(F,1):- cwc, tCol(F). % current_predicate(F/1)).  % is_ftNameArity(F,1), , (col_as_unary(F);ttTypeType(F)), \+((call((dif:dif(Z,1))), arity(F,Z))).
 
-% mtCycL(baseKB).
-
-
-arity(tCol,1).
-tSet(tRelation).
-
-:- kb_shared(ttModuleType/1).
-tAtemporalNecessarilyEssentialCollectionType(ttModuleType).
-functorDeclares(ttModuleType).
-tCol(ttModuleType).
 %  % :- mpred_trace_exec.
 tCol(F)==>arity(F,1).
 :- mpred_notrace_exec.
-tCol(ttModuleType).
-:- sanity(arity(ttModuleType,1)).
-:- sanity(functorDeclares(ttModuleType)).
-:- must(arity(ttModuleType,1)).
 
 /*
 ?- fully_expand((==> (ftSpec(ftListFn(_72012)):- cwc,callable(_72012),ftSpec(_72012))),O).
 
 ?- fully_expand_head(clause(asserta,once),(==> (ftSpec(ftListFn(_72012)):- cwc,callable(_72012),ftSpec(_72012))),O).
 */
-tCol(ftListFn(Atom)):- cwc, callable(Atom),tCol(Atom).
-ftSpec(ftListFn(Atom)):- cwc, callable(Atom),ftSpec(Atom).
-ttExpressionType(ftListFn(Atom)):- cwc, callable(Atom).
-tSet(ftListFn(Atom)):- cwc, callable(Atom),!,fail.
+tCol(ftListFn(Atom)):- cwc, nonvar(Atom),tCol(Atom).
+ftSpec(ftListFn(Atom)):- cwc, nonvar(Atom),ftSpec(Atom).
+ttExpressionType(ftListFn(Atom)):- cwc, nonvar(Atom),!,ttExpressionType((Atom)).
+tSet(ftListFn(Atom)):- cwc, nonvar(Atom),!,tSet(Atom).
 
-
+% :- mpred_trace_exec.
 ttExpressionType(ftAssertable).
-ttExpressionType(ftCallable).
 ttExpressionType(ftAskable).
-ttExpressionType(Atom)/atom(Atom)==> arity(Atom,1).
-tCol(ftString).
-tCol(ftAtom).
-tCol(ftProlog).
-tCol(rtAvoidForwardChain).
+ttExpressionType(ftCallable).
+ttExpressionType(ftString).
+ttExpressionType(ftAtom).
+ttExpressionType(ftProlog).
 
-tSet(ttModuleType,mudToCyc('MicrotheoryType')).
+ttTypeType(ttModuleType,mudToCyc('MicrotheoryType')).
+typeGenls(ttModuleType,tMicrotheory).
 
-arity(argsQuoted,1).
+arity(rtArgsVerbatum,1).
 arity(quasiQuote,1).
-argsQuoted(spft).
+rtArgsVerbatum(spft).
 
-:-call(asserta_if_new, mtCycL(baseKB)).
 
 % this mean to leave terms at EL:  foo('xQuoteFn'([cant,touch,me])).
 
 quasiQuote('xQuoteFn').
 
-argsQuoted(argsQuoted).
+rtArgsVerbatum('loop_check_term').
+rtArgsVerbatum('loop_check_term_key').
+rtArgsVerbatum('xQuoteFn').
+rtArgsVerbatum('$VAR').
 
-argsQuoted('loop_check_term').
-argsQuoted('loop_check_term_key').
-argsQuoted('xQuoteFn').
-argsQuoted('$VAR').
+rtArgsVerbatum(ain).
+rtArgsVerbatum(meta_argtypes).
+rtArgsVerbatum(ruleRewrite).
+rtArgsVerbatum(mpred_action).
+rtArgsVerbatum(mpred_prop).
+rtArgsVerbatum(ain).
+rtArgsVerbatum(mpred_rem).
+rtArgsVerbatum(added).
+rtArgsVerbatum(call).
+rtArgsVerbatum(call_u).
+rtArgsVerbatum(member).
+rtArgsVerbatum(=..).
+% rtArgsVerbatum({}). % Needs mpred_expansion to visit
+rtArgsVerbatum(second_order).
+rtArgsVerbatum(ftSpec).
+rtArgsVerbatum(vtActionTemplate).
+% rtArgsVerbatum((':-')).
 
-argsQuoted(ain).
-argsQuoted(meta_argtypes).
-argsQuoted(ttFormated).
-argsQuoted(ruleRewrite).
-argsQuoted(mpred_action).
-argsQuoted(mpred_prop).
-argsQuoted(ain).
-argsQuoted(mpred_rem).
-argsQuoted(added).
-argsQuoted(call).
-argsQuoted(call_u).
-argsQuoted(member).
-argsQuoted(=..).
-argsQuoted({}).
-argsQuoted(second_order).
-argsQuoted(ftSpec).
-argsQuoted(vtActionTemplate).
-% argsQuoted((':-')).
 
-:- kb_shared((==>)/2).
-:- kb_shared((==>)/2).
-%doing_slow_rules
-%:-rtrace(ain(((prologBuiltin(F),{atom(F)},arity(F,A),{sanity(integer(A))})==>{make_builtin(F/A)}))).
-%((prologBuiltin(P),{compound(P),get_arity(P,F,A)},arity(F,A),{sanity(integer(A))})==>{make_builtin(F/A)}).
 
 
 meta_argtypes(support_hilog(tRelation,ftInt)).
@@ -688,7 +855,7 @@ meta_argtypes(support_hilog(tRelation,ftInt)).
 
 :- kb_shared(support_hilog/2).
 
-
+/*
 ((codeTooSlow,(support_hilog(F,A)
   /(is_ftNameArity(F,A),
     \+ is_static_predicate(F/A), \+ prologDynamic(F)))) ==>
@@ -698,20 +865,19 @@ meta_argtypes(support_hilog(tRelation,ftInt)).
     CL = arity(F,A)
     },
    (CL))).
-
+*/
 
 
 %:- kb_shared(hybrid_support/2).
 %prologBuiltin(resolveConflict/1).
 
 :- kb_shared(bt/2).
-:- kb_shared(bt/2).
 bt(P,_)/nonvar(P) ==> (P:- mpred_bc_only(P)).
 
-redundantMaybe ==> ((prologHybrid(F),arity(F,A))==>prop_mpred(pfcVisible,F,A)).
-redundantMaybe ==> (prop_mpred(pfcVisible,F,A)==>prologHybrid(F),arity(F,A)).
+%redundantMaybe ==> ((prologHybrid(F),arity(F,A))==>prop_mpred(pfcVisible,F,A)).
+%redundantMaybe ==> (prop_mpred(pfcVisible,F,A)==>prologHybrid(F),arity(F,A)).
 
-((mpred_prop(F,A,pfcRHS)/(A\=0)) ==> {kb_shared(F/A)}).
+% ((mpred_prop(F,A,pfcRHS)/(A\=0)) ==> {kb_shared(F/A)}).
 % ((mpred_prop(F,A,_)/(A\=0)) ==> {kb_shared(F/A)}).
 
 % pfcMustFC(F) ==> pfcControlled(F).
@@ -760,19 +926,6 @@ resultIsa(aVerbFn(ftString),vtVerb).
 
 :- kb_shared(genls/2).
 
-/*
-genlMt(Mt1,Mt2),mtCycL(Mt1),mtProlog(Mt2) ==> 
-  {maybe_add_module_import(Mt1,Mt2)}.
-*/
-/*
-genlMt(Mt1,Mt2),mtProlog(Mt1),mtCycL(Mt2) ==> 
-  {trace_or_throw(oddly_genlMt(Mt1,Mt2))}.
-*/
-
-% mtCycL(baseKB).
-
-predicateConventionMt(predicateConventionMt,baseKB).
-predicateConventionMt(collectionConventionMt,baseKB).
 
 :- kb_shared( ( =@=> ) /2 ).
 :- kb_shared( ( macroExpandExact ) /2 ).
@@ -789,128 +942,8 @@ tiProps(C,I,P1,P2,P3,P4)=@=>props(I,[C,P1,P2,P3,P4]).
 
 % :- listing(macroExpandExact/2).
 
-predicateConventionMt(genlMt,baseKB).
-predicateConventionMt(regression_test,baseKB).
-
-functorDeclares(tSet).
-tSet(tMicrotheory,mudToCyc('Microtheory')).
-
-collectionConventionMt(tMicrotheory,baseKB).
-collectionConventionMt(mtCycL,baseKB).
-collectionConventionMt(mtExact,baseKB).
-collectionConventionMt(Col,Where) ==> predicateConventionMt(Col,Where).
-
-% mtExact(Mt)==>{kb_shared(Mt/1)}.
-
-
-mtProlog(Mt),predicateConventionMt(F,Mt)/(Mt\==baseKB)==>prologBuiltin(F).
-
-% genlsFwd(Sub,Super)==> (isa(I,Super) :- isa(I,Sub)). 
-% :- ain_expanded((genlsFwd(Sub,Super)==> (t(Sub,I) ==> t(Super,I)))).
-
-ttModuleType(M)==>tSet(M).
-
-ttModuleType(MtType)==>genls(MtType,tMicrotheory).
-
-ttModuleType(mtProlog).
-
-==>ttModuleType(mtProlog).
-
-
-:- sanity(get_lang(pfc)).
-
-:- sanity(( fully_expand(cuz,
- ==>((ttModuleType(mtCycL,
-  comment("yada....................."),
-  genlsFwd(tMicrotheory)))),
-  OO),dmsg(full_transform=OO),OO=(_,_))).
-
-
-
-% :- rtrace((trace,fully_expand(zzz,==>ttModuleType(mtCycL777One,comment("hi there"),genlsFwd(tMicrotheory)),O))),nl,writeq(O),nl,notrace.
-
-:- ain_expanded(ttModuleType(mtCycL,
-  comment("mtCycL(?Mt) Mts like baseKB that contain mainly assertions written in CycL"),
-  genlsFwd(tMicrotheory))).
-
-:- ain_expanded(
- ttModuleType(mtProlog,comment("Real Prolog modules loaded with :-use_module/1 such as 'lists' or 'apply'"),
-  genls(tMicrotheory))).
-
-:- sanity(arity(ttModuleType,1)).
-:- sanity(functorDeclares(ttModuleType)).
-:- sanity(\+ arity(ttModuleType,3)).
-:- sanity(\+ predicate_property(ttModuleType(_,_,_),_)).
-
-:- ain_expanded(ttModuleType(mtProlog,comment("Builtin Prolog code modules such as 'lists' or 'apply' and PFC system like 'mpred_loader' or 'mpred_type_wff'"),
-  genls(mtCore))).
-
-
-% ttModuleType(mtLocal,comment("mtLocal(?Mt) is always scoped underneath baseKB")).
-
-==> ttModuleType(mtGlobal,comment("mtGlobal(?Mt) states the Mt is always findable during inheritance")).
-
-mtGlobal(baseKB).
-mtGlobal(system).
-
-ttModuleType(mtExact,
-  comment("mtExact(?Mt) states that all predicates the Mt specifies should be called and asserted using only this ?Mt.")).
-mtExact(baseKB).
-mtExact(lmcache).
-mtExact(t_l).
-mtExact(Mt)==> mtGlobal(Mt).
-
-
-ttModuleType(mtCore,comment("mtCore(?Mt) states Mt specified is builtin")).
-mtCore(user).
-mtCore(iEverythingPSC).
-mtCore(iInferencePSC).
-genls(mtCore,tMicrotheory).
-
-
-mtCycL(O)==>({find_and_call(ensure_abox(O))},~mtProlog(O),\+ mtProlog(O)).
-
-:- sanity(functorDeclares(ttModuleType)).
-:- sanity(arity(ttModuleType,1)).
-
-:- sanity(\+ arity(ttModuleType,3)).
-:- sanity(\+ predicate_property(ttModuleType(_,_,_),_)).
-
-
-:- kb_shared(nondet/0).
-:- kb_shared(nondet/0).
-
-/*
-% These rules break the loader 
-% to test 
-% swipl -f sanity_base/mt_01.pl
-% whereas this would work: 
-% swiplb -f sanity_base/mt_01.pl
-
-*/
-{module_property(Mt,class(_)),
-   (atom_concat('common_logic_',_,Mt);atom_concat('logicmoo_',_,Mt);atom_concat('mpred_',_,Mt))} 
-    ==>  mtProlog(Mt).
-{module_property(Mt,class(microtheory))} ==> mtCycL(Mt).
-{module_property(Mt,class(library))} ==> mtProlog(Mt).
-{module_property(Mt,class(system))} ==> mtProlog(Mt).
-
-
-
-% TODO: stop next line from killing mtCycL(baseKB)
-%  (tMicrotheory(Mt), ~ mtCycL(Mt)) <==> mtProlog(Mt).
-
-% mtCycL(Mt)==>{skip_user(Mt),set_prolog_flag(Mt:unknown,warning)},genlMt(Mt,baseKB).
-codeRule(mtGlobal(Mt)==>genlMt(baseKB,Mt)).
 
 isRegisteredCycPred(apply,maplist,3).
-
-/*
-(genlMt(Child,Parent), \+ mtCore(Child)) ==>
-   {ignore((system:delete_import_module(Parent,user))),
-    ignore((system:delete_import_module(Parent,Child))),
-    system:add_import_module(Child,Parent,start)}.
-*/
 
 :- kb_shared(isRegisteredCycPred/3).
 :- kb_shared(isRegisteredCycPred/3).
@@ -937,10 +970,6 @@ isRegisteredCycPred(apply,maplist,3).
 % Unneeded yet
 % pass2
 
-
-% :- ain(mpred_database_term(F,_,_)==> ~predicateConventionMt(F,_)).
-% :- ain((mpred_database_term(F,_,_)==> ~ predicateConventionMt(F,baseKB))).
-% :- ain(((predicateConventionMt(F,abox),\+predicateConventionMt(F,baseKB)) ==> ~ predicateConventionMt(F,baseKB))).
 
 
 /*
@@ -982,15 +1011,6 @@ do_and_undo(mpred_post_exactly,mpred_remove_exactly).
 % :- abolish(system:arity,2).
 % :- system:import(arity/2).
 
-
-arity(functorIsMacro,1).
-
-functorIsMacro(functorIsMacro).
-ttRelationType(X)==>functorDeclares(X).
-tSet(X)==>functorDeclares(X).
-
-isa(iExplorer2,C):- C==argsQuoted,!,fail.
-isa(I,C):- cwc, no_repeats(loop_check(isa_backchaing(I,C))), \+ isa(C,ttExpressionType).
 
 tSet(tFoo).
 isa(iBar,tFoo).

@@ -5,24 +5,131 @@
 :- set_prolog_flag(do_renames,restore).
 :- set_prolog_flag_until_eof(do_renames,term_expansion).
 
-flatTrans(G)==> ((({differentTerms(A,B)},t(G,A,B)/(ground(t(G,A,B)),differentTerms(A,C)),t(G,B,C)/(differentTerms(B,C),
-  (ground(t(G,A,C)))))) ==> t(G,A,C)).
-flatTrans(genls).
-flatTrans(genlPreds).
+/*
+flatTrans(G)==> 
+ ((
+  t(G,A,B)/A\=B, 
+  t(G,B,C)/(C\=B,C\=A))==> t(G,A,C)).
+
+flatTrans(G)==> (((t(G,A,B)/(A\=B,dif(A,C)),t(G,B,C)/(B\=C)))  ==> t(G,A,C)).
+
+*/
+tooSlow==>
+((flatTrans(G)==> (((t(G,A,B)/(A\=B),t(G,B,C)/(B\=C,A\=C)))  ==> t(G,A,C)))).
+
+% flatTrans(genls).
 flatTrans(subFormat).
+flatTrans(genlPreds).
 flatTrans(genlFuncs).
 flatTrans(genlFunctions).
 flatTrans(genlMt).
 
-ttTypeType(ttTemporalType).
-typeGenls(ttRelationType,tRelation).
-typeGenls(ttSpatialType,tSpatialThing).
-genls(tSpatialThing,tTemporalThing).
-genls(ttSpatialType,ttTemporalType).
+%genlsUpTo(TT) ==> ((isa(T,TT),genls(C,T))==>isa(C,TT)).
+genlsUpTo(ttTemporalType).
+genlsUpTo(ttRelationType).
+genlsUpTo(ttTypeType).
 
-(((ttTemporalType(T),genls(C,T))==> ttTemporalType(C))).
-(((ttTypeType(T),genls(C,T))==> ttTypeType(C))).
-(((ttRelationType(T),genls(C,T))==> ttRelationType(C))).
+
+
+% to load this files use  ?- ensure_mpred_file_loaded('logicmoo/pfc/system_genls.pfc').
+:- dynamic(mudIsa/2).
+:- file_begin(pfc).
+
+
+tooSlow==>((type_checking ==> (((genls(X,Y),{X\=Y},genls(Y,X))) ==> {mpred_withdraw(genls(Y,X))}))).
+
+% (genls(C,SC)==>(tCol(SC),tCol(C),{repropagate(SC)})).
+
+:- sanity(get_lang(pfc)).
+
+% TODO (genls(C,SC)==>(tCol(C),tCol(SC))).
+
+% rtAvoidForwardChain(functorDeclares).
+rtAvoidForwardChain(C):- cwc, tCol(C),compound(C).
+rtAvoidForwardChain(meta_argtypes).
+% rtAvoidForwardChain(completeIsaAsserted).
+
+ttExpressionType(C)==>rtAvoidForwardChain(C).
+
+% TODO ((completeIsaAsserted(I), isa(I,Sub), {dif(Sub, Super)}, genls(Sub,Super),{ground(Sub:Super)}, \+ genls/*Fwd*/(Sub,Super), \+ ttExpressionType(Super))) ==> isa(I,Super).
+%    \+ genlsFwd(Sub,Super), \+ ttExpressionType(Super))) ==> isa(I,Super).
+
+completeIsaAsserted(I) ==> ((isa(I,Sub)/ (\+ rtAvoidForwardChain(Sub))) ==> mudIsa(I,Sub)).
+mudIsa(I,C),genls(C,P) ==> mudIsa(I,P).
+/*
+
+% isRuntime ==> 
+% (mudIsa(I,Sub)/(ground(mudIsa(I,Sub)), \+ rtAvoidForwardChain(Sub))) ==> isa(I,Sub).
+((completelyAssertedCollection(Sub) / (\+ rtAvoidForwardChain(Sub)))) ==> ttMudIsaCol(Sub).
+ttMudIsaCol(Sub) ==> (isa(I,Sub) ==> mudIsa(I,Sub)).
+((completeIsaAsserted(I),mudIsa(I,Sub), {dif(Sub, Super)}, genls(Sub,Super),{ground(Sub:Super)}, \+ rtAvoidForwardChain(Super))) ==> mudIsa(I,Super).
+*/
+
+
+
+:- set_prolog_flag(do_renames,restore).
+
+
+
+end_of_file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 
@@ -72,7 +179,7 @@ col_as_unary(C) ==> {atom(C),not_undoable((CI=..[C,I],forall(retract(isa(I,C):-t
 col_as_isa(C) ==> {atom(C),not_undoable((CI=..[C,I],forall(retract(CI:-true),mpred_post1(isa(I,C))),retractall(col_as_unary(C))))}.
 
 % genls(tSet,functorDeclares).
-rtQuotedPred(functorDeclares).
+rtArgsVerbatum(functorDeclares).
 genls(completelyAssertedCollection,tSet).
 
 isa(I,ttRelationType):-I==col_as_unary,!,fail.
@@ -138,51 +245,4 @@ tSet(tKnownID).
 
 
 */
-
-% to load this files use  ?- ensure_mpred_file_loaded('logicmoo/pfc/system_genls.pfc').
-:- dynamic(mudIsa/2).
-:- file_begin(pfc).
-
-
-(((genls(X,Y),genls(Y,X),{X\==Y}))) ==> {mpred_withdraw(genls(Y,X))}.
-% (genls(C,SC)==>(tCol(SC),tCol(C),{repropagate(SC)})).
-
-:- sanity(get_lang(pfc)).
-
-% TODO (genls(C,SC)==>(tCol(C),tCol(SC))).
-
-% rtAvoidForwardChain(functorDeclares).
-rtAvoidForwardChain(C):-tCol(C),compound(C).
-rtAvoidForwardChain(meta_argtypes).
-% rtAvoidForwardChain(completeIsaAsserted).
-
-ttExpressionType(C)==>rtAvoidForwardChain(C).
-
-% TODO ((completeIsaAsserted(I), isa(I,Sub), {differentTerms(Sub, Super)}, genls(Sub,Super),{ground(Sub:Super)}, \+ genls/*Fwd*/(Sub,Super), \+ ttExpressionType(Super))) ==> isa(I,Super).
-%    \+ genlsFwd(Sub,Super), \+ ttExpressionType(Super))) ==> isa(I,Super).
-
-completeIsaAsserted(I) ==> ((isa(I,Sub)/ (\+ rtAvoidForwardChain(Sub))) ==> mudIsa(I,Sub)).
-mudIsa(I,C),genls(C,P) ==> mudIsa(I,P).
-/*
-
-% isRuntime ==> 
-% (mudIsa(I,Sub)/(ground(mudIsa(I,Sub)), \+ rtAvoidForwardChain(Sub))) ==> isa(I,Sub).
-((completelyAssertedCollection(Sub) / (\+ rtAvoidForwardChain(Sub)))) ==> ttMudIsaCol(Sub).
-ttMudIsaCol(Sub) ==> (isa(I,Sub) ==> mudIsa(I,Sub)).
-((completeIsaAsserted(I),mudIsa(I,Sub), {differentTerms(Sub, Super)}, genls(Sub,Super),{ground(Sub:Super)}, \+ rtAvoidForwardChain(Super))) ==> mudIsa(I,Super).
-*/
-
-
-(genls(C,P)/(C\=P)), completelyAssertedCollection(P)  ==> genlsFwd(C,P).
-(genls(C,P)/(C\=P, \+ ttExpressionType(C) , \+ ttExpressionType(P) , \+ rtAvoidForwardChain(P) )) ==> genlsFwd(C,P).
-
-genlsFwd(C,P)/(C\=P) ==> (isa(I,C) ==> isa(I,P)).
-
-((genls(C1,C2), ( \+ genlsFwd(C1,C2)))==>
- ({get_functor(C1,F1),get_functor(C2,F2),
-   P1 =.. [F1,X],
-    P2 =.. [F2,X],
-    asserta_if_new(baseKB:((P2:-loop_check(P1))))})).
-
-:- set_prolog_flag(do_renames,restore).
 

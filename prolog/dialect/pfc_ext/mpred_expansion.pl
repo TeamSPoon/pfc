@@ -350,7 +350,7 @@ cheaply_u(G):- quickly(quietly(Goal)).
 
 % lookup_u/cheaply_u/call_u/clause_b
 
-cheaply_u(argsQuoted(G)):- !,lookup_u(argsQuoted(G)).
+cheaply_u(rtArgsVerbatum(G)):- !,lookup_u(rtArgsVerbatum(G)).
 cheaply_u(call(ereq,G)):- !,sanity(callable(G)),cheaply_u(G).
 cheaply_u(G):- quietly(lookup_u(G)).
 
@@ -852,7 +852,7 @@ as_is_term(F,I,[]):- !, (F==I;const_or_var(I)).
 % covered  as_is_term(P):-functor(P,F,A),functor(C,F,A),C=@=P,!. % all vars
 % covered  as_is_term(meta_argtypes(_)):-!.
 % covered  as_is_term(meta_argtypes_guessed(_)):-!.
-% covered  as_is_term(argsQuoted(Atom)):- !, \+ compound(Atom).
+% covered  as_is_term(rtArgsVerbatum(Atom)):- !, \+ compound(Atom).
 as_is_term(arity,F,_):- atom(F).
 % covered  as_is_term(functorIsMacro(Atom)):- !, \+ compound(Atom).
 % covered  as_is_term(functorDeclares(Atom)):- !, \+ compound(Atom).
@@ -1015,10 +1015,13 @@ db_expand_final(_ ,isa(Args,Meta_argtypes),  meta_argtypes(Args)):-Meta_argtypes
 %db_expand_final(_,PARSE,ISA):- PARSE=..[t,C,I],atom(C),atom(I),ISA=..[C,I],!.
 % covered db_expand_final(_ ,NC,NC):-functor(NC,_,1),arg(1,NC,T),(not_ftCompound(T)),!.
 db_expand_final(_, Sent,Sent):-is_true(Sent).
-% covered db_expand_final(_,Term,Term):- is_ftCompound(Term),functor(Term,F,_),(cheaply_u(prologBuiltin(F));cheaply_u(argsQuoted(F))).
+% covered db_expand_final(_,Term,Term):- is_ftCompound(Term),functor(Term,F,_),(cheaply_u(prologBuiltin(F));cheaply_u(rtArgsVerbatum(F))).
 % covered db_expand_final(_, arity(F,A),arity(F,A)):- not_ftCompound(F),not_ftCompound(A),!, (maybe_ain_arity(F,A)).
 %unused db_expand_final(_, tPred(V),tPred(V)):-!,fail, not_ftCompound(V),!.
 %db_expand_final(_ ,NC,NC):-functor(NC,_,1),arg(1,NC,T),db_expand_final(_,T,_),!.
+
+db_expand_final(_ ,IN,OUT):- IN=..[F,A,B],nonvar(A),nonvar(B),clause_b(rtSymmetricBinaryPredicate(F)), (A@<B -> OUT=IN ; OUT=..[F,B,A]).
+
 db_expand_final(_ ,isa(Atom,PredArgTypes), tRelation(Atom)):-PredArgTypes==meta_argtypes,atom(Atom),!.
 db_expand_final(_ ,meta_argtypes(F,Args),    meta_argtypes(Args)):-atom(F),!,functor(Args,Pred,A),assert_arity(Pred,A).
 %covered db_expand_final(_ ,meta_argtypes(Args),      meta_argtypes(Args)):-!.
@@ -1200,7 +1203,7 @@ db_expand_0(Op,(G:-B),(GG:-BB)):-!,db_expand_0(Op,G,GG),fully_expand_goal(Op,B,B
 db_expand_0(Op,M:Sent,SentO):- atom(M),is_stripped_module(M),!,db_expand_0(Op,Sent,SentO).
 db_expand_0(Op,M:Sent,R:SentO):- replaced_module(Op,M,R),!,db_expand_0(Op,Sent,SentO).
 
-
+db_expand_0(_Op,pddlSomethingIsa(I,EL),(isa(I,IC),O)):- icn_tcn(I,IC), listToE(EL,E),expand_isEach_or_fail(==>genls(IC,E),O),!.
 db_expand_0(_Op,pddlSomethingIsa(I,EL),O):- listToE(EL,E),expand_isEach_or_fail(==>isa(I,E),O).
 db_expand_0(_Op,pddlDescription(I,EL),O):- listToE(EL,E),expand_isEach_or_fail(==>mudDescription(I,E),O).
 db_expand_0(_Op,pddlObjects(I,EL),O):- listToE(EL,E),expand_isEach_or_fail(==>isa(E,I),O).
@@ -1806,7 +1809,7 @@ holds_args(HOFDS,FIST):- is_ftCompound(HOFDS),HOFDS=..[H|FIST],is_holds_true(H),
 %
 do_expand_args(_,Term,TermO):- \+ compound(Term),!,must(Term=TermO).
 do_expand_args(Exp,M:Sent,M:SentO):- atom(M),!,do_expand_args(Exp,Sent,SentO).
-do_expand_args(_,Term,Term):- functor(Term,F,_),cheaply_u(argsQuoted(F)),!.
+do_expand_args(_,Term,Term):- functor(Term,F,_),cheaply_u(rtArgsVerbatum(F)),!.
 do_expand_args(Exp,[L|IST],Out):- !,must(do_expand_args_l(Exp,[L|IST],Out)).
 do_expand_args(Exp,Term,Out):- Term=..[P|ARGS],do_expand_args_pa(Exp,P,ARGS,Out).
 
@@ -2027,16 +2030,17 @@ exact_args_f(format).
 exact_args_f(dynamic).
 exact_args_f(dmsg).
 exact_args_f(call_u).
+exact_args_f(say).
 exact_args_f(call).
 exact_args_f(mpred_prop).
 exact_args_f(assertz_if_new).
 exact_args_f(asserts_eq_quitely).
 exact_args_f(asserted).
-exact_args_f(argsQuoted).
+exact_args_f(rtArgsVerbatum).
 exact_args_f((=..)).
 exact_args_f((=)).
 exact_args_f('$was_imported_kb_content$'):-dtrace.
-exact_args_f(F):-cheaply_u(argsQuoted(F)),!.
+exact_args_f(F):-cheaply_u(rtArgsVerbatum(F)),!.
 exact_args_f(F):-cheaply_u(prologBuiltin(F)),!.
 
 % exact_args((_:-_)).
