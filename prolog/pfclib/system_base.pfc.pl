@@ -395,7 +395,7 @@ disjointWith(ttRelationType,ttTypeType).
 
 :- if(false). % true,false
 :- listing(disjointWith/2).
-:- listing( ~ /1).
+:- listing( ( ~ )/1).
 :- break.
 :- endif.
 

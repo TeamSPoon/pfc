@@ -11,7 +11,7 @@
 :- module(mpred_type_wff,
           [ 
             head_singletons/2, head_singles0/2,head_singles01/2,
-            append_termlist/3,            
+
             call_last_is_var/1,
             is_quantifier/1,
             same_var/2,
@@ -125,15 +125,6 @@ subst_except([H|T],B,A,[HH|TT]):- !,
 subst_except(HT,B,A,HHTT):- HT=..FARGS,subst_except(FARGS,B,A,[FM|MARGS]),
    (atom(FM)->HHTT=..[FM|MARGS];append_termlist(FM,MARGS,HHTT)).
 
-
-
-
-%% append_termlist( ?Call, ?EList, ?CallE) is semidet.
-%
-% Append Termlist.
-%
-append_termlist(Call,EList,CallE):- var(Call),must(is_list(EList)),!,must((append([t,Call],EList,ListE), CallE=..ListE)).
-append_termlist(Call,EList,CallE):-must(is_list(EList)),!,must((Call=..LeftSide, append(LeftSide,EList,ListE), CallE=..ListE)).
 
 
 % ========================================

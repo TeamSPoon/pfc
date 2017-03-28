@@ -712,14 +712,19 @@ fully_expand_clause_now(Op,Sent,SentO):- \+ ground(Sent),!,fully_expand_clause_c
 fully_expand_clause_now(_,Sent,SentO):- lmcache:completely_expanded(_,Sent),!,SentO=Sent.
 fully_expand_clause_now(_,Sent,SentO):- lmcache:completely_expanded(Sent,SentO),!.
 fully_expand_clause_now(Op,Sent,SentO):- 
- must(fully_expand_clause_catch_each(Op,Sent,SentO)),
-         asserta(lmcache:completely_expanded(Sent,SentO)).
+ fully_expand_clause_catch_each(Op,Sent,SentO),!,
+         asserta(lmcache:completely_expanded(Sent,SentO)),!.
+fully_expand_clause_now(Op,Sent,SentO):- 
+ trace,break,
+  (fully_expand_clause_catch_each(Op,Sent,SentO)),
+         asserta(lmcache:completely_expanded(Sent,SentO)),!.
+% fully_expand_clause_catch_each(change(assert, ain), arity(functorDeclares, 1), _32410
 
 
 fully_expand_clause_catch_each(Op,Sent,SentO):-
   catch(fully_expand_clause(Op,Sent,SentO),hasEach,
     (must(expand_isEach_or_fail_conj(Sent,SentM)),
-       fully_expand_real(Op,SentM,SentO))).
+       must(fully_expand_real(Op,SentM,SentO)))).
 /*
 
 fully_expand_clause_now(Op,Sent,SentO):- term_variables(Sent,SentV),copy_term(Sent-SentV,SentI-SentIV),
@@ -1332,7 +1337,7 @@ db_expand_0(Op,props(A,F),OO):-expand_props(_Prefix,Op,props(A,F),OO),!.
 
 % covered db_expand_0(_,arity(F,A),arity(F,A)):-atom(F),!.
 db_expand_0(Op,IN,OUT):- 
-   IN=..[F|Args],
+   compound_name_args_safe(IN,F,Args),
    % wdmsg(db_expand_0(Op,IN)),
    sanity(F \== isa),
    must_maplist(db_expand_0(Op),Args,ArgsO),
@@ -1588,9 +1593,10 @@ into_mpred_form(t(P,A),O):-atom(P),!,O=..[P,A].
 into_mpred_form(t(P,A,B),O):-atom(P),!,O=..[P,A,B].
 into_mpred_form(t(P,A,B,C),O):-atom(P),!,O=..[P,A,B,C].
 into_mpred_form(IN,OUT):- 
-   IN=..[F|Args],
+   compound_name_args_safe(IN,F,Args),
    must_maplist(into_mpred_form,Args,ArgsO),!,
-   map_f(F,FO),OUT=..[FO|ArgsO].
+   map_f(F,FO),
+   compound_name_args_safe(OUT,FO,ArgsO).
 
 
 % into_mpred_form(I,O):- /*quietly*/(loop_check(into_mpred_form_ilc(I,O),O=I)). % trace_or_throw(into_mpred_form(I,O).

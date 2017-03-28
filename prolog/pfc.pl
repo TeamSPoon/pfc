@@ -404,13 +404,16 @@ system:clause_expansion(I,O):- pfc_clause_expansion(I,O).
 :- multifile(user:goal_expansion/4).
 :- dynamic(user:goal_expansion/4).
 :- module_transparent(user:goal_expansion/4).
-user:goal_expansion(I,P,O,PO):- notrace((\+ source_location(_,_),
-     nonvar(I),          
+user:goal_expansion(I,P,O,PO):- fail,
+ notrace(( % \+ source_location(_,_),
+     callable(I),          
      var(P), % Not a file goal     
-     \+ current_prolog_flag(xref,true), \+ current_prolog_flag(mpred_te,false),
+     \+ current_prolog_flag(xref,true), 
+     \+ current_prolog_flag(mpred_te,false),
      '$current_typein_module'(CM),
-     (I \= CM:call_u(_)),(I \= call_u(_)),
+     (I \= CM:call_u(_)),(I \= call_u(_)))),
      fully_expand(I,M),
+     notrace((
      O=CM:call_u(M),
      PO=P)).
 
