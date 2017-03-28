@@ -373,16 +373,6 @@ copy_term_vn(B,A):- get_varname_list(Vs),length(Vs,L),L<30, shared_vars(B,Vs,Sha
 copy_term_vn(B,A):- nb_current('$old_variable_names',Vs),length(Vs,L),L<30, shared_vars(B,Vs,Shared),Shared\==[],!,copy_term(B+Vs,A+Vs2),append(Vs,Vs2,Vs3),b_setval('$old_variable_names',Vs3),!.
 copy_term_vn(B,A):- copy_term(B,A).
 
-shared_vars(Left,Right,SVG):-quietly(( term_variables(Left,Vs1),term_variables(Right,Vs2),intersect_eq0(Vs2,Vs1,SVG))).
-
-intersect_eq0([], _, []).
-intersect_eq0([X|Xs], Ys, L) :-
- 	(   member_eq0(X, Ys)
- 	->  L = [X|T],
- 	    intersect_eq0(Xs, Ys, T)
- 	;   intersect_eq0(Xs, Ys, L)
- 	).
-
 
 setup_mpred_ops:-
           op(500,fx,'-'),
