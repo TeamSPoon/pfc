@@ -43,7 +43,7 @@ ain_minfo/2,
 cnstrn/2,
 ain_minfo_2/2,
 cnstrn0/2,
-physical_side_effect/1,
+physical_side_effect_call/3,
 predicate_to_goal/2,
 mpred_kb_ops_file/0,
 mpred_wfflist/2,
@@ -726,12 +726,12 @@ attvar_op(Op,MData):-
    strip_module(Op,_,OpA), sanity(atom(OpA)),
    fix_mp(clause(assert,OpA),MData,M,Data),
    add_side_effect(OpA,M:Data),
-   (current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0),!,
-   physical_side_effect_call(M,OpA,Data0))),!.
+   (current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0))),!,
+   physical_side_effect_call(M,OpA,Data0).
 
 physical_side_effect_call(M,OpA,Data0):- is_side_effect_disabled,!,mpred_warn('no_physical_side_effects ~p',M:call(M:OpA,M:Data0)).
 % @TODO BROKEN phys ical_side_effect_call(M,assertz_i,Data0):- must((compile_aux_clauses(M:Data0))),!.
-physical_side_effect_call(M,OpA,Data0):- show_failure(physical_side_effect(M:call(M:OpA,M:Data0))),!.
+physical_side_effect_call(M,OpA,Data0):- show_failure(physical_side_effect(M:call(M:OpA,M:Data0))).
 
 
 %% erase_w_attvars( +Data0, ?Ref) is semidet.
