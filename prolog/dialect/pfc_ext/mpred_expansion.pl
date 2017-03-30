@@ -1649,7 +1649,7 @@ was_isa(G,I,C):- fail, \+(current_predicate(_,G)),
 
 
 
-baseKB:prologBuiltin(to_isa_out/2).
+%==>baseKB:prologBuiltin(to_isa_out/2).
 
 %% to_isa_out( ?I, ?C, ?OUT) is nondet.
 %
