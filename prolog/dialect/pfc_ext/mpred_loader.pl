@@ -493,7 +493,7 @@ read_one_term(Term,Vs):- catch(once(( read_term(Term,[double_quotes(string),vari
 %
 read_one_term(Stream,Term,Vs):- catch(once(( read_term(Stream,Term,[double_quotes(string),variable_names(Vs)]))),E,(Term=error(E),dmsg(error(E,read_one_term(Term))))).
 
-% rescan_mpred_stubs:- doall((mpred_isa(F,prologHybrid),arity(F,A),A>0,warnOnError(declare_mpred_local_dynamic(moo,F,A)))).
+% rescan_mpred_stubs:- doall((mpred_prop(F,A,prologHybrid),arity(F,A),A>0,warnOnError(declare_mpred_local_dynamic(moo,F,A)))).
 
 
 
@@ -977,7 +977,7 @@ expanded_already_functor('$si$':'$was_imported_kb_content$').
 expanded_already_functor(was_enabled).
 expanded_already_functor(_:NV):-nonvar(NV),!,expanded_already_functor(NV).
 
-% expanded_already_functor(F):-mpred_isa(F,pl).
+% expanded_already_functor(F):-mpred_prop(F,A,pl).
 
 
 %:- thread_local is_compiling_clause/0.

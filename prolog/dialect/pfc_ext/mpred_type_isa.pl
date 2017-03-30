@@ -217,7 +217,7 @@ never_type_f('Area1000').
 never_type_f(iPlayer2).
 never_type_f(genls).
 never_type_f(must).
-never_type_f(mpred_isa).
+% never_type_f(mpred_isa).
 never_type_f(defnSufficient).
 never_type_f(backchainForbidden).
 

@@ -113,9 +113,9 @@ which_f/1,
 
 add_arg_parts_of_speech/4,
 verb_after_arg/3,
-local_qh_mpred_isa/2,
 
 /*
+local_qh_mpred_isa/2,
 fact_always_true/1,
 create_random_fact/1,
 
@@ -481,12 +481,13 @@ into_plist_arities(_,_,Call,PLIST):- Call=..PLIST. % finally the fallthrue
 %
 % Never Managed Predicate Managed Predicate.
 %
-never_mpred_tcall(mpred_isa).
+
+never_mpred_tcall(mpred_prop).
 never_mpred_tcall(isa).
 never_mpred_tcall(arity).
 
 
-local_qh_mpred_isa(F,C):- call_u(isa(F,C)).
+local_qh_mpred_prop(F,A,C):- call_u(mpred_prop(F,A,C)).
 
 
 % :- setup_mpred_ops.
@@ -521,7 +522,7 @@ if_result(TF,Call):-(TF->Call;true).
 mpred_plist_t(P,[]):-!,t(P).
 mpred_plist_t(P,LIST):-var(P),!,is_list(LIST),CALL=..[t,P|LIST],on_x_debug((CALL)).
 mpred_plist_t(t,[P|LIST]):-!, mpred_plist_t(P,LIST).
-mpred_plist_t(mpred_isa,[C,_A,I]):-!,ground(I:C),local_qh_mpred_isa(C,I).
+%mpred_plist_t(mpred_isa,[C,_A,I]):-!,ground(I:C),local_qh_mpred_isa(C,I).
 mpred_plist_t(isa,[I,C]):-!,t(C,I).
 mpred_plist_t(P,_):-never_mpred_tcall(P),!,fail.
 mpred_plist_t(P,[L|IST]):-is_holds_true(P),!,mpred_plist_t(L,IST).
@@ -550,10 +551,10 @@ mpred_fa_call(F,_,Call):-current_predicate(F,M:_OtherCall),F\==t,M:Call.
 % Managed Predicate Fact Arity.
 %
 mpred_fact_arity(F,A):- call_u(arity(F,A)),
-  once(local_qh_mpred_isa(F,prologHybrid);
-     local_qh_mpred_isa(F,pfcControlled);
-     local_qh_mpred_isa(F,prologPTTP);
-     local_qh_mpred_isa(F,prologKIF)).
+  once(local_qh_mpred_prop(F,A,prologHybrid);
+     local_qh_mpred_prop(F,A,pfcControlled);
+     local_qh_mpred_prop(F,A,prologPTTP);
+     local_qh_mpred_prop(F,A,prologKIF)).
 
 
 %= 	 	 
@@ -571,7 +572,7 @@ prologHybridFact(G):- (var(G)->(mpred_fact_arity(F,A),functor(G,F,A));true),into
 %
 % If Is A Cyc Predicate Arity Ignoreable.
 %
-isCycPredArity_ignoreable(F,A):- ignore(local_qh_mpred_isa(F,cycPred(A))),ignore(arity(F,A)).
+isCycPredArity_ignoreable(F,A):- ignore(local_qh_mpred_prop(F,A,cycPred(A))),ignore(arity(F,A)).
 
 
 %= 	 	 

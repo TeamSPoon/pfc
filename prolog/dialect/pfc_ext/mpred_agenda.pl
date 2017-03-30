@@ -265,7 +265,7 @@ agenda_do_prequery:- loop_check(agenda_rescan_mpred_ops,true),!.
 :- '$hide'(agenda_rescan_mpred_ops/0).
 :- '$hide'(agenda_do_prequery/0).
 %:- rescan_missing_stubs.
-%:- agenda_rescan_mpred_props.
+%:- agenda_rescan_mpred_prop.
 
 
 :- was_export(agenda_slow_op_restart/0).
@@ -538,7 +538,7 @@ rescan_all:- doall_and_fail(rescan_mpred_loaded).
 rescan_all:- doall_and_fail(agenda_rescan_mpred_ops).
 % rescan_all:- doall_and_fail(agenda_rescan_sim_objects).
 rescan_all:- doall_and_fail(agenda_slow_op_restart).
-rescan_all:- doall_and_fail(agenda_rescan_mpred_props).
+rescan_all:- doall_and_fail(agenda_rescan_mpred_prop).
 rescan_all.
 
 

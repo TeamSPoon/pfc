@@ -1110,7 +1110,6 @@ meta_argtypes_guessed(P)==>meta_argtypes(P).
 
 :- kb_shared(argIsa/3).
 
-:- decl_mpred(argIsa/3).
 
 /*
 prologBuiltin(col_arity/2).

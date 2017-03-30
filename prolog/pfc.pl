@@ -93,7 +93,7 @@ base_message(_,_,_):- \+ current_predicate(dumpST/0),!.
 base_message(T,Type,Warn):- dmsg(message_hook(T,Type,Warn)),dumpST,dmsg(message_hook(T,Type,Warn)),!,fail.
 
 :- multifile prolog:message//1, user:message_hook/3.
-user:message_hook(T,Type,Warn):- ( \+ current_prolog_flag(runtime_debug,0)),
+user:message_hook(T,Type,Warn):- fail, ( \+ current_prolog_flag(runtime_debug,0)),
    catch(once(base_message(T,Type,Warn)),_,fail),fail.
 
 % :- use_module(library(logicmoo_utils)).
