@@ -1238,8 +1238,8 @@ is_static_pred(Head):-  predicate_property(Head,meta_predicate),!.
 %
 % Prolog Managed Predicate Provide Storage Oper..
 %
-prolog_mpred_provide_storage_op(Op,G):- G\=isa(_,_), get_functor(G,F),call(call_u,mpred_isa(F,prologDynamic)),!, prolog_op(Op,G).
-prolog_mpred_provide_storage_op(Op,G):- G\=isa(_,_), get_functor(G,F),\+ call(call_u,mpred_isa(F,prologHybrid)),!,current_predicate(_,G), prolog_op(Op,G).
+prolog_mpred_provide_storage_op(Op,G):- G\=isa(_,_), get_functor(G,F,A),call(call_u,mpred_prop(F,A,prologDynamic)),!, prolog_op(Op,G).
+prolog_mpred_provide_storage_op(Op,G):- G\=isa(_,_), get_functor(G,F,A),\+ call(call_u,mpred_prop(F,A,prologHybrid)),!,current_predicate(_,G), prolog_op(Op,G).
 
 %= 	 	 
 

@@ -18,10 +18,18 @@
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_props.pl
 %:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
 :- module(mpred_props,
-          [ add_mpred_prop_gleaned/2,
+          [ 
+
+          assert_arity/2,
+          bad_arity/2,
+          ensure_arity/2,
+          functor_check_univ/3,
+          get_arity/3,
+
+
+          /*
+          add_mpred_prop_gleaned/2,
             add_mpred_prop_gleaned_4/4,
-            assert_arity/2,
-            bad_arity/2,
             bad_pred_relation_name0/2,
             bad_pred_relation_name1/2,
             (decl_mpred)/1,
@@ -31,7 +39,7 @@
             decl_mpred_0/2,
             decl_mpred_2/2,
             decl_mpred_3/3,
-            decl_mpred_4/4,
+            decl_mpred_4/4,*/
 /*
             define_maybe_exact/2,
           %(kb_shared)/1,
@@ -40,6 +48,7 @@
           (kb_shared)/4,
           (kb_shared)/5,
 */
+/*
             decl_mpred_mfa/3,
             decl_mpred_pi/1,
           (decl_mpred_prolog)/1,
@@ -47,9 +56,6 @@
           (decl_mpred_prolog)/3,
           (decl_mpred_prolog)/4,
           (decl_mpred_prolog)/5,
-            ensure_arity/2,
-            functor_check_univ/3,
-            get_arity/3,
             get_mpred_prop/2,
             get_mpred_prop/3,
             glean_pred_props_maybe/1,
@@ -58,13 +64,113 @@
             listprolog/0,
             pred_type_test/2,
             pred_type_test/3,
-            pred_type_test2/2,
-            mpred_props_file/0
+            pred_type_test2/2,*/
+            mpred_prop_file_begin/0
           ]).
 
 :- include('mpred_header.pi').
 
 :- reexport(library(xlisting)).
+mpred_prop_file_begin.
+
+%% get_arity( :TermTerm, ?F, ?A) is semidet.
+%
+% Get Arity.
+%
+get_arity(Term,F,A):- atom(Term),F=Term,!,ensure_arity(F,A).
+get_arity(F/A,F,A):-!,atom(F),ensure_arity(F,A),!,(A>0).
+get_arity(F // A,F,A2):- must(integer(A)),!, atom(F), is(A2 , A+2), ensure_arity(F,A2),!,(A2>0).
+get_arity(F // A,F,A2):- use_module(library(clpfd)),!, atom(F), clpfd:call(#=(A2 , A+2)), ensure_arity(F,A2),!,(A2>0).
+get_arity(M:FA,F,A):-atom(M),!,get_arity(FA,F,A).
+get_arity(FA,F,A):- get_functor(FA,F,A),must(A>0).
+
+% arity_no_bc(F,A):- call_u(arity(F,A)).
+arity_no_bc(F,A):- clause_b(arity(F,A)).
+arity_no_bc(F,A):- clause_b(tCol(F)),!,A=1.
+arity_no_bc(completeExtentAsserted,1).
+arity_no_bc(home,2).
+arity_no_bc(record,2).
+arity_no_bc(F,A):- clause_b(mpred_prop(F,AA,_)),nonvar(AA),A=AA.
+%arity_no_bc(F,A):- current_predicate(F/A)
+% arity_no_bc(F,A):- current_predicate(_:F/A),\+(current_predicate(_:F/AA),AA\=A). =
+
+%% ensure_arity( ?VALUE1, ?VALUE2) is semidet.
+%
+% Ensure Arity.
+%
+ensure_arity(F,A):- one_must(arity_no_bc(F,A),one_must((current_predicate(F/A),
+    (A>0),assert_arity(F,A)),(ground(F:A),(A>0),assert_arity(F,A)))),!.
+
+
+%=
+
+%% assert_arity( ?F, :PRED2A) is semidet.
+%
+% Assert Arity.
+%
+
+assert_arity(F,A):- sanity(\+ ((bad_arity(F,A), trace_or_throw(assert_arity(F,A))))), arity_no_bc(F,A),!.
+assert_arity(F,A):- arity_no_bc(F,AA), A\=AA,dmsg(assert_additional_arity(F,AA->A)),!,ain_fast(arity(F,A)).
+assert_arity(F,A):- ain_fast(arity(F,A)),!.
+
+bad_arity(F,_):- \+ atom(F).
+bad_arity(_,A):- \+ integer(A).
+bad_arity('[|]',_).
+bad_arity(typeProps,0).
+bad_arity(argIsa,2).
+bad_arity(isEach,_).
+bad_arity(_,0).
+bad_arity(prologDynamic,2).
+bad_arity(F,A):- \+ good_pred_relation_name(F,A).
+
+
+%=
+
+%% good_pred_relation_name( ?F, ?A) is semidet.
+%
+% Good Predicate Relation Name.
+%
+good_pred_relation_name(F,A):- \+ bad_pred_relation_name0(F,A).
+
+
+%=
+
+%% bad_pred_relation_name0( ?V, ?VALUE2) is semidet.
+%
+% Bad Predicate Relation Name Primary Helper.
+%
+bad_pred_relation_name0(V,_):- \+ atom(V),!.
+bad_pred_relation_name0('[]',_).
+bad_pred_relation_name0('',_).
+bad_pred_relation_name0('!',_).
+bad_pred_relation_name0('{}',_).
+bad_pred_relation_name0(',',_).
+bad_pred_relation_name0('[|]',_).
+
+%=
+
+%% bad_pred_relation_name1( ?X, ?Y) is semidet.
+%
+% Bad Predicate Relation Name Secondary Helper.
+%
+bad_pred_relation_name1(X,Y):-bad_pred_relation_name0(X,Y).
+bad_pred_relation_name1(F,A):-must_det((atom_codes(F,[C|_]),to_upper(C,U))),!, U == C, A>1.
+bad_pred_relation_name1(F,A):-arity_no_bc(F,AO), A \= AO.
+
+% :-after_boot(writeq("Seen Mpred_props at start!\n")),!.
+
+%=
+
+%% functor_check_univ( ?G1, ?F, ?List) is semidet.
+%
+% Functor Check Univ.
+%
+functor_check_univ(M:G1,F,List):-atom(M),member(M,[dbase,user]),!,functor_check_univ(G1,F,List),!.
+functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_det(G1 \= _/_),G1=..[F|List],!.
+
+:- fixup_exports.
+
+end_of_file.
 
 %:- endif.
 
@@ -159,7 +265,7 @@ decl_mpred_mfa(M,FF,A):-
    get_functor(FF,F,_),
    must_det_l((
      ignore((var(M),source_context_module(M),dmsg(decl_mpred_mfa(M,F,A)))),
-     ignore((nonvar(M),asserta_if_new(mpred_isa(F,predicateConventionMt(M))))),
+     ignore((nonvar(M),asserta_if_new(mpred_prop(F,A,predicateConventionMt(M))))),
      assert_arity(F,A),
      must_det(nonvar(M)),
     nop(dmsg(('@'((
@@ -280,7 +386,7 @@ define_maybe_prolog(M,PI,F,A):-
       ain(~prologHybrid(F)),
       ain(prologBuiltin(F)),
       (\+ is_static_predicate(M:PI)->ain(prologDynamic(F));true),
-      ain(mpred_isa(PI,predCanHaveSingletons)),!.
+      ain(mpred_prop(F,A,predCanHaveSingletons)),!.
 
 
 :- op(1120,fx,(decl_mpred_prolog)).
@@ -290,7 +396,7 @@ define_maybe_prolog(M,PI,F,A):-
 %:- lock_predicate(prologHybrid(_,_)).
 
 % ========================================
-% mpred_props database
+% mpred_prop database
 % ========================================
 
 
@@ -308,7 +414,7 @@ get_mpred_prop(F,_A,P):-get_mpred_prop(F,P).
 %
 % Get Managed Predicate Prop.
 %
-get_mpred_prop(F,P):- mreq(mpred_isa(F,P)).
+get_mpred_prop(F,P):- mreq(mpred_prop(F,A,P)).
 
 :- was_export(listprolog/0).
 
@@ -318,97 +424,11 @@ get_mpred_prop(F,P):- mreq(mpred_isa(F,P)).
 %
 % Listprolog.
 %
-listprolog:-listing(mpred_isa(_,prologDynamic)).
+listprolog:-listing(mpred_prop(_,_,prologDynamic)).
 
 :- use_module(library(clpfd),[ (#=) /2]).
 
 %=
-
-%% get_arity( :TermTerm, ?F, ?A) is semidet.
-%
-% Get Arity.
-%
-get_arity(Term,F,A):- atom(Term),F=Term,!,ensure_arity(F,A).
-get_arity(F/A,F,A):-!,atom(F),ensure_arity(F,A),!,(A>0).
-get_arity(F // A,F,A2):- must(integer(A)),!, atom(F), is(A2 , A+2), ensure_arity(F,A2),!,(A2>0).
-get_arity(F // A,F,A2):- use_module(library(clpfd)),!, atom(F), clpfd:call(#=(A2 , A+2)), ensure_arity(F,A2),!,(A2>0).
-get_arity(M:FA,F,A):-atom(M),!,get_arity(FA,F,A).
-get_arity(FA,F,A):- get_functor(FA,F,A),must(A>0).
-
-% arity_no_bc(F,A):- call_u(arity(F,A)).
-arity_no_bc(F,A):- clause_b(arity(F,A)).
-arity_no_bc(F,A):- clause_b(tCol(F)),!,A=1.
-arity_no_bc(completeExtentAsserted,1).
-arity_no_bc(home,2).
-arity_no_bc(record,2).
-arity_no_bc(F,A):- clause_b(mpred_prop(F,AA,_)),nonvar(AA),A=AA.
-%arity_no_bc(F,A):- current_predicate(F/A)
-% arity_no_bc(F,A):- current_predicate(_:F/A),\+(current_predicate(_:F/AA),AA\=A). =
-
-%% ensure_arity( ?VALUE1, ?VALUE2) is semidet.
-%
-% Ensure Arity.
-%
-ensure_arity(F,A):- one_must(arity_no_bc(F,A),one_must((current_predicate(F/A),
-    (A>0),assert_arity(F,A)),(ground(F:A),(A>0),assert_arity(F,A)))),!.
-
-
-%=
-
-%% assert_arity( ?F, :PRED2A) is semidet.
-%
-% Assert Arity.
-%
-
-assert_arity(F,A):- sanity(\+ ((bad_arity(F,A), trace_or_throw(assert_arity(F,A))))), arity_no_bc(F,A),!.
-assert_arity(F,A):- arity_no_bc(F,AA), A\=AA,dmsg(assert_additional_arity(F,AA->A)),!,ain_fast(arity(F,A)).
-assert_arity(F,A):- ain_fast(arity(F,A)),!.
-
-bad_arity(F,_):- \+ atom(F).
-bad_arity(_,A):- \+ integer(A).
-bad_arity('[|]',_).
-bad_arity(typeProps,0).
-bad_arity(argIsa,2).
-bad_arity(isEach,_).
-bad_arity(_,0).
-bad_arity(prologDynamic,2).
-bad_arity(F,A):- \+ good_pred_relation_name(F,A).
-
-
-%=
-
-%% good_pred_relation_name( ?F, ?A) is semidet.
-%
-% Good Predicate Relation Name.
-%
-good_pred_relation_name(F,A):- \+ bad_pred_relation_name0(F,A).
-
-
-%=
-
-%% bad_pred_relation_name0( ?V, ?VALUE2) is semidet.
-%
-% Bad Predicate Relation Name Primary Helper.
-%
-bad_pred_relation_name0(V,_):- \+ atom(V),!.
-bad_pred_relation_name0('[]',_).
-bad_pred_relation_name0('',_).
-bad_pred_relation_name0('!',_).
-bad_pred_relation_name0('{}',_).
-bad_pred_relation_name0(',',_).
-bad_pred_relation_name0('[|]',_).
-
-%=
-
-%% bad_pred_relation_name1( ?X, ?Y) is semidet.
-%
-% Bad Predicate Relation Name Secondary Helper.
-%
-bad_pred_relation_name1(X,Y):-bad_pred_relation_name0(X,Y).
-bad_pred_relation_name1(F,A):-must_det((atom_codes(F,[C|_]),to_upper(C,U))),!, U == C, A>1.
-bad_pred_relation_name1(F,A):-arity_no_bc(F,AO), A \= AO.
-
-% :-after_boot(writeq("Seen Mpred_props at start!\n")),!.
 
 
 % ========================================
@@ -494,7 +514,7 @@ decl_mpred_2(_,meta_argtypes(FARGS)):- functor(FARGS,_,A),arg(A,FARGS,Arg),var(A
 decl_mpred_2(F,cycPlus2(A)):- ensure_universal_stub_plus_mt_why(F,A).
 
 decl_mpred_2(F,A):-once(baseKB:mpred_provide_write_attributes(F,A)).
-decl_mpred_2(F,Prop):-ain_expanded(mpred_isa(F,Prop)).
+decl_mpred_2(F,Prop):-ain_expanded(mpred_prop(F,A,Prop)).
 
 
 %=
@@ -518,14 +538,6 @@ decl_mpred_4(_CM,M,PI,FA):- decl_mpred_3(M,PI,FA).
 
 
 
-%=
-
-%% functor_check_univ( ?G1, ?F, ?List) is semidet.
-%
-% Functor Check Univ.
-%
-functor_check_univ(M:G1,F,List):-atom(M),member(M,[dbase,user]),!,functor_check_univ(G1,F,List),!.
-functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_det(G1 \= _/_),G1=..[F|List],!.
 
 :- was_export(glean_pred_props_maybe/1).
 
@@ -572,7 +584,7 @@ add_mpred_prop_gleaned_4(Arg1,_F,_,FRGS):-decl_mpred(Arg1,FRGS).
 
 % user:term_expansion(G,_):- current_predicate(logicmoo_bugger_loaded/0),\+ t_l:disable_px, not(t_l:into_form_code),quietly((once(glean_pred_props_maybe(G)),fail)).
 
-mpred_props_file.
+mpred_prop_file.
 
 
 
@@ -734,17 +746,17 @@ maybe_define_if_not_static(M,PI):-
 %:- lock_predicate(prologHybrid(_,_)).
 
 % ========================================
-% mpred_props database
+% mpred_prop database
 % ========================================
 
 /*
 
 
 
-% mpred_isa(F,prologDynamic):- \+ (mpred_isa(F,prologHybrid)),(F=ttRelationType;(current_predicate(F/1);not(t(F,tCol)))).
-mpred_isa(G,predProxyAssert(ain)):- atom(G),functorIsMacro(G).
-mpred_isa(G,predProxyQuery(ireq)):- atom(G),functorIsMacro(G).
-mpred_isa(G,predProxyRetract(del)):- atom(G),functorIsMacro(G).
+% mpred_prop(F,A,prologDynamic):- \+ (mpred_prop(F,A,prologHybrid)),(F=ttRelationType;(current_predicate(F/1);not(t(F,tCol)))).
+mpred_prop(F,A,predProxyAssert(ain)):- atom(G),functorIsMacro(G).
+mpred_prop(F,A,predProxyQuery(ireq)):- atom(G),functorIsMacro(G).
+mpred_prop(F,A,predProxyRetract(del)):- atom(G),functorIsMacro(G).
 */
 
 

@@ -403,7 +403,7 @@ functor_declares_instance_0(P,P):-
   arg(_,s(tPred,prologMultiValued, prologOrdered,prologNegByFailure,prologHybrid,prologPTTP,prologSideEffects,
        predIsFlag,prologBuiltin,prologKIF,prologDynamic,prologListValued,prologSingleValued),P).
 functor_declares_instance_0(P,P):- arg(_,s(predCanHaveSingletons,functorIsMacro),P).
-functor_declares_instance_0(P,P):- arg(_,s(mpred_isa),P),!,fail.
+% functor_declares_instance_0(P,P):- arg(_,s(mpred_isa),P),!,fail.
 functor_declares_instance_0(col_as_isa,col_as_isa).
 
 functor_declares_instance_0(F,F):- between(2,5,A),arity_no_bc(F,A),!,fail.
@@ -1110,8 +1110,8 @@ db_expand_chain(_,('nesc'(P)),P) :- !.
 % covered fully_expand_head(_,Sent,SentO):- as_is_term(Sent),!,SentO=Sent,!.
 
 fully_expand_head(Why,Before,After):-
-  quietly(subst(Before,mpred_isa,isa,Before1)),
-  into_mpred_form(Before1,Before2),
+  % quietly(subst(Before,mpred_isa,isa,Before1)),
+  into_mpred_form(Before,Before2),
   must(try_expand_head(Why,Before2,After1)),
   must(post_expansion(Why,After1,After)).
 
@@ -1362,7 +1362,7 @@ arity_zor(D,ZOR) :- atom(D),D\==isa, \+ (arity_no_bc(D,N),!,N>ZOR).
 % Map False.
 %
 map_f(M:F,M:FO):-atom(M),map_f(F,FO).
-map_f(mpred_isa,isa).
+% map_f(mpred_isa,isa).
 % map_f(props,isa).
 map_f(F,F):-!.
 
@@ -2038,7 +2038,6 @@ exact_args_f(dmsg).
 exact_args_f(call_u).
 exact_args_f(say).
 exact_args_f(call).
-exact_args_f(mpred_prop).
 exact_args_f(assertz_if_new).
 exact_args_f(asserts_eq_quitely).
 exact_args_f(asserted).

@@ -2536,9 +2536,9 @@ mpred_mark_fa_as(_Sup,_P,t,_,_):- !.
 mpred_mark_fa_as(_Sup,_P,argIsa,N,_):- !,must(N=3).
 mpred_mark_fa_as(_Sup,_P,arity,N,_):- !,must(N=2).
 mpred_mark_fa_as(_Sup,_P,mpred_prop,N,_):- !,must(N=3).
-mpred_mark_fa_as(_Sup,_P,mpred_isa,N,_):- must(N=2).
+%mpred_mark_fa_as(_Sup,_P,mpred_isa,N,_):- must(N=2).
 mpred_mark_fa_as(_Sup,_P,'[|]',N,_):- dtrace,must(N=2).
-mpred_mark_fa_as(_Sup,_P,_:mpred_isa,N,_):- must(N=2).
+mpred_mark_fa_as(_Sup,_P,_:mpred_prop,N,_):- must(N=3).
 mpred_mark_fa_as(Sup, _P,F,A,Type):- really_mpred_mark(Sup,Type,F,A),!.
 
 % i hope i am not exagerating but anniepoo used to enter this yearly contest for whom could build graphical assets the most pretty and complex the quickest in secondlife.. (now it makes sense she used a 3d mouse)  she won so much, they and she had to ban herself becasue she always won hands down.. so with this agility to create the physical aspects of a wolrd veery easily .. we realized we could make a fun leanring inpiring world for AIs .. however 

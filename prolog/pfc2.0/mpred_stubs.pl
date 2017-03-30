@@ -15,7 +15,7 @@
 :- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
 :- module(mpred_stubs_file_module,
           [ 
-agenda_rescan_mpred_props/0,
+agenda_rescan_mpred_prop/0,
 assert_mpred_t/1,
 call_for_literal/3,
 call_for_literal_db/3,
@@ -35,14 +35,14 @@ create_stub_body/3,
 cwdl/2,
 erase_mpred_storage_op/1,
 ensure_universal_stub_plus_mt_why/2,
-first_mpred_props/1,
+first_mpred_prop/1,
 get_cc/2,
 hybrid_tPredStubImpl/1,
 is_call_op/1,
 is_mpred_change_op/1,
 is_mpred_op/1,
 is_non_call_op/1,
-is_proc/1,
+is_proc_only/1,
 is_same_clauses/2,
 is_same_clauses/3,
 is_tCol/1,
@@ -98,7 +98,7 @@ registerCycPredMtWhy(0),
 call_provided_mpred_storage_op(*,0,*).
 
 :- module_transparent
-agenda_rescan_mpred_props/0,
+agenda_rescan_mpred_prop/0,
 assert_mpred_t/1,
 call_for_literal/3,
 call_for_literal_db/3,
@@ -117,14 +117,14 @@ create_stub_body/2,
 create_stub_body/3,
 cwdl/2,
 erase_mpred_storage_op/1,
-first_mpred_props/1,
+first_mpred_prop/1,
 get_cc/2,
 hybrid_tPredStubImpl/1,
 is_call_op/1,
 is_mpred_change_op/1,
 is_mpred_op/1,
 is_non_call_op/1,
-is_proc/1,
+is_proc_only/1,
 is_same_clauses/2,
 is_same_clauses/3,
 is_tCol/1,
@@ -247,11 +247,11 @@ db_redir_op_if_needed(Op,_C0,Prop,ARGS):- database_modify_units(Op,Unit).
 
 
 % :- meta_predicate baseKB:decl_database_hook(?,0).
-%OLD baseKB:decl_database_hook(change(assert,_),local_q_mpred_isa(F,StubType)):- maybe_storage_stub(F,StubType).
+%OLD baseKB:decl_database_hook(change(assert,_),local_q_mpred_isa(F,A,StubType)):- maybe_storage_stub(F,StubType).
 
 %OLD baseKB:decl_database_hook(change(assert,_),isa(F,StubType)):- maybe_storage_stub(F,StubType).
 
-%OLD baseKB:decl_database_hook(change(assert,_),arity_no_bc(F,StubType)):-  hybrid_tPredStubImpl(StubType),local_q_mpred_isa(F,StubType),must(ensure_universal_stub(F/A)).
+%OLD baseKB:decl_database_hook(change(assert,_),arity_no_bc(F,StubType)):-  hybrid_tPredStubImpl(StubType),local_q_mpred_isa(F,A,StubType),must(ensure_universal_stub(F/A)).
 
 
 
@@ -359,7 +359,7 @@ change(assert,z) asserts last if no =@=
 change( retract,one)  using =
 change( retract,all)  using =
 
-good_for_hybrid(H,F):- not(local_q_mpred_isa(F,_ANY_)),predicate_property(H,number_of_clauses(0)),predicate_property(H,dynamic).
+good_for_hybrid(H,F):- not(local_q_mpred_isa(F,A,_ANY_)),predicate_property(H,number_of_clauses(0)),predicate_property(H,dynamic).
 ensure_exists(Head):-get_pifunctor3(Head,PHead,F),get_functor(Head,F,A),(predicate_property(PHead,dynamic)->true;(predicate_property(PHead,_)->dmsg(warn(static_pred,F/A));dynamic(F/A))).
 
 */
@@ -375,18 +375,18 @@ ensure_exists(Head):-get_pifunctor3(Head,PHead,F),get_functor(Head,F,A),(predica
 %
 is_tCol(V):-is_ftVar(V),!,fail.
 is_tCol(tCol).
-is_tCol(F):- local_q_mpred_isa(F,tCol);a(tCol,F);a(F,_).
+is_tCol(F):- local_q_mpred_isa(F,1,tCol);a(tCol,F);a(F,_).
 
 
-local_q_mpred_isa(F,C):- call_u(isa(F,C)).
+local_q_mpred_isa(F,A,C):- call_u(mpred_prop(F,A,C)).
 %= 	 	 
 
-%% is_proc( ?V) is semidet.
+%% is_proc_only( ?V) is semidet.
 %
 % If Is A Proc.
 %
-is_proc(V):-is_ftVar(V),!,fail.
-is_proc(F):- functor(P,F,1),predicate_property(P,_),must(not(local_q_mpred_isa(F,tCol))).
+is_proc_only(V):-is_ftVar(V),!,fail.
+is_proc_only(F):- functor(P,F,1),predicate_property(P,_), \+ tCol(F).
 
 % -- CODEBLOCK
 
@@ -515,13 +515,13 @@ call_wdmsg(P,DB):- get_functor(DB,F,A), call_wdmsg(P,DB,F,A).
 % Call Wdmsg.
 %
 call_wdmsg(P,DB,t,_A):-!, append_term(P,DB,CALL),dmsg((CALL)),call_u(CALL).
-call_wdmsg(P,MP,F,A):- local_q_mpred_isa(F,prologHybrid),must(A>1),into_functor_form(t,MP,DB),!, append_term(P,DB,CALL),dmsg(info(CALL)),!,call_u(CALL).
-call_wdmsg(P,MP,F,_A):-  
-  (\+ local_q_mpred_isa(F,prologDynamic)), 
-  (\+ local_q_mpred_isa(F,prologBuiltin)), 
+call_wdmsg(P,MP,F,A):- local_q_mpred_isa(F,A,prologHybrid),must(A>1),into_functor_form(t,MP,DB),!, append_term(P,DB,CALL),dmsg(info(CALL)),!,call_u(CALL).
+call_wdmsg(P,MP,F,A):-  
+  (\+ local_q_mpred_isa(F,A,prologDynamic)), 
+  (\+ local_q_mpred_isa(F,A,prologBuiltin)), 
   /* functor(FA,F,A), kb_shared(FA), */ into_functor_form(t,MP,DB),!, 
   append_term(P,DB,CALL),dmsg(info(CALL)),!,call_u(CALL).
-call_wdmsg(P,DB,F,_):- append_term(P,DB,CALL),dmsg(info(CALL)),must(local_q_mpred_isa(F,prologDynamic);local_q_mpred_isa(F,prologBuiltin)),!,call_u(CALL).
+call_wdmsg(P,DB,F,A):- append_term(P,DB,CALL),dmsg(info(CALL)),must(local_q_mpred_isa(F,A,prologDynamic);local_q_mpred_isa(F,A,prologBuiltin)),!,call_u(CALL).
 %call_wdmsg(P,DB,S,_):-  dtrace((append_term(P,DB,CALL),dmsg((CALL)),call_u(CALL))).
 
 
@@ -529,7 +529,7 @@ call_wdmsg(P,DB,F,_):- append_term(P,DB,CALL),dmsg(info(CALL)),must(local_q_mpre
 % INSTALL MISSING STUBS
 % ================================================================================
 
-%:-agenda_rescan_mpred_props.
+%:-agenda_rescan_mpred_prop.
 
 % pass 2
 
@@ -541,37 +541,37 @@ call_wdmsg(P,DB,F,_):- append_term(P,DB,CALL),dmsg(info(CALL)),must(local_q_mpre
 %
 no_rescans.
 
-:- was_export(agenda_rescan_mpred_props/0).
+:- was_export(agenda_rescan_mpred_prop/0).
 
 
 %= 	 	 
 
-%% agenda_rescan_mpred_props is semidet.
+%% agenda_rescan_mpred_prop is semidet.
 %
 % Agenda Rescan Managed Predicate Props.
 %
-agenda_rescan_mpred_props:- loop_check(rescan_mpred_props_ilc,true).
+agenda_rescan_mpred_prop:- loop_check(rescan_mpred_prop_ilc,true).
 
 %= 
 :- use_module(prolog_statistics:library(statistics)).
 % :- reconsult(library(statistics)).
-%% rescan_mpred_props_ilc is semidet.
+%% rescan_mpred_prop_ilc is semidet.
 %
 % Rescan Managed Predicate Props Inside Of Loop Checking.
 %
-rescan_mpred_props_ilc:-no_rescans,!.
-rescan_mpred_props_ilc:-rescan_duplicated_facts(user,local_q_mpred_isa(_,_)),fail.
-rescan_mpred_props_ilc:- prolog_statistics:time(forall(find_and_call(mpred_prop_ordered(Pred,Prop)),ain(local_q_mpred_isa(Pred,Prop)))),fail.
-rescan_mpred_props_ilc.
+rescan_mpred_prop_ilc:-no_rescans,!.
+rescan_mpred_prop_ilc:-rescan_duplicated_facts(user,local_q_mpred_isa(_,_)),fail.
+rescan_mpred_prop_ilc:- prolog_statistics:time(forall(find_and_call(mpred_prop_ordered(Pred,Prop)),ain(local_q_mpred_isa(Pred,Prop)))),fail.
+rescan_mpred_prop_ilc.
 
 
 %= 	 	 
 
-%% first_mpred_props( :TermARG1) is semidet.
+%% first_mpred_prop( :TermARG1) is semidet.
 %
 % First Managed Predicate Props.
 %
-first_mpred_props(meta_argtypes(_)).
+first_mpred_prop(meta_argtypes(_)).
 
 
 %= 	 	 
@@ -580,8 +580,8 @@ first_mpred_props(meta_argtypes(_)).
 %
 % Managed Predicate Prop Ordered.
 %
-mpred_prop_ordered(Pred,Prop):-first_mpred_props(Prop),local_q_mpred_isa(Pred,Prop),\+ (local_q_mpred_isa(Pred,prologDynamic)).
-mpred_prop_ordered(Pred,Prop):-local_q_mpred_isa(Pred,Prop),not(first_mpred_props(Prop)),not(local_q_mpred_isa(Pred,prologDynamic)).
+mpred_prop_ordered(Pred,Prop):-first_mpred_prop(Prop),local_q_mpred_isa(Pred,_,Prop),\+ (local_q_mpred_isa(Pred,_,prologDynamic)).
+mpred_prop_ordered(Pred,Prop):-local_q_mpred_isa(Pred,_,Prop),not(first_mpred_prop(Prop)),not(local_q_mpred_isa(Pred,_,prologDynamic)).
 
 
 % ================================================================================
@@ -984,8 +984,8 @@ body_call_cyckb(HEAD_T):- if_defined(el_holds_DISABLED_KB), HEAD_T =.. [t|PLIST]
 body_req(HEAD,HEAD_T):- (hook_body_req(HEAD,HEAD_T)).
 
 :- was_export(body_req_normal/4).
-%hook_body_req(HEAD,HEAD_T):- local_q_mpred_isa(F,prologPTTP),!,dmsg(warn(hook_body_req(HEAD,HEAD_T))),fail.
-%hook_body_req(HEAD,HEAD_T):- local_q_mpred_isa(F,prologDynamic),!,dmsg(warn(hook_body_req(HEAD,HEAD_T))),fail.
+%hook_body_req(HEAD,HEAD_T):- local_q_mpred_isa(F,A,prologPTTP),!,dmsg(warn(hook_body_req(HEAD,HEAD_T))),fail.
+%hook_body_req(HEAD,HEAD_T):- local_q_mpred_isa(F,A,prologDynamic),!,dmsg(warn(hook_body_req(HEAD,HEAD_T))),fail.
 hook_body_req(_,_,isa(I,C),_):- !, body_req_isa(I,C).
 hook_body_req(_,_,_,t(C,I)):- !, body_req_isa(I,C).
 hook_body_req(_,_,_,t(C,I)):- !, body_req_isa(I,C).
@@ -999,10 +999,10 @@ body_req_normal(HEAD,HEAD_T):- not(ground(HEAD)),!,no_repeats(HEAD_T,body_req_1(
 body_req_normal(HEAD,HEAD_T):- body_req_1(HEAD,HEAD_T),!. 
 
 :- was_export(body_req_1/4).
-body_req_1(HEAD,HEAD_T):- get_functor(HEAD,F), local_q_mpred_isa(F,lc_tcall),!, lc_tcall(body_req_2(HEAD,HEAD_T)).
+body_req_1(HEAD,HEAD_T):- get_functor(HEAD,F), local_q_mpred_isa(F,A,lc_tcall),!, lc_tcall(body_req_2(HEAD,HEAD_T)).
 body_req_1(HEAD,HEAD_T):- body_req_2(HEAD,HEAD_T).
 
-body_req_2(HEAD,  _):-   get_functor(HEAD,F), local_q_mpred_isa(F,external(Module)),!,call(Module:HEAD).
+body_req_2(HEAD,  _):-   get_functor(HEAD,F), local_q_mpred_isa(F,A,external(Module)),!,call(Module:HEAD).
 body_req_2(HEAD,HEAD_T):- body_req_with_rules(HEAD,HEAD_T).
 
 body_req_with_rules(HEAD,HEAD_T):-body_req_no_rules(HEAD,HEAD_T).
@@ -1015,7 +1015,7 @@ body_req_no_rules(F,_,_,HEAD_T):- body_req_plus_cyc(F,_,_,HEAD_T).
 body_req_only_rules(HEAD, _):-  ruleBackward(HEAD,BODY),call_mpred_body(HEAD,BODY).
 body_req_only_rules(_,_,_,t(F,Obj,LValue)):-  choose_val(F,Obj,LValue).
 
-body_req_plus_cyc(F,_,_,HEAD_T):-  local_q_mpred_isa(F,cycPlus2(_)),t_l:useOnlyExternalDBs,!,locally(baseKB:use_cyc_database,body_call_cyckb(HEAD_T)).
+body_req_plus_cyc(F,_,_,HEAD_T):-  local_q_mpred_isa(F,A,cycPlus2(_)),t_l:useOnlyExternalDBs,!,locally(baseKB:use_cyc_database,body_call_cyckb(HEAD_T)).
 
 */
 
@@ -1079,8 +1079,8 @@ registerCycPredMtWhy_3(_CM,M,PI,F/A2):-
 %
 registerCycPredMtWhy_3(M,_PI,F/A2):- 
   ignore((A2==3,assertz_if_new(is_never_type(F)))),
-  A is A2 - 2, decl_mpred_mfa(M,F,A),
-  decl_mpred(F,cycPlus2(A2)),decl_mpred(F,cycPred(A)).
+  A is A2 - 2, % decl_mpred_mfa(M,F,A),
+  ain(mpred_prop(F,A,cycPlus2)).
 
 
 
@@ -1096,21 +1096,13 @@ registerCycPredMtWhy(P):-!,baseKB:with_pi(P,baseKB:registerCycPredMtWhy_3).
 
 %= 	 	 
 
-%% ensure_universal_stub_plus_HIDE( ?F, ?AMinus2) is semidet.
+%% ensure_universal_stub_plus( ?F, ?AMinus2) is semidet.
 %
 % Ensure Universal Stub Plus Presently Unused.
 %
-ensure_universal_stub_plus_HIDE(F,AMinus2):-
-  functor(FAMinus2,F,AMinus2), kb_shared(FAMinus2).
-
-
-%= 	 	 
-
-%% ensure_universal_stub_plus( ?F, ?AMinus2) is semidet.
-%
-% Ensure Universal Stub Plus.
-%
-ensure_universal_stub_plus(F,AMinus2):- /*decl_mpred(F,arity(F,AMinus2)), */ decl_mpred_mfa(user,F,AMinus2).
+ensure_universal_stub_plus(F,AMinus2):-
+  kb_shared(F/AMinus2).
+% ensure_universal_stub_plus(F,AMinus2):- /*decl_mpred(F,arity(F,AMinus2)), */ decl_mpred_mfa(user,F,AMinus2).
    
 
 %= 	 	 
