@@ -248,7 +248,7 @@ push_current_choice/1,
 :- module_transparent lookup_u/1,lookup_u/2,mpred_unfwc_check_triggers0/1,mpred_unfwc1/1,mpred_why1/1,mpred_blast/1.
 
 
-system:must_notrace_pfc(G):- must(quietly(G)).
+must_notrace_pfc(G):- must((G)).
 
 /*
 
@@ -1832,7 +1832,7 @@ mpred_define_bc_rule(Head,_ZBody,Parent_rule):-
   fail.
 
 mpred_define_bc_rule(Head,Body,Parent_rule):-
-  must_notrace_pfc(get_source_ref1(U)),
+  must_notrace_pfc(get_source_ref1(U)),!,
   copy_term(Parent_rule,Parent_ruleCopy),
   build_rhs(U,Head,Rhs),
   assertz_mu((Head:-mpred_bc_only(Head))),
@@ -2393,7 +2393,7 @@ mpred_neg_connective('\\+').
 % Process Rule.
 %
 process_rule(Lhs,Rhs,Parent_rule):-
-  must_notrace_pfc(get_source_ref1(U)),
+  must_notrace_pfc(get_source_ref1(U)),!,
   copy_term(Parent_rule,Parent_ruleCopy),
   build_rhs(U,Rhs,Rhs2),
   foreachl_do(mpred_nf(Lhs,Lhs2),

@@ -717,30 +717,21 @@ call_s2(G0):-
        call(CALL),
      ('$set_source_module'(S),'$set_typein_module'(M))))).
 
-/*
-attvar_op(Op,Data):-
-   deserialize_attvars(Data,Data0),
-   attvar_op(Op,Data0).
-*/
+
 :- module_transparent(attvar_op/2).
+
+% % attvar_op(Op,Data):- deserialize_attvars(Data,Data0), attvar_op(Op,Data0).
 attvar_op(Op,MData):-
-   quietly((strip_module(Op,_,OpA), sanity((atom(OpA))),
+ must_det_l((
+   strip_module(Op,_,OpA), sanity(atom(OpA)),
    fix_mp(clause(assert,OpA),MData,M,Data),
    add_side_effect(OpA,M:Data),
-   (current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0))),
-   (==(Data,Data0)->
-     physical_side_effect_call(M,OpA,Data0);
-
-   ((atom_concat(assert,_,OpA) -> physical_side_effect_call(M,OpA,Data0));
-   ((
-    % nop((expand_to_hb(Data0,H,B),split_attrs(B,BA,G))),
-    dtrace, 
-    physical_side_effect_call(M,OpA,Data0)
-    )))).
+   (current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0),!,
+   physical_side_effect_call(M,OpA,Data0))),!.
 
 physical_side_effect_call(M,OpA,Data0):- is_side_effect_disabled,!,mpred_warn('no_physical_side_effects ~p',M:call(M:OpA,M:Data0)).
 % @TODO BROKEN phys ical_side_effect_call(M,assertz_i,Data0):- must((compile_aux_clauses(M:Data0))),!.
-physical_side_effect_call(M,OpA,Data0):- show_failure(physical_side_effect(M:call(M:OpA,M:Data0))).
+physical_side_effect_call(M,OpA,Data0):- show_failure(physical_side_effect(M:call(M:OpA,M:Data0))),!.
 
 
 %% erase_w_attvars( +Data0, ?Ref) is semidet.
@@ -756,7 +747,7 @@ erase_w_attvars(Data0,Ref):- physical_side_effect(erase(Ref)),add_side_effect(er
 % Physical Side Effect.
 %
 physical_side_effect(PSE):- is_side_effect_disabled,!,mpred_warn('no_physical_side_effects ~p',PSE).
-physical_side_effect(PSE):- PSE.
+physical_side_effect(PSE):- call(PSE).
 
 %% mpred_nochaining( +Goal) is semidet.
 %
