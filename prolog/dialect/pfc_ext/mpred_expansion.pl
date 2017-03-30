@@ -1306,7 +1306,7 @@ db_expand_props(Op,ClassTemplate,(tCol(PropsIsa),isa(Type,PropsIsa),OUT)):-
    expand_props(relationMostInstance,Op,props(Type,Props),OUT),!.
 
 % tRegion_inst_template(X, tLivingRoom,.....).
-db_expand_props(Op,ClassTemplate,(isa(TypePropsIsa,Type),(isa(NewInst,Type)=>OUT))):- 
+db_expand_props(Op,ClassTemplate,(isa(TypePropsIsa,Type),ONEPROP)):- isa_one_prop(NewInst,Type,OUT,ONEPROP),
   ClassTemplate=..[FunctorTypePropsIsa,NewInst,Type|Props],
   instTypePropsToType(FunctorTypePropsIsa,TypePropsIsa),
   arity_zor(FunctorTypePropsIsa,2),
@@ -1316,7 +1316,7 @@ db_expand_props(Op,ClassTemplate,(isa(TypePropsIsa,Type),(isa(NewInst,Type)=>OUT
 /*
 
 % tRegion_template(tLivingRoom,.....).
-db_expand_props(Op,typeProps(C,Props),(isa(I,C)=>OOUT)):- (is_ftNonvar(C);is_ftNonvar(Props)), expand_props(Prefix,Op,props(I,Props),OUT),dtrace,list_to_conjuncts(OUT,OUTC),conjuncts_to_list(OUTC,OUTL),
+db_expand_props(Op,typeProps(C,Props),(isa(I,C)==>mdefault(OOUT))):- (is_ftNonvar(C);is_ftNonvar(Props)), expand_props(Prefix,Op,props(I,Props),OUT),dtrace,list_to_conjuncts(OUT,OUTC),conjuncts_to_list(OUTC,OUTL),
    ISEACH=..[isEach|OUTL],
   db_expand_0(Op,mdefault(ISEACH),OOUT).
 
@@ -1343,6 +1343,7 @@ db_expand_0(Op,IN,OUT):-
    must_maplist(db_expand_0(Op),Args,ArgsO),
    map_f(F,FO),OUT=..[FO|ArgsO].
    
+isa_one_prop(NewInst,Type,OUT,ONEPROP):- ONEPROP = (isa(NewInst,Type)==>OUT).
 
 %= 	 	 
 
@@ -1526,12 +1527,14 @@ expand_props(Op,Term,OUT):-expand_props(_,Op,Term,OUT).
 %
 expand_props(_Prefix,_,Sent,OUT):- t_l:no_db_expand_props, (not_ftCompound(Sent)),!,OUT=Sent.
 %expand_props(Prefix,Op,Term,OUT):- stack_check,(is_ftVar(OpeR);is_ftVar(Term)),!,trace_or_throw(var_expand_units(OpeR,Term,OUT)).
-expand_props(Prefix,Op,Sent,OUT):-Sent=..[And|C12],is_sentence_functor(And),!,maplist(expand_props(Prefix,Op),C12,O12),OUT=..[And|O12].
+expand_props(Prefix,Op,Sent,OUT):-  Sent=..[And|C12],is_sentence_functor(And),!,maplist(expand_props(Prefix,Op),C12,O12),OUT=..[And|O12].
 expand_props(_Prefix,_ ,props(Obj,Open),props(Obj,Open)):- is_ftVar(Open),!. % ,trace_or_throw(expand_props(Prefix,Op,props(Obj,Open))->OUT).
 % expand_props(_Prefix,_ ,props(Obj,List),ftID(Obj)):- List==[],!.
 expand_props(_Prefix,_ ,props(_Obj,List),true):- List==[],!.
 expand_props(Prefix,Op,props(Obj,[P]),OUT):- is_ftNonvar(P),!,expand_props(Prefix,Op,props(Obj,P),OUT).
-expand_props(Prefix,Op,props(Obj,[P|ROPS]),OUT):- !,expand_props(Prefix,Op,props(Obj,P),OUT1),expand_props(Prefix,Op,props(Obj,ROPS),OUT2),conjoin_l(OUT1,OUT2,OUT).
+expand_props(Prefix,Op,props(Obj,[P|ROPS]),OUT):- !,expand_props(Prefix,Op,props(Obj,P),OUT1),
+   expand_props(Prefix,Op,props(Obj,ROPS),OUT2),
+   conjoin_l(OUT1,OUT2,OUT).
 expand_props(Prefix,Op,props(Obj,PropVal),OUT):- atom(PropVal),!,from_univ(Prefix,Op,[PropVal,Obj],OUT).
 
 expand_props(_Prefix,_Op,props(Obj,PropVal),(PropVal2,{OPVAL})):- PropVal=..[OpeR,Pred|Val],comparitiveOp(OpeR),
