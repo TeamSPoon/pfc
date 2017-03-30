@@ -17,8 +17,6 @@
 
 :- thread_local(t_l:disable_px).
 
-pfc_mud:- consult(library(prologmud_sample_games/run_mud_server)).
-
 :- include('pfc2.0/mpred_header.pi').
 
 :- kb_shared((
