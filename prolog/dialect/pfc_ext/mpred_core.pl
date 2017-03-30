@@ -1088,7 +1088,7 @@ mpred_post12(P,S):- !,
   gripe_time(0.1, must(get_mpred_support_status(P,S,PP,SS,Was))),!,
  %  if we''ve asserted what we''ve compiled
   gripe_time(0.1, must(get_mpred_assertion_status(P,PP,WasA))),!,
-  gripe_time(0.6, must(mpred_post_update4(WasA,P,S,Was))),!.
+  gripe_time(0.4, must(mpred_post_update4(WasA,P,S,Was))),!.
 
 
 get_mpred_assertion_status(P,PP,Was):-

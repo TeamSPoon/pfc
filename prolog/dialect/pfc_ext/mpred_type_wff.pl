@@ -1147,8 +1147,6 @@ ensure_quantifiers(Wff,WffO):-
  must_det_l((show_failure(why,term_singletons(Wff,[],NS,[],Singles)),
   put_singles(Wff,'all',Singles,WffM),put_singles(WffM,'all',NS,WffO))).
 
-%= :- kb_shared(function_corisponding_predicate/2).
-%= :- was_dynamic(function_corisponding_predicate/2).
 
 
 
@@ -1163,6 +1161,7 @@ get_pred(Pred,F):- get_functor(Pred,F).
 
 
 
+:- kb_shared(function_corisponding_predicate/2).
 
 
 %% function_to_predicate( ?Function, ?NewVar, ?PredifiedFunction) is semidet.
