@@ -4,7 +4,7 @@
 % Douglas Miles
 
 */
-:- module(pfc,[clause_expansion/2]).
+:- module(pfc,[use_pfc/0]).
 :- system:use_module(library(virtualize_source)).
 :- system:use_module(library(hook_hybrid)).
 % :- use_module(library(attvar_serializer)).
@@ -17,6 +17,7 @@
 
 :- thread_local(t_l:disable_px).
 
+pfc_mud:- consult(library(prologmud_sample_games/run_mud_server)).
 
 :- include('pfc2.0/mpred_header.pi').
 
@@ -417,6 +418,8 @@ user:goal_expansion(I,P,O,PO):- fail,
      notrace((
      O=CM:call_u(M),
      PO=P)).
+
+use_pfc.
 
 :- fixup_exports.
 
