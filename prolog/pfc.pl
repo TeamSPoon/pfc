@@ -5,6 +5,7 @@
 
 */
 :- module(pfc,[clause_expansion/2]).
+:- system:use_module(library(virtualize_source)).
 :- system:use_module(library(hook_hybrid)).
 % :- use_module(library(attvar_serializer)).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
@@ -15,6 +16,7 @@
 :- set_prolog_flag(pfc_booted,false).
 
 :- thread_local(t_l:disable_px).
+
 
 :- include('pfc2.0/mpred_header.pi').
 
@@ -119,7 +121,6 @@ disable_yall:- multifile(yall:lambda_functor/1),
 :- set_prolog_flag(last_call_optimisation,false).
 :- set_prolog_flag(debug,true).
 :- debug.
-:- Six = 6, set_prolog_stack(global, limit(Six*10**9)),set_prolog_stack(local, limit(Six*10**9)),set_prolog_stack(trail, limit(Six*10**9)).
 */
 %:- guitracer.
 %:- set_prolog_flag(access_level,system).
@@ -157,7 +158,6 @@ baseKB:mpred_skipped_module(eggdrop).
 
 
 :- use_module(library(subclause_expansion)).
-:- system:use_module(library(virtualize_source)).
 :- reexport(library('pfc2.0/mpred_core.pl')).
 :- system:reexport(library('pfc2.0/mpred_at_box.pl')).
 
@@ -328,7 +328,8 @@ maybe_builtin(I) :- nonvar(I),get_consequent_functor(I,F,A),
 %:- autoload([verbose(false)]).
 :- statistics.
 
-:- ain(arity(functorDeclares, 1)).
+:- (ain(arity(functorDeclares, 1))).
+% :- ain(arity(functorDeclares, 1)).
 % Load boot base file
 %:- dynamic(isa/2).
 
@@ -411,7 +412,7 @@ user:goal_expansion(I,P,O,PO):- fail,
      \+ current_prolog_flag(xref,true), 
      \+ current_prolog_flag(mpred_te,false),
      '$current_typein_module'(CM),
-     (I \= CM:call_u(_)),(I \= call_u(_)))),
+     (I \= (CM : call_u(_))), (I \= call_u(_)))),
      fully_expand(I,M),
      notrace((
      O=CM:call_u(M),

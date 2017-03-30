@@ -207,7 +207,6 @@ add_side_effect/2,
 record_se/0,
 mpred_is_builtin/1,
 is_mpred_action/1,
-set_prolog_stack_gb/1,
 w_get_fa/3,
 f_to_mfa/4,
 is_side_effect_disabled/0,
@@ -620,16 +619,9 @@ w_get_fa(Mask,F,A):-get_functor(Mask,F,A).
 
 
 
-%% set_prolog_stack_gb( +Six) is semidet.
-%
-% Set Prolog Stack Gb.
-%
-set_prolog_stack_gb(Six):-set_prolog_stack(global, limit(Six*10**9)),set_prolog_stack(local, limit(Six*10**9)),set_prolog_stack(trail, limit(Six*10**9)).
-
 :- multifile(baseKB:mpred_hook_rescan_files/0).
 :- dynamic(baseKB:mpred_hook_rescan_files/0).
 :- use_module(library(logicmoo_util_common)).
-:- during_boot(set_prolog_stack_gb(16)).
 %:- was_dynamic(use_presently/0).
 % used to annotate a predciate to indicate PFC support
 
@@ -2643,7 +2635,6 @@ retract_mu((H:-B)):-!, clause_u(H,B,R),erase(R).
 :- module_transparent( (record_se)/0).
 :- module_transparent( (mpred_is_builtin)/1).
 :- module_transparent( (is_mpred_action)/1).
-:- module_transparent( (set_prolog_stack_gb)/1).
 :- module_transparent( (w_get_fa)/3).
 :- module_transparent( (f_to_mfa)/4).
 :- module_transparent( (is_side_effect_disabled)/0).

@@ -567,7 +567,7 @@ full_transform_and_orignal(Why,MH,MHO):- full_transform(Why,MH,MHH),
 
 
 
-full_transform(Op,isa(I,C),SentO):- !, must(fully_expand_real(Op,isa(I,C),SentO)),!.
+full_transform(Op,ISA,SentO):- nonvar(ISA),isa(I,C)=ISA,!, must(fully_expand_real(Op,isa(I,C),SentO)),!.
 full_transform(Op,Sent,SentO):- functor(Sent,F,A),may_fully_expand(F,A),!,must(fully_expand_real(Op,Sent,SentO)),!.
 
 */
