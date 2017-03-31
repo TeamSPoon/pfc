@@ -1529,9 +1529,10 @@ expand_props(_Prefix,_,Sent,OUT):- t_l:no_db_expand_props, (not_ftCompound(Sent)
 %expand_props(Prefix,Op,Term,OUT):- stack_check,(is_ftVar(OpeR);is_ftVar(Term)),!,trace_or_throw(var_expand_units(OpeR,Term,OUT)).
 expand_props(Prefix,Op,Sent,OUT):-  Sent=..[And|C12],is_sentence_functor(And),!,maplist(expand_props(Prefix,Op),C12,O12),OUT=..[And|O12].
 expand_props(_Prefix,_ ,props(Obj,Open),props(Obj,Open)):- is_ftVar(Open),!. % ,trace_or_throw(expand_props(Prefix,Op,props(Obj,Open))->OUT).
-% expand_props(_Prefix,_ ,props(Obj,List),ftID(Obj)):- List==[],!.
-expand_props(_Prefix,_ ,props(_Obj,List),true):- List==[],!.
-expand_props(Prefix,Op,props(Obj,[P]),OUT):- is_ftNonvar(P),!,expand_props(Prefix,Op,props(Obj,P),OUT).
+expand_props(_Prefix,_ ,props(Obj,List),{nonvar(Obj)}):- List==[],!.
+% expand_props(_Prefix,_ ,props(_Obj,List),true):- List==[],!.
+expand_props(Prefix,Op,props(Obj,[P|List]),OUT):- List==[],expand_props(Prefix,Op,props(Obj,P)),!.
+% expand_props(Prefix,Op,props(Obj,[P]),OUT):- is_ftNonvar(P),!,expand_props(Prefix,Op,props(Obj,P),OUT).
 expand_props(Prefix,Op,props(Obj,[P|ROPS]),OUT):- !,expand_props(Prefix,Op,props(Obj,P),OUT1),
    expand_props(Prefix,Op,props(Obj,ROPS),OUT2),
    conjoin_l(OUT1,OUT2,OUT).

@@ -1844,7 +1844,7 @@ mpred_define_bc_rule(Head,Body,Parent_rule):-
 
 push_current_choice(CP):- (nb_current('$pfc_current_choice',Was);Was=[]), b_setval('$pfc_current_choice',[CP|Was]),!.
 
-
+cut_c:-!.
 cut_c:-
   must(nb_current('$pfc_current_choice',[CP|_WAS])),prolog_cut_to(CP).
 
@@ -1854,7 +1854,7 @@ cut_c:-
 %  eval something on the LHS of a rule.
 %
 mpred_eval_lhs(X,S):-
-   prolog_current_choice(CP),push_current_choice(CP),
+   % prolog_current_choice(CP),push_current_choice(CP),
    with_current_why(S,loop_check(mpred_eval_lhs_0(X,S),fail)).
 
 
