@@ -999,6 +999,7 @@ string_to_mws([String,A|B],OUT):- (string(String);string(A)),!,must((string_to_m
 
 
 db_expand_final(_ ,NC,NC):-  is_ftVar(NC),!.
+db_expand_final(_,props(Obj,List),{nonvar(Obj)}):- (List==[] ; List==true).
 db_expand_final(_ ,sumo_rule(NC),sumo_rule(NC)):- !.
 
 db_expand_final(Op, meta_argtypes(Args),    O  ):- is_ftCompound(Args),functor(Args,Pred,A),
@@ -1531,7 +1532,7 @@ expand_props(Prefix,Op,Sent,OUT):-  Sent=..[And|C12],is_sentence_functor(And),!,
 expand_props(_Prefix,_ ,props(Obj,Open),props(Obj,Open)):- is_ftVar(Open),!. % ,trace_or_throw(expand_props(Prefix,Op,props(Obj,Open))->OUT).
 expand_props(_Prefix,_ ,props(Obj,List),{nonvar(Obj)}):- List==[],!.
 % expand_props(_Prefix,_ ,props(_Obj,List),true):- List==[],!.
-expand_props(Prefix,Op,props(Obj,[P|List]),OUT):- List==[],expand_props(Prefix,Op,props(Obj,P)),!.
+expand_props(Prefix,Op,props(Obj,[P|List]),OUT):- List==[],expand_props(Prefix,Op,props(Obj,P),OUT),!.
 % expand_props(Prefix,Op,props(Obj,[P]),OUT):- is_ftNonvar(P),!,expand_props(Prefix,Op,props(Obj,P),OUT).
 expand_props(Prefix,Op,props(Obj,[P|ROPS]),OUT):- !,expand_props(Prefix,Op,props(Obj,P),OUT1),
    expand_props(Prefix,Op,props(Obj,ROPS),OUT2),

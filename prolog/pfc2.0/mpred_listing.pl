@@ -162,9 +162,9 @@ pp_item(MM,H):- \+ \+ (( get_clause_vars_for_print(H,HH),fmt("~w ~p~N",[MM,HH]))
 % Get Clause Variables For Print.
 %
 get_clause_vars_for_print(HB,HB):- ground(HB),!.
-get_clause_vars_for_print(I,I):- listing_filter(skipVarnames),!.
-get_clause_vars_for_print(H0,MHB):- get_clause_vars_copy(H0,MHB).
-
+get_clause_vars_for_print(I,I):- is_listing_hidden(skipVarnames),!.
+get_clause_vars_for_print(H0,MHB):- get_clause_vars_copy(H0,MHB),!.
+get_clause_vars_for_print(HB,HB).
 
 %= 	 	 
 
