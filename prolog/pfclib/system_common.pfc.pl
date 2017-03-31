@@ -1453,8 +1453,8 @@ prologNegByFailure(tDeleted(ftID)).
 %
 % Prolog Single Valued.
 %
-==>prologSingleValued(predInstMax(ftID,prologSingleValued,ftInt),prologHybrid).
-props(predTypeMax(prologSingleValued,tCol,ftInt),[prologHybrid,prologSingleValued]).
+prologSingleValued(predInstMax(ftID,prologSingleValued,ftInt),prologHybrid).
+prologSingleValued(predTypeMax(prologSingleValued,tCol,ftInt),prologHybrid).
 resultIsa(txtFormatFn,ftText).
 %'<==>'(prologMultiValued(CallSig,[predProxyAssert(aina),predProxyRetract(del),predProxyQuery(call)]),prologDynamic(CallSig)).
 %'<==>'(prologMultiValued(CallSig,[predProxyAssert(pttp_tell),predProxyRetract(pttp_retract),predProxyQuery(pttp_ask)]),prologPTTP(CallSig)).
