@@ -864,9 +864,10 @@ import_predicate(CM,M:F/A):- show_call(nop(CM:z333import(M:F/A))),CM:multifile(M
   on_xf_cont(CM:discontiguous(M:F/A)).
 
 
-:- fixup_exports.
- 
 :- include('mpred_header.pi').
+
+:- fixup_exports.
+
 /*
 system:call_expansion(T,(mpred_at_box:defaultAssertMt(NewVar),NewT)):- current_predicate(_,get_lang(pfc)), compound(T),
    subst(T,abox,NewVar,NewT),NewT\=@=T.
