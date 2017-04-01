@@ -90,6 +90,9 @@
 :- kb_shared(ttTypeType/1). 
 :- kb_shared(typeGenls/2).
 :- kb_shared(genls/2).
+:- kb_shared(typeProps/2).
+
+
 
 :- forall(between(1,11,A),kb_shared(t/A)).
 
