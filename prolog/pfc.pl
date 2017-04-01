@@ -363,7 +363,7 @@ must_pfc(IM,_):- \+ compound(IM),!,fail.
 must_pfc(IM,MO):- in_dialect_pfc,fully_expand(IM,MO),!.
 must_pfc(IM,MO):- must_pfc_p(IM),!,fully_expand(IM,MO),!.
 must_pfc_p('-->'(_,_)):-!,fail.
-must_pfc_p(':-'(_,(CWC,_))):- !, atom(CWC),arg(_,v(bwc,cwc,fwc,pfc),CWC).
+must_pfc_p(':-'(_,(CWC,_))):- !, atom(CWC),arg(_,v(bwc,fwc,pfc),CWC).
 must_pfc_p('==>'(_,_)).
 must_pfc_p('==>'(_)).
 must_pfc_p('<==>'(_,_)).
