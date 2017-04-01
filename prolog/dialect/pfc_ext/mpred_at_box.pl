@@ -271,19 +271,32 @@ makeConstant(_Mt).
 :- dynamic(lmcache:has_pfc_database_preds/1).
 ensure_abox(M):- sanity(atom(M)), lmcache:has_pfc_database_preds(M),!.
 ensure_abox(user):- setup_module_ops(user),!,ensure_abox(baseKB),!.
-ensure_abox(M):-
+ensure_abox(M):- ensure_abox_suport(M,baseKB).
+
+ensure_abox_suport(M,Where):-
    asserta(lmcache:has_pfc_database_preds(M)),
    assert_if_new(baseKB:mtCycL(M)),
    retractall(baseKB:mtProlog(M)),
    setup_module_ops(M),
    set_prolog_flag(M:unknown,error),
-   forall(mpred_database_term(F,A,_),
+   forall(mpred_database_term(F,A,Type),
+     import_mpred_database_term(M,F,A,Type,Where)).
+
+import_mpred_database_term(M,F,A,_,_):- localize_mpred(M,F,A),!.
+import_mpred_database_term(M,F,A,Type,_):- member(Type,[rule,fact,fact(_),rule(_)]), system:export(system:F/A),M:import(system:F/A),M:export(system:F/A).
+import_mpred_database_term(M,F,A,Type,_):- member(Type,[setting,debug]), localize_mpred(M,F,A).
+import_mpred_database_term(M,F,A,_,Where):- localize_mpred(Where,F,A),
+                                               Where:export(Where:F/A),
+                                               M:import(Where:F/A),
+                                               M:export(M:F/A).
+
+localize_mpred(M,F,A):-
        (((
         M:multifile(M:F/A),
         M:dynamic(M:F/A),
         M:discontiguous(M:F/A),
         create_predicate_istAbove(M,F,A),
-        M:module_transparent(M:F/A))))),!.
+        M:module_transparent(M:F/A)))),!.
 
 setup_module_ops(M):- mpred_op_each(mpred_op_unless(M)).
 
@@ -544,7 +557,7 @@ make_as_dynamic(Reason,Mt,F,A):-
    public(Mt:F/A),
    on_f_throw( (Mt:F/A)\== (baseKB:loaded_external_kbs/1)),
    functor(Goal,F,A),
-   assert_if_new(( Mt:Goal :- (fail,infoF(Reason)))))).
+   assert_if_new(( Mt:Goal :- (fail,infoF(createdFor(Reason))))))).
 
 
 transitive_path(F,[Arg1,Arg2],Arg2):-

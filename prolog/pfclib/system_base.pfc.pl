@@ -1,8 +1,10 @@
 :- if( current_prolog_flag(xref,true) ).
 :- module(system_base,[]).
 :- else.
-:- '$set_source_module'(baseKB).
+:- module(system_base,[]).
 :- endif.
+:- set_module(class(development)).
+:- use_module(library(pfc)).
 /** <module> system_base
 % =============================================
 % File 'system_base.pfc'
@@ -35,10 +37,10 @@
 % Dec 13, 2035
 % Douglas Miles
 */
-% :- '$set_typein_module'(baseKB).
-:- set_module(class(development)).
-
-:- mpred_notrace_exec.
+:- '$set_source_module'(baseKB).
+:- mpred_unload_file.
+:- '$def_modules'([clause_expansion/2],O),dmsg(O),nl.
+:- make:list_undefined([]).
 
 :- style_check(-discontiguous).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
@@ -47,35 +49,23 @@
 :- set_prolog_flag(runtime_safety, 3).  % 3 = very important
 :- set_prolog_flag(unsafe_speedups, false).
 
-:- kb_shared(ttTypeType/1). 
-:- kb_shared(rtAvoidForwardChain/1).
 :- kb_shared(tCol/1).
-:- kb_shared(tooSlow/0).
-:- kb_shared(completelyAssertedCollection/1).
-:- kb_shared(tAtemporalNecessarilyEssentialCollectionType/1).
-:- kb_shared(ttExpressionType/1).
 
 
 
 :- kb_shared(predicateConventionMt/2).
 :- kb_shared(prologOnly/1).
 :- kb_shared(functorIsMacro/1).
-%:- kb_shared(pfcControlled/1).
+:- kb_shared(pfcControlled/1).
 :- kb_shared(arity/2).
 :- kb_shared(tSet/1).
 :- kb_shared( ('~') /1).
-:- kb_shared(argQuotedIsa/3).
-:- kb_shared(quotedIsa/2).
 
-% :- sanity(listing(tCol/1)).
+:- kb_shared(quotedIsa/2).
 
 :- kb_shared(col_as_unary/1).  % never used for arg2 of isa/2
 
-/*
-:- kb_shared(ttExpressionType/1). % hard coded like: compound/1
-*/
 :- kb_shared(meta_argtypes/1).
-:- kb_shared(startup_option/2).
 :- kb_shared(type_checking/0).
 :- kb_shared(mpred_prop/3).
 :- kb_shared(ttRelationType/1).
@@ -83,29 +73,39 @@
 :- kb_shared(mudToCyc/2).
 :- kb_shared(mtExact/1).
 
-:- kb_shared(prologHybrid/1).
+% :- xlisting( (==>) /2 ).
 
-((prologHybrid(F),arity(F,A))==>{kb_shared(F/A)}).
+:- kb_shared(ttTypeFacet/1).
+:- kb_shared(ttActionType/1). 
+:- kb_shared(ttAgentType/1). 
+
+:- kb_shared(prologHybrid/1).
+:- kb_shared(startup_option/2).
+:- kb_shared(argQuotedIsa/3).
+:- kb_shared(ttExpressionType/1). % hard coded like: compound/1
+:- kb_shared(tAtemporalNecessarilyEssentialCollectionType/1).
+:- kb_shared(completelyAssertedCollection/1).
+:- kb_shared(tooSlow/0).
+:- kb_shared(rtAvoidForwardChain/1).
+:- kb_shared(ttTypeType/1). 
+:- kb_shared(typeGenls/2).
+:- kb_shared(genls/2).
 
 :- forall(between(1,11,A),kb_shared(t/A)).
 
-:- use_module(library(pfc)).
-:- mpred_unload_file.
-:- make:list_undefined([]).
-:- '$def_modules'([clause_expansion/2],O),dmsg(O),nl.
-
-
 :- begin_pfc.
-% :- sanity('$current_source_module'(baseKB)).
-% :- '$set_source_module'(baseKB).
-:- prolog_load_context(module,Mod),writeq(prolog_load_context(module,Mod)),nl.
+
+:- mpred_notrace_exec.
+:- mpred_trace_exec.
+
+
+((prologHybrid(F),arity(F,A))==>{kb_shared(F/A)}).
 
 arity(arity,2).
 arity(functorIsMacro,1).
 functorIsMacro(functorIsMacro).
 functorDeclares(Decl)==>functorIsMacro(Decl).
 ~tCol(functorDeclares).
-
 
 
 % ======================================================================================= %
@@ -117,6 +117,8 @@ completelyAssertedCollection(completelyAssertedCollection).
 
 % all completely asserted collections are finite sets
 completelyAssertedCollection(A)==>tSet(A).
+
+
 
 % tSets are part of the KR expressions language and are types of collections
 (tSet(A) ==> (tCol(A), \+ ttExpressionType(A))).
@@ -217,7 +219,7 @@ tooSlow ==>
 % ======================================================================================= %
 ttTypeType(TT)==>tSet(TT).
 
-tSet(RT)==>functorDeclares(RT).
+tSet(RT)==>functorDeclares(RT),arity(RT,1).
 % tCol(P)==>{sanity(atom(P))},functorIsMacro(P).
 
 % ~ ttRelationType(col_as_unary).
@@ -228,6 +230,9 @@ tSet(RT)==>functorDeclares(RT).
 ttTypeType(ttActionType,comment("Types of actions such PostureChangingAction")).
 ttTypeType(ttAgentType,comment("Types of agents such tHuman")).
 ttTypeType(ttEventType,comment("Events such StartRaining")).
+
+:- mpred_notrace_exec.
+
 ttTypeType(ttExpressionType).
 ttTypeType(ttItemType).
 ttTypeType(ttMicrotheoryType).
@@ -315,9 +320,13 @@ ttTypeType(TT)==>(isa(C,TT)==>tCol(C)).
                   pfcRHS,
                   pfcLHS)).
 
+:- scan_missed_source.
+
+:- mpred_notrace_exec.
+
 genls(prologSideEffects,rtNotForUnboundPredicates).
 
-ttRelationType(RT)==> { decl_rt(RT) },tSet(RT),completelyAssertedCollection(RT).
+ttRelationType(RT)==> { kb_shared(RT/1), decl_rt(RT) },tSet(RT),completelyAssertedCollection(RT).
 % ttRelationType(RT) ==> ( ~genls(RT,tFunction) <==> genls(RT,tPred)).
 
 ttRelationType(tFunction).
@@ -372,7 +381,7 @@ disjointWith(C,D)==> tCol(C),tCol(D).
 :- if(false). % true,false
 :- listing(disjointWith/2).
 :- listing( ~ /1).
-:- break.
+:- mpred_notrace_exec.
 :- endif.
 
 % disjointWith(ttRegionType,ttAgentType).
@@ -396,7 +405,7 @@ disjointWith(ttRelationType,ttTypeType).
 :- if(false). % true,false
 :- listing(disjointWith/2).
 :- listing( ( ~ )/1).
-:- break.
+:- mpred_notrace_exec.
 :- endif.
 
 % :- ain((disjointWith(P1,P2) , genls(C1,P1)) ==>  disjointWith(C1,P2)).
@@ -664,7 +673,7 @@ mudEquals(X,Y):-equals_call(X,Y).
 
 % :- assert_if_new((isa(I,T):- cwc, visit_isa(I,T))).
 
-% :- break.
+% :- mpred_notrace_exec.
 
 
 :- do_gc.
@@ -996,7 +1005,7 @@ doRedelMe.
 :- dbreak.
 */
 
-%  % :- set_prolog_flag(dialect_pfc,false).
+%  % :- set_prolog_flag(dialect_pfc,cwc).
 %  % :- mpred_trace_exec.
 
 % isa(I,C)==>{wdmsg(isa(I,C))}.
@@ -1016,5 +1025,8 @@ tSet(tFoo).
 isa(iBar,tFoo).
 :- sanity(isa(iBar,tFoo)).
 
+
 :- mpred_notrace_exec.
+
+:- scan_missed_source.
 

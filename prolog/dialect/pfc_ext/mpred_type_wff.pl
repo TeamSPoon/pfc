@@ -1103,11 +1103,12 @@ is_function(Function):- is_function(Function,Function,0).
 %
 % If Is A Function.
 %
+is_function(_,F,_):- \+ atom(F),!,fail.
 is_function(_,'uSubLQuoteFn',_):- !,fail.
 is_function(_,'xQuoteFn',_):- !,fail.
 is_function(_,'uNARTFn',_):- !,fail.
 is_function(_,'tCol_CollectionSubsetFn',_).
-is_function(_,F,_):- atom_concat('sk',_Was,F),!,fail.
+is_function(_,F,_):- atom(F),atom_concat('sk',_Was,F),!,fail.
 % is_function(P,_,_):- loop_check(leave_as_is(P)),!,fail.
 is_function(_,F,_):- loop_check(is_log_op(F)),!,fail.
 is_function(_,F,_):- atom_concat(_Was,'Fn',F).
