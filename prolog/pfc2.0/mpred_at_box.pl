@@ -282,7 +282,11 @@ ensure_abox_suport(M,Where):-
    forall(mpred_database_term(F,A,Type),
      import_mpred_database_term(M,F,A,Type,Where)).
 
-import_mpred_database_term(M,F,A,_,_):- localize_mpred(M,F,A),!.
+import_mpred_database_term(M,F,A,_,Where):- localize_mpred(Where,F,A),
+                                               Where:export(Where:F/A),
+                                               M:import(Where:F/A),
+                                               M:export(M:F/A),!.
+
 import_mpred_database_term(M,F,A,Type,_):- member(Type,[rule,fact,fact(_),rule(_)]), system:export(system:F/A),M:import(system:F/A),M:export(system:F/A).
 import_mpred_database_term(M,F,A,Type,_):- member(Type,[setting,debug]), localize_mpred(M,F,A).
 import_mpred_database_term(M,F,A,_,Where):- localize_mpred(Where,F,A),

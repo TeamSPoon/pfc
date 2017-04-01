@@ -1276,11 +1276,11 @@ mpred_enqueue0(P,S):-
    ; mpred_error("No pm mode").
 
 mpred_enqueue_w_mode(S,Mode,P):-
-    (Mode=direct  -> loop_check_term(mpred_fwc(P),mpred_enqueueing(P),trace_or_throw(mpred_enqueueing(P))) ;
+    (Mode=direct  -> loop_check_term(mpred_fwc(P),mpred_enqueueing(P),true)) ;
 	Mode=depth   -> mpred_asserta_w_support(que(P,S),S) ;
         Mode=paused   -> mpred_asserta_w_support(que(P,S),S) ;
 	Mode=breadth -> mpred_assertz_w_support(que(P,S),S) ;
-	true         -> mpred_error("Unrecognized pm mode: ~p", Mode)).
+	true         -> mpred_error("Unrecognized pm mode: ~p", Mode).
      
 
 
