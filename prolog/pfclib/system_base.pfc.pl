@@ -219,7 +219,7 @@ tooSlow ==>
 % ======================================================================================= %
 ttTypeType(TT)==>tSet(TT).
 
-tSet(RT)==>functorDeclares(RT),arity(RT,1).
+tSet(RT)==>functorDeclares(RT).
 % tCol(P)==>{sanity(atom(P))},functorIsMacro(P).
 
 % ~ ttRelationType(col_as_unary).
