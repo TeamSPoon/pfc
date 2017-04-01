@@ -101,15 +101,13 @@
 :- mpred_notrace_exec.
 :- mpred_trace_exec.
 
-
-((prologHybrid(F),arity(F,A))==>{kb_shared(F/A)}).
-
 arity(arity,2).
 arity(functorIsMacro,1).
 functorIsMacro(functorIsMacro).
 functorDeclares(Decl)==>functorIsMacro(Decl).
 ~tCol(functorDeclares).
 
+((prologHybrid(F),arity(F,A))==>{kb_shared(F/A)}).
 
 % ======================================================================================= %
 % Types/Sets/Collections
