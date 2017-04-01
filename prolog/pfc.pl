@@ -429,7 +429,6 @@ maybe_builtin(I) :- nonvar(I),get_consequent_functor(I,F,A),
 %:- autoload([verbose(false)]).
 :- statistics.
 
-:- (ain(arity(functorDeclares, 1))).
 % :- ain(arity(functorDeclares, 1)).
 % Load boot base file
 %:- dynamic(isa/2).
@@ -522,11 +521,6 @@ use_pfc.
 
 %baseKB:'==>'(Consq) :- sanity( \+ input_from_file), ain_expanded('==>'(Consq)),!.
 %baseKB:'==>'(Ante,Consq):- sanity( \+ input_from_file), mpred_why(Consq,Ante).
-:- fixup_exports.
-
-
-
-
 
 :- set_prolog_flag(subclause_expansion,false).
 
@@ -534,11 +528,12 @@ use_pfc.
 :- system:import(pfc_clause_expansion/2).
 :- '$set_source_module'(system).
 system:clause_expansion(I,O):- pfc_clause_expansion(I,O).
-
 :- '$set_source_module'(pfc).
+:- fixup_exports.
 
 :- set_prolog_flag(subclause_expansion,true).
 :- set_prolog_flag(mpred_te,true).
+:- (ain(arity(functorDeclares, 1))).
 :- ensure_loaded('pfclib/system_autoexec.pfc').
 :- set_prolog_flag(mpred_te,false).
 %:- set_prolog_flag(read_attvars,false).
