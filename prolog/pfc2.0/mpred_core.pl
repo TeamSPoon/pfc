@@ -1262,7 +1262,6 @@ set_fc_mode(Mode):- asserta(t_l:mpred_fc_mode(Mode)).
 
 mpred_enqueue(P):- current_why(S),mpred_enqueue(P,S).
 
-
 % mpred_enqueue(P,S):- get_fc_mode(P,S,Mode), must(Mode=direct),fail.
 mpred_enqueue(P,_):- show_success(lookup_u(que(P,_))),!.
 %mpred_enqueue(P,_):- clause_asserted(t_l:current_local_why(_,P)),!,trace_or_throw(why(P)).
@@ -1272,13 +1271,17 @@ mpred_enqueue(P,_):- clause_asserted(t_l:busy(P)),!,dmsg(t_l:busy(P)).
 mpred_enqueue(P,S):- locally(t_l:busy(P),mpred_enqueue0(P,S)).
 
 mpred_enqueue0(P,S):-
- ( (must(get_fc_mode(P,S,Mode))
-    -> (Mode=direct  -> loop_check_term(mpred_fwc(P),mpred_enqueueing(P),trace_or_throw(mpred_enqueueing(P))) ;
+ must(get_fc_mode(P,S,Mode)) 
+  -> mpred_enqueue_w_mode(S,Mode,P)
+   ; mpred_error("No pm mode").
+
+mpred_enqueue_w_mode(S,Mode,P):-
+    (Mode=direct  -> loop_check_term(mpred_fwc(P),mpred_enqueueing(P),trace_or_throw(mpred_enqueueing(P))) ;
 	Mode=depth   -> mpred_asserta_w_support(que(P,S),S) ;
         Mode=paused   -> mpred_asserta_w_support(que(P,S),S) ;
 	Mode=breadth -> mpred_assertz_w_support(que(P,S),S) ;
-	true         -> mpred_error("Unrecognized pm mode: ~p", Mode))
-     ; mpred_error("No pm mode"))),!.
+	true         -> mpred_error("Unrecognized pm mode: ~p", Mode)).
+     
 
 
 %% mpred_remove_old_version( :TermIdentifier) is semidet.
@@ -2547,8 +2550,8 @@ really_mpred_mark(_  ,Type,F,A):- call_u_no_bc(mpred_prop(F,A,Type)),!.
 really_mpred_mark(Sup,Type,F,A):-
   MARK = mpred_prop(F,A,Type),
   check_never_assert(MARK),
-  with_no_mpred_trace_exec(with_fc_mode(direct,mpred_post1(MARK,(s(Sup),ax)))).
-  % with_no_mpred_trace_exec(with_fc_mode(direct,mpred_fwc1(MARK,(s(Sup),ax)))),!.
+  with_no_mpred_trace_exec(with_fc_mode(direct,mpred_post1(MARK,(why_marked(Sup),ax)))).
+  % with_no_mpred_trace_exec(with_fc_mode(direct,mpred_fwc1(MARK,(why_marked(Sup),ax)))),!.
 
 
 %% fa_to_p(+F, ?A, ?P) is semidet.
@@ -3015,7 +3018,8 @@ with_mpred_trace_exec(P):-
 % Without Trace exec.
 %
 with_no_mpred_trace_exec(P):-
-   locally_each(-t_l:mpred_debug_local,locally_each(t_l:hide_mpred_trace_exec, must(/*show_if_debug*/(P)))).
+ with_no_dmsg((
+   locally_each(-t_l:mpred_debug_local,locally_each(t_l:hide_mpred_trace_exec, must(/*show_if_debug*/(P)))))).
 
 %% show_if_debug( :GoalA) is semidet.
 %
@@ -3117,7 +3121,8 @@ justification(F,J):- supporters_list(F,J).
 
 justifications(F,Js):- bagof_nr(J,justification(F,J),Js).
 
-mpred_why(F,Js):- bagof_nr(J,justification(F,J),Js).
+mpred_why(Conseq,Ante):- var(Conseq),!,mpred_children(Conseq,Ante).
+mpred_why(Conseq,Ante):- justifications(Conseq,Ante).
 
 
 

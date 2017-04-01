@@ -1182,6 +1182,7 @@ simplify_language_name(W,W).
 %
 % File Begin.
 %
+file_begin(W):- enable_mpred_expansion,!,set_file_lang(W).
 file_begin(WIn):- 
  must_det_l((   
    simplify_language_name(WIn,W),
@@ -1194,22 +1195,27 @@ file_begin(WIn):-
    enable_mpred_expansion)),!,
    sanity(get_lang(W)).
 
+:- nodebug(logicmoo(loader)).
 
-
+set_file_lang(W):- !, set_lang(W).
 set_file_lang(W):-
-   %assert_until_eof(t_l:current_lang(W)),
-   forall((prolog_load_context(file,Source);which_file(Source);prolog_load_context(source,Source)),
-   ignore((  % \+ lmcache:mpred_directive_value(Source,language,W),
-  % decache_file_type(Source),
+  forall((prolog_load_context(file,Source);which_file(Source);prolog_load_context(source,Source)),
+  ignore((  % \+ lmcache:mpred_directive_value(Source,language,W),
+  source_location(File,Line),
+  prolog_load_context(module,Module),
+  INFO = source_location_lang(Module,File,Line,Source,W),
+  asserta(lmconf:INFO),
+  decache_file_type(Source),
+  debug(logicmoo(loader),'~N~p~n',[INFO]),
+  % (Source = '/root/lib/swipl/pack/logicmoo_base/prolog/logicmoo/pfc/system_common.pfc.pl'-> must(W=pfc);true),
+  assert_until_eof(Source,lmcache:mpred_directive_value(Source,language,W))))),
+  sanity(get_lang(W)),
+  assert_until_eof(t_l:current_lang(W)),!.
 
-   debug(logicmoo(loader),'~N~p~n',[lmcache:mpred_directive_value(Source,language,W)]),
-   % (Source = '/root/lib/swipl/pack/logicmoo_base/prolog/logicmoo/pfc/system_common.pfc.pl'-> must(W=pfc);true),
-   assert_until_eof(Source,lmcache:mpred_directive_value(Source,language,W))))),
-   sanity(get_lang(W)).
 
-
-set_lang(W):-
-    assert_until_eof(t_l:current_lang(W)).
+set_lang(WIn):- simplify_language_name(WIn,W),!,
+   set_prolog_flag_until_eof(dialect_pfc,W),
+   assert_until_eof(t_l:current_lang(W)).
     
 
 %% file_end( ?W) is det.
@@ -1241,6 +1247,7 @@ get_lang0(W) :- t_l:current_lang(W),!.
 get_lang0(W) :- prolog_load_context(file,Source)->lmcache:mpred_directive_value(Source,language,W).
 get_lang0(W) :- prolog_load_context(source,Source)->lmcache:mpred_directive_value(Source,language,W).
 get_lang0(W) :- loading_source_file(Source)->lmcache:mpred_directive_value(Source,language,W).
+get_lang0(W):- current_prolog_flag(dialect_pfc,W).
 get_lang0(pfc):- loading_source_file(F)->is_mpred_file(F),!.
 get_lang0(pl).
 

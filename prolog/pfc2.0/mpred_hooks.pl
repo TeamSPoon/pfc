@@ -672,7 +672,7 @@ holds_relaxed_0_t(dac(_,a,_,_),P,A1,A2):- assertion_t([P,A1,A2]).
 holds_relaxed_0_t(dac(d,_,_,_),P,A1,A2):- t(P,A1,A2).
 holds_relaxed_0_t(dac(_,_,_,h),P,A1,A2):- call_which_t(DBS,P,A1,A2).
 holds_relaxed_0_t(DBS,P,A1,A2):- call_mt_t(DBS,P,A1,A2,_,_).
-holds_relaxed_0_t(_DBS,P,A1,A2):- ground((P,A1)), TEMPL=..[P,T1,_],t(argSingleValueDefault,TEMPL,2,A2),call_u(isa(A1,T1)),!.
+holds_relaxed_0_t(_DBS,P,A1,A2):- ground((P,A1)), TEMPL=..[P,T1,_],t(relationMostInstance,TEMPL,T1,A2),call_u(isa(A1,T1)),!.
 */
 
 
@@ -924,7 +924,8 @@ differentTerms(A,B):- dif:dif(A,B).
 admittedArgument(P,N,A):-var_non_attvar(P),!,freeze(P,admittedArgument(P,N,A)).
 admittedArgument(P,N,A):-var_non_attvar(A),!,freeze(A,admittedArgument(P,N,A)).
 admittedArgument(P,N,A):-var_non_attvar(N),!,freeze(N,(number(N),admittedArgument(P,N,A))).
-admittedArgument(P,N,A):-wdmsg(admittedArgument(P,N,A)).
+admittedArgument(P,N,A):-nop(wdmsg(admittedArgument(P,N,A))).
+
 
 %= 	 	 
 
