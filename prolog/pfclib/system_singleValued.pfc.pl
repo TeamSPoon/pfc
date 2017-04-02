@@ -8,7 +8,7 @@
 
 
 
-prologSingleValued(C):-cwc,is_ftCompound(C),functor(C,F,_),!,prologSingleValued(F).
+% prologSingleValued(C):-cwc,is_ftCompound(C),functor(C,F,_),!,prologSingleValued(F).
 
 :-dynamic(baseKB:mpred_sv/2).
 arity(mpred_sv,2).

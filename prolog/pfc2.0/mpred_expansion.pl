@@ -1026,7 +1026,7 @@ db_expand_final(_, Sent,Sent):-is_true(Sent).
 %unused db_expand_final(_, tPred(V),tPred(V)):-!,fail, not_ftCompound(V),!.
 %db_expand_final(_ ,NC,NC):-functor(NC,_,1),arg(1,NC,T),db_expand_final(_,T,_),!.
 
-db_expand_final(_ ,IN,OUT):- IN=..[F,A,B],nonvar(A),nonvar(B),clause_b(rtSymmetricBinaryPredicate(F)), (A@<B -> OUT=IN ; OUT=..[F,B,A]).
+db_expand_final(_ ,IN,OUT):- IN=..[F,A,B], \+ is_ftVar(A), \+ is_ftVar(B), clause_b(rtSymmetricBinaryPredicate(F)), (A@<B -> OUT=IN ; OUT=..[F,B,A]).
 
 db_expand_final(_ ,isa(Atom,PredArgTypes), tRelation(Atom)):-PredArgTypes==meta_argtypes,atom(Atom),!.
 db_expand_final(_ ,meta_argtypes(F,Args),    meta_argtypes(Args)):-atom(F),!,functor(Args,Pred,A),assert_arity(Pred,A).

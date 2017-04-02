@@ -99,7 +99,6 @@
 :- begin_pfc.
 
 :- mpred_notrace_exec.
-:- mpred_trace_exec.
 
 arity(arity,2).
 arity(functorIsMacro,1).
@@ -374,7 +373,6 @@ rtSymmetricBinaryPredicate(F)==> {fxy_args_swapped(F,X,Y,P1,P2),nop(was_singleto
                                                                   (~P1/ (X @< Y) ==>{mpred_fwc1(~P2)}),
                                                                   (~P1:- loop_check(~P2)),
                                                                   ( P1:- loop_check( P2)).
-
 
 
 disjointWith(C,D)==> tCol(C),tCol(D).

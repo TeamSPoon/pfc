@@ -76,7 +76,7 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg(visit_pfc_non_file_r
 :- thread_local(t_l:disable_px).
 
 :- include('pfc2.0/mpred_header.pi').
-c
+
 :- kb_shared((
  rtArgsVerbatum/1,
    argIsa/3,
@@ -427,7 +427,9 @@ maybe_builtin(I) :- nonvar(I),get_consequent_functor(I,F,A),
 :- sanity((clause(baseKB:ignore_file_mpreds(_),B),compound(B))).
 
 %:- autoload([verbose(false)]).
+:- if(false).
 :- statistics.
+:- endif.
 
 % :- ain(arity(functorDeclares, 1)).
 % Load boot base file
