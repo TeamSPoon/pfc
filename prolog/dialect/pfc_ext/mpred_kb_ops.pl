@@ -1569,7 +1569,7 @@ mpred_retry(G):- fail; quietly(G).
 %
 % {}.
 %
-'{}'(G):-call_u(G).
+baseKB:'{}'(G):-call_u(G).
 
 :- meta_predicate neg_in_code(*).
 :- export(neg_in_code/1).
