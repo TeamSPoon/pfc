@@ -1175,14 +1175,22 @@ function_to_predicate(Function,NewVar,PredifiedFunction):-
  PredifiedFunction = (isa(NewVar,Col) & Formulas).
 
 function_to_predicate(Function,NewVar,PredifiedFunction):- 
-  Function=..[F|ARGS],
-  cheaply_u(function_corisponding_predicate(F,P)),
+  Function=.. [F|ARGS],
+  cheaply_u(functionCorrespondingPredicate(F,P,N)),
   fresh_varname(Function,NewVar),
-  PredifiedFunction=..[P,NewVar|ARGS],!.
+  list_insert_at([P|ARGS],NewVar,N,Predified),
+  PredifiedFunction=..Predified,!.
 
-function_to_predicate(Function,NewVar,mudEquals(NewVar,Function)):- \+ t_l:dont_use_mudEquals, fresh_varname(Function,NewVar),!.
+function_to_predicate(Function,NewVar,mudEquals(NewVar,Function)):- 
+  \+ t_l:dont_use_mudEquals, fresh_varname(Function,NewVar),!.
 
 
+
+list_insert_at([A],NewVar,_,[A,NewVar]):-!.  % will append it to the last if too deep
+list_insert_at(List,NewVar,0,[NewVar|List]):- !.
+list_insert_at([A|List],NewVar,1,[A,NewVar|List]):-!.
+list_insert_at([A|List],NewVar,N,[A|NewList]):- N2 is N -1,
+   list_insert_at(List,NewVar,N2,NewList).
 
 
 %= 	 	 

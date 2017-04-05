@@ -20,7 +20,7 @@
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_type_constraints.pl
 :- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
 :- module(mpred_type_constraints,
-          [ add_dom/2,
+          [ add_dom/2,           
             arg_to_var/3,
             attempt_attribute_args/3,
             attempt_attribute_args/5,
@@ -54,13 +54,13 @@
             type_size/2,
             extract_conditions/2,
             enforce_fa_unify_hook/2,
-            dom_lbl/1, iz_member/1,
+            unrelax/1, iz_member/1,
 
             lazy/1,lazy/2,
 
-            constrain/1,enforce/1,
+            constrain/1,enforce/1,mpred_functor/3,
 
-            weaken/1,weaken_goal/2,thaw/1,
+            relax/1,relax_goal/2,thaw/1,
             mpred_type_constraints_file/0
           ]).
 
@@ -68,11 +68,17 @@
 
 :- endif.
 
+:- set_prolog_flag(generate_debug_info, true).
+
+:- if(exists_source(library(multivar))).
+:- use_module(library(multivar)).
+:- endif.
+
 :- meta_predicate 
    isa_pred_l(+,*,*),
    isa_pred_l(+,*,*,*),
    map_subterms(+,?,?),
-   iz_member(0),
+   iz_member(*),
    constrain(*),
    map_lits(1,+),
    boxlog_goal_expansion(*,*),
@@ -80,21 +86,36 @@
    map_argnums(?,4,*),
    thaw(?),
    lazy(0),
-   weaken(0),
-   weaken_goal(0,0),
+   relax(*),
+   unrelax(*),
+   relax_goal(*,+),
    lazy(?,0).
 
-map_lits(_,Lit):- \+ compound(Lit),!.
-map_lits(P1,[Lit1 |  Lit2]):- !,call(P1,Lit1),call(P1,Lit2).
-map_lits(P1,(Lit1 ,  Lit2)):- !,call(P1,Lit1),call(P1,Lit2).
-map_lits(P1,(Lit1 ;  Lit2)):- !,call(P1,Lit1),call(P1,Lit2).
-map_lits(P1,(Lit1 :- Lit2)):- !,call(P1,Lit1),call(P1,Lit2).
-map_lits(P1, Expr) :- demodalfy_outermost(_ModalIn,Expr,MExpr,_),!,map_lits(P1, MExpr).
-map_lits(P1, Expr) :- Expr=..[C,I], tCol(C),!,map_lits(P1, isa(I,C)).
-map_lits(P1, Expr) :- functor(Expr,F,A),mappable_sentence_functor(F,A),!, Expr =.. [F|Args], maplist(P1,Args).
-map_lits(P1,Lit):- call(P1,Lit).
+% ?- G=(loves(X,Y),~knows(Y,tHuman(X))),relax_goals(G,Out),writeq(Out).
+ 
+map_lits(P1,Lit):- 
+ locally($('$outer_stack')=[],once(map_plits(P1,Lit))),!.
 
+map_plits(P1,Lit):- \+ compound(Lit),!,call(P1,Lit).
+map_plits(P1,[Lit1 |  Lit2]):- !,map_plits(P1,Lit1),map_plits(P1,Lit2).
+map_plits(P1,(Lit1 ,  Lit2)):- !,map_plits(P1,Lit1),map_plits(P1,Lit2).
+map_plits(P1,(Lit1 ;  Lit2)):- !,map_plits(P1,Lit1),map_plits(P1,Lit2).
+map_plits(P1,(Lit1 :- Lit2)):- !,map_lits(P1,Lit1),with_outer(Lit1,0,map_plits(P1,Lit2)).
+map_plits(P1, Expr) :- demodalfy_outermost(+,Expr,MExpr,_Outer),!,
+   with_outer(Expr,1,map_plits(P1, MExpr)).
+map_plits(P1, Expr) :- Expr=..[C,I], tCol(C),!,map_plits(P1, isa(I,C)).
+map_plits(P1, Expr) :- functor(Expr,F,A),mappable_sentence_functor(F,A),!, Expr =.. [F|Args],
+  map_meta_lit(F,1,P1,Args).
+map_plits(P1,Lit):- call(P1,Lit).
 
+map_meta_lit(F,N,P1,[Arg|Args]):- !,
+  with_outer(F,N,map_plits(P1, Arg)),
+  N2 is N + 1,
+  map_meta_lit(F,N2,P1,Args).
+map_meta_lit(_,_,_,[]):-!.
+
+with_outer(ExprF,N,Goal):- nb_current('$outer_stack',Was),
+  locally($('$outer_stack')=[ExprF-N|Was],Goal).
 
 closure_push(Closure,Data):- var(Closure),!,add_dom(Closure,Data).
 closure_push(Closure,Data):- Closure=[true|_Rest],!,setarg(1,Closure,Data).
@@ -260,7 +281,8 @@ extract_conditions(Sentence,Conds):-
 %
 % Datalog Goal Expansion.
 %
-boxlog_goal_expansion(weaken(G),GG):-!,weaken_goal(G,GG).
+boxlog_goal_expansion(relax(G),GG):-!,relax_goal(G,GG).
+%boxlog_goal_expansion(G,GG):-!,relax_goal(G,GG).
 /* 
 boxlog_goal_expansion(G,_):- % \+ source_location(_,_),
   wdmsg(g_s(G)),fail.
@@ -269,40 +291,87 @@ boxlog_goal_expansion(G,_):- % \+ source_location(_,_),
 
 
 
-%% weaken( :GoalG) is semidet.
+%% relax( :GoalG) is det.
 %
-% Weaken.
+% Relaxen.
 %
-weaken(G):- weaken_goal(G,GG) -> GG.
+relax(G):- map_lits(relax_lit,G).
+
+relax_lit(G):- var(G),!.
+relax_lit(_:G):-!,relax_lit(G).
+relax_lit(G):- G=..[_|ARGS],relax_args(G,1,ARGS).
 
 
-
-
-%% weaken_goal( :GoalG, :GoalGGG) is semidet.
+%% relaxed_call( :GoalG) is nondet.
 %
-% Weaken Goal.
 %
-weaken_goal(G,GGG):- copy_term(G,GG,Gs),G=GG,G=..[_|ARGS],weaken_args(GG,1,ARGS),   GGG=(GG,maplist(iz_member,Gs)).
+relaxed_call(G):- relax(G), (G *-> unrelax(G) ; (unrelax(G),!,fail)).
 
 
 
 
-%% weaken_arg( ?G, ?N, ?A) is semidet.
+%% relax_goal( :GoalG ) is det.
 %
-% Weaken Argument.
+% Relaxen Goal.
 %
-weaken_arg(G,N,A):- iz(AA,[A]),!,setarg(N,G,AA).
-weaken_arg(G,N,A):- (var(A)->true;(iz(AA,[A]),setarg(N,G,AA))).
+
+relax_goal(G,GG):- copy_term(G,GG),relax(GG).
+
+
+relax_goal_alt_old(G,GGG):-
+  copy_term(G,GG,Gs),G=GG,G=..[_|ARGS],relax_args(GG,1,ARGS),   
+  GGG=(GG,maplist(iz_member,Gs)).
+
+
+%  ?- G=loves(a,b),relax_lit(G).
+  
 
 
 
 
-%% weaken_args( ?G, ?N, :TermA) is semidet.
+%% relax_N( ?G, ?N, ?A) is semidet.
 %
-% Weaken Arguments.
+% Relaxen Argument.
 %
-weaken_args(G,N,[A]):-weaken_arg(G,N,A),!.
-weaken_args(G,N,[A|RGS]):-weaken_arg(G,N,A),N2 is N + 1,weaken_args(G,N2,RGS).
+% % relax_N(G,N,Val):- var(Val),!,setarg(N,G,Val).
+% % relax_N(G,N,Val):- iz(AA,[Val]),!,nb_setarg(N,G,AA).
+relax_N(G,N,Val):- dont_relax(Val)->true;(nb_setarg(N,G,NewVar),put_value(NewVar,Val)).
+
+:- if(exists_source(library(multivar))).
+% put_value(Var,Value):- multivar(Var),iz(Var,[Value]),mv_set1(Var,Value).
+
+% put_value(Var,Value):- Var==Value,!.
+put_value(Var,Value):- is_dict(Value,Tag),!,
+     (Tag==Var->true;put_value(Var,Tag)),
+     dict_pairs(Value,_Tag2,Pairs),
+     maplist(put_value_attr(Var),Pairs).
+put_value(Var,Value):- iz(Var,[Value]).
+
+put_value_attr(Var,N-V):-put_attr_value(Var,N,V).
+put_attr_value(Var,iza,V):- !, add_dom(Var,V).
+put_attr_value(Var,iz,V):- !, iz(Var,V).
+put_attr_value(Arg,Name,FA):- as_constraint_for(Arg,FA,Constraint),!,put_attr_value0(Arg,Name,Constraint).
+
+put_attr_value0(Var,Name,HintE):- 
+  (get_attr(Var,Name,HintL) -> min_dom(HintE,HintL,Hint);Hint=[HintE]), !,
+   put_attr(Var,Name,Hint).
+
+
+
+:- else.
+ put_value(Var,Value):- iz(Var,[Value]).
+:- endif.
+
+dont_relax(A):- var(A),!.
+dont_relax(A):- \+ compound(A), \+ atom(A), \+ string(A).
+
+%% relax_args( ?G, ?N, :TermA) is semidet.
+%
+% Relaxen Arguments.
+%
+relax_args(G,N,[A|RGS]):-relax_N(G,N,A),!,N2 is N + 1,relax_args(G,N2,RGS).
+relax_args(_,_,[]).
+
 
 
 
@@ -391,6 +460,7 @@ add_dom0(Var,HintE):- var(Var),
   (get_attr(Var,iza,HintL) ->min_dom(HintE,HintL,Hint);Hint=[HintE]), !,
    put_attr(Var,iza,Hint).
 add_dom0(Var,Hint):- ignore(show_failure(why,dom_call(Var,Hint))).
+
 
 
 %% dom_chk( ?E, ?Cs) is semidet.
@@ -537,11 +607,11 @@ max_dom0(HintA,[HintB|HintL],[HintB|HintS]):- !,max_dom0(HintA,HintL,HintS).
 
 
 
-%% dom_lbl( ?X) is semidet.
+%% unrelax( ?X) is semidet.
 %
 % Domain Labeling (residuals).
 %
-dom_lbl(X):-copy_term(X,X,Gs),maplist(iz_member,Gs).
+unrelax(X):-copy_term(X,X,Gs),maplist(iz_member,Gs).
 
 
 
@@ -686,24 +756,34 @@ same_arg(same_or(Pred),I,Sup):- holds_t(Pred,I,Sup),!.
 %
 promp_yn(Fmt,A):- format(Fmt,A),get_single_char(C),C=121.
 
-:- set_prolog_flag(generate_debug_info, true).
+
+
+:- export(mpred_functor/3).
+mpred_functor(Pred,Pred,A):-var(Pred),!,between(1,9,A).
+mpred_functor(F/A,F,A):-!,probably_arity(F,A).
+mpred_functor(_:Pred,F,A):-!,mpred_functor(Pred,F,A).
+mpred_functor(F,F,A):-atom(F),!,probably_arity(F,A).
+mpred_functor(Pred,F,A):-functor_safe(Pred,F,A).
+
+probably_arity(F,A):-(integer(A)->true;(arity(F,A)*->true;between(1,9,A))).
+
 
 
 % :-swi_module(iz, [ iz/2  ]). % Var, ?Domain
 :- use_module(library(ordsets)).
-:- was_export(iz/2).
-
-
 
 %% iz( ?X, ?Dom) is semidet.
 %
 % Domain.
 %
+:- was_export(iz/2).
+
 iz(X, Dom) :-
       var(Dom), !,
       get_attr(X, iz, Dom).
-iz(X, List) :-
-      list_to_ord_set(List, Domain),
+iz(X, List) :- 
+      listify(List,List0),
+      list_to_ord_set(List0, Domain),
       put_attr(Y, iz, Domain),
       X = Y.
 
@@ -746,7 +826,7 @@ iz:attr_unify_hook(Domain, Y) :-
    ( NewDomain == []
    -> fail
    ; NewDomain = [Value]
-   -> Y = Value
+   -> Y = the(Value)
    ; put_attr(Y, iz, NewDomain)
    )
    ; var(Y)
@@ -763,6 +843,9 @@ iz:attribute_goals(X) -->
 
 
 
+iz:attr_portray_hook(Val, _) :- write('iz:'), write(Val),!.
+
+iza:attr_portray_hook(Val, _) :- write('iza:'), write(Val),!.
 
 
 %% cmp_memberchk( ?X, ?Y) is semidet.

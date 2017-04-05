@@ -7,6 +7,7 @@
 :- module(pfc,[use_pfc/0]).
 :- system:use_module(library(virtualize_source)).
 :- system:use_module(library(hook_hybrid)).
+:- system:use_module(library(logicmoo_utils)).
 % :- use_module(library(attvar_serializer)).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
 :- set_prolog_flag(runtime_speed, 1). % 1 = default
@@ -217,7 +218,8 @@ baseKB:mpred_skipped_module(eggdrop).
 :- reexport(library('pfc2.0/mpred_core.pl')).
 :- system:reexport(library('pfc2.0/mpred_at_box.pl')).
 
-:- set_prolog_flag_until_eof(virtual_stubs,true).
+:- system:use_module(library('file_scope')).
+:- virtualize_source_file.
 
 :- reexport(library('pfc2.0/mpred_type_isa.pl')).
 :- reexport(library('pfc2.0/mpred_expansion.pl')).
@@ -363,7 +365,7 @@ must_pfc(IM,_):- \+ compound(IM),!,fail.
 must_pfc(IM,MO):- in_dialect_pfc,fully_expand(IM,MO),!.
 must_pfc(IM,MO):- must_pfc_p(IM),!,fully_expand(IM,MO),!.
 must_pfc_p('-->'(_,_)):-!,fail.
-must_pfc_p(':-'(_,(CWC,_))):- !, atom(CWC),arg(_,v(bwc,fwc,pfc),CWC).
+must_pfc_p(':-'(_,(CWC,_))):- !, atom(CWC),arg(_,v(bwc,fwc,pfc,awc,zwc,cwc),CWC).
 must_pfc_p('==>'(_,_)).
 must_pfc_p('==>'(_)).
 must_pfc_p('<==>'(_,_)).

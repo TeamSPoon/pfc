@@ -12,7 +12,7 @@
 % Douglas Miles
 */
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_type_isa.pl
-:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
+%:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
 :- module(mpred_type_isa,
           [ 
             assert_isa/2,
@@ -107,16 +107,22 @@
          % did_learn_from_name/1,
          % isa_pred_now_locked/0,
          
-          type_prefix/2,
-          type_suffix/2, 
+         % type_prefix/2,
+         % type_suffix/2, 
           mpred_type_isa_file/0
           ]).
 
+:- kb_shared(baseKB:type_prefix/2).
+:- kb_shared(baseKB:type_suffix/2).
+ 
 :- include('mpred_header.pi').
+
+:- meta_predicate as_reflexive(2,?,?).
 
 :- thread_local(t_l:disable_px/0).
 
-:- endif.
+%:- endif.
+
 
 :-
             op(1150,fx,(was_dynamic)),
@@ -202,7 +208,7 @@ is_never_type(V):-nonvar(V),never_type_why(V,_),!.
 % Never Type False.
 %
 never_type_f(Var):-is_ftVar(Var),!,trace_or_throw(var_never_type(Var)).
-never_type_f(F):-a(tCol,F),!,fail.
+never_type_f(F):- call_u(tCol(F)),!,fail.
 never_type_f(_:W):-!,never_type_f(W).
 never_type_f(':-').
 never_type_f('include').
@@ -267,62 +273,66 @@ never_type_why(M:C,Why):-atomic(M),!,never_type_why(C,Why).
 isa_from_morphology(Inst,Type):-atom(Inst),type_suffix(Suffix,Type),atom_concat(Base,Suffix,Inst),!,atom_length(Base,BL),BL>2.
 isa_from_morphology(Inst,Type):-atom(Inst),type_prefix(Prefix,Type),atom_concat(Prefix,Other,Inst),capitalized(Other),!.
 
+:- add_import_module(mpred_type_isa,baseKB,start).
 
-%= 	 	 
+:- multifile(baseKB:type_suffix/2).
+:- mpred_type_isa:import(baseKB:type_suffix/2).
 
 %% type_suffix( ?VALUE1, ?VALUE2) is nondet.
 %
 % Type Suffix.
 %
-type_suffix('Fn',ftFunctional).
-type_suffix('Type',ttTypeType).
-type_suffix('Able',ttTypeByAction).
+baseKB:type_suffix('Fn',ftFunctional).
+baseKB:type_suffix('Type',ttTypeType).
+baseKB:type_suffix('Able',ttTypeByAction).
 
 
 
-%= 	 	 
+:- import(baseKB:type_prefix/2).	 	 
 
 %% type_prefix( ?VALUE1, ?VALUE2) is nondet.
 %
 % Type Prefix.
 %
-type_prefix(vt,ttValueType).
-type_prefix(tt,ttTypeType).
-type_prefix(t,tSet).
-type_prefix(pred,tPred).
+baseKB:type_prefix(A,B):-typ_prfx(A,B).
 
-type_prefix(format,tPred).
-type_prefix(is,ftSyntaxOperator).
-type_prefix(dcg,ftSyntaxOperator).
-type_prefix(dcg,ftTextType).
-type_prefix(txt,ftTextType).
-type_prefix(sk,ftSkolemFunction).
-%type_prefix(is,tPred).
-%type_prefix(a,tFunction).
-%type_prefix(t,tCol).
-type_prefix(fn,tFunction).
-type_prefix(mud,rtMudPred).
-type_prefix(mud,tPred).
-type_prefix(prop,tPred).
-type_prefix(ft,ttExpressionType).
+typ_prfx(vt,ttValueType).
+typ_prfx(tt,ttTypeType).
+typ_prfx(t,tSet).
+typ_prfx(pred,tPred).
+
+typ_prfx(format,tPred).
+typ_prfx(is,ftSyntaxOperator).
+typ_prfx(dcg,ftSyntaxOperator).
+typ_prfx(dcg,ftTextType).
+typ_prfx(txt,ftTextType).
+typ_prfx(sk,ftSkolemFunction).
+%typ_prfx(is,tPred).
+%typ_prfx(a,tFunction).
+%typ_prfx(t,tCol).
+typ_prfx(fn,tFunction).
+typ_prfx(mud,rtMudPred).
+typ_prfx(mud,tPred).
+typ_prfx(prop,tPred).
+typ_prfx(ft,ttExpressionType).
 
 
-type_prefix(prolog,ttRelationType).
-type_prefix(pfc,ttRelationType).
-type_prefix(rt,ttRelationType).
-type_prefix(pt,ttRelationType).
+typ_prfx(prolog,ttRelationType).
+typ_prfx(pfc,ttRelationType).
+typ_prfx(rt,ttRelationType).
+typ_prfx(pt,ttRelationType).
 
-type_prefix(v,vtValue).
-type_prefix(i,tIndividual).
+typ_prfx(v,vtValue).
+typ_prfx(i,tIndividual).
 
 /*
-type_prefix(i,ftID).
-type_prefix(act,ftAction).
-type_prefix(mob,ttAgentType).
-type_prefix(mt,ttModuleType).
-type_prefix(role,ttKnowledgeType).
-type_prefix(item,ttItemType).
-type_prefix(macro,ttMacroType).
+typ_prfx(i,ftID).
+typ_prfx(act,ftAction).
+typ_prfx(mob,ttAgentType).
+typ_prfx(mt,ttModuleType).
+typ_prfx(role,ttKnowledgeType).
+typ_prfx(item,ttItemType).
+typ_prfx(macro,ttMacroType).
 */
 
 % ========================================
@@ -392,6 +402,37 @@ into_single_class(A,B):- is_ftCompound(B),!, (is_ftCompound(A) -> (into_single_c
 into_single_class('&'(A,Var),VV):-is_ftVar(Var),!,into_single_class(A,VV).
 into_single_class('&'(A,B),VV):-!, into_single_class((B),VV);into_single_class((A),VV).
 into_single_class(A,A).
+
+
+% ==========================
+% tran_by_trans(isa,genls)
+% ==========================
+
+genls_by_trans(C,S):- var(S),!,nonvar(C),genls_upward(C,S),not_already_genls(C,S).
+genls_by_trans(C,S):- var(C),!,genls_downward(C,S),not_already_genls(C,S).
+genls_by_trans(C,S):- genls_inward(C,S),not_already_genls(C,S).
+
+not_already_genls(C,P):- C\=P, \+ clause_b(genls(C,P)).
+
+genls_upward(C,S):-clause_b(genls(C,C0)),clause_b(genls(C0,SP)),(SP=S;clause_b(genls(SP,S))).
+genls_downward(C,S):-clause_b(genls(S0,S)),clause_b(genls(SP,S0)),(SP=C;clause_b(genls(C,SP))).
+genls_inward(C,S):- genls_upward(C,M),(M=S ; genls_downward(M,S)).
+
+
+tran_by_trans(_,C,S):- C==S,!.
+tran_by_trans(genls,C,S):- !,genls_by_trans(C,S), \+ disjointWith(C,S).
+tran_by_trans(R,C,S):- var(S),!,nonvar(C),tran_upward(R,C,S),not_already_tran(R,C,S).
+tran_by_trans(R,C,S):- var(C),!,tran_downward(R,C,S),not_already_tran(R,C,S).
+tran_by_trans(R,C,S):- tran_inward(R,C,S),not_already_tran(R,C,S).
+
+not_already_tran(R,C,P):- C\=P, \+ clause_r(R,C,P).
+
+tran_upward(R,C,S):-clause_r(R,C,C0),clause_r(R,C0,SP),(SP=S;clause_r(R,SP,S)).
+tran_downward(R,C,S):-clause_r(R,S0,S),clause_r(R,SP,S0),(SP=C;clause_r(R,C,SP)).
+tran_inward(R,C,S):- tran_upward(R,C,M),(M=S ; tran_downward(R,M,S)).
+
+clause_r(R,C,P):- P=..[R,C,P],clause_b(P).
+
 
 % ==========================
 % taxonomicPair(isa,genls)

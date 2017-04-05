@@ -103,7 +103,7 @@
 
 :- flag_call(runtime_debug=false).
 
-:- set_prolog_flag_until_eof(virtual_stubs,true).
+:- virtualize_source_file.
 
 user_m_check(_Out).
 

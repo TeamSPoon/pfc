@@ -200,7 +200,7 @@
 
 :- endif.
 
-:- set_prolog_flag_until_eof(virtual_stubs,false).
+:- system:use_module(library('file_scope')).
 
 :- thread_local(t_l:into_form_code).
 
@@ -1519,9 +1519,10 @@ mpred_term_expansion(Fact,Output):- load_file_term_to_command_1(_Dir,Fact,C),qui
 % load file term Converted To command  Secondary Helper.
 %
       load_file_term_to_command_1(pfc(act),(H:-(Chain,B)),(PFC==>PH)):-cwc, is_action_body(Chain),pl_to_mpred_syntax((Chain,B),PFC),pl_to_mpred_syntax_h(H,PH).
-      load_file_term_to_command_1(pfc(awc),(H:-(Chain,B)),(PH==>PFC)):-cwc, has_body_atom(twc,Chain),pl_to_mpred_syntax((Chain,B),PFC),pl_to_mpred_syntax_h(H,PH).
       load_file_term_to_command_1(pfc(fwc),(H:-(Chain,B)),(PFC==>PH)):-cwc, is_fc_body(Chain),pl_to_mpred_syntax((Chain,B),PFC),pl_to_mpred_syntax_h(H,PH),can_be_dynamic(PH),make_dynamic(PH).
       load_file_term_to_command_1(pfc(bwc),(H:-(Chain,B)),(PH<-PFC)):-cwc, is_bc_body(Chain),pl_to_mpred_syntax((Chain,B),PFC),pl_to_mpred_syntax_h(H,PH),can_be_dynamic(PH),make_dynamic(PH).
+      load_file_term_to_command_1(pfc(awc),(H:-(Chain,B)),(H:-(Chain,B))):-cwc, has_body_atom(awc,Chain),!.
+      load_file_term_to_command_1(pfc(zwc),(H:-(Chain,B)),(H:-(Chain,B))):-cwc, has_body_atom(zwc,Chain),!.
 
 
 mpred_term_expansion(Fact,Output):- load_file_term_to_command_1b(_Dir,Fact,C),!,quietly_must(mpred_term_expansion(C,Output)),!.
@@ -1862,7 +1863,8 @@ ensure_mpred_file_loaded(M:F0,List):-
 %
 % Declare Load Dbase.
 %
-declare_load_dbase(Spec):- forall(no_repeats(File,must_locate_file(Spec,File)),show_call(why,asserta_if_new(baseKB:registered_mpred_file(File)))).
+declare_load_dbase(Spec):- forall(no_repeats(File,must_locate_file(Spec,File)),
+  show_call(why,asserta_if_new(baseKB:registered_mpred_file(File)))).
 
 % :-  /**/ export((is_compiling_sourcecode/1)).
 

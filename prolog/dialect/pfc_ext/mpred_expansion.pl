@@ -999,6 +999,7 @@ string_to_mws([String,A|B],OUT):- (string(String);string(A)),!,must((string_to_m
 
 
 db_expand_final(_ ,NC,NC):-  is_ftVar(NC),!.
+db_expand_final(Op,t(EL),O):- !, db_expand_final(Op,EL,O).
 db_expand_final(_,props(Obj,List),{nonvar(Obj)}):- (List==[] ; List==true).
 db_expand_final(_ ,sumo_rule(NC),sumo_rule(NC)):- !.
 
@@ -1151,6 +1152,9 @@ db_expand_0(Op,pkif(SentI),SentO):- nonvar(SentI),!,must((any_to_string(SentI,Se
 db_expand_0(_Op,kif(Sent),SentO):- nonvar(Sent),!, must(expand_kif_string(Sent,SentM)),if_defined(sexpr_sterm_to_pterm(SentM,SentO),SentM=SentO).
 
 db_expand_0(Op,==>(EL),O):- !, db_expand_0(Op,EL,O).
+db_expand_0(Op,t(EL),O):- !, db_expand_0(Op,EL,O).
+% db_expand_0(_,t(Sent),t(Sent)):- ftVar(Sent),!.
+
 db_expand_0(Op,[G|B],[GG|BB]):-!,db_expand_0(Op,G,GG),db_expand_0(Op,B,BB).
 db_expand_0(Op,G:B,GG:BB):-!,db_expand_0(Op,G,GG),db_expand_0(Op,B,BB).
 
@@ -1160,8 +1164,6 @@ db_expand_0(Op,SentI,SentO):- SentI=..[NOT,Sent],arg(_,v( ( \+ ), '{}' , (~) , (
   db_expand_0(Op,Sent,SentM)-> 
   (Sent\=@=SentM -> (SentMM=..[NOT,SentM],fully_expand_goal(Op,SentMM,SentO)) ; SentO =..[NOT,SentM]),!.
 
-
-db_expand_0(_,t(Sent),t(Sent)):- !.
 
 db_expand_0(_,Sent,SentO):- copy_term(Sent,NoVary),get_ruleRewrite(Sent,SentO),must(Sent\=@=NoVary),SentO \=@= Sent.
 db_expand_0(call(Op),Sent,SentO):-  mreq(quasiQuote(QQuote)),subst(Sent,QQuote,isEach,MID),Sent\=@=MID,!,must(db_expand_0(call(Op),MID,SentO)).

@@ -284,3 +284,6 @@ lm_util:register_mpred_impl_file(F):- (current_prolog_flag(xref,true)->true;
    (if_defined(baseKB:ignore_file_mpreds(F),fail)->true;assertz(baseKB:ignore_file_mpreds(F))),
    ((baseKB:mpred_is_impl_file(F))->true;assertz(baseKB:mpred_is_impl_file(F)))),now))))).
 
+
+:- virtualize_source_file.
+
