@@ -540,6 +540,7 @@ mpred_plist_t(P,LIST):- CALL=..[t,P|LIST],on_x_debug(CALL).
 %
 % Managed Predicate Functor-arity Call.
 %
+mpred_fa_call(M:F,A,Call):-!,mpred_fa_call(F,A,M:Call).
 mpred_fa_call(F,A,Call):- var(F),!,(support_hilog(F,A);arity(F,A)), F\==t, \+ rtNotForUnboundPredicates(F),current_predicate(F,M:_OtherCall),on_x_debug(M:Call).
 mpred_fa_call(F,_,Call):-current_predicate(F,M:_OtherCall),F\==t,M:Call.
 

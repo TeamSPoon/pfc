@@ -52,7 +52,8 @@
 :- kb_shared(tCol/1).
 
 
-
+:- kb_shared(never_assert_u/1).
+:- kb_shared(never_retract_u/1).
 :- kb_shared(predicateConventionMt/2).
 :- kb_shared(prologOnly/1).
 :- kb_shared(functorIsMacro/1).
@@ -92,9 +93,15 @@
 :- kb_shared(genls/2).
 :- kb_shared(typeProps/2).
 
-
-
 :- forall(between(1,11,A),kb_shared(t/A)).
+
+:- meta_predicate t(*,?).
+:- meta_predicate t(*,?,?).
+:- meta_predicate t(*,?,?,?).
+:- meta_predicate t(*,?,?,?,?).
+:- meta_predicate t(*,?,?,?,?,?).
+:- meta_predicate t(*,?,?,?,?,?,?).
+:- meta_predicate t(*,?,?,?,?,?,?,?).
 
 :- begin_pfc.
 
@@ -140,6 +147,7 @@ ttExpressionType(A)==> ( tCol(A), \+ tSet(A) ).
 % ttTypeFacet - Every type (tCol) has at least two facets below
 % ======================================================================================= %
 completelyAssertedCollection(ttTypeFacet).
+
 
 ttTypeFacet(T)==>tSet(T).
 
@@ -195,6 +203,7 @@ tooSlow ==> (((typeGenls(SUBCOLTYPE ,SUBCOL),genls(SUBCOLTYPE,COLTYPE),typeGenls
    genls(SUBCOL,COL))).
 
 genls(C,P) ==> (tCol(C), tCol(P)).
+isa(_,C) ==> tCol(C).
 
 tooSlow ==> ((genls(C,P)/(C\=P, \+ ttExpressionType(C) , \+ ttExpressionType(P) , \+ rtAvoidForwardChain(P) )) ==> genlsFwd(C,P)).
 
@@ -936,24 +945,26 @@ resultIsa(aVerbFn(ftString),vtVerb).
 
 
 :- kb_shared( ( =@=> ) /2 ).
-:- kb_shared( ( macroExpandExact ) /2 ).
+:- kb_shared( ( macroExpandExact ) /3 ).
 
-:- op(1049,xfx, ( =@=> )).
+:- op(1185,yfx, ( =@=> )).
 tiProps(C,I)=@=>isa(I,C).
 tiProps(C,I,P1)=@=>props(I,[C,P1]).
 tiProps(C,I,P1,P2)=@=>props(I,[C,P1,P2]).
 tiProps(C,I,P1,P2,P3)=@=>props(I,[C,P1,P2,P3]).
 tiProps(C,I,P1,P2,P3,P4)=@=>props(I,[C,P1,P2,P3,P4]).
 
-'=@=>'(I,O) ==> macroExpandExact(I,O).
+'=@=>'((I,{PreReq}),O) ==> macroExpandExact(I,PreReq,O).
+('=@=>'(I,O) / (I\=(_,_))) ==> macroExpandExact(I,true,O).
+
 % '=@=>'(I,O) ==> ('==>'(I,O)).
 
-% :- listing(macroExpandExact/2).
+macroExpandExact(P,PreReq,Q) ==>
+(  P, { PreReq,mpred_why(P,Why) } ==> {ignore(retract(P)),mpred_ain(Q,Why)}).
 
 
 isRegisteredCycPred(apply,maplist,3).
 
-:- kb_shared(isRegisteredCycPred/3).
 :- kb_shared(isRegisteredCycPred/3).
 
 /*

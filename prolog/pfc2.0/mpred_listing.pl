@@ -130,7 +130,7 @@ pp_items(Type,[H|T]) :-
   pp_items(Type,T).
 pp_items(Type,H) :- ignore(pp_item(Type,H)).
 
- 
+:- thread_local(t_l:print_mode/1).
 
 %= 	 	 
 

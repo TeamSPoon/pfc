@@ -73,6 +73,7 @@
 :- reexport(library(xlisting)).
 mpred_prop_file_begin.
 
+:- system:use_module(library(clpfd),['#='/2]).
 %% get_arity( :TermTerm, ?F, ?A) is semidet.
 %
 % Get Arity.
@@ -80,7 +81,7 @@ mpred_prop_file_begin.
 get_arity(Term,F,A):- atom(Term),F=Term,!,ensure_arity(F,A).
 get_arity(F/A,F,A):-!,atom(F),ensure_arity(F,A),!,(A>0).
 get_arity(F // A,F,A2):- must(integer(A)),!, atom(F), is(A2 , A+2), ensure_arity(F,A2),!,(A2>0).
-get_arity(F // A,F,A2):- use_module(library(clpfd)),!, atom(F), clpfd:call(#=(A2 , A+2)), ensure_arity(F,A2),!,(A2>0).
+get_arity(F // A,F,A2):- use_module(library(clpfd),['#='/2]),!, atom(F), clpfd:call(#=(A2 , A+2)), ensure_arity(F,A2),!,(A2>0).
 get_arity(M:FA,F,A):-atom(M),!,get_arity(FA,F,A).
 get_arity(FA,F,A):- get_functor(FA,F,A),must(A>0).
 

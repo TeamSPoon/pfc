@@ -14,10 +14,9 @@ flatTrans(G)==>
 flatTrans(G)==> (((t(G,A,B)/(A\=B,dif(A,C)),t(G,B,C)/(B\=C)))  ==> t(G,A,C)).
 
 */
-tooSlow==>
 ((flatTrans(G)==> (((t(G,A,B)/(A\=B),t(G,B,C)/(B\=C,A\=C)))  ==> t(G,A,C)))).
 
-% flatTrans(genls).
+tooSlow==> flatTrans(genls).
 flatTrans(subFormat).
 flatTrans(genlPreds).
 flatTrans(genlFuncs).
@@ -29,6 +28,8 @@ genlsUpTo(ttTemporalType).
 genlsUpTo(ttRelationType).
 genlsUpTo(ttTypeType).
 
+
+genls(C,S):- cwc, tran_by_trans(genls,C,S).
 
 
 % to load this files use  ?- ensure_mpred_file_loaded('logicmoo/pfc/system_genls.pfc').

@@ -255,6 +255,8 @@ type_checking ==> (( typeCheckDecl(Each,Must), Each, {\+ Must}) ==> failed_typeC
 
 failed_typeCheckDecl(Each,Must)==>{trace_or_throw(failed_typeCheckDecl(Each,Must))}.
 
+:- kb_shared(never_assert_u/1).
+:- kb_shared(never_assert_u/2).
 never_assert_u(vtVerb(BAD),vtVerbError):- BAD=='[|]'.
 never_assert_u(prologSingleValued(BAD),var_prologSingleValued(BAD)):-is_ftVar(BAD).
 
@@ -266,6 +268,7 @@ never_assert_u(A,test_sanity(A)):- never_assert_u(A).
 
 
 
+:- kb_shared(never_retract_u/1).
 :- kb_shared(never_retract_u/2).
 never_retract_u(~(X),is_ftVar(X)):- cwc, is_ftVar(X).
 never_retract_u(A,test_sanity(A)):- cwc, never_retract_u(A).
@@ -473,7 +476,11 @@ tSet(isLoaded).
 :- mpred_notrace_exec.
 
 
-isLoaded(Thing),isa(Thing,ModType), \+ ttExpressionType(ModType) ==> isLoadedType(ModType).
+:- kb_shared(onStart/1).
+
+%:-ain(((ttModuleType(ModType),isa(Thing,ModType),isLoaded(Thing), \+ ttExpressionType(ModType) ==> isLoadedType(ModType)))).
+%==>(((onStart(Idea)==> ((isLoadedType(tSourceData),isRuntime) ==> {ain_expanded(Idea,())})))).
+(onStart(Idea)==> (isRuntime ==> {get_startup_uu(UU),ain_expanded(Idea,UU)})).
 
 pfcControlled(prologArity(tRelation,ftInt)).
 pfcControlled(isa(ftTerm,tCol)).
@@ -1410,6 +1417,7 @@ prologHybrid(argIsa(tRelation,ftInt,tCol)).
 prologHybrid(formatted_resultIsa(ttExpressionType,tCol)).
 
 :- sanity(argIsa(genlPreds,2,_)).
+
 :- sanity(tCol(vtVerb)).
 :- sanity(isa(vtVerb,tCol)).
 :- sanity(t(tCol,vtVerb)).
