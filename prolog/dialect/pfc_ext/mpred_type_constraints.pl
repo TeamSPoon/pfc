@@ -16,9 +16,8 @@
 % Douglas Miles
 */
 
-
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_type_constraints.pl
-:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
+%:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
 :- module(mpred_type_constraints,
           [ add_dom/2,           
             arg_to_var/3,
@@ -64,11 +63,12 @@
             mpred_type_constraints_file/0
           ]).
 
+:- set_prolog_flag(generate_debug_info, true).
 :- include('mpred_header.pi').
 
-:- endif.
+% :- endif.
 
-:- set_prolog_flag(generate_debug_info, true).
+
 
 :- if(exists_source(library(multivar))).
 :- use_module(library(multivar)).
@@ -87,12 +87,16 @@
    thaw(?),
    lazy(0),
    relax(*),
+   relaxing(*),
    unrelax(*),
    relax_goal(*,+),
-   lazy(?,0).
+   lazy(+,0).
+
+:- meta_predicate relaxed_call(0).
 
 % ?- G=(loves(X,Y),~knows(Y,tHuman(X))),relax_goals(G,Out),writeq(Out).
- 
+
+:- meta_predicate map_plits(1,*).
 map_lits(P1,Lit):- 
  locally($('$outer_stack')=[],once(map_plits(P1,Lit))),!.
 
@@ -104,7 +108,7 @@ map_plits(P1,(Lit1 :- Lit2)):- !,map_lits(P1,Lit1),with_outer(Lit1,0,map_plits(P
 map_plits(P1, Expr) :- demodalfy_outermost(+,Expr,MExpr,_Outer),!,
    with_outer(Expr,1,map_plits(P1, MExpr)).
 map_plits(P1, Expr) :- Expr=..[C,I], tCol(C),!,map_plits(P1, isa(I,C)).
-map_plits(P1, Expr) :- functor(Expr,F,A),mappable_sentence_functor(F,A),!, Expr =.. [F|Args],
+map_plits(P1, Expr) :- functor(Expr,F,A),mappable_sentence_functor(F,A), !, Expr =.. [F|Args],
   map_meta_lit(F,1,P1,Args).
 map_plits(P1,Lit):- call(P1,Lit).
 
@@ -290,13 +294,15 @@ boxlog_goal_expansion(G,_):- % \+ source_location(_,_),
 */
 
 
-
+is_iz_or_iza(Var):- get_attr(Var,iz,_);get_attr(Var,iza,_).
 
 %% relax( :GoalG) is det.
 %
 % Relaxen.
 %
 relax(G):- map_lits(relax_lit,G).
+
+relaxing(G):- term_attvars(G,Gs),notrace(relax(G)),term_attvars(G,Gs0),!,Gs0\==Gs.
 
 relax_lit(G):- var(G),!.
 relax_lit(_:G):-!,relax_lit(G).
@@ -307,8 +313,6 @@ relax_lit(G):- G=..[_|ARGS],relax_args(G,1,ARGS).
 %
 %
 relaxed_call(G):- relax(G), (G *-> unrelax(G) ; (unrelax(G),!,fail)).
-
-
 
 
 %% relax_goal( :GoalG ) is det.
@@ -336,6 +340,7 @@ relax_goal_alt_old(G,GGG):-
 %
 % % relax_N(G,N,Val):- var(Val),!,setarg(N,G,Val).
 % % relax_N(G,N,Val):- iz(AA,[Val]),!,nb_setarg(N,G,AA).
+relax_N(_,_,Val):- var(Val),!, ((get_attr(Val,iz,_);get_attr(Val,iza,_))->true;put_attr(Val,iz,[_])).
 relax_N(G,N,Val):- dont_relax(Val)->true;(nb_setarg(N,G,NewVar),put_value(NewVar,Val)).
 
 :- if(exists_source(library(multivar))).
@@ -348,13 +353,13 @@ put_value(Var,Value):- is_dict(Value,Tag),!,
      maplist(put_value_attr(Var),Pairs).
 put_value(Var,Value):- iz(Var,[Value]).
 
-put_value_attr(Var,N-V):-put_attr_value(Var,N,V).
+put_value_attr(Var,N-V):- put_attr_value(Var,N,V).
 put_attr_value(Var,iza,V):- !, add_dom(Var,V).
 put_attr_value(Var,iz,V):- !, iz(Var,V).
 put_attr_value(Arg,Name,FA):- as_constraint_for(Arg,FA,Constraint),!,put_attr_value0(Arg,Name,Constraint).
 
 put_attr_value0(Var,Name,HintE):- 
-  (get_attr(Var,Name,HintL) -> min_dom(HintE,HintL,Hint);Hint=[HintE]), !,
+  (get_attr(Var,Name,HintL) -> min_dom(HintE,HintL,Hint); Hint=[HintE]), !,
    put_attr(Var,Name,Hint).
 
 
@@ -363,7 +368,7 @@ put_attr_value0(Var,Name,HintE):-
  put_value(Var,Value):- iz(Var,[Value]).
 :- endif.
 
-dont_relax(A):- var(A),!.
+dont_relax(A):- var(A),!,is_iz_or_iza(A).
 dont_relax(A):- \+ compound(A), \+ atom(A), \+ string(A).
 
 %% relax_args( ?G, ?N, :TermA) is semidet.
@@ -374,23 +379,48 @@ relax_args(G,N,[A|RGS]):-relax_N(G,N,A),!,N2 is N + 1,relax_args(G,N2,RGS).
 relax_args(_,_,[]).
 
 
+:- use_module(user:library(clpfd)).		% Make predicates defined
+:- use_module(user:library(clpr),except([{}/1])).		% Make predicates defined
+:- use_module(user:library(simplex)).		% Make predicates defined
 
-
+:- meta_predicate lazy_pfa(0,+,*).
+:- meta_predicate #(0).
+'#'(G):- map_lits(lazy,G).
 
 %% lazy( :GoalG) is semidet.
 %
 % Lazy.
 %
-lazy(G):- term_variables(G,Vs),lazy(Vs,G).
+lazy(G):- var(G),!,freeze(G,lazy(G)).
+lazy(G):- ground(G),!,call(G).
+lazy(is(X,G)):- !,clpr:{X =:= G}.
+% lazy(is(X,G)):-!,term_variables(G,Vs),lazy(Vs,is(X,G)).
+lazy(G):- functor(G,F,A),lazy_pfa(G,F,A).
 
+arithmetic_compare(=<).
+arithmetic_compare(=:=).
+arithmetic_compare(:=).
+arithmetic_compare(<).
+arithmetic_compare(>=).
+arithmetic_compare(>).
+
+lazy_pfa(G,F,2):- arithmetic_compare(F),!,clpr:{G}.
+lazy_pfa(G,_,1):- term_variables(G,[V1|Vs1]),!,
+      (Vs1 = [V2|Vs0] -> lazy([V1,V2|Vs0],G)
+                      ; freeze(V1,G)).
+lazy_pfa(G,_,_):- term_variables(G,[V1|Vs1]),
+      (Vs1 = [V2|Vs0] -> lazy([V1,V2|Vs0],G)
+                      ; freeze(V1,G)).
 
 %% lazy( ?V, :GoalG) is semidet.
 %
 % Lazy.
 %
-lazy([],G):-!,G.
+lazy([V],G):- !, freeze(V,G).
 %lazy([V|Vs],G):- or_any_var([V|Vs],C)->when(C,lazy(G)).
-lazy([V|Vs],G):- lazy(Vs,freeze(V,G)).
+lazy([V|Vs],G):- !, lazy(Vs,freeze(V,G)).
+lazy(_,G):- call(G).
+
 
 or_any_var([V],nonvar(V)).
 or_any_var([V|Vs],(nonvar(V);C)):-or_any_var(Vs,C).
@@ -709,7 +739,7 @@ samef(X,Y):- quietly(((to_functor(X,XF),to_functor(Y,YF),(XF=YF->true;string_equ
 % Converted To Functor.
 %
 to_functor(A,O):-is_ftVar(A),!,A=O.
-to_functor(A,O):-compound(A),get_functor(A,F),!,to_functor(F,O).
+to_functor(A,O):-compound(A),get_functor(A,O),!. % ,to_functor(F,O).
 to_functor(A,A).
 
 :- was_export(arg_to_var/3).
@@ -821,15 +851,17 @@ init_iz(X,Dom):-Dom =[_], put_attr(X, iz, Dom),!.
 
 % An attributed variable with attribute value Domain has been
 % assigned the value Y
+
+iz:attr_unify_hook([Y], Value) :-  same(Y , Value),!.
 iz:attr_unify_hook(Domain, Y) :-
    ( get_attr(Y, iz, Dom2)
    -> ord_intersection(Domain, Dom2, NewDomain),
-   ( NewDomain == []
-   -> fail
-   ; NewDomain = [Value]
-   -> Y = the(Value)
-   ; put_attr(Y, iz, NewDomain)
-   )
+         ( NewDomain == []
+         -> fail
+         ; NewDomain = [Value]
+          -> same(Y , Value)
+             ; put_attr(Y, iz, NewDomain)
+           )
    ; var(Y)
    -> put_attr( Y, iz, Domain )
    ; (\+ \+ (cmp_memberchk(Y, Domain)))

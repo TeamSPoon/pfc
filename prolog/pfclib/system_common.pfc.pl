@@ -476,10 +476,25 @@ tSet(isLoaded).
 :- mpred_notrace_exec.
 
 
-:- kb_shared(onStart/1).
+:- kb_shared(onSpawn/1).
+
+%= 	 	 
+
+%% onSpawn( :TermA) is semidet.
+%
+% Whenever Spawn.
+%
+:- kb_shared(onSpawn/1).
+
+rtArgsVerbatum(onSpawn).
+tSet(onSpawn).
+
+onSpawn(When==>State)/nonvar(State) ==> ( When ==> onSpawn(State)).
+onSpawn(State)/(State \= (_ ==> _ )) ==> {doSpawn(State)}.
+
 
 %:-ain(((ttModuleType(ModType),isa(Thing,ModType),isLoaded(Thing), \+ ttExpressionType(ModType) ==> isLoadedType(ModType)))).
-%==>(((onStart(Idea)==> ((isLoadedType(tSourceData),isRuntime) ==> {ain_expanded(Idea,())})))).
+%==>(((onSpawn(Idea)==> ((isLoadedType(tSourceData),isRuntime) ==> {ain_expanded(Idea,())})))).
 (onStart(Idea)==> (isRuntime ==> {get_startup_uu(UU),ain_expanded(Idea,UU)})).
 
 pfcControlled(prologArity(tRelation,ftInt)).

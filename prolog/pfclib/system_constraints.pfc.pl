@@ -49,14 +49,24 @@ predicate_relaxed(Spec),{ mpred_functor(Spec,F,A),functor(P,F,A)} ==>
        
 :- else.
 
-predicate_relaxed(Spec),{ mpred_functor(Spec,F,A),functor(LOOP,F,A)} ==>  
+predicate_relaxed(Spec),{ mpred_functor(Spec,F,A),functor(LOOP,F,A),kb_shared(F/A),LOOP=..[F|ARGS]} ==>  
+ (((LOOP:- awc, \+ maplist(is_iz_or_iza,ARGS), LOOPY=LOOP,relax(LOOPY),!,call(LOOPY))),
+  prologOrdered(F)).  % Prolog Ordered is secondary insurance new assertions use assertz
+
+
+% @TODO THIS IS DISABLED but good to figure out
+predicate_relaxed(Spec),{ fail, mpred_functor(Spec,F,A),functor(LOOP,F,A)} ==>  
+ (((LOOP:- awc,LOOPY=LOOP,relaxing(LOOPY),!,call(LOOPY))),
+  prologOrdered(F)).  % Prolog Ordered is secondary insurance new assertions use assertz
+
+% @TODO THIS IS DISABLED but good to figure out
+predicate_relaxed(Spec),{ fail, mpred_functor(Spec,F,A),functor(LOOP,F,A)} ==>  
  (((LOOP:-
     awc,    % awc means this rule is always first
-      \+ is_looping(LOOP),!,
-       loop_check_term(
-         (relax(LOOP),LOOP),
-         LOOP,fail))),
+      \+ is_loop_checked(LOOP),!,
+      loop_check_term((LOOPY = LOOP, relax(LOOPY), LOOPY),LOOP,fail))),
   prologOrdered(F)).  % Prolog Ordered is secondary insurance new assertions use assertz
+
 
 % make sure current bug is caught
 prologOrdered(F),predSingleValued(F) ==> {trace_or_throw(unsupported(prologOrdered(F),predSingleValued(F)))}.
@@ -65,9 +75,18 @@ prologOrdered(F),predSingleValued(F) ==> {trace_or_throw(unsupported(prologOrder
 
 % ?- G=(loves(X,Y),~knows(Y,tHuman(X))),relax_goal(G,Out),writeq(Out).
 
-predicate_relaxed(test_weak/2).
+predicate_relaxed(weak_test/2).
 
-test_weak(vWeak1,vWeak2).
+weak_test("Weak1","Weak2").
+weak_test("Weak0","weAk2").
 
-:- listing(test_weak/2).
+:- export(weak_test/2).
+:- public(weak_test/2).
+:- listing(weak_test/2).
+
+:- mpred_test(weak_test("Weak1","Weak2")).
+
+:- mpred_test(weak_test(weak1,"Weak2")).
+
+:- mpred_test(weak_test("Weak1","wEak2")).
 
