@@ -149,6 +149,7 @@ modal_value(neg(_), Neg , true):- arg(_,v( ( \+ ),'~','-','not'),Neg).
 modal_value(_, Neg , neg(Neg)):- arg(_,v( ( \+ ),'~','-','not'),Neg).
 
 mappable_sentence_functor(call,1).
+mappable_sentence_functor(=,2):-!,fail.
 mappable_sentence_functor(call_u,1).
 mappable_sentence_functor(F,_):- downcase_atom(F,DC),upcase_atom(F,DC).
 %mappable_sentence_functor(F,1):- \+ tCol(F).

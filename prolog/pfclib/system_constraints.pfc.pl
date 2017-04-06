@@ -59,7 +59,7 @@ predicate_relaxed(Spec),{ mpred_functor(Spec,F,A),functor(LOOP,F,A)} ==>
   prologOrdered(F)).  % Prolog Ordered is secondary insurance new assertions use assertz
 
 % make sure current bug is caught
-prologOrdered(F),predSingleValued(F)? {trace_or_throw(unsupported(prologOrdered(F),predSingleValued(F))}.
+prologOrdered(F),predSingleValued(F) ==> {trace_or_throw(unsupported(prologOrdered(F),predSingleValued(F)))}.
 
 :- endif.
 
