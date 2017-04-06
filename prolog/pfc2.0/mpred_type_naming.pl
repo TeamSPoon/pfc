@@ -24,9 +24,9 @@
             i_name/3,
             i_name_lc/2,
             modality/3,
-            onSpawn/1,
-            onSpawn_0/2,
-            onSpawn_f_args/3,
+            doSpawn/1,
+            doSpawn_modal/2,
+            doSpawn_f_args/3,
             spawnOneSpawnArg/4,
             split_name_type/3,
             split_name_type_0/3,
@@ -301,59 +301,52 @@ modality(~,[not],[]).
 modality(~,[never],[]).
 
 
-:- baseKB:kb_shared(onStart/1).
+%% doSpawn( :TermA) is semidet. 
+% 
+% Spawn. 
 
-%= 	 	 
-
-%% onSpawn( :TermA) is semidet.
-%
-% Whenever Spawn.
-%
-onSpawn(A):-A==true,!.
-onSpawn((A,B)):-!,onSpawn(A),onSpawn(B).
-onSpawn(Class==>Fact):-!,ain(onStart(Class==>Fact)).
-onSpawn(ClassFact):-
-  fully_expand(clause(assert,onSpawn),ClassFact,ClassFactO),!,
-  onSpawn_0(t,ClassFactO).
+doSpawn((A,B)):-!,doSpawn(A),doSpawn(B). 
+doSpawn(Class==>Fact):-!,ain(Class==>{doSpawn(Fact)}). 
+doSpawn(ClassFact):-   
+   fully_expand(clause(assert,doSpawn),ClassFact,ClassFactO),!,  
+   doSpawn_modal(t,ClassFactO).
 
 
 %= 	 	 
 
-%% onSpawn_0( ?Modality, ?ClassFact) is semidet.
+%% doSpawn_modal( ?Modality, ?ClassFact) is semidet.
 %
 % Whenever spawn  Primary Helper.
 %
-onSpawn_0(_Modality,ClassFact):- 
+doSpawn_modal(_Modality,ClassFact):- 
  ClassFact=..[FunctArgType,Name],
  modality(FunctArgType,_,_),!,
- must(onSpawn_0(FunctArgType,Name)).
+ must(doSpawn_modal(FunctArgType,Name)).
    
-onSpawn_0(Modality,ClassFact):- ClassFact=..[FunctArgType,Name],
-
- must_det((
+doSpawn_modal(Modality,ClassFact):-  ClassFact=..[FunctArgType,Name],
  call_u(tCol(FunctArgType)),
+ must_det((
  createByNameMangle(Name,Inst,TypeA),
- call_u((assert_isa(TypeA,tCol),
- assert_isa(Inst,FunctArgType),
- assert_isa(Inst,TypeA))),
- fully_expand(clause(assert,onSpawn),t(Modality,genls(TypeA,FunctArgType)),TO),
- call_u(ain(onStart(TO))))),!.
+ assert_isa(TypeA,tCol),assert_isa(Inst,FunctArgType),assert_isa(Inst,TypeA),
+ fully_expand(clause(assert,doSpawn),t(Modality,genls(TypeA,FunctArgType)),TO),
+ ain(onStart(TO)))).
+ 
 
-onSpawn_0(Modality,ClassFact):- ClassFact=..[Funct|InstADeclB],
-  must_det(onSpawn_f_args(Modality,Funct,InstADeclB)).
+doSpawn_modal(Modality,ClassFact):- ClassFact=..[Funct|InstADeclB],
+  must_det(doSpawn_f_args(Modality,Funct,InstADeclB)).
 
 
 %= 	 	 
 
-%% onSpawn_f_args( ?Modality, ?Funct, ?List) is semidet.
+%% doSpawn_f_args( ?Modality, ?Funct, ?List) is semidet.
 %
 % Whenever Spawn Functor Arguments.
 %
-onSpawn_f_args(Modality,Funct,List):-
+doSpawn_f_args(Modality,Funct,List):-
  must_det((
-  call_u(must(convertSpawnArgs(Funct,1,List,NewList))),
+   convertSpawnArgs(Funct,1,List,NewList),
    Later =.. [Funct|NewList],
-   fully_expand(clause(assert,onSpawn),t(Modality,Later),TO),
+   fully_expand(clause(assert,doSpawn),t(Modality,Later),TO),
    call_u(ain(onStart(TO))))),!. 
   % call_after_mpred_load_slow(locally(deduceArgTypes(Funct), ain(Later))))),!.
 
@@ -391,8 +384,13 @@ convertOneSpawnArg(Funct,N,A,O):-spawnOneSpawnArg(Funct,N,A,O).
 % Spawn One Spawn Argument.
 %
 spawnOneSpawnArg(Funct,N,Name,Inst):- 
-    must(call_u(argIsa(Funct,N,FunctArgType))),
+    call_u(argIsa(Funct,N,FunctArgType)),
     must(convertToInstance(Name,FunctArgType,Inst)),!.
+
+spawnOneSpawnArg(Funct,N,Name,Inst):- 
+  must(( N == 1,
+    call_u(tCol(Funct)),
+    must(convertToInstance(Name,Funct,Inst)))),!.
 
 
 %= 	 	 
