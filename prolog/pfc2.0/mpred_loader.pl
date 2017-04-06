@@ -200,7 +200,7 @@
 
 :- endif.
 
-:- system:use_module(library('file_scope')).
+:- user:use_module(library('file_scope')).
 
 :- thread_local(t_l:into_form_code).
 
@@ -311,10 +311,6 @@ mpred_prolog_only_file(File):- file_name_extension(File,_,pfc),!,fail.
 mpred_prolog_only_file(File):- lmcache:mpred_directive_value(File,language,pfc),!,fail.
 mpred_prolog_only_file(_).
 
-% :- ensure_loaded(system:library(logicmoo_utils)).
-%:- use_module(mpred_expansion).
-%:- ensure_loaded(library(logicmoo/util/logicmoo_util_attvar_reader)).
-%:- ensure_loaded(library(logicmoo/util/logicmoo_util_varnames)).
 
 % mpred_te(_,_,I,OO):-thread_self(X),X\==main,!,I=OO.
 % not actual function
@@ -686,7 +682,7 @@ check_term_expansions:- not(do_term_expansions).
 
 
 
-% :- system:use_module(library(base32)).
+% :- user:use_module(library(base32)).
 
 % :-autoload.
 
@@ -1693,8 +1689,8 @@ make_dynamic_ilc(C):- % trace_or_throw(make_dynamic_ilc(C)),
 
 
 
-%:- system:use_module(library(shlib)).
-%:- system:use_module(library(operators)).
+%:- user:use_module(library(shlib)).
+%:- user:use_module(library(operators)).
 
 :- source_location(F,_),asserta(baseKB:ignore_file_mpreds(F)).
 

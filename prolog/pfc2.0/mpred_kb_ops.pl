@@ -271,9 +271,9 @@ mpred_facts_and_universe/1
 
 %:- endif.
 % :- ensure_loaded(library('logicmoo/util/logicmoo_util_bugger.pl')).
-:- use_module(system:mpred_core).
-:- use_module(system:mpred_type_isa).
-:- use_module(system:library(listing_vars)).
+:- use_module(mpred_core).
+:- use_module(mpred_type_isa).
+:- use_module(library(listing_vars)).
 
 :- module_transparent retract_mu/1,
                assert_mu/4,
@@ -644,9 +644,9 @@ mpred_is_builtin(F):- current_predicate(F/A),A>0,functor(P,F,A),mpred_is_builtin
 
 /* UNUSED TODAY
 
-:- use_module(system:library(mavis)).
-:- use_module(system:library(type_check)).
-:- use_module(system:library(typedef)).
+:- use_module(library(mavis)).
+:- use_module(library(type_check)).
+:- use_module(library(typedef)).
 */
 
 
@@ -2663,9 +2663,7 @@ retract_mu((H:-B)):-!, clause_u(H,B,R),erase(R).
  :- meta_predicate repropagate_2(0).
  :- meta_predicate mpred_get_support_via_sentence(0,*).
 
-% :- kb_shared(infoF/1).
-:- dynamic(system:infoF/1).
-:- export(system:infoF/1).
+:- kb_shared(infoF/1).
 
 :- fixup_exports.
 

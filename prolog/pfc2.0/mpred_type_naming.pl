@@ -390,7 +390,7 @@ spawnOneSpawnArg(Funct,N,Name,Inst):-
 spawnOneSpawnArg(Funct,N,Name,Inst):- 
   must(( N == 1,
     call_u(tCol(Funct)),
-    must(convertToInstancen(Name,Funct,Inst)))),!.
+    must(convertToInstance(Name,Funct,Inst)))),!.
 
 
 %= 	 	 
