@@ -73,7 +73,7 @@
 :- reexport(library(xlisting)).
 mpred_prop_file_begin.
 
-:- system:use_module(library(clpfd),['#='/2]).
+:- user:use_module(library(clpfd),['#='/2]).
 %% get_arity( :TermTerm, ?F, ?A) is semidet.
 %
 % Get Arity.

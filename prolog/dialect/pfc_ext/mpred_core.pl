@@ -326,7 +326,7 @@ get_head_term(Form0,Form):- get_consequent(Form0,Form).
 
 '=@@='(A,B):-variant_u(A,B).
 
-% :- ensure_loaded(system:library(logicmoo_utils)).
+% :- ensure_loaded(library(logicmoo_utils)).
 
 :- module_transparent((assert_u_confirmed_was_missing/1,mpred_trace_exec/0,pfcl_do/1,
   call_u_mp_fa/4,call_u_mp_lc/4,

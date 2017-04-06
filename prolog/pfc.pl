@@ -5,9 +5,9 @@
 
 */
 :- module(pfc,[use_pfc/0]).
-:- system:use_module(library(virtualize_source)).
-:- system:use_module(library(hook_hybrid)).
-:- system:use_module(library(logicmoo_utils)).
+:- user:use_module(library(virtualize_source)).
+:- user:use_module(library(hook_hybrid)).
+:- user:use_module(library(logicmoo_utils)).
 % :- use_module(library(attvar_serializer)).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
 :- set_prolog_flag(runtime_speed, 1). % 1 = default
@@ -157,7 +157,7 @@ user:message_hook(T,Type,Warn):- fail, ( \+ current_prolog_flag(runtime_debug,0)
 
 % :- use_module(library(logicmoo_utils)).
 :- if( \+ current_predicate(each_call_cleanup/3)).
-:- system:use_module(library(each_call_cleanup)).
+:- user:use_module(library(each_call_cleanup)).
 :- endif.
 
 % Make YALL require ">>" syntax (the problem was it autoloads when its sees PFC code containing "/" and gripes all the time)
@@ -218,7 +218,7 @@ baseKB:mpred_skipped_module(eggdrop).
 :- reexport(library('pfc2.0/mpred_core.pl')).
 :- system:reexport(library('pfc2.0/mpred_at_box.pl')).
 
-:- system:use_module(library('file_scope')).
+:- user:use_module(library('file_scope')).
 :- virtualize_source_file.
 
 :- reexport(library('pfc2.0/mpred_type_isa.pl')).
@@ -468,7 +468,7 @@ term_expansion_UNUSED(:-module(M,List),Pos,ExportList,Pos):- nonvar(Pos),
 
 :- mutifile(user:exception/3).
 user:exception(undefined_predicate, MFA, Action):- fail, current_prolog_flag(retry_undefined,true),
-  system:ensure_loaded(library('pfc2.0/mpred_at_box.pl')), 
+  user:ensure_loaded(library('pfc2.0/mpred_at_box.pl')), 
     must(loop_check(mpred_at_box:uses_predicate(MFA, Action),Action=error)).
 */
 
