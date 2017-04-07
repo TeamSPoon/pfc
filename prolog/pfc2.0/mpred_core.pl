@@ -15,6 +15,7 @@
 
 :- module(mpred_core, [
 
+  get_startup_uu/1,
   call_u_no_bc/1,%fix_mp/3,
   fix_mp/4, %fix_mp/3,
   mpred_fwc/1,
@@ -3060,6 +3061,7 @@ mpred_is_silient :- notrace(( \+ t_l:mpred_debug_local, \+ lookup_u(mpred_is_tra
 %
 mpred_test(_):- (compiling; current_prolog_flag(xref,true)),!.
 mpred_test(G):- mpred_is_silient,!, with_no_mpred_trace_exec(must(mpred_test_fok(G))).
+mpred_test(G):- current_prolog_flag(runtime_debug,D),D<2,!,with_no_mpred_trace_exec(must((G))).
 mpred_test(G):- with_mpred_trace_exec(must(mpred_test_fok(G))).
 
 oinfo(O):- xlisting((O, - spft, - ( ==> ), - pt , - nt , - bt , - mdefault, - lmcache)).
