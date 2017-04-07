@@ -487,10 +487,9 @@ tSet(isLoaded).
 :- kb_shared(onSpawn/1).
 
 rtArgsVerbatum(onSpawn).
-tSet(onSpawn).
 
 onSpawn(When==>State)/nonvar(State) ==> ( When ==> onSpawn(State)).
-onSpawn(State)/(State \= (_ ==> _ )) ==> {doSpawn(State)}.
+onSpawn(State)/mpred_literal(State) ==> {doSpawn(State)}.
 
 
 %:-ain(((ttModuleType(ModType),isa(Thing,ModType),isLoaded(Thing), \+ ttExpressionType(ModType) ==> isLoadedType(ModType)))).
@@ -1189,6 +1188,7 @@ rtArgsVerbatum(functorDeclares).
 %((prologHybrid(C),{get_functor(C,F,A),C\=F}) ==> arity(F,A)).
 ==>prologHybrid(typeProps/2).
 
+==>typeProps(Type,List)/(member(isa(Super),List),nonvar(Super))==>genls(Type,Super).
 
 arity(typeProps,2).
 
