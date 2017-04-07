@@ -2280,6 +2280,7 @@ repropagate(_):-  check_context_module,fail.
 %repropagate(P):-  check_real_context_module,fail.
 
 repropagate(P):-  is_ftVar(P),!.
+repropagate(==>P):- !,repropagate(P).
 repropagate(P):-  meta_wrapper_rule(P),!,call_u(repropagate_meta_wrapper_rule(P)).
 repropagate(P):-  \+ predicate_property(P,_),'$find_predicate'(P,PP),PP\=[],!,forall(member(M:F/A,PP),
                                                           must((functor(Q,F,A),repropagate_1(M:Q)))).
@@ -2308,6 +2309,7 @@ repropagate_0(P):- loop_check(call_u(repropagate_1(P)),true).
 % repropagate  Secondary Helper.
 %
 repropagate_1(P):- is_ftVar(P),!.
+repropagate_1(==>P):- !,repropagate_1(P).
 repropagate_1(USER:P):- USER==user,!,repropagate_1(P).
 %repropagate_1((P/_)):-!,repropagate_1(P).
 

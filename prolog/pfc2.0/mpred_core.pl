@@ -251,6 +251,8 @@ push_current_choice/1,
 
 must_notrace_pfc(G):- must((G)).
 
+:- thread_local(t_l:assert_to/1).
+
 /*
 
   ?- dynamic(f2/2),gensym(nnn,N),sanity_attvar_08:attr_bind([name_variable(A, 'ExIn'), form_sk(A, 'SKF-66')], true),
@@ -1192,6 +1194,8 @@ assert_u_confirmed_was_missing(P):- once((get_consequent_functor(P,F,_),get_func
  \+ \+ must((db_assert_sv(P))),
  \+ \+ sanity((clause_asserted_u(P))),!.
 */
+
+% assert_u_confirmed_was_missing(P):- mpred_enqueue(onChange(P),'was_missing'), fail.
 
 assert_u_confirmed_was_missing(P):- P= ( :-(AWC,_) ),
  AWC == awc,!,
