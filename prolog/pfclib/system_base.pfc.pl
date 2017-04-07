@@ -39,13 +39,18 @@
 */
 :- '$set_source_module'(baseKB).
 :- mpred_unload_file.
+
+:- set_prolog_flag(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
+
+:- if((current_prolog_flag(runtime_debug,D),D>1)).
 :- '$def_modules'([clause_expansion/2],O),dmsg(O),nl.
 :- make:list_undefined([]).
+:- endif.
 
 :- style_check(-discontiguous).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
 :- set_prolog_flag(runtime_speed, 1). % 1 = default
-:- set_prolog_flag(runtime_debug, 3). % 2 = important but dont sacrifice other features for it
+:- set_prolog_flag(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
 :- set_prolog_flag(runtime_safety, 3).  % 3 = very important
 :- set_prolog_flag(unsafe_speedups, false).
 

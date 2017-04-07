@@ -75,6 +75,11 @@ prologOrdered(F),predSingleValued(F) ==> {trace_or_throw(unsupported(prologOrder
 
 % ?- G=(loves(X,Y),~knows(Y,tHuman(X))),relax_goal(G,Out),writeq(Out).
 
+
+
+
+
+:- if((current_prolog_flag(runtime_safety,D),D>2)).
 predicate_relaxed(weak_test/2).
 
 weak_test("Weak1","Weak2").
@@ -82,11 +87,17 @@ weak_test("Weak0","weAk2").
 
 :- export(weak_test/2).
 :- public(weak_test/2).
+:- if((current_prolog_flag(runtime_debug,D),D>1)).
 :- listing(weak_test/2).
+:- endif.
 
+:- if((current_prolog_flag(runtime_safety,D),D>2)).
+:- mpred_test(weak_test(weak1,"WeAK2")).
+:- if((current_prolog_flag(runtime_debug,D),D>1)).
 :- mpred_test(weak_test("Weak1","Weak2")).
-
-:- mpred_test(weak_test(weak1,"Weak2")).
-
 :- mpred_test(weak_test("Weak1","wEak2")).
+:- endif.
+:- endif.
+
+:- endif.
 

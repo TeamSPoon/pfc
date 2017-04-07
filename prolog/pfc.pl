@@ -5,13 +5,14 @@
 
 */
 :- module(pfc,[use_pfc/0]).
+:- user:use_module(library(must_trace)).
 :- user:use_module(library(virtualize_source)).
-:- user:use_module(library(hook_hybrid)).
-:- user:use_module(library(logicmoo_utils)).
+% :- user:use_module(library(hook_hybrid)).
+% :- user:use_module(library(logicmoo_utils)).
 % :- use_module(library(attvar_serializer)).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
 :- set_prolog_flag(runtime_speed, 1). % 1 = default
-:- set_prolog_flag(runtime_debug, 3). % 2 = important but dont sacrifice other features for it
+:- set_prolog_flag(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
 :- set_prolog_flag(runtime_safety, 3).  % 3 = very important
 :- set_prolog_flag(unsafe_speedups, false).
 :- set_prolog_flag(pfc_booted,false).
@@ -211,8 +212,9 @@ baseKB:mpred_skipped_module(eggdrop).
 :- multifile(baseKB:safe_wrap/3).
 :- dynamic(baseKB:safe_wrap/3).
 
+:- if((current_prolog_flag(runtime_debug,D),D>1)).
 :- dmsg("Ensuring PFC Loaded").
-
+:- endif.
 
 :- use_module(library(subclause_expansion)).
 :- reexport(library('pfc2.0/mpred_core.pl')).

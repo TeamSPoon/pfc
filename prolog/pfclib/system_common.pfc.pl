@@ -63,7 +63,7 @@
 :- mpred_unload_file.
 :- begin_pfc.
 % :- '$set_source_module'(baseKB).
-:- prolog_load_context(module,Mod),sanity(Mod==baseKB),writeq(prolog_load_context(module,Mod)),nl.
+% :- prolog_load_context(module,Mod),sanity(Mod==baseKB),writeq(prolog_load_context(module,Mod)),nl.
 
 :- ensure_abox(baseKB).
 
@@ -1060,8 +1060,9 @@ argIsa(class_template,N,Type):- (N=1 -> Type=tCol;Type=ftVoprop).
 rtArgsVerbatum(functor_module).
 
 
-
+:- if((current_prolog_flag(runtime_debug,D),D>1)).
 :- show_count(arity/2).
+:- endif.
 
 
 %= 	 	 
@@ -1676,13 +1677,14 @@ isa(iPlato7,mobPhilosopher).
 
 :-must(isa(iPlato7,mobPhilosopher)).
 
+:- if((current_prolog_flag(runtime_debug,D),D>2)).
 :- mpred_test(\+ isa(iPlato7,ftAtom)).
 
 %:- mpred_test(\+ quotedIsa(iPlato7,mobPhilosopher)).
 %:- sanity(mpred_test(~quotedIsa(iPlato7,mobPhilosopher))).
 :- sanity(mpred_test(quotedIsa(iPlato7,ftAtom))).
 :- mpred_notrace_all.
-
+:- endif.
 
 tCol(ttAbstractType).
 
