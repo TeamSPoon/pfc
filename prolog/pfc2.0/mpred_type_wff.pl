@@ -60,7 +60,9 @@
             is_colection_name/3,
             is_ftEquality/1,
             is_function/1,
-            is_function/3,
+            is_function_expr/1,
+            has_function/1,
+            is_function_pfa/3,
             is_holds_false/1,
             is_holds_false0/1,
             is_holds_true/1,
@@ -102,7 +104,7 @@
         call_last_is_var(0).
 
 
-
+:- kb_shared(functionCorrespondingPredicate/3).
 
 
 
@@ -729,7 +731,7 @@ call_last_is_var(MCall):- strip_module(MCall,M,Call),
    arg(A,Call,Last),nonvar(Last),Call=..FArgs,
    append(Left,[Last],FArgs),
    append(Left,[IsVar],NFArgs),NewCall=..NFArgs,!,
-     M:NewCall*->IsVar=Last;fail.
+    ( M:NewCall*->IsVar=Last;fail).
 
    
 
@@ -742,29 +744,53 @@ call_last_is_var(MCall):- strip_module(MCall,M,Call),
 %
 % Defunctionalize.
 %
-defunctionalize(Wff,WffO):- 
-  locally(t_l:dont_use_mudEquals,
-      defunctionalize(',',Wff,WffO)).
-
+defunctionalize(Wff,WffO):- defunctionalize('=>',Wff,WffO),!.
+% defunctionalize(Wff,WffO):- locally(t_l:dont_use_mudEquals,defunctionalize(',',Wff,WffO)).
 
 
 %% defunctionalize( ?OP, ?Wff, ?WffO) is semidet.
 %
 % Defunctionalize.
 %
-defunctionalize(OP,Wff,WffO):- call_last_is_var(defunctionalize(OP,Wff,WffO)).
-defunctionalize(_ ,Wff,Wff):- leave_as_is(Wff),!.
-defunctionalize(_ ,Wff,Wff):- not_ftCompound(Wff),!.
+defunctionalize(OP ,Wff,WffO):- defunctionalize_op(OP,Wff,WffM),!,WffO=WffM.
 
-defunctionalize(OP,(H:-B),WffO):- t_l:dont_use_mudEquals,!,
- locally_hide(t_l:dont_use_mudEquals,defunctionalize(OP,(H:-B),WffO)).
-defunctionalize(OP,(H:-B),WffO):- !,
-  defunctionalize(',',(B=>H),HH),
-  (HH=(PreC,(NewBody=>NEWH))-> 
-     defunctionalize(OP,(NEWH:not(PreC,NewBody)),WffO);
-  (defunctionalize(OP,B,NewBody),WffO=(H:-NewBody))).
-  
-defunctionalize(OP,Wff,WffO):- 
+defunctionalize_op(OP,WffO,WffO):- not_ftCompound(WffO),!.
+defunctionalize_op(OP,(H:-B),WffO):- 
+   notrace(defunctionalize_did(B,PREB,POSTB)),!,
+   defunctionalize(OP,(H:-(PREB,POSTB)),WffO).
+defunctionalize_op(OP,(H:-B),WffO):- 
+   notrace(defunctionalize_did(H,PREH,POSTH)),!,
+   defunctionalize(OP,(POSTH:-(PREH,B)),WffO).
+defunctionalize_op(OP,Wff,WffO):- 
+  (defunctionalize_did(Wff,PREWff,POSTWff)),!,
+  WffM=..[OP,PREWff,POSTWff],
+  defunctionalize_op(OP,WffM,WffO).
+defunctionalize_op(_,Wff,Wff).
+
+
+defunctionalize_did(Wff,PredifiedFunction,NextWff):- 
+  sub_term(SubTerm,Wff),
+  compound(SubTerm),
+  \+ is_precond_like(SubTerm),
+  arg(N,SubTerm,Function), N<4,
+  compound(Function),
+  notrace(is_function_expr(Function)),
+  notrace(\+ has_function(Function)),
+  must(notrace((function_to_predicate(Function,NewVar,PredifiedFunction),
+  subst(Wff,Function,NewVar,NextWff)))),!.
+
+is_precond_like(Var):- \+ compound(Var),!.
+is_precond_like(SubTerm):- is_ftEquality(SubTerm),!.
+is_precond_like({_}).
+
+has_function(Term):- 
+ compound(Term),
+ \+ is_precond_like(Term),
+ arg(_,Term,Function), 
+ (is_function_expr(Function);has_function(Function)),!.
+
+/*
+defunctionalize_did(Wff,PredifiedFunction,NextWff):- 
   each_subterm(Wff,SubTerm),
   compound(SubTerm),
   \+ (is_ftEquality(SubTerm)),
@@ -774,26 +800,9 @@ defunctionalize(OP,Wff,WffO):-
   \+ (leave_as_is(Function)),
   subst_except(SubTerm,Function,NewVar,NewSubTerm),
   function_to_predicate(Function,NewVar,PredifiedFunction),
-  subst_except(Wff,SubTerm,NewSubTerm,NextWff),!,
-  defunctionalize(OP,NextWff,WffM),!,
-  WffO=..[OP,PredifiedFunction,WffM].
+  subst_except(Wff,SubTerm,NewSubTerm,NextWff),!.
 
-defunctionalize(OP,Wff,WffO):-
-  each_subterm(Wff,SubTerm),
-  compound(SubTerm),
-  not(is_ftEquality(SubTerm)),
-  not(leave_as_is(SubTerm)),
-  arg(_,SubTerm,Function),is_function(Function),
-  subst_except(SubTerm,Function,NewVar,NewSubTerm),
-  function_to_predicate(Function,NewVar,PredifiedFunction),
-  NEW =..[OP,PredifiedFunction,NewSubTerm],
-  subst_except(Wff,SubTerm,NEW,NextWff),!,
-  defunctionalize(OP,NextWff,WffO),!.
-defunctionalize(_,Wff,Wff).
-
-
-
-
+*/
 
 %% correct_negations( ?Op, :TermX, ?O) is semidet.
 %
@@ -966,9 +975,9 @@ leave_as_is_functor('$VAR').
 leave_as_is_functor('kbMark').
 leave_as_is_functor('z_unused').
 leave_as_is_functor('genlMt').
-leave_as_is_functor('{}').
+% leave_as_is_functor('{}').
 leave_as_is_functor(F):-cheaply_u(rtArgsVerbatum(F)).
-leave_as_is_functor(F):-loop_check(cheaply_u(rtReformulatorDirectivePredicate(F))).
+% leave_as_is_functor(F):-loop_check(cheaply_u(rtReformulatorDirectivePredicate(F))).
 
 
 
@@ -1091,29 +1100,33 @@ get_kv(KV,X,Y):- arg(1,KV,X),arg(2,KV,Y),!.
 % If Is A Function.
 %
 is_function(F):- is_ftVar(F),!,fail.
-is_function(Function):- compound(Function),!,get_functor(Function,F,A),is_function(Function,F,A).
-is_function(Function):- is_function(Function,Function,0).
+is_function(F):- clause_b(tFunction(F)).
+is_function(F):- \+ atom(F),!,fail.
+is_function(uU).
+is_function(F):- atom_concat('sk',_Was,F),!,fail.
+is_function(F):- atom_concat(_Was,'Fn',F),!.
+
+is_function_expr(Function):- compound(Function),!,compound_name_arity(Function,F,A),is_function_pfa(Function,F,A).
+% is_function_expr(Function):- is_function(Function,Function,0).
 
 
 
+has_ftVar(Body):-is_ftVar(Body),!.
+has_ftVar(Body):-compound(Body),arg(_,Body,Arg),has_ftVar(Arg),!.
 
-
-
-%% is_function( ?VALUE1, ?F, ?VALUE3) is semidet.
+%% is_function_pfa( ?VALUE1, ?F, ?VALUE3) is semidet.
 %
 % If Is A Function.
 %
-is_function(_,F,_):- \+ atom(F),!,fail.
-is_function(_,'uSubLQuoteFn',_):- !,fail.
-is_function(_,'xQuoteFn',_):- !,fail.
-is_function(_,'uNARTFn',_):- !,fail.
-is_function(_,'tCol_CollectionSubsetFn',_).
-is_function(_,F,_):- atom(F),atom_concat('sk',_Was,F),!,fail.
-% is_function(P,_,_):- loop_check(leave_as_is(P)),!,fail.
-is_function(_,F,_):- loop_check(is_log_op(F)),!,fail.
-is_function(_,F,_):- atom_concat(_Was,'Fn',F).
-is_function(_,F,_):- cheaply_u(tFunction(F)).
-% is_function(_,F,A):- A2 is A+1, current_predicate(F/A2), \+ current_predicate(F/A).
+is_function_pfa(_,F,_):- \+ atom(F),!,fail.
+is_function_pfa(_,'uSubLQuoteFn',_):- !,fail.
+is_function_pfa(_,'xQuoteFn',_):- !,fail.
+is_function_pfa(_,'uNARTFn',_):- !,fail.
+is_function_pfa(Body,F,_):- has_ftVar(Body),is_function(F).
+is_function_pfa(_,'tCol_CollectionSubsetFn',_).
+% is_function_pfa(P,_,_):- loop_check(leave_as_is(P)),!,fail.
+% is_function_pfa(_,F,_):- loop_check(is_log_op(F)),!,fail.
+% is_function_pfa(_,F,A):- A2 is A+1, current_predicate(F/A2), \+ current_predicate(F/A).
 
 %:- ain(isa(I,C)<=(ttRelationType(C),baseKB:isa(I,C))).
 
@@ -1130,6 +1143,7 @@ is_ftEquality(mudEquals(_,_)).
 is_ftEquality(skolem(_,_)).
 is_ftEquality(equals(_,_)).
 is_ftEquality(termOfUnit(_,_)).
+
 
 :- thread_local(t_l:dont_use_mudEquals/0).
 
@@ -1169,20 +1183,24 @@ get_pred(Pred,F):- get_functor(Pred,F).
 %
 % Function Converted To Predicate.
 %
+
 function_to_predicate(Function,NewVar,PredifiedFunction):- 
  Function = 'tColOfCollectionSubsetFn'(Col,'tSetOfTheSetOfFn'(NewVar,Formulas)), 
  must(is_ftVar(NewVar)), % \+ is_ftVar(Col),!,
  PredifiedFunction = (isa(NewVar,Col) & Formulas).
 
+
 function_to_predicate(Function,NewVar,PredifiedFunction):- 
   Function=.. [F|ARGS],
   cheaply_u(functionCorrespondingPredicate(F,P,N)),
   fresh_varname(Function,NewVar),
-  list_insert_at([P|ARGS],NewVar,N,Predified),
-  PredifiedFunction=..Predified,!.
+  list_insert_at([P|ARGS],NewVar,N,[PR|Edified]),
+  (atom(PR) -> PredifiedFunction=..[PR|Edified] ; PredifiedFunction=..[t,PR|Edified]),!.
+
 
 function_to_predicate(Function,NewVar,mudEquals(NewVar,Function)):- 
-  \+ t_l:dont_use_mudEquals, fresh_varname(Function,NewVar),!.
+ % \+ t_l:dont_use_mudEquals, 
+  fresh_varname(Function,NewVar),!.
 
 
 
