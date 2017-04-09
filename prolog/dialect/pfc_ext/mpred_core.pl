@@ -2978,7 +2978,9 @@ not_not_ignore_mnotrace(G):- notrace(ignore(mnotrace(\+ \+ G))).
 % needed:  mpred_trace_rule(Name)  ...
 
 log_failure(ALL):- quietly((log_failure_red,maybe_mpred_break(ALL),log_failure_red)).
-log_failure_red:- quietly(doall((between(1,3,_),wdmsg(color(red,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")),fail))).
+log_failure_red:-!.
+log_failure_red:- quietly(doall((between(1,3,_),
+  wdmsg(color(red,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")),fail))).
 
 maybe_mpred_break(Info):- (t_l:no_mpred_breaks->true;(debugging(logicmoo(pfc))->dtrace(dmsg(Info));(dmsg(Info)))).
 

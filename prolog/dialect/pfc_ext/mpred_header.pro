@@ -140,7 +140,7 @@ user:term_expansion/2,user:goal_expansion/2,system:term_expansion/2,system:goal_
 :- thread_local(t_l:infSupertypeName/0).
 :- thread_local(t_l:loading_mpred_file/2).
 :- thread_local(t_l:mpred_run_paused/0).
-:- thread_local(t_l:no_kif_var_coroutines/0).
+:- thread_local(t_l:no_kif_var_coroutines/1).
 
 end_of_file.
 

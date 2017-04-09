@@ -52,7 +52,7 @@
             to_functor/2,
             type_size/2,
             extract_conditions/2,
-            enforce_fa_unify_hook/2,
+            
             unrelax/1, iz_member/1,
 
             lazy/1,lazy/2,
@@ -91,6 +91,8 @@
    unrelax(*),
    relax_goal(*,+),
    lazy(+,0).
+
+:- thread_local(t_l:no_kif_var_coroutines/1).
 
 :- meta_predicate relaxed_call(0).
 
@@ -280,7 +282,9 @@ args_enforce_nonvar(Closure,Modal,F,A,Arg):-
 %
 extract_conditions(Sentence,Conds):- 
  copy_term(Sentence,Sentence,Goals),
- list_to_conjuncts(Goals,Conds),!.
+ list_to_set(Goals,GoalSet),
+ (Goals\==GoalSet-> dmsg(cons_odd) ; true),
+ list_to_conjuncts(GoalSet,Conds),!.
 
 %% boxlog_goal_expansion( ?G, ?GG) is semidet.
 %
@@ -463,17 +467,12 @@ iza:attr_unify_hook(DVar, Y):-
    -> put_attr( Y, iza, DVar )
    ;  dom_chk(Y,DVar)).
 
-iza:attr_unify_hook(ArgIsas,Value):- enforce_fa_unify_hook(ArgIsas,Value).
-
-enforce_fa_unify_hook([Goal|ArgIsas],Value):- !,
-  call(Goal),
-  enforce_fa_unify_hook(ArgIsas,Value).
-enforce_fa_unify_hook(_,_).
+iza:attr_unify_hook(ArgIsas,Value):- dom_chk(Value,ArgIsas).
 
 
 % Translate attributes from this module to residual goals
 iza:attribute_goals(X) -->
-      { get_attr(X, iza, List) },
+      { get_attr(X, iza, List) },!,
       [add_dom(X, List)].
 
 %% add_dom( ?Var, ?HintE) is semidet.
@@ -498,18 +497,34 @@ add_dom0(Var,Hint):- ignore(show_failure(why,dom_call(Var,Hint))).
 %
 % Isac Checking.
 %
-dom_chk(E,Cs):-once(dom_call(E,Cs)).
+dom_chk(_,_):- t_l:no_kif_var_coroutines(G),!,call(G).
+dom_chk(E,Cs):- once(dom_call(E,Cs)).
 
 
 %% dom_call( ?VALUE1, :TermARG2) is semidet.
 %
 % Isac Gen.
 %
-dom_call(_, []).
-dom_call(Y, [H|List]):- !,dom_call(Y,H),dom_call(Y, List).
-dom_call(Y,H):- atom(H),!,isa(Y,H).
-dom_call(Y,H):- arg(_,H,E),Y==E,!,call_u(H),!.
-dom_call(Y,H):- ereq(props(Y,H)).
+dom_call(Y, [H|List]):- !,dom_call0(Y,H),dom_call(Y, List).
+dom_call(_, _).
+
+dom_call0(Y,H):- atom(H),!,isa(Y,H).
+dom_call0(Y,H):- arg(_,H,E),Y==E,!,call_u(H),!.
+dom_call0(Y,H):- ereq(props(Y,H)).
+
+/*
+enforce_fa_unify_hook([Goal|ArgIsas],Value):- !,
+  enforce_fa_call(Goal,Value),
+  enforce_fa_unify_hook(ArgIsas,Value).
+enforce_fa_unify_hook(_,_).
+
+enforce_fa_call(Goal,Value):- atom(Goal),!,call(Goal,Value).
+enforce_fa_call(Goal,Value):- arg(_,Goal,Var),Var==Value,!,call(Goal).
+enforce_fa_call(Goal,Value):- prepend_arg(Goal,Value,GVoal),!,call(GVoal).
+
+prepend_arg(M:Goal,Value,M:GVoal):- !, prepend_arg(Goal,Value,GVoal).
+prepend_arg(Goal,Value,GVoal):- Goal=..[F|ARGS],GVoal=..[F,Value|ARGS].
+*/
 
 /*
 
@@ -870,15 +885,13 @@ iz:attr_unify_hook(Domain, Y) :-
 
 
 % Translate attributes from this module to residual goals
-iz:attribute_goals(X) -->
-      { get_attr(X, iz, List) },
-      [iz(X, List)].
+iz:attribute_goals(X) --> { get_attr(X, iz, List) },!,[iz(X, List)].
 
 
 
-iz:attr_portray_hook(Val, _) :- write('iz:'), write(Val),!.
+%iz:attr_portray_hook(Val, _) :- write('iz:'), write(Val),!.
 
-iza:attr_portray_hook(Val, _) :- write('iza:'), write(Val),!.
+%iza:attr_portray_hook(Val, _) :- write('iza:'), write(Val),!.
 
 
 %% cmp_memberchk( ?X, ?Y) is semidet.
