@@ -15,107 +15,24 @@
 % Dec 13, 2035
 % Douglas Miles
 */
-:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
+
 :- module(mpred_prolog_file,[
-          guess_file_type_loader/2,
-          process_this_script/0,
-          process_this_script/1,
-          process_this_script0/1,
-          prolog_load_file_loop_checked/2,
-          prolog_load_file_loop_checked_0/2, 
-          prolog_load_file_nlc/2,
-          prolog_load_file_nlc_0/2,
-          load_file_dir/2,
-          load_file_some_type/2,
-          use_file_type_loader/2,
-          never_load_special/2,
-          %user:prolog_load_file/2,
-          mpred_process_input/2,
-          mpred_process_input_1/1
-          
-           
- ]).
+            guess_file_type_loader/2,
+            prolog_load_file_loop_checked/2,
+            prolog_load_file_loop_checked_0/2, 
+            prolog_load_file_nlc/2,
+            prolog_load_file_nlc_0/2,
+            load_file_dir/2,
+            load_file_some_type/2,
+            use_file_type_loader/2,
+            never_load_special/2
+          ]).
+
 :- include('mpred_header.pi').
-:- endif.
 
 :- multifile(user:prolog_load_file/2).
 :- dynamic(user:prolog_load_file/2).
 % :- '$set_source_module'(system).
-
-%% mpred_process_input_1( :TermT) is semidet.
-%
-% Managed Predicate process input  Secondary Helper.
-%
-mpred_process_input_1('?-'(TT)):-!,doall(printAll(call_u(TT))),!.
-mpred_process_input_1(':-'(TT)):-!,call_u(TT),!.
-mpred_process_input_1(':-'(TT,TRUE)):- TRUE==true,!,mpred_process_input_1(TT).
-mpred_process_input_1('$si$':'$was_imported_kb_content$'(_,_)):-!.
-mpred_process_input_1(T):- must(try_save_vars(T)),ain(T),!.
-
-
-
-%% mpred_process_input( ?T, ?Vs) is semidet.
-%
-% Managed Predicate Process Input.
-%
-mpred_process_input(T,Vs):- must(quietly(expand_term(T,TT)))->put_variable_names( Vs)->mpred_process_input_1(TT)->!.
-
-
-
-
-%% process_this_script is semidet.
-%
-% Process This Script.
-%
-process_this_script:- current_prolog_flag(xref,true),!.
-process_this_script:- ignore(show_call(why,prolog_load_context(script,_))), prolog_load_context(stream,S), !, must(process_this_script(S)).
-
-
-
-
-%% process_this_script( ?S) is semidet.
-%
-% Process This Script.
-%
-process_this_script(_):- current_prolog_flag(xref,true),!.
-process_this_script(S):- at_end_of_stream(S),!.
-process_this_script(S):- repeat,once(process_this_script0(S)),at_end_of_stream(S).
-
-
-consume_stream(In) :-
-        repeat,
-            (   at_end_of_stream(In)
-            ->  !
-            ;   read_pending_codes(In, _Chars, []),
-                fail
-            ).
-
-
-%% process_this_script0( ?S) is semidet.
-%
-% Process This Script Primary Helper.
-%
-process_this_script0(S):- at_end_of_stream(S),!.
-process_this_script0(S):- current_prolog_flag(xref,true),!,consume_stream(S).
-process_this_script0(S):- peek_code(S,W),member(W,` \n\r\t `),get_code(S,P),put(P),!,process_this_script0(S).
-process_this_script0(S):- peek_string(S,2,W),W="%=",!,read_line_to_string(S,String),format('~N~s~n',[String]).
-process_this_script0(S):- peek_string(S,1,W),W="%",!,read_line_to_string(S,_String).
-process_this_script0(S):- 
- call_u((
-  read_term(S,T,[variable_names(Vs)]),put_variable_names( Vs),
-  format('~N~n>',[]),portray_one_line(T),format('~N~n',[]),!,
-  must(mpred_process_input(T,Vs)),!,format('~N<~n',[]))),!.
-
-
-
-
-
-
-
-
-
-
-
 
 
 
