@@ -1545,7 +1545,7 @@ mpred_term_expansion_by_storage_type(_M,C,must_compile_special):- must_compile_s
 
 
 mpred_term_expansion(Fact,Fact):- get_functor(Fact,F,_A),(a(prologDynamic,F)),!.
-mpred_term_expansion(Fact,(:- ((cl_assert(Dir,Fact))))):- mpred_term_expansion_by_pred_class(Dir,Fact,_Output),break,!.
+mpred_term_expansion(Fact,(:- ((cl_assert(Dir,Fact))))):- show_success(mpred_term_expansion_by_pred_class(Dir,Fact,_Output)),!.
 
 mpred_term_expansion(MC,(:- cl_assert(ct(How),MC))):- fail, strip_module(MC,M,C),quietly(mpred_rule_hb(C,H,_B)),
   (mpred_term_expansion_by_storage_type(M,H,How)->true;(C \= (_:-_),mpred_term_expansion_by_storage_type(M,C,How))),!.

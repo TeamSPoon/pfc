@@ -705,13 +705,13 @@ create_predicate_istAbove(Nonvar,F,A):- sanity(ground(create_predicate_istAbove(
 
 
 create_predicate_istAbove(baseKB,F,A):- !,
-  make_as_dynamic(create_predicate,baseKB,F,A), 
+  make_as_dynamic(create_predicate_istAbove(baseKB,F,A),baseKB,F,A), 
      ignore((( \+ (defaultAssertMt(CallerMt),CallerMt\==baseKB,create_predicate_istAbove(CallerMt,F,A) )))).
 create_predicate_istAbove(abox,F,A):-  must(defaultAssertMt(CallerMt)),sanity(CallerMt\=abox),!,create_predicate_istAbove(CallerMt,F,A).
 %create_predicate_istAbove(_, do_and_undo, 2):-dtrace.
 create_predicate_istAbove(CallerMt,F,A):- clause_b(mtProlog(CallerMt)), must(\+ clause_b(mtCycL(CallerMt))) ,!,wdmsg(warn(create_predicate_istAbove_mtProlog(CallerMt,F,A))),dtrace.
 create_predicate_istAbove(CallerMt,F,A):-
-   make_as_dynamic(create_predicate_istAbove,CallerMt,F,A),
+   make_as_dynamic(create_predicate_istAbove(CallerMt,F,A),CallerMt,F,A),
    functor(Goal,F,A),
    assert_if_new(( CallerMt:Goal :- istAbove(CallerMt,Goal))).
 

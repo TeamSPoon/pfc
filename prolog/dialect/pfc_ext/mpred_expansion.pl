@@ -622,16 +622,20 @@ fully_expand(X,Y):- must((fully_expand(clause(unknown,cuz),X,Y))).
 %
 
 
-fully_expand(_,Var,Var):- \+ compound(Var),!.
-fully_expand(Op,Sent,SentO):- functor(Sent,F,A),should_fully_expand(F,A),!,must(fully_expand_real(Op,Sent,SentO)),!.
-fully_expand(Op,Sent,SentO):- must(fully_expand_real(Op,Sent,SentO)),!.
+%fully_expand(_,Var,Var):- \+ compound(Var),!.
+%fully_expand(Op,Sent,SentO):- functor(Sent,F,A),should_fully_expand(F,A),!,must(fully_expand_real(Op,Sent,SentO)),!.
+fully_expand(Op,Sent,SentO):- notrace(fully_expand_real(Op,==>Sent,SentO)),!.
 % fully_expand(Op,Sent,Sent):- sanity((ignore((fully_expand_real(Op,Sent,SentO)->sanity((Sent=@=SentO)))))).
 
 /*
 fully_expand(Op,Sent,SentO):- must(fully_expand_real(Op,Sent,SentO)),!,
    fully_expand_check(Op,Sent,SentO).
-*/
 
+fully_expand_check(_Op,Sent,SentO):- Sent=@=SentO.
+fully_expand_check(Op,Sent,SentO):- break,throw(fully_expand_real(Op,Sent,SentO)).
+
+*/
+/*
 should_fully_expand(~,1).
 should_fully_expand(==>,_).
 should_fully_expand(props,2).
@@ -640,21 +644,35 @@ should_fully_expand(ereq,_).
 should_fully_expand(arity,2).
 should_fully_expand(F,_):-clause_b(functorIsMacro(F)).
 should_fully_expand(F,_):-clause_b(functorDeclares(F)).
+*/
 
 :- meta_predicate memoize_on_local(*,*,0).
-memoize_on_local(_Why,_,Goal):- Goal.
+memoize_on_local(_Why,_,Goal):- call(Goal),!.
 % memoize_on_local(_Why,Sent->SentO,Goal):- memoize_on(fully_expand_real,Sent->SentO,Goal).
 
-fully_expand_check(_Op,Sent,SentO):- Sent=@=SentO.
-fully_expand_check(Op,Sent,SentO):- break,throw(fully_expand_real(Op,Sent,SentO)).
+has_skolem_attrvars(Sent):- notrace((term_attvars(Sent,Attvars),member(Var,Attvars),get_attr(Var,sk,_))),!.
+
+fully_expand_real(Op,Sent,SentO):- has_skolem_attrvars(Sent),!,
+   gripe_time(0.2,
+    (must_det(quietly(serialize_attvars(Sent,SentI))),
+      sanity(\+ has_skolem_attrvars(SentI)),
+     must_det(fully_expand_real(Op,SentI,SentO)),!)),!.
 
 fully_expand_real(Op,Sent,SentO):-
- gripe_time(0.2,
-  (quietly(deserialize_attvars(Sent,SentI)),
-   locally(t_l:disable_px,
-     locally(t_l:no_kif_var_coroutines(true),
-     fully_expand_clause_now(Op,SentI,SentO))))),!.
-    
+   gripe_time(0.2,
+    must_det(locally(t_l:disable_px,
+       (locally(t_l:no_kif_var_coroutines(true),
+       (must_det(fully_expand_clause_now(Op,Sent,SentIO)),
+                   must_det(quietly(deserialize_attvars(SentIO,SentO))))))))),!.
+
+/*
+fully_expand_real(Op,Sent,SentO):-
+   gripe_time(0.2,
+    (quietly(deserialize_attvars(Sent,SentI)),
+     locally(t_l:disable_px,
+       locally(t_l:no_kif_var_coroutines(true),
+       fully_expand_clause_now(Op,SentI,SentO))))),!.
+*/    
 
 %% is_stripped_module( +Op) is semidet.
 %

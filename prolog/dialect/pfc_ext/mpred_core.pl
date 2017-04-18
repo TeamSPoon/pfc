@@ -364,7 +364,7 @@ decl_rt(RT) :-
    compile_predicates([Head]),
    nop(decl_rt(RT)))))),baseKB).
 
-mnotrace(G):- notrace(quietly(G)),!.
+mnotrace(G):- notrace(G),!.
 
 % =================================================
 % ==============  UTILS BEGIN        ==============
@@ -564,8 +564,8 @@ convention_to_symbolic_mt(_Why,F,A,abox):- baseKB:safe_wrap(F,A,ereq).
 % convention_to_symbolic_mt(_Why,_,_,M):- atom(M),!.
 
 full_transform_warn_if_changed(_,MH,MHH):-!,MH=MHH.
-full_transform_warn_if_changed(Why,MH,MHH):- full_transform(Why,MH,MHH),must(MH=@=MHH).
-full_transform_warn_if_same(Why,MH,MHH):- full_transform(Why,MH,MHH),must(MH \=@= MHH).
+full_transform_warn_if_changed(Why,MH,MHH):- full_transform(Why,MH,MHH),!,sanity(MH=@=MHH).
+full_transform_warn_if_same(Why,MH,MHH):- full_transform(Why,MH,MHH),!,sanity(MH \=@= MHH).
 
 /*
 full_transform_and_orignal(Why,MH,MHO):- full_transform(Why,MH,MHH),
@@ -574,15 +574,20 @@ full_transform_and_orignal(Why,MH,MHO):- full_transform(Why,MH,MHH),
 
 
 full_transform(Op,ISA,SentO):- nonvar(ISA),isa(I,C)=ISA,!, must(fully_expand_real(Op,isa(I,C),SentO)),!.
-full_transform(Op,Sent,SentO):- functor(Sent,F,A),may_fully_expand(F,A),!,must(fully_expand_real(Op,Sent,SentO)),!.
+full_transform(Op,Sent,SentO):- functor(Sent,F,A),may_fully_expand(F,A),!,
+   must(fully_expand_real(Op,Sent,SentO)),!.
 
 */
 %:- use_module(mpred_expansion).
 
+/*
+full_transform(Why,MH,MHH):- has_skolem_attrvars(MH),!,
+ rtrace(fully_expand_real(change(assert,skolems(Why)),MH,MHH)),!,
+   nop(sanity(on_f_debug(same_modules(MH,MHH)))),!.
+*/
 full_transform(Why,MH,MHH):-
- notrace((
-   must(fully_expand_real(change(assert,Why),MH,MHH)),!,
-   sanity(same_modules(MH,MHH)))).
+ must_det(fully_expand_real(change(assert,Why),MH,MHH)),!.
+   % nop(sanity(on_f_debug(same_modules(MH,MHH)))).
 
 same_modules(MH,MHH):- strip_module(MH,HM,_),strip_module(MHH,HHM,_),!,
    HM==HHM.
@@ -1945,7 +1950,7 @@ mpred_eval_rhs1([X|Xrest],Support):-
 mpred_eval_rhs1(Assertion,Support):- !,
  % an assertion to be added.
  mpred_trace_msg('~N~n~n\tRHS-Post1: ~p \n\tSupport: ~p~n',[Assertion,Support]),!,
- (must_det(mpred_post(Assertion,Support)) *->
+ (maybe_notrace(mpred_post(Assertion,Support)) *->
     true;
     mpred_warn("\n\t\t\n\t\tMalformed rhs of a rule (mpred_post1 failed)\n\t\tPost1: ~p\n\t\tSupport=~p.",[Assertion,Support])).
 
@@ -2035,7 +2040,7 @@ call_u_mp(M,P1):- predicate_property(M:P1,defined),!, M:call(P1).
 call_u_mp(M,P):- functor(P,F,A), call_u_mp_fa(M,P,F,A).
 
 make_visible(R,M:F/A):- wdmsg(make_visible(R,M:F/A)),fail.
-make_visible(M,M:F/A):- must_det(M:export(M:F/A)).
+make_visible(M,M:F/A):- maybe_notrace(M:export(M:F/A)).
 make_visible(R,M:F/A):- must_det_l((M:export(M:F/A),R:import(M:F/A),R:export(M:F/A))).
 
 
@@ -2973,7 +2978,7 @@ mpred_untrace:- mpred_untrace(_).
 mpred_untrace(Form0):- get_head_term(Form0,Form), retractall_u(mpred_is_spying_pred(Form,print)).
 
 
-not_not_ignore_mnotrace(G):- notrace(ignore(mnotrace(\+ \+ G))).
+not_not_ignore_mnotrace(G):- ignore(quietly(\+ \+ G)).
 
 % needed:  mpred_trace_rule(Name)  ...
 
@@ -3283,6 +3288,7 @@ mpred_add_support_fast(P,(Fact,Trigger)):-
   assertz_mu(spft(P,Fact,Trigger)).
 
 
+mpred_get_support((H:-B),(Fact,Trigger)):- lookup_u(spft((H <- B),_,_),Ref),clause(spft(HH<-BB,Fact,Trigger),true,Ref),H=@=HH,B=@=BB.
 mpred_get_support(P,(Fact,Trigger)):-
       lookup_spft(P,Fact,Trigger).
 

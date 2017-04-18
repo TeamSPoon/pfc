@@ -43,7 +43,7 @@ ain_minfo/2,
 cnstrn/2,
 ain_minfo_2/2,
 cnstrn0/2,
-physical_side_effect_call/3,
+physical_side_effect_mpa/3,
 predicate_to_goal/2,
 mpred_kb_ops_file/0,
 mpred_wfflist/2,
@@ -727,11 +727,24 @@ attvar_op(Op,MData):-
    fix_mp(clause(assert,OpA),MData,M,Data),
    add_side_effect(OpA,M:Data),
    (current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0))),!,
-   physical_side_effect_call(M,OpA,Data0).
+   physical_side_effect_mpa(M,OpA,Data0).
 
-physical_side_effect_call(M,OpA,Data0):- is_side_effect_disabled,!,mpred_warn('no_physical_side_effects ~p',M:call(M:OpA,M:Data0)).
+
+:- thread_local(t_l:no_physical_side_effects/0).
+
+%% physical_side_effect( +PSE) is semidet.
+%
+% Physical Side Effect.
+%
+physical_side_effect(PSE):- to_physical_mpa(PSE,M,P,A),!,physical_side_effect_mpa(M,P,A).
+
+to_physical_mpa(PSE,M,P,A):- strip_module(PSE,M,PA),to_physical_pa(PA,P,A).
+to_physical_pa(PA,P,A):-PA=..[P,A],!. to_physical_pa(PA,call,PA).
+
+physical_side_effect_mpa(M,retract_u0,Data0):- \+ lookup_u(M:Data0),!.
+physical_side_effect_mpa(M,OpA,Data0):- is_side_effect_disabled,!,mpred_warn('no_physical_side_effects ~p',physical_side_effect_mpa(M,OpA,Data0)).
 % @TODO BROKEN phys ical_side_effect_call(M,assertz_i,Data0):- must((compile_aux_clauses(M:Data0))),!.
-physical_side_effect_call(M,OpA,Data0):- show_failure(physical_side_effect(M:call(M:OpA,M:Data0))).
+physical_side_effect_mpa(M,OpA,Data0):- show_failure(M:call(M:OpA,M:Data0)).
 
 
 %% erase_w_attvars( +Data0, ?Ref) is semidet.
@@ -740,20 +753,19 @@ physical_side_effect_call(M,OpA,Data0):- show_failure(physical_side_effect(M:cal
 %
 erase_w_attvars(Data0,Ref):- physical_side_effect(erase(Ref)),add_side_effect(erase,Data0).
 
-:- thread_local(t_l:no_physical_side_effects/0).
-
-%% physical_side_effect( +PSE) is semidet.
-%
-% Physical Side Effect.
-%
-physical_side_effect(PSE):- is_side_effect_disabled,!,mpred_warn('no_physical_side_effects ~p',PSE).
-physical_side_effect(PSE):- call(PSE).
 
 %% mpred_nochaining( +Goal) is semidet.
 %
 % PFC No Chaining.
 %
 mpred_nochaining(Goal):- locally(t_l:no_physical_side_effects,call(Goal)).
+
+
+%% with_chaining( +Goal) is semidet.
+%
+% PFC No Chaining.
+%
+with_chaining(Goal):- locally(- t_l:no_physical_side_effects,call(Goal)).
 
 % TODO ISSUE https://github.com/TeamSPoon/PrologMUD/issues/7
 
