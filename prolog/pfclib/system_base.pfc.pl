@@ -851,6 +851,7 @@ rtArgsVerbatum(added).
 rtArgsVerbatum(call).
 rtArgsVerbatum(call_u).
 rtArgsVerbatum(member).
+rtArgsVerbatum( <- ).
 rtArgsVerbatum(=..).
 % rtArgsVerbatum({}). % Needs mpred_expansion to visit
 rtArgsVerbatum(second_order).
