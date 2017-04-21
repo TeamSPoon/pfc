@@ -1617,12 +1617,6 @@ neg_may_naf(P):- mpred_non_neg_literal(P),get_functor(P,F),clause_u(prologNegByF
 neg_may_naf(P):- is_ftCompound(P),predicate_property(P,static).
 
 
-%=
-%= mpred_call_only_facts(+Why,:F) is true iff F is a fact available for forward chaining.
-%= Note that this has the side effect [maybe] of catching unsupported facts and
-%= assigning them support from God. (g,ax)
-%=
-
 %% call_u_req( +G) is semidet.
 %
 % Req.
@@ -1630,18 +1624,18 @@ neg_may_naf(P):- is_ftCompound(P),predicate_property(P,static).
 call_u_req(G):- loop_check(mpred_call_0(G),fail).
 
 
-%% mpred_call_only_facts( +Clause) is semidet.
+%% mpred_call_only_facts(:Fact) is nondet.
+%% mpred_call_only_facts(+Why,:Fact) is nondet.
 %
 % PFC Call Only Facts.
 %
-mpred_call_only_facts(Clause) :-  strip_module(Clause,_,F), 
-  on_x_debug(no_repeats(loop_check(mpred_call_0(F),fail))). 
-
-%% mpred_call_only_facts( +Why, ?F) is semidet.
+% is true iff Fact is a fact available for forward chaining.
 %
-% PFC Call Only Facts.
+% Note that this has the side effect [maybe] of catching unsupported facts and
+% assigning them support from God. (g,ax)
 %
-mpred_call_only_facts(_Why,F):- on_x_debug(no_repeats(loop_check(mpred_call_0(F),fail))). 
+mpred_call_only_facts(_Why,Clause):- mpred_call_only_facts(Clause).
+mpred_call_only_facts(Clause) :-  strip_module(Clause,_,ClauseF), on_x_debug(no_repeats(loop_check(mpred_call_0(ClauseF),fail))). 
 
 
 
@@ -1672,13 +1666,20 @@ mpred_call_0(call_u(X)):- !, mpred_call_0(X).
 mpred_call_0(clause(H,B,Ref)):-!,clause_u(H,B,Ref).
 mpred_call_0(clause(H,B)):-!,clause_u(H,B).
 mpred_call_0(clause(HB)):-expand_to_hb(HB,H,B),!,clause_u(H,B).
-mpred_call_0(asserta(X)):- !, aina(X).
-mpred_call_0(assertz(X)):- !, ainz(X).
+mpred_call_0(asserta(X)):- !, mpred_aina(X).
+mpred_call_0(assertz(X)):- !, mpred_ainz(X).
 mpred_call_0(assert(X)):- !, mpred_ain(X).
-mpred_call_0(retract(X)):- !, mpred_remove(X).
+mpred_call_0(retract(X)):- !, mpred_prolog_retract(X).
+mpred_call_0(retractall(X)):- !, mpred_prolog_retractall(X).
+
 % TODO: test removal
 %mpred_call_0(prologHybrid(H)):-get_functor(H,F),!,isa_asserted(F,prologHybrid).
+
+mpred_call_0((H)):- !, call(H).
+
+mpred_call_0((H)):- is_static_pred(H),!,call(H).
 mpred_call_0((H)):- is_static_pred(H),!,show_pred_info(H),dtrace(mpred_call_0((H))).
+
 %mpred_call_0(HB):-quietly((full_transform_warn_if_changed(mpred_call_0,HB,HHBB))),!,mpred_call_0(HHBB).
 mpred_call_0(H):- !, locally(t_l:infAssertedOnly(H),call_u(H)).
 %mpred_call_0(argIsa(mpred_isa,2,mpred_isa/2)):-  trace_or_throw(mpred_call_0(argIsa(mpred_isa,2,mpred_isa/2))),!,fail.
