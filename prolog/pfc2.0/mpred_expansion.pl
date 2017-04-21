@@ -2034,7 +2034,11 @@ exact_args0(==>(_,_)):-!,fail.
 exact_args0(Q):- functor(Q,F,A),A>0,!,exact_args_f(F),!.
 
 exact_args_f(-->).
+exact_args_f(if_defined).
 exact_args_f(txtConcatFn).
+exact_args_f(dif).
+
+exact_args_f(maplist).
 exact_args_f(action_info).
 exact_args_f(never_retract_u).
 exact_args_f(actn).

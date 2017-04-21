@@ -1475,6 +1475,19 @@ mpred_undo_action(actn(Did)):-
   call_u_no_bc(Undo),
   !.
 
+%%  mpred_prolog_retractall(X) is nondet.
+mpred_prolog_retractall(X):-
+ get_consequent(X,P),
+ mpred_prolog_retract(P),fail.
+mpred_prolog_retractall(_).
+
+%%  mpred_prolog_retract(X) is nondet.
+mpred_prolog_retract(X):-
+  %  retract an arbitrary thing.
+  mpred_db_type(X,Type),!,
+  mpred_retract_type(Type,X).
+  
+
 
 %%  mpred_retract(X) is det.
 %
@@ -1491,7 +1504,7 @@ mpred_retract_type(fact(_FT),X):-
   %  db mpred_ain_db_to_head(X,X2), retract_u(X2).
   % stop_trace(mpred_retract_type(fact(FT),X)),
   (retract_u(X)
-   *-> nop(mpred_unfwc(X)) ; (mpred_unfwc(X),!,fail)).
+   *-> mpred_unfwc(X) ; (mpred_unfwc(X),!,fail)).
 
 mpred_retract_type(rule,X):-
   %  db  mpred_ain_db_to_head(X,X2),  retract_u(X2).
@@ -2010,8 +2023,8 @@ lookup_m_g(To,_M,G):- clause(To:G,true).
 
 % :- table(call_u/1).
 
-call_u(G):- baseKB:call(G).
-% call_u(G):- strip_module(G,M,P), no_repeats(gripe_time(5.3,call_u_mp(M,P))).
+% call_u(G):- baseKB:call(G).
+call_u(G):- strip_module(G,M,P), no_repeats(gripe_time(5.3,call_u_mp(M,P))).
 % call_u(G):- strip_module(G,M,P), call_u_mp(G,M,P).
 
 
@@ -2031,12 +2044,18 @@ call_u_mp(M, 't'(P1)):-!, call_u_mp(M,P1).
 call_u_mp(M,'{}'(P1)):-!, call_u_mp(M,P1).
 call_u_mp(_,mtCycL(P)):-!,clause(baseKB:mtCycL(P),true).
 %call_u_mp(_,is_string(P)):- !, logicmoo_util_bugger:is_string(P).
-call_u_mp(M,call(O,P1)):- !,M:call(O,P1).
-call_u_mp(M,call(P1)):- !, M:call(P1).
+
+
+call_u_mp(M,call(O,P1)):- !,append_term(O,P1,P),call_u_mp(M,P).
+call_u_mp(M,call(P1)):- !, call_u_mp(M,P1).
+
+% call_u_mp(M,P1):- predicate_property(M:P1,foreign),!,M:call(P1).
+call_u_mp(M,P1):- predicate_property(M:P1,static),!,M:call(P1).
+
+
 %call_u_mp(M,P1):- predicate_property(M:P1,built_in),!, M:call(P1).
-%call_u_mp(M,P1):- predicate_property(M:P1,static),!, M:call(P1).
 %call_u_mp(M,P1):- predicate_property(M:P1,dynamic),!, M:call(P1).
-call_u_mp(M,P1):- predicate_property(M:P1,defined),!, M:call(P1).
+%call_u_mp(M,P1):- predicate_property(M:P1,defined),!, M:call(P1).
 call_u_mp(M,P):- functor(P,F,A), call_u_mp_fa(M,P,F,A).
 
 make_visible(R,M:F/A):- wdmsg(make_visible(R,M:F/A)),fail.
@@ -2053,6 +2072,8 @@ call_u_mp_fa(M,P,F,A):- loop_check(call_u_mp_lc(M,P,F,A)).
 %call_u_mp_lc(mpred_core,P,F,A):-!, call_u_mp_lc(baseKB,P,F,A).
 %call_u_mp_lc(M,P,F,A):- current_predicate(M:F/A),!,throw(current_predicate(M:F/A)),catch(M:P,E,(wdmsg(call_u_mp(M,P)),wdmsg(E),dtrace)).
 % call_u_mp_lc(baseKB,P,F,A):- kb_shared(F/A),dmsg(kb_shared(F/A)),!, baseKB:call(P).
+
+call_u_mp_lc(M,P,_,_):- !, M:mpred_call_0(P).
 call_u_mp_lc(M,P,_,_):- !, M:call(P).
 
 
@@ -2161,7 +2182,8 @@ mpred_METACALL(_How, _Cut, clause(HB)):-expand_to_hb(HB,H,B),!,clause_u(H,B).
 mpred_METACALL(_How, _Cut, asserta(X)):- !, aina(X).
 mpred_METACALL(_How, _Cut, assertz(X)):- !, ainz(X).
 mpred_METACALL(_How, _Cut, assert(X)):- !, mpred_ain(X).
-mpred_METACALL(_How, _Cut, retract(X)):- !, mpred_remove(X).
+mpred_METACALL(_How, _Cut, retract(X)):- !, mpred_prolog_retract(X).
+mpred_METACALL(_How, _Cut, retractall(X)):- !, mpred_prolog_retractall(X).
 % TODO: test removal
 %mpred_METACALL(How, Cut, prologHybrid(H)):-get_functor(H,F),!,isa_asserted(F,prologHybrid).
 % mpred_METACALL(How, Cut, HB):-quietly((full_transform_warn_if_changed(mpred_METACALL,HB,HHBB))),!,mpred_METACALL(How, Cut, HHBB).

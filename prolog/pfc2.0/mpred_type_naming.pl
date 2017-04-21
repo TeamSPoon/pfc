@@ -384,13 +384,12 @@ convertOneSpawnArg(Funct,N,A,O):-spawnOneSpawnArg(Funct,N,A,O).
 % Spawn One Spawn Argument.
 %
 spawnOneSpawnArg(Funct,N,Name,Inst):- 
-    call_u(argIsa(Funct,N,FunctArgType)),
-    must(convertToInstance(Name,FunctArgType,Inst)),!.
+    N == 1, call_u(tCol(Funct)),
+    must(convertToInstance(Name,Funct,Inst)),!.
 
 spawnOneSpawnArg(Funct,N,Name,Inst):- 
-  must(( N == 1,
-    call_u(tCol(Funct)),
-    must(convertToInstance(Name,Funct,Inst)))),!.
+    must(argIsa(Funct,N,FunctArgType)),!,
+    must(convertToInstance(Name,FunctArgType,Inst)),!.
 
 
 %= 	 	 
@@ -403,7 +402,7 @@ convertToInstance(Name,FunctArgType,Inst):- call_u(isa(Name,FunctArgType)),!,Ins
 convertToInstance(Name,COLTHING,TypeA):- a(ttTypeType,COLTHING),createByNameMangle(Name,_,TypeA),assert_isa(TypeA,COLTHING).
 convertToInstance(Name,COLTHING,TypeA):- call_u(genls(COLTHING,tCol)),createByNameMangle(Name,_,TypeA),assert_isa(TypeA,COLTHING).
 convertToInstance(Name,FunctArgType,Inst):- createByNameMangle(Name,Inst,TypeA),
-  %  assert_isa(Inst,FunctArgType),
+    assert_isa(Inst,FunctArgType),
     call_u(ain(genls(TypeA,FunctArgType))),!.
 
 :- fixup_exports.

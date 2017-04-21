@@ -68,6 +68,9 @@
 :- ensure_abox(baseKB).
 
 :- kb_shared(arity/2).
+:- kb_shared(nameString/2).
+:- kb_shared(mudKeyword/2).
+
 
 :- % better stack traces..
  set_prolog_flag(access_level,system).
