@@ -30,7 +30,7 @@ demo_nb_linkval(T) :-
 :- set_prolog_flag(read_attvars,true).
  :- enable_mpred_expansion.
 
-sk_in(avar([vn='Ex',sk='SKF-666'])).
+sk_in(avar([vn='Ex'],[sk='SKF-666'])).
 
 :- listing(sk_in).
 
