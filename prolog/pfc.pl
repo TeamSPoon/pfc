@@ -367,7 +367,7 @@ must_pfc(IM,_):- \+ compound(IM),!,fail.
 must_pfc(IM,MO):- in_dialect_pfc,fully_expand(IM,MO),!.
 must_pfc(IM,MO):- must_pfc_p(IM),!,fully_expand(IM,MO),!.
 must_pfc_p('-->'(_,_)):-!,fail.
-must_pfc_p(':-'(_,(CWC,_))):- !, atom(CWC),arg(_,v(bwc,fwc,pfc,awc,zwc,cwc),CWC).
+must_pfc_p(':-'(_,(CWC,_))):- !, atom(CWC),arg(_,v(bwc,fwc,pfc,awc,zwc,cwc),CWC),!.
 must_pfc_p('==>'(_,_)).
 must_pfc_p('==>'(_)).
 must_pfc_p('<==>'(_,_)).
@@ -383,11 +383,18 @@ must_pfc_fa(F,A):-baseKB:mpred_prop(F,A,B),!,B\==prologBuiltin.
 
 :- module_transparent(base_clause_expansion/2).
 
+% module prefixed clauses for sure should be non pfc?
+is_never_pfc(Var):- \+ compound(Var),!,fail.
+is_never_pfc(':-'(_)).
+is_never_pfc(':-'(C,_)):- !,is_never_pfc(C).
+is_never_pfc(M:_):- atom(M),M\==baseKB.
+
 base_clause_expansion(IM,':-'(ain_expanded(==>(IM)))):- atom(IM),!,(sub_atom(IM,';');sub_atom(IM,'(')),!.
 base_clause_expansion(IM,_):- \+ compound(IM),!,fail.
-% base_clause_expansion(In,Out):-!,only_expand(In,Out).
 base_clause_expansion( :- module(W,List), :- writetln(module(W,List))):- is_pfc_file,!.
-base_clause_expansion(':-'(I), ':-'(I)):- !.
+base_clause_expansion(:-(I),:-(I)):- !.
+% base_clause_expansion(In,Out):- only_expand(In,Out),!.
+base_clause_expansion(NeverPFC, EverPFC):- is_never_pfc(NeverPFC),!,NeverPFC=EverPFC.
 base_clause_expansion('?=>'(I), ':-'(O)):- !, sanity(nonvar(I)), fully_expand('==>'(I),O),!. % @TODO NOT NEEDED REALY UNLESS DO mpred_expansion:reexport(library('pfc2.0/mpred_expansion.pl')),
 base_clause_expansion('==>'(I,M),':-'(ain_expanded('==>'(I,M)))):- !.
 base_clause_expansion('<==>'(I,M),':-'(ain_expanded('<==>'(I,M)))):- !.
@@ -418,6 +425,8 @@ needs_pfc(F,_):- (clause_b(functorIsMacro(F));clause_b(functorDeclares(F))).
 needs_pfc(F,A):- base_kb_dynamic(F,A).
 needs_pfc(F,A):- clause_b(mpred_prop(F,_,prologHybrid)), \+ clause_b(mpred_prop(F,A,prologBuiltin)).
 
+maybe_builtin(M : _ :-_):- atom(M),!.
+maybe_builtin(M : _ ):- atom(M),!.
 maybe_builtin(I) :- nonvar(I),get_consequent_functor(I,F,A),
    \+ (clause_b(functorIsMacro(F));clause_b(functorDeclares(F));clause_b(mpred_prop(F,A,prologHybrid))),
    ain(prologBui sltin(F/A)).

@@ -461,7 +461,8 @@ correctArgsIsa00(Op,[Prop|Args],[Prop|AArgs]):- discoverAndCorrectArgsIsa(Op,Pro
 %
 % discover and correct Arguments  (isa/2).
 %
-discoverAndCorrectArgsIsa(Op,Prop,_,ArgsIn,ArgsOut):- length(ArgsIn,ArgUsed),show_failure(why,(arity_no_bc(Prop,MaxArity),(number(ArgUsed),number(MaxArity),ArgUsed=<MaxArity))),
+discoverAndCorrectArgsIsa(Op,Prop,_,ArgsIn,ArgsOut):- length(ArgsIn,ArgUsed), /*show_failure*/ (
+ (arity_no_bc(Prop,MaxArity),(number(ArgUsed),number(MaxArity),ArgUsed=<MaxArity))),
     discoverAndCorrectArgsIsa_from_right(Op,Prop,MaxArity,ArgsIn,ArgsOut),!.
 discoverAndCorrectArgsIsa(Op,Prop,N,ArgsIn,ArgsOut):-discoverAndCorrectArgsIsa_from_left(Op,Prop,N,ArgsIn,ArgsOut),!.
 

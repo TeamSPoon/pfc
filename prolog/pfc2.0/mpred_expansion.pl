@@ -650,7 +650,7 @@ should_fully_expand(F,_):-clause_b(functorDeclares(F)).
 memoize_on_local(_Why,_,Goal):- call(Goal),!.
 % memoize_on_local(_Why,Sent->SentO,Goal):- memoize_on(fully_expand_real,Sent->SentO,Goal).
 
-has_skolem_attrvars(Sent):- notrace((term_attvars(Sent,Attvars),member(Var,Attvars),get_attr(Var,sk,_))),!.
+has_skolem_attrvars(Sent):- notrace((term_attvars(Sent,Attvars),member(Var,Attvars),get_attr(Var,skk,_))),!.
 
 fully_expand_real(Op,Sent,SentO):- has_skolem_attrvars(Sent),!,
    gripe_time(0.2,
@@ -949,7 +949,7 @@ is_unit(A):-notrace(is_unit_like(A)).
 is_unit_like(A):- atomic(A),!.
 is_unit_like(C):-is_unit_like0(C).
 
-is_unit_like0(C):- var(C),!, dictoo:oo_get_attr(C,sk,_),!.
+is_unit_like0(C):- var(C),!, dictoo:oo_get_attr(C,skk,_),!.
 is_unit_like0(C):- \+ compound(C),!.
 is_unit_like0(C):- C\='VAR'(_),C\='$VAR'(_),C\=(_:-_),C\=ftRest(_),C\=ftListFn(_),get_functor(C,F),is_unit_functor(F).
 

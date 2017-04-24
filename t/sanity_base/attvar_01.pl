@@ -2,9 +2,13 @@
 
 :- module(attvar_01,[]).
 
-:- ensure_loaded(system:library(logicmoo_utils)).
+% :- ensure_loaded(system:library(logicmoo_utils)).
 :- ensure_loaded(library(pfc)).
+% :- ensure_loaded(library(logicmoo_snark)).
 :- set_prolog_flag(assert_attvars,true).
+
+
+sk:attr_unify_hook(_,_).
 
 :-export(demo_nb_linkval/1).
 demo_nb_linkval(T) :-
