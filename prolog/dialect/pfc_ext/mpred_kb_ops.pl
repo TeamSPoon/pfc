@@ -314,7 +314,13 @@ mpred_facts_and_universe/1
       assert_mu(+,+,+,+),
       ain_minfo_2(1,*),
       ain_minfo(1,*),
-        whenAnd(0,0).
+      whenAnd(0,0),
+      mpred_call_0(*),
+      mpred_bc_only(*),
+      mpred_bc_only0(*),
+      mpred_prove_neg(*),
+      call_u_req(*),
+      pfcBC_NoFacts(*).
 
  :- meta_predicate mpred_get_support_one(0,*).
  :- meta_predicate mpred_get_support_precanonical_plus_more(0,*).
