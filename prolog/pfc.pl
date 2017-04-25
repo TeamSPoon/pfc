@@ -519,6 +519,7 @@ clause_expansion(I,O):- pfc_clause_expansion(I,O).
 :- multifile(user:goal_expansion/4).
 :- dynamic(user:goal_expansion/4).
 :- module_transparent(user:goal_expansion/4).
+/*
 user:goal_expansion(I,P,O,PO):- fail,
  notrace(( \+ source_location(_,_),
      callable(I),          
@@ -531,6 +532,7 @@ user:goal_expansion(I,P,O,PO):- fail,
      notrace((
      O=CM:call_u(M),
      PO=P)).
+*/
 
 use_pfc.
 

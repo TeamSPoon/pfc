@@ -1178,7 +1178,7 @@ simplify_language_name(W,W).
 %
 % File Begin.
 %
-file_begin(W):- enable_mpred_expansion,!,set_file_lang(W).
+file_begin(W):- enable_mpred_expansion,mpred_ops,!,set_file_lang(W).
 file_begin(WIn):- 
  must_det_l((   
    simplify_language_name(WIn,W),
