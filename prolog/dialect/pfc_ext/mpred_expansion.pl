@@ -1117,7 +1117,7 @@ db_expand_chain(_,B<==>P,P) :-is_true(B),!.
 db_expand_chain(_,P<-B,P) :-is_true(B),!.
 db_expand_chain(_,isa(I,Not),INot):-Not==not,!,INot =.. [Not,I].
 %db_expand_chain(_,P,PE):-fail,cyc_to_clif_entry(P,PE).
-db_expand_chain(_,('nesc'(P)),P) :- !.
+%db_expand_chain(_,('nesc'(P)),P) :- !.
 
 
 
