@@ -855,7 +855,8 @@ contains_negs(X):-sub_term(Sub, X),compound(Sub),Sub=not(_).
 % If Is A Modal.
 %
 is_modal(MODAL,_):- \+ compound(MODAL),!,fail.
-is_modal(MODAL,BDT):- (MODAL = nesc(BDT,_) ; MODAL = poss(BDT,_)),!,nonvar(BDT).
+is_modal(MODAL,BDT):- (MODAL = nesc(BDT,_) ; MODAL = poss(BDT,_)),!,nop(nonvar(BDT)).
+is_modal(MODAL,BDT):- (MODAL = nesc(BDT) ; MODAL = poss(BDT)),!.
 is_modal(MODAL,BDT):- arg(_,MODAL,ARG),is_modal(ARG,BDT).
 
 
