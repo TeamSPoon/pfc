@@ -710,7 +710,7 @@ col_gen(_,T):- nonvar(T),!.
 col_gen(S,T):- var(S),!,trace_or_throw(col_gen(S,T)).
 col_gen(tCol,T):- !, no_repeats(T,col_type(T)).
 col_gen(tRelation,T):- !, no_repeats(T,rel_type(T)).
-col_gen(tTemporalThing,T):- !, no_repeats(T,inst_type(T)).
+col_gen(tTemporalThing,T):- !, no_repeats(T,(inst_type(T))).
 col_gen(vtValue,T):- !, no_repeats(T,val_type(T)).
 col_gen(S,T):- trace_or_throw(col_gen(S,T)).
 
@@ -862,7 +862,7 @@ subcache(X,Z):-nonvar(Z)-> (genls(Y,Z),isa(X,Y)) ; isa(X,Y),genls(Y,Z).
 isa_backchaing(I,C):- C==ftVar,!,is_ftVar(I).
 isa_backchaing(I,C):- nonvar(I),is_ftVar(I),!,C=ftVar.
 isa_backchaing(_,C):- C==ftProlog,!.
-isa_backchaing(I,C):- no_repeats(isa_asserted(I,C)).
+isa_backchaing(I,C):- no_repeats((isa_asserted(I,C)*->true;(var(C),tSet(C),isa_asserted(I,C)))).
 
 %:- table(isa_backchaing_1/2).
 isa_backchaing_1(I,C):- fail,
