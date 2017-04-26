@@ -407,7 +407,7 @@ get_source_ref(O):- notrace((get_source_ref1(U),(U=(_,_)->O=U;O=(U,ax)))),!.
 get_source_ref_stack(O):- findall(U,current_why(U),Whys),Whys\==[],!, U=(_,_),(Whys=[U]->O=U;O=(Whys,ax)),!.
 get_source_ref_stack(O):- get_source_ref1(U),(U=(_,_)->O=U;O=(U,ax)),!.
 
-get_startup_uu((mfl(baseKB, user_input, _), ax)).
+get_startup_uu((mfl(baseKB, user_input, _), ax)):-true.
 
 is_user_fact((_,U)):-atomic(U).
 
@@ -984,7 +984,8 @@ mpred_post1( P):- get_source_ref(UU), mpred_post1( P,   UU).
 % It always succeeds.
 %
 mpred_post1( isa(_,_,_),   _):- dumpST,dtrace.
-mpred_post1( tCol(','),   _):- dumpST,dtrace.
+mpred_post1( tCol(COMMA),   _):- COMMA==',',break, dumpST,dtrace.
+mpred_post1( tCol(VAR),   _):- var(VAR),break, dumpST,dtrace.
 
 mpred_post1(P, S):- each_E(mpred_post2,P,[S]).
 
@@ -1839,6 +1840,7 @@ mpred_do_fcpt(Fact,F):-
 mpred_do_fcpt(_,_).
 
 lookup_spft(A,B,C):- baseKB:spft(A,B,C).
+lookup_spft(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,baseKB:spft(AA,B,C).
 
 
 mpred_do_fcnt(_ZFact,F):-
@@ -3489,8 +3491,8 @@ mpred_why(M:P):-atom(M),!,call_from_module(M,mpred_why_sub(P)).
 mpred_why(P):-mpred_why_sub(P).
 
 
-mpred_why_sub(P):-mpred_why(P,Why),!,wdmsg(mpred_why_sub(P,Why)).
-mpred_why_sub(P):- loop_check(mpred_why_sub_lc(P),trace_or_throw(mpred_why_sub_lc(P))).
+mpred_why_sub(P):-mpred_why(P,Why),!,wdmsg(:-mpred_why(P)),wdmsgl(proof(Why)).
+mpred_why_sub(P):-loop_check(mpred_why_sub_lc(P),trace_or_throw(mpred_why_sub_lc(P)))-> \+ \+ call_u(why_buffer(_,_)),!.
 mpred_why_sub_lc(P):- 
   justifications(P,Js),
   nb_setval('$last_printed',[]),

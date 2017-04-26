@@ -919,10 +919,16 @@ completelyAssertedCollection(tCol).
 
 % :-rtrace.
 
-%((((P/(nonvar(P),is_ftNonvar(P),functor(P,F,A), \+ mpred_connective(F), A>1) ==> 
-%   {baseKB:agenda_slow_op_enqueue(must(ignore(deduceEachArgType(P))))})))).
 
+% set false so make_wff/1 will be noticed (default is true)
+feature_setting(make_wff,true)==> feature_setting(add_admitted_arguments,true), feature_setting(assume_wff, false).
+feature_setting(add_admitted_arguments,true) ==>  (P/(compound(P),\+is_ftVar(P)) ==> {with_current_why(P,ignore(\+ addAdmittedArguments(P)))}).
+feature_setting(make_wff,true)==> 
+ ((argIsa(P, N, T)/(nonvar(T),nonvar(P),integer(N)))==>(admittedArgument(P, N, E)/nonvar(E)==> (tCol(T),isa(E,T)))).
 
+% make_wff(true)==> (P/(compound(P),\+is_ftVar(P)) ==> {with_current_why(P,ignore(\+ deduceEachArgType(P)))}).
+
+==> feature_setting(add_admitted_arguments,true).
 
 prologHybrid(argIsa/3).
 
