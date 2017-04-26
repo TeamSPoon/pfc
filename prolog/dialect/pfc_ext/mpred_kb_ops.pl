@@ -13,8 +13,9 @@
 */
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_kb_ops.pl
 %:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
-:- module(mpred_kb_ops,
-          [ deducedSimply/1,
+:- module(mpred_kb_ops,[]).
+
+:- module_transparent((deducedSimply/1,
 get_consequent/2,
 how_to_op/2,
 is_callable/1,
@@ -156,9 +157,7 @@ map_literals/3,
 map_literals/2,
 update_single_valued_arg/3,
 has_body_atom/2,
-is_action_body/1,
-is_bc_body/1,
-is_fc_body/1,
+% is_fc_body/1,is_bc_body/1,is_action_body/1,
 wac/0,
 bwc/0,
 fwc/0,
@@ -244,11 +243,8 @@ map_first_arg/2,
 mpred_rule_hb/3,mpred_rule_hb_0/3,
 is_side_effect_disabled/0,
 is_resolved/1,
-is_fc_body/1,
-is_bc_body/1,
-is_action_body/1,
+is_fc_body/1,is_bc_body/1,is_action_body/1,has_body_atom/2,
 has_cl/1,
-has_body_atom/2,
 cwc/0,
 compute_resolve/3,
 clause_or_call/2,          
@@ -264,7 +260,7 @@ attvar_op/2,
 
 mpred_facts_and_universe/1
             
-          ]).
+          )).
 
 
 :- include('mpred_header.pi').
@@ -1590,6 +1586,7 @@ mpred_retry(G):- fail; quietly(G).
 %
 % {}.
 %
+:- baseKB:module_transparent( ({})/1).
 baseKB:'{}'(G):-call_u(G).
 
 :- meta_predicate neg_in_code(*).
@@ -2486,196 +2483,9 @@ retract_mu((H:-B)):-!, clause_u(H,B,R),erase(R).
 
 
 :- retractall(t_l:mpred_debug_local).
-
 :- thread_local(t_l:in_rescan_mpred_hook/0).
 
-/*
-
-% :- hook_database:listing(ereq/1).
-
-*/
-
-% =================================================
-% ==============  UTILS END          ==============
-% =================================================
-:- module_transparent( (retract_mu)/1).
-:- module_transparent( (assert_mu)/4).
-:- module_transparent( (asserta_mu)/1).
-:- module_transparent( (ruleBackward0)/2).
-:- module_transparent( (ruleBackward)/2).
-:- module_transparent( (fwd_ok)/1).
-:- module_transparent( (repropagate_meta_wrapper_rule)/1).
-:- module_transparent( (repropagate_1)/1).
-:- module_transparent( (repropagate_0)/1).
-:- module_transparent( (repropagate)/1).
-:- module_transparent( (mpred_facts_and_universe)/1).
-:- module_transparent( (rescan_pfc)/0).
-:- module_transparent( (pred_r0)/1).
-:- module_transparent( (pred_t0)/1).
-:- module_transparent( (has_db_clauses)/1).
-:- module_transparent( (pred_u2)/1).
-:- module_transparent( (pred_u1)/1).
-:- module_transparent( (pred_u0)/1).
-:- module_transparent( (pred_all)/1).
-:- module_transparent( (meta_wrapper_rule)/1).
-:- module_transparent( (rewritten_metawrapper)/1).
-:- module_transparent( (nonfact_metawrapper)/1).
-:- module_transparent( (pred_head_all)/1).
-:- module_transparent( (mpred_prove_neg)/1).
-:- module_transparent( (is_resolved)/1).
-:- module_transparent( (compute_resolve)/3).
-:- module_transparent( (compute_resolve)/5).
-:- module_transparent( (no_side_effects)/1).
-:- module_transparent( (should_call_for_facts)/3).
-:- module_transparent( (should_call_for_facts)/1).
-:- module_transparent( (clause_or_call)/2).
-:- module_transparent( (is_relative)/1).
-:- module_transparent( (mpred_non_neg_literal)/1).
-:- module_transparent( (is_reprop_0)/1).
-:- module_transparent( (is_reprop)/1).
-:- module_transparent( (mpred_literal_nv)/1).
-:- module_transparent( (mpred_is_assertable)/1).
-:- module_transparent( (mpred_cleanup_0)/1).
-:- module_transparent( (mpred_cleanup)/2).
-:- module_transparent( (mpred_cleanup)/0).
-:- module_transparent( (mpred_negation_w_neg)/2).
-:- module_transparent( (has_cl)/1).
-:- module_transparent( (mpred_ignored)/1).
-:- module_transparent( (maybeSupport)/2).
-:- module_transparent( (pfcBC_Cache)/1).
-:- module_transparent( (pfcBC_NoFacts_TRY)/1).
-:- module_transparent( (mpred_slow_search)/0).
-:- module_transparent( (pfcBC_NoFacts)/1).
-:- module_transparent( (mpred_bc_only0)/1).
-:- module_transparent( (mpred_bc_only)/1).
-:- module_transparent( (mpred_call_with_no_triggers_uncaugth)/1).
-:- module_transparent( (mpred_call_with_no_triggers_bound)/1).
-:- module_transparent( (mpred_call_with_no_triggers)/1).
-:- module_transparent( (call_with_bc_triggers)/1).
-:- module_transparent( (mpred_call_1)/3).
-:- module_transparent( (mpred_call_0)/1).
-:- module_transparent( (mpred_call_only_facts)/2).
-:- module_transparent( (mpred_call_only_facts)/1).
-:- module_transparent( (call_u_req)/1).
-:- module_transparent( (neg_in_code)/1).
-:- module_transparent( ({})/1).
-:- module_transparent( (trigger_supporters_list)/2).
-:- module_transparent( (spft_precanonical)/3).
-:- module_transparent( (mpred_get_support_precanonical)/2).
-:- module_transparent( (support_ok_via_clause_body)/3).
-:- module_transparent( (support_ok_via_clause_body)/1).
-:- module_transparent( (mpred_get_support_via_clause_db)/2).
-:- module_transparent( (mpred_get_support_via_sentence)/2).
-:- module_transparent( (mpred_get_support_one)/2).
-:- module_transparent( (mpred_get_support_precanonical_plus_more)/2).
-:- module_transparent( (mpred_deep_support0)/2).
-:- module_transparent( (mpred_deep_support)/2).
-:- module_transparent( (user_atom)/1).
-:- module_transparent( (mpred_scan_tms)/1).
-:- module_transparent( (well_founded)/2).
-:- module_transparent( (mpred_tms_supported0)/3).
-:- module_transparent( (mpred_tms_supported)/3).
-:- module_transparent( (mpred_tms_supported)/2).
-:- module_transparent( (mpred_remove_file_support)/1).
-:- module_transparent( (without_running)/1).
-:- module_transparent( (mpred_run_resume)/0).
-:- module_transparent( (mpred_run_pause)/0).
-:- module_transparent( (which_missing_argnum)/2).
-:- module_transparent( (if_missing_mask)/4).
-:- module_transparent( (if_missing_mask)/3).
-:- module_transparent( (is_already_supported)/3).
-:- module_transparent( (clause_asserted_local)/1).
-:- module_transparent( (correctify_support)/2).
-:- module_transparent( (pfcVersion)/1).
-:- module_transparent( (mpred_current_op_support)/1).
-:- module_transparent( (mpred_freeLastArg)/2).
-:- module_transparent( (pfcVerifyMissing)/3).
-:- module_transparent( (map_first_arg)/3).
-:- module_transparent( (map_first_arg)/2).
-:- module_transparent( (map_literals)/3).
-:- module_transparent( (map_literals)/2).
-:- module_transparent( (update_single_valued_arg)/3).
-:- module_transparent( (has_body_atom)/2).
-:- module_transparent( (is_action_body)/1).
-:- module_transparent( (is_bc_body)/1).
-:- module_transparent( (is_fc_body)/1).
-:- module_transparent( (wac)/0).
-:- module_transparent( (bwc)/0).
-:- module_transparent( (fwc)/0).
-:- module_transparent( (cwc)/0).
-:- module_transparent( (mpred_rewrap_h)/2).
-:- module_transparent( (mpred_is_info)/1).
-:- module_transparent( (ain_minfo)/1).
-:- module_transparent( (mpred_rule_hb_0)/3).
-:- module_transparent( (mpred_rule_hb)/3).
-:- module_transparent( (all_different_head_vals_2)/2).
-:- module_transparent( (all_different_head_vals)/1).
-:- module_transparent( (sub_term_v)/2).
-:- module_transparent( (sub_term_eq)/2).
-:- module_transparent( (mpred_pbody_f)/5).
-:- module_transparent( (get_why)/4).
-:- module_transparent( (mpred_pbody)/5).
-:- module_transparent( (pfc_provide_storage_op)/2).
-:- module_transparent( (is_retract_first)/1).
-:- module_transparent( (mpred_is_taut)/1).
-:- module_transparent( (assert_eq_quitely)/1).
-:- module_transparent( (retract_eq_quitely_f)/1).
-:- module_transparent( (retract_eq_quitely)/1).
-
-
-
-
-:- module_transparent( (mpred_each_literal)/2).
-:- module_transparent( (has_functor)/1).
-:- module_transparent( (make_uu_remove)/1).
-:- module_transparent( (match_source_ref1)/1).
-:- module_transparent( (mpred_nochaining)/1).
-:- module_transparent( (erase_w_attvars)/2).
-:- module_transparent( (call_s2)/1).
-:- module_transparent( (call_s)/1).
-:- module_transparent( (clauseq_s)/3).
-:- module_transparent( (clause_s)/3).
-:- module_transparent( (assertz_s)/1).
-:- module_transparent( (asserta_s)/1).
-:- module_transparent( (lookq_s)/2).
-:- module_transparent( (lookq_s)/1).
-:- module_transparent( (lookup_s)/2).
-:- module_transparent( (lookup_s)/1).
-:- module_transparent( (retract_s)/1).
-:- module_transparent( (clause_s)/2).
-:- module_transparent( (retractall_s)/1).
-:- module_transparent( (assert_s)/1).
-:- module_transparent( (listing_s)/1).
-:- module_transparent( (add_side_effect)/2).
-:- module_transparent( (record_se)/0).
-:- module_transparent( (mpred_is_builtin)/1).
-:- module_transparent( (is_mpred_action)/1).
-:- module_transparent( (w_get_fa)/3).
-:- module_transparent( (f_to_mfa)/4).
-:- module_transparent( (is_side_effect_disabled)/0).
-:- module_transparent( (mreq)/1).
-:- module_transparent( (check_real_context_module)/0).
-:- module_transparent( (check_context_module)/0).
-:- module_transparent( (lookup_inverted_op)/3).
-:- module_transparent( (how_to_op)/2).
-:- module_transparent( (reduce_mpred_op)/2).
-:- module_transparent( (second_order)/2).
-:- module_transparent( (assert_mu)/1).
-:- module_transparent( (assertz_mu)/2).
-:- module_transparent( (assertz_mu)/1).
-:- module_transparent( (mpred_op)/2).
-:- module_transparent(deducedSimply/1).
-:- module_transparent(is_callable/1).
-:- module_transparent(map_unless/4).
-:- module_transparent(mpred_facts_only/1).
-:- module_transparent(mpred_retry/1).
-:- module_transparent(mpred_update_literal/4).
-:- module_transparent(naf/1).
-:- module_transparent(oncely/1).
-:- module_transparent(physical_side_effect/1).
-:- module_transparent(pred_head/2).
-:- module_transparent(if_missing1/1).
-
+:- module_transparent(mpred_call_0/1).
 
  :- meta_predicate update_single_valued_arg(+,+,*).
  :- meta_predicate assert_mu(*,+,*,*).
@@ -2686,11 +2496,12 @@ retract_mu((H:-B)):-!, clause_u(H,B,R),erase(R).
 
 :- kb_shared(infoF/1).
 
-:- fixup_exports.
 
 
 mpred_kb_ops_file.
 
-% % :- '$set_source_module'(mpred_kb_ops).
+:- fixup_exports.
+
+
 
 
