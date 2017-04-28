@@ -243,7 +243,7 @@ map_first_arg/2,
 mpred_rule_hb/3,mpred_rule_hb_0/3,
 is_side_effect_disabled/0,
 is_resolved/1,
-is_fc_body/1,is_bc_body/1,is_action_body/1,has_body_atom/2,
+% is_fc_body/1,is_bc_body/1,is_action_body/1,has_body_atom/2,
 has_cl/1,
 cwc/0,
 compute_resolve/3,
@@ -286,19 +286,19 @@ mpred_facts_and_universe/1
 :- meta_predicate 
       pred_head(1,*),
       physical_side_effect(+),
-      call_s(0),
-      oncely(0),
-      naf(0),
-      call_s2(0),
+      call_s(*),
+      oncely(*),
+      naf(*),
+      call_s2(*),
       mpred_update_literal(*,*,0,*),
-      mpred_retry(0),
+      mpred_retry(*),
       mpred_op(?, ?),
-      mpred_facts_only(0),
+      mpred_facts_only(*),
       map_unless(1,:,*,*),      
-      is_callable(0),     
-      deducedSimply(0),
+      is_callable(*),     
+      deducedSimply(*),
       cnstrn0(:,+),
-      cnstrn(0),
+      cnstrn(*),
       cnstrn(+,:),
       attvar_op(+,+),
       % clause_u(+,+,-),
@@ -321,14 +321,14 @@ mpred_facts_and_universe/1
  :- meta_predicate mpred_get_support_one(0,*).
  :- meta_predicate mpred_get_support_precanonical_plus_more(0,*).
  % :- meta_predicate '__aux_maplist/2_cnstrn0+1'(*,0).
- :- meta_predicate repropagate_1(0).
+ :- meta_predicate repropagate_1(*).
  :- meta_predicate trigger_supporters_list(0,*).
- :- meta_predicate repropagate_meta_wrapper_rule(0).
- :- meta_predicate repropagate_0(0).
+ :- meta_predicate repropagate_meta_wrapper_rule(*).
+ :- meta_predicate repropagate_0(*).
 
 
 % oncely later will throw an error if there where choice points left over by call
-:- meta_predicate(oncely(0)).
+:- meta_predicate(oncely(*)).
 :- was_export(oncely/1).
 
 
@@ -358,7 +358,7 @@ once(A,B,C,D):-trace_or_throw(once(A,B,C,D)).
 %
 second_order(_,_):-fail.
 
-:- meta_predicate(deducedSimply(0)).
+:- meta_predicate(deducedSimply(*)).
 :- was_export(deducedSimply/1).
 
 
@@ -483,7 +483,7 @@ lookup_inverted_op(asserta_new,retract,+).
 % ================================================
 
 %:- was_dynamic(naf/1).
-:- meta_predicate(naf(0)).
+:- meta_predicate(naf(*)).
 :- was_export(naf/1).
 
 
@@ -494,7 +494,7 @@ lookup_inverted_op(asserta_new,retract,+).
 %
 naf(Goal):- (\+ call_u(Goal)).
 
-:- meta_predicate(is_callable(0)).
+:- meta_predicate(is_callable(*)).
 :- was_export(is_callable/1).
 
 
@@ -1088,19 +1088,19 @@ wac:-true.
 %
 % If Is A Forward Chaining Body.
 %
-is_fc_body(P):-cwc, has_body_atom(fwc,P).
+is_fc_body(P):- has_body_atom(fwc,P).
 
 %% is_bc_body( +P) is semidet.
 %
 % If Is A Backchaining Body.
 %
-is_bc_body(P):-cwc, has_body_atom(bwc,P).
+is_bc_body(P):- has_body_atom(bwc,P).
 
 %% is_action_body( +P) is semidet.
 %
 % If Is A Action Body.
 %
-is_action_body(P):-cwc, has_body_atom(wac,P).
+is_action_body(P):- has_body_atom(wac,P).
 
 
 
@@ -1108,11 +1108,11 @@ is_action_body(P):-cwc, has_body_atom(wac,P).
 %
 % Has Body Atom.
 %
-has_body_atom(WAC,P):-cwc, call(
+has_body_atom(WAC,P):- call(
    WAC==P -> true ; (is_ftCompound(P),consequent_arg(1,P,E),has_body_atom(WAC,E))),!.
 
 /*
-has_body_atom(WAC,P,Rest):-cwc, call(WAC==P -> Rest = true ; (is_ftCompound(P),functor(P,F,A),is_atom_body_pfa(WAC,P,F,A,Rest))).
+has_body_atom(WAC,P,Rest):- call(WAC==P -> Rest = true ; (is_ftCompound(P),functor(P,F,A),is_atom_body_pfa(WAC,P,F,A,Rest))).
 is_atom_body_pfa(WAC,P,F,2,Rest):-consequent_arg(1,P,E),E==WAC,consequent_arg(2,P,Rest),!.
 is_atom_body_pfa(WAC,P,F,2,Rest):-consequent_arg(2,P,E),E==WAC,consequent_arg(1,P,Rest),!.
 */
@@ -1584,29 +1584,31 @@ mpred_retry(G):- fail; quietly(G).
 
 %% { ?G} is semidet.
 %
-% {}.
+% an escape construct for bypassing the FOL''s salient body goals. 
+% 
 %
-:- baseKB:module_transparent( ({})/1).
-baseKB:'{}'(G):-call_u(G).
-
-:- meta_predicate neg_in_code(*).
-:- export(neg_in_code/1).
+:- meta_predicate '{}'(*).
+:- module_transparent( ({})/1).
+'{}'(G):- call_u(G).
 
 %% neg_in_code( +G) is semidet.
 %
 % Negated In Code.
 %
+:- meta_predicate neg_in_code(*).
+:- export(neg_in_code/1).
 neg_in_code(G):-nonvar(G),loop_check(neg_in_code0(G)).
+
 :- meta_predicate neg_in_code0(*).
 :- export(neg_in_code0/1).
-
 neg_in_code0(G):- var(G),!,lookup_u(~ G).
 neg_in_code0(call_u(G)):- !,call_u(~G).
-neg_in_code0(~(G)):- nonvar(G),!,  \+ call_u(~G) ,!.
+neg_in_code0(G):- clause(~G,Call)*-> call(Call) ,! .
 neg_in_code0(G):-  is_ftNonvar(G), a(prologSingleValued,G),
       must((if_missing_mask(G,R,Test),nonvar(R),nonvar(Test))),call_u(R),!,call_u(Test).
 neg_in_code0(G):-   neg_may_naf(G), \+ call_u(G),!.
-
+neg_in_code0(~(G)):- nonvar(G),!,  \+ call_u(~G) ,!.
+neg_in_code0(_:G):-!,baseKB:neg_in_code0(G).
 
 :- meta_predicate neg_may_naf(*).
 :- module_transparent(neg_may_naf/1).
@@ -1813,7 +1815,6 @@ ruleBackward(R,Condition):- call_u(( ruleBackward0(R,Condition),functor(Conditio
 %
 ruleBackward0(F,Condition):- call_u((  '<-'(F,Condition),\+ (is_true(Condition);mpred_is_info(Condition)) )).
 
-%:- was_dynamic('{}'/1).
 %{X}:-dmsg(legacy({X})),call_u(X).
 */
 
@@ -2489,10 +2490,11 @@ retract_mu((H:-B)):-!, clause_u(H,B,R),erase(R).
 
  :- meta_predicate update_single_valued_arg(+,+,*).
  :- meta_predicate assert_mu(*,+,*,*).
- :- meta_predicate mpred_facts_and_universe(0).
- :- meta_predicate {0}.
- :- meta_predicate repropagate_2(0).
- :- meta_predicate mpred_get_support_via_sentence(0,*).
+ :- meta_predicate mpred_facts_and_universe(*).
+ :- meta_predicate {*}.
+ :- meta_predicate neg_in_code0(*).
+ :- meta_predicate repropagate_2(*).
+ :- meta_predicate mpred_get_support_via_sentence(*,*).
 
 :- kb_shared(infoF/1).
 
