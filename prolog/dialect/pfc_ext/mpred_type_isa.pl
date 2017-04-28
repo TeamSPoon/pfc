@@ -347,8 +347,8 @@ baseKB:prologBuiltin(was_isa/3).
 
 
 :- export(shouldnt_be_set/1).
-shouldnt_be_set(C):- cwc, a(ttExpressionType,C).
-shouldnt_be_set(C):- cwc, atom(C), atom_concat(ft,_,C).
+shouldnt_be_set(C):- a(ttExpressionType,C).
+shouldnt_be_set(C):- atom(C), atom_concat(ft,_,C).
 
 %= 	 	 
 

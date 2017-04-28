@@ -366,8 +366,10 @@ is_loadin(M,CC):- functor(CC,F,A),localize_mpred(M,F,A).
 must_pfc(IM,_):- \+ compound(IM),!,fail.
 must_pfc(IM,MO):- in_dialect_pfc,fully_expand(IM,MO),!.
 must_pfc(IM,MO):- must_pfc_p(IM),!,fully_expand(IM,MO),!.
+
 must_pfc_p('-->'(_,_)):-!,fail.
-must_pfc_p(':-'(_,(CWC,_))):- !, atom(CWC),arg(_,v(bwc,fwc,pfc,awc,zwc,cwc),CWC),!.
+must_pfc_p(':-'(_,(CWC,_))):- atom(CWC),arg(_,v(bwc,fwc,awc,zwc),CWC),!.
+must_pfc_p(':-'(_,(CWC,_))):- !, atom(CWC),arg(_,v(cwc),CWC),is_pfc_file.
 must_pfc_p('==>'(_,_)).
 must_pfc_p('==>'(_)).
 must_pfc_p('<==>'(_,_)).
@@ -375,10 +377,13 @@ must_pfc_p('<=='(_,_)).
 must_pfc_p('<-'(_,_)).
 must_pfc_p('<--'(_,_)).
 must_pfc_p('->'(_,_)).
+must_pfc_p('~'(_)).
 must_pfc_p('--->'(_,_)).
 must_pfc_p(FAB):-functor(FAB,F,A),must_pfc_fa(F,A),!.
-must_pfc_fa(F,2):-sub_atom(F,'=').
-must_pfc_fa(F,A):-baseKB:mpred_prop(F,A,B),!,B\==prologBuiltin.
+
+must_pfc_fa(F,2):- sub_atom(F,'=').
+must_pfc_fa(F,A):- mpred_database_term(F,A,_),!.
+must_pfc_fa(F,A):- baseKB:mpred_prop(F,A,_), \+ baseKB:mpred_prop(F,A,prologBuiltin).
 
 
 :- module_transparent(base_clause_expansion/2).
@@ -389,20 +394,14 @@ is_never_pfc(':-'(_)).
 is_never_pfc(':-'(C,_)):- !,is_never_pfc(C).
 is_never_pfc(M:_):- atom(M),M\==baseKB.
 
-base_clause_expansion(IM,':-'(ain_expanded(==>(IM)))):- atom(IM),!,(sub_atom(IM,';');sub_atom(IM,'(')),!.
+base_clause_expansion(IM,':-'(ain_expanded(==>(IM)))):- atomic(IM),!,(sub_atom(IM,';');sub_atom(IM,'(')),!.
 base_clause_expansion(IM,_):- \+ compound(IM),!,fail.
 base_clause_expansion( :- module(W,List), :- writetln(module(W,List))):- is_pfc_file,!.
 base_clause_expansion(:-(I),:-(I)):- !.
 % base_clause_expansion(In,Out):- only_expand(In,Out),!.
 base_clause_expansion(NeverPFC, EverPFC):- is_never_pfc(NeverPFC),!,NeverPFC=EverPFC.
 base_clause_expansion('?=>'(I), ':-'(O)):- !, sanity(nonvar(I)), fully_expand('==>'(I),O),!. % @TODO NOT NEEDED REALY UNLESS DO mpred_expansion:reexport(library('pfc2.0/mpred_expansion.pl')),
-base_clause_expansion('==>'(I,M),':-'(ain_expanded('==>'(I,M)))):- !.
-base_clause_expansion('<==>'(I,M),':-'(ain_expanded('<==>'(I,M)))):- !.
-base_clause_expansion('?=>'(I), ':-'(O)):- !, sanity(nonvar(I)), fully_expand('==>'(I),O),!. % @TODO NOT NEEDED REALY UNLESS DO mpred_expansion:reexport(library('pfc2.0/mpred_expansion.pl')),
-base_clause_expansion('==>'(I),':-'(ain_expanded('==>'(I)))):- !.
-base_clause_expansion(IN, ':-'(ain_expanded('==>'(IN)))):- is_pfc_file.
-base_clause_expansion(IN, ':-'(ain_expanded('==>'(IN)))):- must_pfc_p(IN).
-base_clause_expansion(IN, ':-'(ain_expanded((IN)))):- functor(IN,F,A),mpred_database_term(F,A,_),!.
+base_clause_expansion(IN, ':-'(ain(ASSERT))):- must_pfc(IN,ASSERT).
 
 /*
 
@@ -484,19 +483,21 @@ user:exception(undefined_predicate, MFA, Action):- fail, current_prolog_flag(ret
 */
 
 pfc_clause_expansion(I,O):- nonvar(I),I\==end_of_file,base_clause_expansion(I,M),!,I\=@=M,
-   notrace((
+   quietly((
       maybe_should_rename(M,MO), 
       ignore(( \+ same_expandsion(I,MO), dmsg(pfc_clause_expansion(I)-->MO))),
       maybe_directive_to_clauses(MO,O),
-      ignore(( O\==MO , (dmsg(pfc_clause_expansion(I)-->O)))))),!.
+      ignore(( O\==MO , (dmsg(directive_to_clauses(I)-->O)))))),!.
 
 %maybe_directive_to_clauses(:- ain(A),Clauses):- loader_side_effect_capture_only(ain(A),Clauses).
-%maybe_directive_to_clauses(:- ain_expanded(A),Clauses):- loader_side_effect_capture_only(ain(A),Clauses).
+%maybe_directive_to_clauses(:- ain_expanded(A),Clauses):- loader_side_effect_capture_only(ain_expanded(A),Clauses).
 maybe_directive_to_clauses(O,O):-!.
 
+same_expandsion(I,O):-var(I),!,I==O.
 same_expandsion('==>'(I),MO):-!,same_expandsion(I,MO).
 same_expandsion(I,'==>'(MO)):-!,same_expandsion(I,MO).
 same_expandsion(I,[MO|_]):-!,same_expandsion(I,MO).
+same_expandsion(I, (:-ain(MO))):-!,same_expandsion(I,MO).
 same_expandsion(I, (:-ain_expanded(MO))):-!,same_expandsion(I,MO).
 same_expandsion(I,O):-I==O.
 

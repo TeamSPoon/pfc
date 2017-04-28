@@ -288,9 +288,9 @@ skolem(X,Vs,SK):-skolem_in_code(X,Vs,SK).
 current_world(current).
 
 
-resolveConflict(C):- cwc, must((resolveConflict0(C),
+resolveConflict(C):- must((resolveConflict0(C),
   show_if_debug(is_resolved(C)),mpred_remove(conflict(C)))).
-resolveConflict(C) :- cwc,
+resolveConflict(C) :- 
   wdmsg("Halting with conflict ~p", [C]),   
   must(mpred_halt(conflict(C))),fail.
 
@@ -300,7 +300,7 @@ resolveConflict(C) :- cwc,
 %
 % Resolve Conflict Primary Helper.
 %
-resolveConflict0(C) :- cwc, forall(must(mpred_negation_w_neg(C,N)),ignore(show_failure(why,(nop(resolveConflict(C)),mpred_why(N))))),
+resolveConflict0(C) :-  forall(must(mpred_negation_w_neg(C,N)),ignore(show_failure(why,(nop(resolveConflict(C)),mpred_why(N))))),
   ignore(show_failure(why,(nop(resolveConflict(C)),mpred_why(C)))), 
     doall((call_u(resolverConflict_robot(C)),\+ is_resolved(C),!)),
     is_resolved(C),!.
@@ -312,8 +312,8 @@ resolveConflict0(C) :- cwc, forall(must(mpred_negation_w_neg(C,N)),ignore(show_f
 %
 % Resolver Conflict Robot.
 %
-resolverConflict_robot(N) :- cwc, forall(must(mpred_negation_w_neg(N,C)),forall(compute_resolve(C,N,TODO),on_x_debug(show_if_debug(TODO)))).
-resolverConflict_robot(C) :- cwc, must((mpred_remove(C),wdmsg("Rem-3 with conflict ~p", [C]),mpred_run,sanity(\+C))).
+resolverConflict_robot(N) :-  forall(must(mpred_negation_w_neg(N,C)),forall(compute_resolve(C,N,TODO),on_x_debug(show_if_debug(TODO)))).
+resolverConflict_robot(C) :-  must((mpred_remove(C),wdmsg("Rem-3 with conflict ~p", [C]),mpred_run,sanity(\+C))).
 
 
 %% never_declare( :TermRule, ?Rule) is semidet.
@@ -339,16 +339,16 @@ never_declare(_:declared(FA),Why):-nonvar(FA),never_declare(declared(FA),Why).
 %
 :- dynamic((never_assert_u/2)).
 :- multifile((never_assert_u/2)).
-% never_assert_u(pt(_,Pre,Post),head_singletons(Pre,Post)):- cwc, head_singletons(Pre,Post).
-never_assert_u(Rule,is_var(Rule)):- cwc, is_ftVar(Rule),!.
-never_assert_u(Rule,head_singletons(Pre,Post)):- cwc, Rule \= (_:-_), once(mpred_rule_hb(Rule,Post,Pre)), head_singletons(Pre,Post).
+% never_assert_u(pt(_,Pre,Post),head_singletons(Pre,Post)):-  head_singletons(Pre,Post).
+never_assert_u(Rule,is_var(Rule)):-  is_ftVar(Rule),!.
+never_assert_u(Rule,head_singletons(Pre,Post)):-  Rule \= (_:-_), once(mpred_rule_hb(Rule,Post,Pre)), head_singletons(Pre,Post).
 never_assert_u(A,B):-never_assert_u0(A,B),dtrace,never_assert_u0(A,B).
-% never_assert_u(M:arity(_,_),is_support(arity/2)):- M==pqr,dumpST, dtrace, cwc,!.
+% never_assert_u(M:arity(_,_),is_support(arity/2)):- M==pqr,dumpST, dtrace, !.
 
 never_assert_u(A,B):-ground(A),never_declare(A,B).
 
 
-never_assert_u(M:Rule,Why):- cwc, atom(M),never_assert_u(Rule,Why).
+never_assert_u(M:Rule,Why):-  atom(M),never_assert_u(Rule,Why).
 
 /*
 never_assert_u(pt(_,
