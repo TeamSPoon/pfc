@@ -29,8 +29,8 @@
             database_modify_assert/2,
             db_must_asserta_confirmed_sv/3,
             deduceEachArgType/1,
-            deduceEachArgType/3,
-            admit_type/2,
+            deduceEachArgType/4,
+            admit_str_type/3,
             del/1,
             del0/1,
             ensure_dynamic/1,
@@ -275,7 +275,8 @@ get_pifunctor(Head,PHead,F,A):-get_functor(Head,F,A),functor(PHead,F,A),ignore(P
 %
 % Rescan Meta Argument Types.
 %
-rescan_meta_argtypes(MT):- functor(MT,F,A),functor(M,F,A),MT=..[F|ARGST],M=..[F|ARGS],forall(clause_asserted(M,_),maplist(admit_type,ARGS,ARGST)),!.
+rescan_meta_argtypes(MT):- functor(MT,F,A),functor(M,F,A),MT=..[F|ARGST],M=..[F|ARGS],forall(clause_asserted(M,_),
+  maplist(admit_str_type(t),ARGS,ARGST)),!.
 
 %= 	 	 
 
@@ -283,7 +284,7 @@ rescan_meta_argtypes(MT):- functor(MT,F,A),functor(M,F,A),MT=..[F|ARGST],M=..[F|
 %
 % rescan Argument  (isa/2).
 %
-rescan_argIsa(F,N,Type):- ignore(( arity_no_bc(F,A), functor(M,F,A),forall((clause_asserted(M,_),arg(N,M,E)),admit_type(E,Type)))),!.
+rescan_argIsa(F,N,Type):- ignore(( arity_no_bc(F,A), functor(M,F,A),forall((clause_asserted(M,_),arg(N,M,E)),admit_str_type(t,E,Type)))),!.
 
 
 %= 	 	 
@@ -292,70 +293,73 @@ rescan_argIsa(F,N,Type):- ignore(( arity_no_bc(F,A), functor(M,F,A),forall((clau
 %
 % Deduce Each Argument Type.
 %
-deduceEachArgType(P):- doArgType(deduceEachArgType,P).
+deduceEachArgType(P):- doArgType(t,deduceEachArgType,P).
 
-deduceEachArgType(F,N,A):- ignore((clause_asserted(argIsa(F,N,Type)),\+ \+ admit_type(A,Type))).
+deduceEachArgType(Str,F,N,A):- ignore((clause_asserted(argIsa(F,N,Type)),\+ \+ admit_str_type(Str,A,Type))).
 
-%% admit_type( ?M, ?VALUE2) is semidet.
+%% admit_type(Str, ?M, ?VALUE2) is semidet.
 %
 % Deduce Each Argument With Type.
 %
-admit_type(M,MT):-  admit_type(M,MT,Result),!,(atom(Result)->true;ain(Result)).
+admit_str_type(Str,M,MT):-  admit_type(Str,M,MT,Result),!,(atom(Result)->true;ain_expanded(t(Str,Result))).
 
-admit_type(M,_,exists):- (is_ftVar(M);number(M)),!.
-admit_type(_,MT,exists):- (is_ftVar(MT);MT=ftTerm;call_u(ttExpressionType(MT))),!.
-admit_type(M,M,exists):-!.
-admit_type(M,MT,exists):- compound(M),!, (compound(MT)->(( M =..ARGS,MT =..ARGST,maplist(admit_type,ARGS,ARGST))); deduceEachArgType(M)).
-admit_type(M,tSpatialThing,exists):-a(tSpatialThing,M),!.
-admit_type(M,tTemporalhing,exists):-a(tTemporalThing,M),!.
-admit_type(M,MT,exists):- call_u(isa(M,MT)),!.
-admit_type(M,MT,isa(M,MT)).
-
-
-
-
-:- meta_predicate doArgType(3,*).
-:- meta_predicate doArgType(3,?,*,*).
-:- meta_predicate doEachArg(3,?,?,*).
+admit_type(_Str,M,_,exists):- (is_ftVar(M);number(M)),!.
+admit_type(_Str,_,MT,exists):- (is_ftVar(MT);MT=ftTerm;call_u(ttExpressionType(MT))),!.
+admit_type(_Str,M,M,exists):-!.
+admit_type(Str,M,MT,exists):- compound(M),!, (compound(MT)->(( M =..ARGS,MT =..ARGST,
+  maplist(admit_str_type(Str),ARGS,ARGST))); doArgType(Str,deduceEachArgType,M)).
+admit_type(_Str,M,tSpatialThing,exists):-a(tSpatialThing,M),!.
+admit_type(_Str,M,tTemporalhing,exists):-a(tTemporalThing,M),!.
+admit_type(_Str,M,MT,exists):- call_u(isa(M,MT)),!.
+admit_type(_Str,M,MT,isa(M,MT)).
 
 
 
-doArgType(_DAT,Var):- \+ compound(Var),!.
-doArgType(deduceEachArgType,meta_argtypes(MT)):- !, rescan_meta_argtypes(MT).
-doArgType(deduceEachArgType,tRelation(M)):-compound(M),functor(M,F,A),ain_expanded(meta_argtypes(M)),ain(tRelation(F)),ain(arity(F,A)).
-doArgType(DAT,M):-functor(M,F,A),M=..[F|ARGS],doArgType(DAT,F,A,ARGS).
+
+:- meta_predicate doArgType(+,4,*).
+:- meta_predicate doArgType(+,4,?,*,*).
+:- meta_predicate doEachArg(+,4,?,?,*).
+
+
+
+doArgType(_Str,_DAT,Var):- \+ compound(Var),!.
+doArgType(_Str,deduceEachArgType,meta_argtypes(MT)):- !, rescan_meta_argtypes(MT).
+doArgType(_Str,deduceEachArgType,tRelation(M)):-compound(M),functor(M,F,A),ain_expanded(meta_argtypes(M)),ain(tRelation(F)),ain(arity(F,A)).
+doArgType(Str,DAT,M):-functor(M,F,A),M=..[F|ARGS],doArgType(Str,DAT,F,A,ARGS).
 
 %= 	 	 
 
-%% doArgType(:DAT, ?F, ?VALUE2, ?VALUE3) is semidet.
+%% doArgType(Str,:DAT, ?F, ?VALUE2, ?VALUE3) is semidet.
 %
 % Deduce Each Argument Type.
 %
 
-doArgType(_,Isa,_,_):- skipped_doArgType(Isa),!.
-doArgType(DAT,_,_,[E]):- !,doArgType(DAT,E),!.
-doArgType(_DAT,t,_,[F|_]):-var(F),!.
-doArgType(DAT,t,A,[F|ARGS]):-A2 is A-1, doArgType(DAT,F,A2,ARGS).
-doArgType(DAT,F,_,ARGS):- upcase_atom(F,F),!,maplist(doArgType(DAT),ARGS).
+doArgType(_Str,_,Isa,_,_):- skipped_doArgType(Isa),!.
+doArgType(_Str,DAT,poss,_,[E]):- !,doArgType(poss,DAT,E),!.
+doArgType(_Str,DAT, ~, _,[E]):- !,doArgType(poss,DAT,E),!.
+doArgType(Str,DAT,_,_,[E]):- !,doArgType(Str,DAT,E),!.
+doArgType(_Str,_DAT,t,_,[F|_]):-var(F),!.
+doArgType(Str,DAT,t,A,[F|ARGS]):-A2 is A-1, doArgType(Str,DAT,F,A2,ARGS).
+doArgType(Str,DAT,F,_,ARGS):- upcase_atom(F,F),!,maplist(doArgType(Str,DAT),ARGS).
 
-% doArgType(DAT,argQuotedIsa,3,[_F,_N,_Type]):-!.
-% doArgType(DAT,argIsa,3,[F,N,Type]):- ttExpressionType(Type),ain(argQuotedIsa(F,N,Type)),!.
-% doArgType(DAT,argIsa,3,[F,N,Type]):- rescan_argIsa(F,N,Type),fail.
-doArgType(DAT,F,A,ARGS):- DAT==deduceEachArgType,
+% doArgType(Str,DAT,argQuotedIsa,3,[_F,_N,_Type]):-!.
+% doArgType(Str,DAT,argIsa,3,[F,N,Type]):- ttExpressionType(Type),ain(argQuotedIsa(F,N,Type)),!.
+% doArgType(Str,DAT,argIsa,3,[F,N,Type]):- rescan_argIsa(F,N,Type),fail.
+doArgType(Str,DAT,F,A,ARGS):- DAT==deduceEachArgType,
   functor(MT,F,A),meta_argtypes(MT),MT =..[_|ARGST],interargIsa_match(ARGS,ARGST),!,
-  nop(if_main(dmsg(doArgType(DAT,F,ARGS,ARGST)))),
-  maplist(admit_type,ARGS,ARGST).
-doArgType(DAT,F,_,ARGS):-doEachArg(DAT,F,1,ARGS),!.
+  nop(if_main(dmsg(doArgType(Str,DAT,F,ARGS,ARGST)))),
+  maplist(admit_str_type(Str),ARGS,ARGST).
+doArgType(Str,DAT,F,_,ARGS):-doEachArg(Str,DAT,F,1,ARGS),!.
 
-%% doEachArg(DAT, ?F, ?N, :TermA) is semidet.
+%% doEachArg(Str,DAT, ?F, ?N, :TermA) is semidet.
 %
 % deduce each Argument With Argument  (isa/2).
 %
-doEachArg(_ ,_,_,[]).
-doEachArg(DAT,F,N,[A|RGS]):-
- (compound(A)-> doArgType(DAT,A) ; true),
- ignore(call(DAT,F,N,A)),
- N2 is N+1,doEachArg(DAT,F,N2,RGS),!.
+doEachArg(_Str,_ ,_,_,[]).
+doEachArg(Str,DAT,F,N,[A|RGS]):-
+ (compound(A)-> doArgType(Str,DAT,A) ; true),
+ ignore(call(DAT,Str,F,N,A)),
+ N2 is N+1,doEachArg(Str,DAT,F,N2,RGS),!.
    
 
 
@@ -384,17 +388,17 @@ if_main(G):-(thread_self(M),lmcache:thread_main(_,M))->G ; true.
 
 
 
-addAdmittedArguments(P):- doArgType(add_admitted_argument,P).
+addAdmittedArguments(P):- doArgType(t,add_admitted_argument,P).
 
 
-% add_admitted_argument(_,_,_).
-add_admitted_argument(F,N,M):- (var(M); number(M); \+ number(N) ; var(F)),!.
-add_admitted_argument(admittedArgument,_,_):-!.
-add_admitted_argument(safe_wrap,_,_):-!.
-add_admitted_argument(arity,_,_):-!.
-add_admitted_argument(mpred_prop,_,_):-!.
-add_admitted_argument(F,N,M):- atom(M),!,show_failure(ain(admittedArgument(F,N,M))).
-add_admitted_argument(_,_,_).                                                        
+% add_admitted_argument(Str,_,_,_).
+add_admitted_argument(_,F,N,M):- (var(M); number(M); \+ number(N) ; var(F)),!.
+add_admitted_argument(_,admittedArgument,_,_):-!.
+add_admitted_argument(_Str,safe_wrap,_,_):-!.
+add_admitted_argument(_Str,arity,_,_):-!.
+add_admitted_argument(_Str,mpred_prop,_,_):-!.
+add_admitted_argument(Str,F,N,M):- atom(M),!,show_failure(baseKB:ain_expanded(t(Str,admittedArgument(F,N,M)))).
+add_admitted_argument(_Str,_,_,_).                                                        
  	 
 
 %% side_effect_prone is semidet.

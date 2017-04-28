@@ -925,6 +925,8 @@ feature_setting(make_wff,true)==> feature_setting(add_admitted_arguments,true), 
 feature_setting(add_admitted_arguments,true) ==>  (P/(compound(P),\+is_ftVar(P)) ==> {with_current_why(P,ignore(\+ addAdmittedArguments(P)))}).
 feature_setting(make_wff,true)==> 
  ((argIsa(P, N, T)/(nonvar(T),nonvar(P),integer(N)))==>(admittedArgument(P, N, E)/nonvar(E)==> (tCol(T),isa(E,T)))).
+feature_setting(make_wff,true)==> 
+ ((argIsa(P, N, T)/(nonvar(T),nonvar(P),integer(N)))==>(poss(admittedArgument(P, N, E))/nonvar(E)==> (tCol(T),isa(E,T)))).
 
 % make_wff(true)==> (P/(compound(P),\+is_ftVar(P)) ==> {with_current_why(P,ignore(\+ deduceEachArgType(P)))}).
 
