@@ -364,8 +364,9 @@ is_loadin(M,CC):- functor(CC,F,A),localize_mpred(M,F,A).
 
 
 must_pfc(IM,_):- \+ compound(IM),!,fail.
-must_pfc(IM,MO):- in_dialect_pfc,fully_expand(IM,MO),!.
-must_pfc(IM,MO):- must_pfc_p(IM),!,fully_expand(IM,MO),!.
+must_pfc(IM,'==>'(IM)):- (in_dialect_pfc;must_pfc_p(IM)),!.
+must_pfc_exp(IM,MO):- in_dialect_pfc,fully_expand(IM,MO),!.
+must_pfc_exp(IM,MO):- must_pfc_p(IM),!,fully_expand(IM,MO),!.
 
 must_pfc_p('-->'(_,_)):-!,fail.
 must_pfc_p(':-'(_,(CWC,_))):- atom(CWC),arg(_,v(bwc,fwc,awc,zwc),CWC),!.
