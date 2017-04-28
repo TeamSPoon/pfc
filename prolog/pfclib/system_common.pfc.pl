@@ -1436,8 +1436,6 @@ ttStringType('SubLListOfStrings').
 
 % :- kb_shared((disjointWith/2,genls/2)).
 
-rtArgsVerbatum(mudAreaConnected).
-
 prologHybrid(argIsa(tRelation,ftInt,tCol)).
 prologHybrid(formatted_resultIsa(ttExpressionType,tCol)).
 

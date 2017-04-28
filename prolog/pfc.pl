@@ -365,12 +365,14 @@ is_loadin(M,CC):- functor(CC,F,A),localize_mpred(M,F,A).
 
 must_pfc(IM,_):- \+ compound(IM),!,fail.
 must_pfc(IM,'==>'(IM)):- (in_dialect_pfc;must_pfc_p(IM)),!.
+
 must_pfc_exp(IM,MO):- in_dialect_pfc,fully_expand(IM,MO),!.
 must_pfc_exp(IM,MO):- must_pfc_p(IM),!,fully_expand(IM,MO),!.
 
 must_pfc_p('-->'(_,_)):-!,fail.
 must_pfc_p(':-'(_,(CWC,_))):- atom(CWC),arg(_,v(bwc,fwc,awc,zwc),CWC),!.
-must_pfc_p(':-'(_,(CWC,_))):- !, atom(CWC),arg(_,v(cwc),CWC),is_pfc_file.
+must_pfc_p(':-'(_,(CWC,_))):- atom(CWC),arg(_,v(cwc),CWC),!,is_pfc_file.
+must_pfc_p(':-'(Head,_)):- !, must_pfc_p(Head),!.
 must_pfc_p('==>'(_,_)).
 must_pfc_p('==>'(_)).
 must_pfc_p('<==>'(_,_)).
@@ -382,6 +384,7 @@ must_pfc_p('~'(_)).
 must_pfc_p('--->'(_,_)).
 must_pfc_p(FAB):-functor(FAB,F,A),must_pfc_fa(F,A),!.
 
+must_pfc_fa(prologHybrid,_).
 must_pfc_fa(F,2):- sub_atom(F,'=').
 must_pfc_fa(F,A):- mpred_database_term(F,A,_),!.
 must_pfc_fa(F,A):- baseKB:mpred_prop(F,A,_), \+ baseKB:mpred_prop(F,A,prologBuiltin).
@@ -402,7 +405,7 @@ base_clause_expansion(:-(I),:-(I)):- !.
 % base_clause_expansion(In,Out):- only_expand(In,Out),!.
 base_clause_expansion(NeverPFC, EverPFC):- is_never_pfc(NeverPFC),!,NeverPFC=EverPFC.
 base_clause_expansion('?=>'(I), ':-'(O)):- !, sanity(nonvar(I)), fully_expand('==>'(I),O),!. % @TODO NOT NEEDED REALY UNLESS DO mpred_expansion:reexport(library('pfc2.0/mpred_expansion.pl')),
-base_clause_expansion(IN, ':-'(ain(ASSERT))):- must_pfc(IN,ASSERT).
+base_clause_expansion(IN, ':-'(ain_expanded(ASSERT))):- must_pfc(IN,ASSERT).
 
 /*
 
