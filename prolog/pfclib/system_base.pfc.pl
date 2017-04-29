@@ -141,7 +141,7 @@ tSet(tIndividual).
 % Types/Sets/Collections are not themselves individuals and are usable always as arity 1
 % tCol(A),{sanity(atom(A))} ==> ~tIndividual(A),{decl_type(A), kb_shared(A/1)}.
 
-~tIndividual(A):- loop_check(tCol(A)).
+~tIndividual(A):- is_ftNonvar(A), loop_check(tCol(A)).
 tCol(A) ==> {decl_type(A), kb_shared(A/1)}.
 
 

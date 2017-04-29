@@ -7,7 +7,7 @@
 %
 */
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_type_wff.pl
-:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
+%:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
 :- module(mpred_type_wff,
           [ 
             head_singletons/2, head_singles0/2,head_singles01/2,
@@ -98,7 +98,7 @@
 
 :- include('mpred_header.pi').
 
-:- endif.
+%:- endif.
 
 :- meta_predicate 
         call_last_is_var(0).
@@ -748,6 +748,7 @@ defunctionalize((H:-B),WffO):- nonvar(H),!,defunctionalize(':-',(H:-B),WffO),!.
 defunctionalize(Wff,WffO):- defunctionalize('=>',Wff,WffO),!.
 % defunctionalize(Wff,WffO):- locally(t_l:dont_use_mudEquals,defunctionalize(',',Wff,WffO)).
 
+defunctionalize_each(Wff,WffO):-must_maplist(defunctionalize,Wff,WffO).
 
 %% defunctionalize( ?OP, ?Wff, ?WffO) is semidet.
 %
