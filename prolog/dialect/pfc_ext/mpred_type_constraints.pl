@@ -74,7 +74,7 @@
 :- use_module(library(multivar)).
 :- endif.
 
-:- kb_shared(baseKB:admittedArgument/3)
+:- kb_shared(baseKB:admittedArgument/3).
 
 :- meta_predicate 
    isa_pred_l(+,*,*),
