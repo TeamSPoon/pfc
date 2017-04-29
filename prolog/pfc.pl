@@ -5,6 +5,8 @@
 
 */
 :- module(pfc,[use_pfc/0]).
+:- kb_shared(baseKB:admittedArgument/3).
+
 :- user:use_module(library(must_trace)).
 :- user:use_module(library(virtualize_source)).
 % :- user:use_module(library(hook_hybrid)).
