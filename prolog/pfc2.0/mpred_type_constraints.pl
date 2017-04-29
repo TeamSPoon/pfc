@@ -74,7 +74,6 @@
 :- use_module(library(multivar)).
 :- endif.
 
-:- kb_shared(baseKB:admittedArgument/3).
 
 :- meta_predicate 
    isa_pred_l(+,*,*),
@@ -88,11 +87,13 @@
    map_argnums(?,4,*),
    thaw(?),
    lazy(0),
-   relax(*),
-   relaxing(*),
    unrelax(*),
    relax_goal(*,+),
    lazy(+,0).
+
+:- meta_predicate relax(*),relaxing(*).
+
+:- kb_shared(baseKB:admittedArgument/3).
 
 :- thread_local(t_l:no_kif_var_coroutines/1).
 
