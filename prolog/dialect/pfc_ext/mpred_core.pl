@@ -2884,9 +2884,9 @@ mpred_fact(P):- mpred_fact(P,true).
 %   mpred_fact(X,mpred_userFact(X))
 %
 
+mpred_fact(P,C):- mpred_fact0(P,C).
 mpred_fact(P,C):- compound(P),functor(P,F,2),clause_b(rtSymmetricBinaryPredicate(F)),args_swapped(P,Q),mpred_fact0(Q,C).
 mpred_fact(~P,C):- compound(P),functor(P,F,2),clause_b(rtSymmetricBinaryPredicate(F)),args_swapped(P,Q),mpred_fact0(~Q,C).
-mpred_fact(P,C):- mpred_fact0(P,C).
 mpred_fact0(P,C):-
   mpred_get_support(P,_),
   mpred_db_type(P,fact(_FT)),
