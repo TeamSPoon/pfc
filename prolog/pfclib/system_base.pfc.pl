@@ -393,7 +393,7 @@ disjointWith(C,D)==> tCol(C),tCol(D).
 
 :- if(false). % true,false
 :- listing(disjointWith/2).
-:- listing( ~ /1).
+:- listing( (~) /1).
 :- mpred_notrace_exec.
 :- endif.
 
@@ -411,7 +411,7 @@ arity(disjointPartition,1).
 
 
 % disjointWith(P1,P2) ==> ((~isa(C,P2):- loop_check(isa(C,P1))), (~isa(C,P1):- loop_check(isa(C,P2)))).
-disjointWith(P1,P2) ==> ((~isa(C,P2):- loop_check(isa(C,P1)))).
+disjointWith(P1,P2) ==> ((~isa(C,P2):- is_ftNonvar(C),loop_check(isa(C,P1)))).
 
 disjointWith(ttRelationType,ttTypeType).
 
