@@ -596,18 +596,18 @@ same_modules(MH,MHH):- strip_module(MH,HM,_),strip_module(MHH,HHM,_),!,
 
 listing_u(P):-call_u_no_bc(xlisting((P,-lmcache,-spft,-xlisting))),!.
 
-attvar_op_fully(Why,MH):- !, attvar_op(Why,MH).
-%attvar_op_fully(Why,M:H):- must_notrace_pfc(full_transform_warn_if_changed(change(Why,attvar_op_fully),H,true,HH,true)),!,each_E(attvar_op(Why),M:HH,[]).
-%attvar_op_fully(Why,MH):- full_transform_warn_if_changed(Why, MH,MHH),each_E(attvar_op(Why),MHH,[]).
+attvar_op_fully(What,MH):- !, attvar_op(What,MH).
+%attvar_op_fully(What,M:H):- must_notrace_pfc(full_transform_warn_if_changed(change(What,attvar_op_fully),H,true,HH,true)),!,each_E(attvar_op(What),M:HH,[]).
+%attvar_op_fully(What,MH):- full_transform_warn_if_changed(What, MH,MHH),each_E(attvar_op(What),MHH,[]).
 
 throw_depricated:- trace_or_throw(throw_depricated).
 
 assert_u(MH):- assert_u_no_dep(MH).
 assert_u_no_dep(MH):- fix_mp(change(assert,assert_u),MH,MHA),
-    attvar_op_fully(assert_i, MHA),expire_tabled_list(MHA).
-asserta_u(MH):- fix_mp(change(assert,asserta_u),MH,MHA),attvar_op_fully(asserta_i,MHA).
-assertz_u(MH):- fix_mp(change(assert,assertz_u),MH,MHA),attvar_op_fully(assertz_i,MHA).
-retract_u(H):- retract_u0(H) *-> true; attvar_op_fully(retract_u0,H).
+    attvar_op_fully(db_op_call(assert,assert_i), MHA),expire_tabled_list(MHA).
+asserta_u(MH):- fix_mp(change(assert,asserta_u),MH,MHA),attvar_op_fully(db_op_call(asserta,asserta_i),MHA).
+assertz_u(MH):- fix_mp(change(assert,assertz_u),MH,MHA),attvar_op_fully(db_op_call(asserta,assertz_i),MHA).
+retract_u(H):- retract_u0(H) *-> true; attvar_op_fully(db_op_call(retract,retract_u0),H).
 
 retract_u0(H0):- strip_module(H0,_,H),(H = ( \+ _ )),!,trace_or_throw(mpred_warn(retract_u(H0))),expire_tabled_list(H).
 retract_u0(M:(H:-B)):- atom(M),!, M:clause_u(H,B,R),erase(R),expire_tabled_list(H).
@@ -616,7 +616,7 @@ retract_u0(H):- clause_u(H,true,R),erase(R),expire_tabled_list(H).
 
 :- lmcache:import(retract_u0/1).
 
-retractall_u(H):- attvar_op_fully(retractall_u0,H).
+retractall_u(H):- attvar_op_fully(db_op_call(retractall,retractall_u0),H).
 retractall_u0(H):- forall(clause_u(H,_,R),erase(R)),expire_tabled_list(H).
 
 
@@ -1106,7 +1106,7 @@ mpred_post12(P,S):- !,
 
 
 get_mpred_assertion_status(P,PP,Was):-
-  notrace(((clause_asserted_u(P)-> Was=identical;
+  maybe_notrace(((clause_asserted_u(P)-> Was=identical;
       (clause_u(PP)-> Was= partial(PP);
           Was= unique)))).
 
@@ -1734,8 +1734,9 @@ mpred_fwc(Ps):- each_E(mpred_fwc0,Ps,[]).
 %
 % this line filters sequential (and secondary) dupes
  % mpred_fwc0(genls(_,_)):-!.
-mpred_fwc0(Fact):- notrace((ground(Fact),fwc1s_post1s(_One,Two),Six is Two * 1, filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact))),!.
-mpred_fwc0(Fact):- notrace(copy_term_vn(Fact,FactC)),
+mpred_fwc0(Fact):- notrace(ground(Fact)),maybe_notrace((fwc1s_post1s(_One,Two),Six is Two * 1)), 
+   show_success((filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact))),!.
+mpred_fwc0(Fact):- maybe_notrace(copy_term_vn(Fact,FactC)),
       loop_check(mpred_fwc1(FactC),true).
 
 
@@ -3491,7 +3492,7 @@ mpred_why(M:P):-atom(M),!,call_from_module(M,mpred_why_sub(P)).
 mpred_why(P):-mpred_why_sub(P).
 
 
-mpred_why_sub(P):-mpred_why(P,Why),!,wdmsg(:-mpred_why(P)),wdmsgl(proof(Why)).
+mpred_why_sub(P):-mpred_why(P,Why),!,wdmsg(:-mpred_why(P)),wdmsgl(proof=(Why)).
 mpred_why_sub(P):-loop_check(mpred_why_sub_lc(P),trace_or_throw(mpred_why_sub_lc(P)))-> \+ \+ call_u(why_buffer(_,_)),!.
 mpred_why_sub_lc(P):- 
   justifications(P,Js),

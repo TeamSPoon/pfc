@@ -408,7 +408,9 @@ mpred_expander_now_physically(M,I,OO):-
     ((show_load_context,wdmsg(warning,wanted_mpred_term_expansion(I,O))),fail)),
    ((O=(:-(CALL))) ->  quietly_must((M:call_file_command(I,CALL,OO,O))); 
         (OO = O))))),'$set_source_module'(Old)).
-    
+
+
+
 
 
 
@@ -2084,7 +2086,22 @@ loader_side_effect_capture_only(I,ActualSupposed):-
     pop_predicates(t_l:side_effect_buffer/3,STATE),!.
 
 
+with_assert_buffer(G,List):-
+      sanity(var(List)),
+      push_predicates(t_l:side_effect_buffer/3,STATE),
+      call_u(G),
+      findall(Tell,(retract(t_l:side_effect_buffer(OP, Data, _Why)),convert_as_tell(OP,Data,Tell)),List),
+      pop_predicates(t_l:side_effect_buffer/3,STATE),!.
 
+convert_as_tell(OP,Data,Tell):- is_assert_op(OP),!,Tell=Data.
+convert_as_tell(OP,Data,call(OP,Data)).
+
+is_assert_op(OP):-must_be(callable,OP),fail.
+is_assert_op(call(OP,_)):-!,is_assert_op(OP),!.
+is_assert_op(db_op_call(OP,_)):-!,is_assert_op(OP),!.
+is_assert_op(asserta).
+is_assert_op(assertz).
+is_assert_op(assert).
 
 
 %% collect_expansions( ?Why, ?I, ?I) is det.
@@ -2152,10 +2169,10 @@ convert_side_effect(I,OO):-convert_side_effect_0c(I,O),((O=(N-_V),number(N))->OO
 % Convert Side Effect 0a.
 %
 convert_side_effect_0a(asserta(Data), (  a(DataR))):-convert_side_effect_0a(Data,DataR).
-convert_side_effect_0a(assertz(Data), (   (DataR))):-convert_side_effect_0a(Data,DataR).
+convert_side_effect_0a(assertz(Data), (  z(DataR))):-convert_side_effect_0a(Data,DataR).
 convert_side_effect_0a(retract(Data), (  r(DataR))):-convert_side_effect_0a(Data,DataR).
 convert_side_effect_0a(cl_assert(Why,Data), (  cl_assert(Why,DataR))):-convert_side_effect_0a(Data,DataR).
-convert_side_effect_0a(attvar_op(Why,Data),Reproduce):-!,convert_side_effect(Why,Data,Reproduce),!.
+convert_side_effect_0a(attvar_op(How,Data),Reproduce):-!,convert_side_effect(How,Data,Reproduce),!.
 convert_side_effect_0a(I,O):-convert_side_effect_0b(I,O),!.
 convert_side_effect_0a(I,I).
 

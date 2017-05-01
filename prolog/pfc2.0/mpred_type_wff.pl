@@ -861,6 +861,8 @@ is_modal(MODAL,BDT):- (MODAL = nesc(BDT) ; MODAL = poss(BDT)),!.
 is_modal(MODAL,BDT):- arg(_,MODAL,ARG),is_modal(ARG,BDT).
 
 
+contains_modal(G):- is_modal(G,_),!.
+
 
 
 %% contains_var_lits( ?Fml, ?Var, ?Lits) is semidet.
