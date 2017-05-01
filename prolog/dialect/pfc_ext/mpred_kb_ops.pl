@@ -30,7 +30,7 @@ if_missing1/1,
 
 ain_minfo/2,
 cnstrn0/2,
-physical_side_effect/1,
+attempt_side_effect/1,
 mpred_update_literal/4,
 cnstrn/1,
 predicate_to_goal/2,
@@ -44,7 +44,7 @@ ain_minfo/2,
 cnstrn/2,
 ain_minfo_2/2,
 cnstrn0/2,
-physical_side_effect_mpa/3,
+attempt_side_effect_mpa/3,
 predicate_to_goal/2,
 mpred_kb_ops_file/0,
 mpred_wfflist/2,
@@ -278,14 +278,13 @@ mpred_facts_and_universe/1
                asserta_mu/1,
                assertz_mu/2,
                assertz_mu/1,
-               physical_side_effect/1.
-:- module_transparent(attvar_op/2).
+               attempt_side_effect/1.
 :- module_transparent(attvar_op/2).
 
 
 :- meta_predicate 
       pred_head(1,*),
-      physical_side_effect(+),
+      attempt_side_effect(+),
       call_s(*),
       oncely(*),
       naf(*),
@@ -300,7 +299,7 @@ mpred_facts_and_universe/1
       cnstrn0(:,+),
       cnstrn(*),
       cnstrn(+,:),
-      attvar_op(+,+),
+      attvar_op(*,*),
       % clause_u(+,+,-),
       % call_u(+),
       assertz_mu(+),      
@@ -593,7 +592,7 @@ Also alows an inference engine constrain search.. PFC became important since it 
 %
 % If Is A Side Effect Disabled.
 %
-is_side_effect_disabled:- t_l:no_physical_side_effects,!.
+is_side_effect_disabled:- t_l:no_attempt_side_effects,!.
 is_side_effect_disabled:- t_l:side_effect_ok,!,fail.
 is_side_effect_disabled:- t_l:noDBaseMODs(_),!.
 
@@ -725,49 +724,65 @@ call_s2(G0):-
 % % attvar_op(Op,Data):- deserialize_attvars(Data,Data0), attvar_op(Op,Data0).
 attvar_op(Op,MData):-
  must_det_l((
-   strip_module(Op,_,OpA), sanity(atom(OpA)),
+   strip_module(Op,_,OpA), sanity( \+ atom(OpA)),
    fix_mp(clause(assert,OpA),MData,M,Data),
-   add_side_effect(OpA,M:Data),
    (current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0))),!,
-   physical_side_effect_mpa(M,OpA,Data0).
+   attempt_side_effect_mpa(M,OpA,Data0).
 
 
-:- thread_local(t_l:no_physical_side_effects/0).
+:- thread_local(t_l:no_attempt_side_effects/0).
 
-%% physical_side_effect( +PSE) is semidet.
+%% attempt_side_effect( +PSE) is semidet.
 %
 % Physical Side Effect.
 %
-physical_side_effect(PSE):- to_physical_mpa(PSE,M,P,A),!,physical_side_effect_mpa(M,P,A).
+attempt_side_effect(PSE):- to_physical_mpa(PSE,M,P,A),!,attempt_side_effect_mpa(M,P,A).
 
 to_physical_mpa(PSE,M,P,A):- strip_module(PSE,M,PA),to_physical_pa(PA,P,A).
 to_physical_pa(PA,P,A):-PA=..[P,A],!. to_physical_pa(PA,call,PA).
 
-physical_side_effect_mpa(M,retract_u0,Data0):- \+ lookup_u(M:Data0),!.
-physical_side_effect_mpa(M,OpA,Data0):- is_side_effect_disabled,!,mpred_warn('no_physical_side_effects ~p',physical_side_effect_mpa(M,OpA,Data0)).
+
+db_op_call(_What,How,Data):- call(How,Data).
+
+attempt_side_effect_mpa(M,OpA,Data):- record_se,!,add_side_effect(OpA,M:Data).
+attempt_side_effect_mpa(M,db_op_call(_,retract_u0),Data0):- \+ lookup_u(M:Data0),!,fail.
+attempt_side_effect_mpa(M,OpA,Data0):- is_side_effect_disabled,!,mpred_warn('no_attempt_side_effects ~p',attempt_side_effect_mpa(M,OpA,Data0)).
 % @TODO BROKEN phys ical_side_effect_call(M,assertz_i,Data0):- must((compile_aux_clauses(M:Data0))),!.
-physical_side_effect_mpa(M,OpA,Data0):- show_failure(M:call(M:OpA,M:Data0)).
+attempt_side_effect_mpa(M,OpA,Data0):- show_failure(M:call(M:OpA,M:Data0)).
 
 
+/*
+
+  b_setval(th_asserts,[]),
+  call_u(G),
+  b_getval(th_asserts,List).
+
+attempt_side_effect_mpa(C) :- 
+   b_getval(th_asserts,List),
+   b_setval(th_asserts,[C|List]),!.
+
+
+
+*/
 %% erase_w_attvars( +Data0, ?Ref) is semidet.
 %
 % Erase W Attribute Variables.
 %
-erase_w_attvars(Data0,Ref):- physical_side_effect(erase(Ref)),add_side_effect(erase,Data0).
+erase_w_attvars(Data0,Ref):- attempt_side_effect(erase(Ref)),add_side_effect(erase,Data0).
 
 
 %% mpred_nochaining( +Goal) is semidet.
 %
 % PFC No Chaining.
 %
-mpred_nochaining(Goal):- locally(t_l:no_physical_side_effects,call(Goal)).
+mpred_nochaining(Goal):- locally(t_l:no_attempt_side_effects,call(Goal)).
 
 
 %% with_chaining( +Goal) is semidet.
 %
 % PFC No Chaining.
 %
-with_chaining(Goal):- locally(- t_l:no_physical_side_effects,call(Goal)).
+with_chaining(Goal):- locally(- t_l:no_attempt_side_effects,call(Goal)).
 
 % TODO ISSUE https://github.com/TeamSPoon/PrologMUD/issues/7
 
@@ -824,7 +839,7 @@ retract_eq_quitely_f((H)):- clause_asserted_i(H,true,Ref),erase(Ref).
 %
 % Assert Using (==/2) (or =@=/2) ) Quitely.
 %
-assert_eq_quitely(H):- attvar_op(assert_if_new,H).
+assert_eq_quitely(H):- attvar_op(db_op_call(assert,assert_if_new),H).
 
 
 %% mpred_is_tautology( +Var) is semidet.
@@ -1907,7 +1922,7 @@ mpred_cleanup(F,A):-functor(P,F,A),predicate_property(P,dynamic)->mpred_cleanup_
 % PFC cleanup  Primary Helper.
 %
 mpred_cleanup_0(P):- findall(P-B-Ref,clause(P,B,Ref),L),
-  forall(member(P-B-Ref,L),erase_w_attvars(clause(P,B,Ref),Ref)),forall(member(P-B-Ref,L),attvar_op(assertz_if_new,((P:-B)))).
+  forall(member(P-B-Ref,L),erase_w_attvars(clause(P,B,Ref),Ref)),forall(member(P-B-Ref,L),attvar_op(db_op_call(assertz,assertz_if_new),((P:-B)))).
 
 % :-debug.
 %isInstFn(A):-!,trace_or_throw(isInstFn(A)).
@@ -2445,12 +2460,12 @@ assert_mu(M,Pred,_,_):- asserta_mu(M,Pred).
 %assertz_mu(abox,X):-!,defaultAssertMt(M),!,assertz_mu(M,X).
 %assertz_mu(M,X):- check_never_assert(M:X), clause_asserted_u(M:X),!.
 % assertz_mu(M,X):- correct_module(M,X,T),T\==M,!,assertz_mu(T,X).
-% assertz_mu(_,X):- must(defaultAssertMt(M)),!,must((expire_tabled_list(M:X),show_call(attvar_op(assertz_i,M:X)))).
+% assertz_mu(_,X):- must(defaultAssertMt(M)),!,must((expire_tabled_list(M:X),show_call(attvar_op(db_op_call(assertz,assertz_i),M:X)))).
 
 
 assertz_mu(M,X):- strip_module(X,_,P), %sanity(check_never_assert(M:P)), 
-    must((expire_tabled_list(M:P),show_failure(attvar_op(assertz_i,M:P)))).
-   %(clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(assertz_i,M:P))))).
+    must((expire_tabled_list(M:P),show_failure(attvar_op(db_op_call(assertz,assertz_i),M:P)))).
+   %(clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(db_op_call(assertz,assertz_i),M:P))))).
 
 %% asserta_mu(+M, ?X) is semidet.
 %
@@ -2458,11 +2473,11 @@ assertz_mu(M,X):- strip_module(X,_,P), %sanity(check_never_assert(M:P)),
 %
 %asserta_mu(abox,X):-!,defaultAssertMt(M),!,asserta_mu(M,X).
 % asserta_mu(M,X):- correct_module(M,X,T),T\==M,!,asserta_mu(T,X).
-% asserta_mu(_,X):- must(defaultAssertMt(M)),!,must((expire_tabled_list(M:X),show_failure(attvar_op(asserta_i,M:X)))).
+% asserta_mu(_,X):- must(defaultAssertMt(M)),!,must((expire_tabled_list(M:X),show_failure(attvar_op(db_op_call(assertz,assertz_i),M:X)))).
 
 asserta_mu(M,X):- strip_module(X,_,P),!, %sanity(check_never_assert(M:P)), 
-    must((expire_tabled_list(M:P),show_failure(attvar_op(assertz_i,M:P)))).
-   %(clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(asserta_i,M:P))))).
+    must((expire_tabled_list(M:P),show_failure(attvar_op(db_op_call(assertz,assertz_i),M:P)))).
+   %(clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(db_op_call(assertz,assertz_i),M:P))))).
 
 
 %% retract_mu( :TermX) is semidet.
@@ -2470,7 +2485,7 @@ asserta_mu(M,X):- strip_module(X,_,P),!, %sanity(check_never_assert(M:P)),
 % Retract For User Code.
 %
 % retract_mu(que(X,Y)):-!,show_failure(why,retract_eq_quitely_f(que(X,Y))),must((expire_tabled_list(~(X)))),must((expire_tabled_list((X)))).
-retract_mu(H0):- throw_depricated, strip_module(H0,_,H),defaultAssertMt(M),show_if_debug(attvar_op(retract_i,M:H)),!,must((expire_tabled_list(H))).
+retract_mu(H0):- throw_depricated, strip_module(H0,_,H),defaultAssertMt(M),show_if_debug(attvar_op(db_op_call(retract,retract_i),M:H)),!,must((expire_tabled_list(H))).
 retract_mu(X):- check_never_retract(X),fail.
 retract_mu(~(X)):-!,show_success(why,retract_eq_quitely_f(~(X))),must((expire_tabled_list(~(X)))),must((expire_tabled_list((X)))).
 retract_mu((X)):-!,show_success(why,retract_eq_quitely_f((X))),must((expire_tabled_list(~(X)))),must((expire_tabled_list((X)))).

@@ -2270,7 +2270,7 @@ expanded_different_1(G0,G1):- G0 \= G1,!.
 % Converted To Functor Form.
 %
 into_functor_form(HFDS,M:X,M:O):- atom(M),! ,into_functor_form(HFDS,X,O),!.
-into_functor_form(HFDS,X,O):-call((( X=..[F|A],into_functor_form(HFDS, X,F,A,O)))),!.
+into_functor_form(HFDS,X,O):-call((( X=..[F|A],into_functor_form(HFDS,X,F,A,O)))),!.
 
 % TODO finish negations
 
@@ -2283,7 +2283,7 @@ into_functor_form(HFDS,X,O):-call((( X=..[F|A],into_functor_form(HFDS, X,F,A,O))
 into_functor_form(Dbase_t,X,Dbase_t,_A,X):-!.
 into_functor_form(Dbase_t,_X,holds_t,A,Call):-Call=..[Dbase_t|A].
 into_functor_form(Dbase_t,_X,t,A,Call):-Call=..[Dbase_t|A].
-into_functor_form(Dbase_t,_X,HFDS,A,Call):- is_holds_true(HFDS), Call=..[Dbase_t|A].
+% into_functor_form(Dbase_t,_X,HFDS,A,Call):- is_holds_true(HFDS), Call=..[Dbase_t|A].
 into_functor_form(Dbase_t,_X,F,A,Call):-Call=..[Dbase_t,F|A].
 
 
