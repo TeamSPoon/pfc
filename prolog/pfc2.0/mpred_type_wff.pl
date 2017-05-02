@@ -176,12 +176,24 @@ is_holds_true(Prop):- quietly((atom(Prop),is_holds_true0(Prop))),!.
 % k,p,..
 
 
+is_holds_functor(F):- atom(F),is_holds_functor0(F),!, \+ isBodyConnective(F).
+is_holds_functor0(F):- atom_concat('prove_',_,F).
+is_holds_functor0(F):- atom_concat('ex_',_,F).
+is_holds_functor0(F):- atom_concat(_,'_t',F).
+is_holds_functor0(F):- is_2nd_order_holds(F).
+
+must_be_unqualified(Var):- \+ compound(Var),!.
+must_be_unqualified(Var):-strip_module(Var,_,O),Var\==O,!,dumpST,break.
+must_be_unqualified(Var):-forall(arg(_,Var,E),must_be_unqualified(E)).
+
 
 %% is_holds_true0( ?Prop) is semidet.
 %
 % If Is A Holds True Primary Helper.
 %
 is_holds_true0(Prop):-arg(_,vvv(holds,holds_t,t,t,asserted_mpred_t,assertion_t,true_t,assertion,secondOrder,firstOrder),Prop).
+
+
 % is_holds_true0(Prop):-atom_concat(_,'_t',Prop).
 
 %= %= :- was_export(is_2nd_order_holds/1).

@@ -924,12 +924,12 @@ differentTerms(A,B):- dif:dif(A,B).
 
 
 :- kb_shared(baseKB:admittedArgument/3).
-
+/*
 baseKB:admittedArgument(P,N,A):-var_non_attvar(P),!,freeze(P,admittedArgument(P,N,A)).
 baseKB:admittedArgument(P,N,A):-var_non_attvar(A),!,freeze(A,admittedArgument(P,N,A)).
 baseKB:admittedArgument(P,N,A):-var_non_attvar(N),!,freeze(N,(number(N),admittedArgument(P,N,A))).
 baseKB:admittedArgument(P,N,A):-nop(wdmsg(admittedArgument(P,N,A))).
-
+*/
 
 %= 	 	 
 
@@ -937,8 +937,9 @@ baseKB:admittedArgument(P,N,A):-nop(wdmsg(admittedArgument(P,N,A))).
 %
 % Callable True/false.
 %
-callable_tf(P,2):- cheaply_u(mpred_arity_pred(P)),!,fail.
+
 callable_tf(F,A):- functor_safe(P,F,A),predicate_property(P,_),!.
+%callable_tf(P,2):- cheaply_u(mpred_arity_pred(P)),!,fail.
 
 
 
