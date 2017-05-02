@@ -3489,11 +3489,14 @@ mpred_why(N):-
   mpred_handle_why_command(N,P,Js).
 
 mpred_why(M:P):-atom(M),!,call_from_module(M,mpred_why_sub(P)).
-mpred_why(P):-mpred_why_sub(P).
+mpred_why(P):- mpred_why_sub(P).
 
+mpred_why_maybe(P):-wdmsgl(proof=P),!.
+mpred_why_maybe(P):-ignore(mpred_why(P)).
 
-mpred_why_sub(P):-mpred_why(P,Why),!,wdmsg(:-mpred_why(P)),wdmsgl(proof=(Why)).
-mpred_why_sub(P):-loop_check(mpred_why_sub_lc(P),trace_or_throw(mpred_why_sub_lc(P)))-> \+ \+ call_u(why_buffer(_,_)),!.
+mpred_why_sub(P):- loop_check(mpred_why_sub0(P),true).
+mpred_why_sub0(P):-mpred_why(P,Why),!,wdmsg(:-mpred_why(P)),wdmsgl(mpred_why_maybe,Why).
+mpred_why_sub0(P):-loop_check(mpred_why_sub_lc(P),trace_or_throw(mpred_why_sub_lc(P)))-> \+ \+ call_u(why_buffer(_,_)),!.
 mpred_why_sub_lc(P):- 
   justifications(P,Js),
   nb_setval('$last_printed',[]),

@@ -301,7 +301,10 @@ deduceEachArgType(Str,F,N,A):- ignore((clause_asserted(argIsa(F,N,Type)),\+ \+ a
 %
 % Deduce Each Argument With Type.
 %
-admit_str_type(Str,M,MT):-  admit_type(Str,M,MT,Result),!,(atom(Result)->true;ain_expanded(t(Str,Result))).
+admit_str_type(Str0,M,MT):- str_to_str(Str0,Str), admit_type(Str,M,MT,Result),!,(atom(Result)->true;ain_expanded(t(Str,Result))).
+
+str_to_str(~(~(Was)),Was):-!.
+str_to_str(Str0,Str):- functor(Str0,Str,_).
 
 admit_type(_Str,M,_,exists):- (is_ftVar(M);number(M)),!.
 admit_type(_Str,_,MT,exists):- (is_ftVar(MT);MT=ftTerm;call_u(ttExpressionType(MT))),!.
@@ -335,11 +338,12 @@ doArgType(Str,DAT,M):-functor(M,F,A),M=..[F|ARGS],doArgType(Str,DAT,F,A,ARGS).
 %
 
 doArgType(_Str,_,Isa,_,_):- skipped_doArgType(Isa),!.
-doArgType(_Str,DAT,poss,_,[E]):- !,doArgType(poss,DAT,E),!.
-doArgType(_Str,DAT, ~, _,[E]):- !,doArgType(poss,DAT,E),!.
+doArgType(~t,DAT,poss,_,[E]):- !,doArgType(poss,DAT,E),!.
+doArgType(Str,DAT,poss,_,[E]):- !,doArgType(poss(Str),DAT,E),!.
+doArgType(Str,DAT, ~, _,[E]):- !,doArgType(~(Str),DAT,E),!.
 doArgType(Str,DAT,_,_,[E]):- !,doArgType(Str,DAT,E),!.
-doArgType(_Str,_DAT,t,_,[F|_]):-var(F),!.
-doArgType(Str,DAT,t,A,[F|ARGS]):-A2 is A-1, doArgType(Str,DAT,F,A2,ARGS).
+doArgType(_Str,_DAT,HOLDS,_,[F|_]):- is_holds_functor(HOLDS), var(F),!.
+doArgType(Str,DAT,HOLDS,A,[F|ARGS]):- is_holds_functor(HOLDS), A2 is A-1, doArgType(Str,DAT,F,A2,ARGS).
 doArgType(Str,DAT,F,_,ARGS):- upcase_atom(F,F),!,maplist(doArgType(Str,DAT),ARGS).
 
 % doArgType(Str,DAT,argQuotedIsa,3,[_F,_N,_Type]):-!.

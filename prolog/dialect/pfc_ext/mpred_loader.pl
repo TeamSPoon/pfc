@@ -33,7 +33,7 @@
             % import_to_user0/3,
             % import_to_user_mfa0/4,
 
-            predicate_is_undefined_fa/2,
+            %predicate_is_undefined_fa/2,
             
             same_language/2,
             call_file_command0/4,
@@ -1160,10 +1160,13 @@ disable_mpred_expansion:-
 
 
 predicate_is_undefined_fa(F,A):-
-  \+ current_predicate(_:F/A),
+  call((
+  ( \+ current_predicate(_:F/A)),
   functor(P,F,A),
+  (( 
   \+ predicate_property(_:P,exported),
-  \+ predicate_property(_:P,static).
+  \+ predicate_property(_:P,static),
+  \+ predicate_property(_:P,dynamic))))).
 
 
 :-multifile(baseKB:locked_baseKB/0).
@@ -2089,10 +2092,12 @@ loader_side_effect_capture_only(I,ActualSupposed):-
 with_assert_buffer(G,List):-
       sanity(var(List)),
       push_predicates(t_l:side_effect_buffer/3,STATE),
-      call_u(G),
+      locally(t_l:use_side_effect_buffer,(call_u(G),mpred_run)),
       findall(Tell,(retract(t_l:side_effect_buffer(OP, Data, _Why)),convert_as_tell(OP,Data,Tell)),List),
       pop_predicates(t_l:side_effect_buffer/3,STATE),!.
 
+convert_as_tell(_P,Data,_Tell):- must_be(nonvar,Data),fail.
+convert_as_tell(OP,M:Data,Tell):-M==baseKB,!,convert_as_tell(OP,Data,Tell).
 convert_as_tell(OP,Data,Tell):- is_assert_op(OP),!,Tell=Data.
 convert_as_tell(OP,Data,call(OP,Data)).
 
