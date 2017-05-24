@@ -1436,14 +1436,12 @@ with_no_mpred_breaks(G):-
 %
 %  Assert New Trigger and Propigate
 %
-mpred_ain_trigger_reprop(PT,Support):-
-  PT = pt(Trigger,Body),!,
+mpred_ain_trigger_reprop(pt(Trigger,Body),Support):- !,
   mpred_mark_as(Support,Trigger,pfcPosTrigger),
   mpred_trace_msg('~N~n\tAdding positive~n\t\ttrigger: ~p~n\t\tbody: ~p~n\t Support: ~p~n',[Trigger,Body,Support]),
-  sanity(\+ string(Support)),
-  sanity(\+ string(Trigger)),
-  sanity(\+ string(Body)),
+  sanity(\+ string(Support)),sanity(\+ string(Trigger)),sanity(\+ string(Body)),
   %  (debugging(logicmoo(_))->dtrace;true),
+  PT = pt(Trigger,Body),
   mpred_assert_w_support(PT,Support),
   copy_term(PT,Tcopy),!,
   doall((call_u_no_bc(Trigger),
