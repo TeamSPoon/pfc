@@ -1017,13 +1017,14 @@ is_ftOpenSentence(P):- compound(P), functor(P,F,N), \+ leave_some_vars_at_el(F),
    (arg(N,P,A);(N\==1,arg(1,P,A))),is_ftOpen(A).
 is_ftOpenSentence(P):- is_ftOpen(P).
 
-mpred_post12(P, _):- P==true,!.
+mpred_post12(P, _):- sanity(must_be(nonvar,P)),P==true,!.
 % mpred_post12(P, S):- notrace((is_ftOpenSentence(P)->wdmsg((warn((var_mpred_post1(P, S))))))),fail.
 
-mpred_post12( \+ P,   S):- nonvar(P), !, must(mpred_post1_rem(P,S)).
+mpred_post12( \+ P,   S):- sanity(must_be(nonvar,P)), !, must(mpred_post1_rem(P,S)).
 
 % TODO - FIGURE OUT WHY THIS IS NEEDED
-mpred_post12( ~ P,   S):- notrace(( sanity((ignore(show_failure(\+ is_ftOpenSentence(P))))), \+ mpred_unique_u(P))),
+mpred_post12( ~ P,   S):- sanity(must_be(nonvar,P)), 
+   notrace(( sanity((ignore(show_failure(\+ is_ftOpenSentence(P))))), \+ mpred_unique_u(P))),
    with_current_why(S,with_no_mpred_breaks((nonvar(P),doall(mpred_remove(P,S)),must(mpred_undo(P))))),fail.
 
 mpred_post12(P,S):- notrace((maybe_updated_value(P,RP,OLD))),!,subst(S,P,RP,RS),mpred_post12(RP,RS),ignore(mpred_retract(OLD)).
@@ -1048,7 +1049,7 @@ mpred_post12(P,S):- fail,
   plus_fwc(P),!.
 
 
-% this would be for complete repropagation
+% this for complete repropagation
 mpred_post12(P,S):- t_l:is_repropagating(_),!,
  ignore(( %  db mpred_ain_db_to_head(P,P2),
   % mpred_remove_old_version(P),
@@ -1113,7 +1114,7 @@ get_mpred_assertion_status(P,PP,Was):-
 % The cyclic_break is when we have regressions arouind ~ ~ ~ ~ ~
 get_mpred_support_status(P,_S, PP,(FF,TT),Was):-
  notrace((( Simular=simular(none),
-  ((((lookup_spft(PP,F,T),P=@@=PP)) *->
+  ((((lookup_spft_p(PP,F,T),P=@@=PP)) *->
      ((TT=@@=T,same_file_facts(F,FF)) -> (Was = exact , ! ) ; (nb_setarg(1,Simular,(F,T)),fail))
     ; Was = none) -> true ; ignore(Was=Simular))))).
 
@@ -1413,19 +1414,18 @@ with_no_mpred_breaks(G):-
 %
 %  Assert New Trigger and Propigate
 %
-mpred_ain_trigger_reprop(PT,Support):-
-  PT = pt(Trigger,Body),!,
+mpred_ain_trigger_reprop(pt(Trigger,Body),Support):- !,
   mpred_mark_as(Support,Trigger,pfcPosTrigger),
   mpred_trace_msg('~N~n\tAdding positive~n\t\ttrigger: ~p~n\t\tbody: ~p~n\t Support: ~p~n',[Trigger,Body,Support]),
-  sanity(\+ string(Support)),
-  sanity(\+ string(Trigger)),
-  sanity(\+ string(Body)),
+  sanity(\+ string(Support)),sanity(\+ string(Trigger)),sanity(\+ string(Body)),
   %  (debugging(logicmoo(_))->dtrace;true),
+  PT = pt(Trigger,Body),
   mpred_assert_w_support(PT,Support),
   copy_term(PT,Tcopy),!,
   call_u_no_bc(Trigger),
   mpred_eval_lhs(Body,(Trigger,Tcopy)),
   fail.
+
 
 mpred_ain_trigger_reprop(nt(Trigger,Test,Body),Support):-
   copy_term_vn(Trigger,TriggerCopy),
@@ -1587,7 +1587,7 @@ mpred_remove1(P,S):-
 mpred_post1_rem(P,S):-
   clause_asserted_u(P),
   must((mpred_post1_rem1(P,S), \+ clause_asserted_u(P))).
-
+% mpred_post1_rem(P,_S):- if_defined(kif_hook(P),fail),!.
 mpred_post1_rem(P,S):- mpred_post1_rem1(P,S),!.
 
 mpred_post1_rem1(P,S):-
@@ -1822,12 +1822,21 @@ mpred_do_rule(Fact):-
   % check negative triggers
   mpred_do_fcnt(Fact,F).
 
+lookup_spft(A,B,C):- nonvar(A),!,lookup_spft_p(A,B,C).
+lookup_spft(A,B,C):- var(B),!,lookup_spft_t(A,B,C).
+lookup_spft(A,B,C):- lookup_spft_f(A,B,C).
 
+lookup_spft_p(A,B,C):- baseKB:spft(A,B,C).
+% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_p(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,show_success(baseKB:spft(AA,B,C)).
 
+lookup_spft_f(A,B,C):- baseKB:spft(A,B,C).
+% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_f(A,B,C):- full_transform(lookup,B,BB),!,B\=@=BB,!,show_success(baseKB:spft(A,BB,C)).
+
+lookup_spft_t(A,B,C):- baseKB:spft(A,B,C).
 
 
 mpred_do_fcpt(Fact,F):-
-  lookup_u(pt(F,Body)),
+  baseKB:pt(F,Body),
   mpred_trace_msg('~N~n\tFound positive trigger: ~p~n\t\tbody: ~p~n',
 		[F,Body]),
   mpred_eval_lhs(Body,(Fact,pt(F,Body))),
@@ -1835,17 +1844,14 @@ mpred_do_fcpt(Fact,F):-
 
 %mpred_do_fcpt(Fact,F):-
 %  lookup_u(pt(presently(F),Body)),
-%  mpred_eval_lhs(Body,(presently(Fact),pt(presently(F),Body))),
+%  mpred_e val_lhs(Body,(presently(Fact),pt(presently(F),Body))),
 %  fail.
 
 mpred_do_fcpt(_,_).
 
-lookup_spft(A,B,C):- baseKB:spft(A,B,C).
-lookup_spft(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,baseKB:spft(AA,B,C).
-
-
 mpred_do_fcnt(_ZFact,F):-
   NT = nt(F,Condition,Body),
+  baseKB:NT,
   lookup_spft(X,F1,NT),
   %clause(SPFT,true),
   mpred_trace_msg('~N~n\tFound negative trigger: ~p~n\t\tcond: ~p~n\t\tbody: ~p~n\tSupport: ~p~n',
@@ -1880,11 +1886,12 @@ mpred_define_bc_rule(Head,Body,Parent_rule):-
 
 :-nb_setval('$pfc_current_choice',[]).
 
-push_current_choice(CP):- (nb_current('$pfc_current_choice',Was);Was=[]), b_setval('$pfc_current_choice',[CP|Was]),!.
+push_current_choice:- \+ current_prolog_flag(pfc_support_cut,true),!.
+push_current_choice:- prolog_current_choice(CP),push_current_choice(CP).
+push_current_choice(CP):- nb_current('$pfc_current_choice',Was)->b_setval('$pfc_current_choice',[CP|Was]);b_setval('$pfc_current_choice',[CP]).
 
-cut_c:-!.
-cut_c:-
-  must(nb_current('$pfc_current_choice',[CP|_WAS])),prolog_cut_to(CP).
+% cut_c:- \+ current_prolog_flag(pfc_support_cut,true),!.
+cut_c:- must(nb_current('$pfc_current_choice',[CP|_WAS])),prolog_cut_to(CP).
 
 
 %% mpred_eval_lhs(X,Support) is nondet.
@@ -1892,7 +1899,7 @@ cut_c:-
 %  eval something on the LHS of a rule.
 %
 mpred_eval_lhs(X,S):-
-   % prolog_current_choice(CP),push_current_choice(CP),
+   push_current_choice,
    with_current_why(S,loop_check(mpred_eval_lhs_0(X,S),fail)).
 
 
@@ -1917,6 +1924,7 @@ mpred_eval_lhs_0(rhs(X),Support):- !,
 %  mpred_eval_lhs_0(X,Support).
 
 mpred_eval_lhs_0(X,Support):- mpred_db_type(X,trigger), !, mpred_ain_trigger_reprop(X,Support).
+
 mpred_eval_lhs_0(X,_):- mpred_warn("Unrecognized item found in trigger body, namely ~p.",[X]).
 
 
@@ -3296,6 +3304,10 @@ bagof_or_nil(T,G,B):- (bagof_nr(T,G,B) *-> true; B=[]).
 %
 %  predicates for manipulating support relationships
 %
+
+mpred_add_support(P,(Fact,Trigger)):- % current_prolog_flag(unsafe_speedups , true) , 
+  SPFT = spft(P,Fact,Trigger),!,  
+  (clause_asserted(SPFT)-> true; assertz_mu(SPFT)).
 
 %  mpred_add_support(+Fact,+Support)
 mpred_add_support(P,(Fact,Trigger)):-
