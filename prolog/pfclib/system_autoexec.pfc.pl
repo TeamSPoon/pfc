@@ -135,6 +135,8 @@ assert_if_newt(G):- cwc,clause_asserted_i(G)->true;call(assert,G).
 
 :- ensure_loaded('system_constraints.pfc').
 
+:- ensure_loaded('system_domains.pfc').
+
 :- ensure_loaded('system_genls.pfc').
 
 :- ensure_loaded('system_if_missing.pfc').

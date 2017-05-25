@@ -159,7 +159,7 @@ closest_u/2,
 pred_check/1,
 pp_why/0,
 get_consequent_functor/3,
-is_user_fact/1,
+is_user_reason/1,
 mpred_retract_i_or_warn_1/1,
 mpred_is_silient/0,
 pp_why/1,
@@ -409,19 +409,21 @@ get_source_ref_stack(O):- get_source_ref1(U),(U=(_,_)->O=U;O=(U,ax)),!.
 
 get_startup_uu((mfl(baseKB, user_input, _), ax)):-true.
 
-is_user_fact((_,U)):-atomic(U).
+is_user_reason((_,U)):-atomic(U).
+
+is_user_fact(P):-get_first_user_reason(P,UU),is_user_reason(UU).
 
 get_first_user_reason(P,(F,T)):-
   UU=(F,T),
-  ((((lookup_spft(P,F,T))),is_user_fact(UU))*-> true;
-    ((((lookup_spft(P,F,T))), \+ is_user_fact(UU))*-> true ;
-       (clause_asserted_u(P),get_source_ref(UU),is_user_fact(UU)))),!.
-get_first_user_reason(_,UU):-get_source_ref_stack(UU),is_user_fact(UU),!.
+  ((((lookup_spft(P,F,T))),is_user_reason(UU))*-> true;
+    ((((lookup_spft(P,F,T))), \+ is_user_reason(UU))*-> true ;
+       (clause_asserted_u(P),get_source_ref(UU),is_user_reason(UU)))),!.
+get_first_user_reason(_,UU):-get_source_ref_stack(UU),is_user_reason(UU),!.
 get_first_user_reason(_,UU):- get_source_ref_stack(UU),!.
 get_first_user_reason(P,UU):- must(ignore(((get_first_user_reason0(P,UU))))),!.
 get_first_user_reason0(_,(M,ax)):-get_source_ref10(M).
 
-%get_first_user_reason(_,UU):- get_source_ref(UU),\+is_user_fact(UU). % ignore(get_source_ref(UU)).
+%get_first_user_reason(_,UU):- get_source_ref(UU),\+is_user_reason(UU). % ignore(get_source_ref(UU)).
 
 %% get_source_ref1(+Mt) is semidet.
 %
