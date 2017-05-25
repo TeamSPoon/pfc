@@ -402,8 +402,22 @@ add_admitted_argument(_,admittedArgument,_,_):-!.
 add_admitted_argument(_Str,safe_wrap,_,_):-!.
 add_admitted_argument(_Str,arity,_,_):-!.
 add_admitted_argument(_Str,mpred_prop,_,_):-!.
-add_admitted_argument(Str,F,N,M):- atom(M),!,show_failure(baseKB:ain_expanded(t(Str,admittedArgument(F,N,M)))).
-add_admitted_argument(_Str,_,_,_).                                                        
+add_admitted_argument(_,_,_,M):- \+ atom(M),!.
+add_admitted_argument(Str,F,N,M):- must(add_admitted_argument0(Str,F,N,M)).
+
+add_admitted_argument0(t,F,N,M):- !,add_admitted_argument1(t,F,N,M).
+add_admitted_argument0(~t,F,N,M):- !,add_admitted_argument1(~t,F,N,M).
+add_admitted_argument0(poss(t),F,N,M):-!,add_admitted_argument1(poss,F,N,M).
+add_admitted_argument0(t(poss(t)),F,N,M):-!,add_admitted_argument1(poss,F,N,M).
+add_admitted_argument0(~(poss(t)),F,N,M):-!,add_admitted_argument1(~t,F,N,M).
+add_admitted_argument0(~t(poss(t)),F,N,M):-!,add_admitted_argument1(~t,F,N,M).
+add_admitted_argument0(~(poss(~t)),F,N,M):-!,add_admitted_argument1(t,F,N,M).
+add_admitted_argument0(Str,F,N,M):- show_call(add_admitted_argument1(Str,F,N,M)).
+
+add_admitted_argument1(~t,F,N,M):- !,show_failure(baseKB:mpred_retract_supported_relations(admittedArgument(F,N,M))). 
+add_admitted_argument1(t,F,N,M):- !,show_failure(baseKB:ain_fast(admittedArgument(F,N,M))).
+add_admitted_argument1(poss,F,N,M):- \+ clause_b(feature_setting(admitted_arguments_modal,true)),!,add_admitted_argument1(t,F,N,M).
+add_admitted_argument1(Str,F,N,M):- show_call(baseKB:ain_expanded(t(Str,admittedArgument(F,N,M)))).                                                      
  	 
 
 %% side_effect_prone is semidet.
