@@ -5,19 +5,26 @@
 
 */
 :- module(pfc,[use_pfc/0]).
-:- kb_shared(baseKB:admittedArgument/3).
-
+:- use_module(library(each_call_cleanup)).
 :- user:use_module(library(must_trace)).
 :- user:use_module(library(virtualize_source)).
-% :- user:use_module(library(hook_hybrid)).
-% :- user:use_module(library(logicmoo_utils)).
-% :- use_module(library(attvar_serializer)).
+:- user:use_module(library(hook_hybrid)).
+:- user:use_module(library(loop_check)).
+:- user:use_module(library(logicmoo_utils)).
+:- use_module(library(attvar_serializer)).
+:- kb_shared(baseKB:admittedArgument/3).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
 :- set_prolog_flag(runtime_speed, 1). % 1 = default
 :- set_prolog_flag(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
 :- set_prolog_flag(runtime_safety, 3).  % 3 = very important
 :- set_prolog_flag(unsafe_speedups, false).
 :- set_prolog_flag(pfc_booted,false).
+pfc_rescan_autoload_pack_packages:- dmsg("AUTOLOADING PACKAGES..."),
+ forall('$pack':pack(Pack, _),
+  forall(((pack_property(Pack, directory(PackDir)),prolog_pack:pack_info_term(PackDir,autoload(true)))),
+  (access_file(PackDir,write) -> prolog_pack:post_install_autoload(PackDir, [autoload(true)]) ; true))),
+ dmsg(".. AUTOLOADING COMPLETE"),!.
+:- pfc_rescan_autoload_pack_packages.
 
 input_from_file:- prolog_load_context(stream,Stream),current_input(Stream).
 
