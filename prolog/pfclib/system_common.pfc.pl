@@ -53,7 +53,7 @@
 :-  system:op(300,fx,('~')).
 :-  system:op(300,fx,('-')).
 
-:- autoload.
+% :- autoload.
 :- mpred_unload_file.
 :- style_check(-discontiguous).
 
@@ -463,7 +463,7 @@ pfcControlled(argIsa).
 %tCol(X) ==> isa(X,tCol).
 %tCol(X) ==> ruleRewrite(t(X,I),isa(I,X)).
 
-(~tCol(T),tCol(T))==> conflict(~tCol(T)).
+==>( specialized_conflict_tests ==> (( ~tCol(T),tCol(T)) ==> conflict(~tCol(T)))).
 
 %typeProps(tCoffeeCup,[mudColor(vBlack),mudColor(isEach(vBrown,vBlack)),mudSize(vSmall),mudShape(vCuplike),mudMaterial(vGlass),mudTexture(vSmooth)]).
 %props(iCoffeeCup7,[mudColor(vBlack),mudColor(isEach(vBrown,vBlack)),mudSize(vSmall),mudShape(vCuplike),mudMaterial(vGlass),mudTexture(vSmooth)]).
@@ -491,15 +491,15 @@ tSet(isLoaded).
 :- mpred_notrace_exec.
 
 
-:- kb_shared(onSpawn/1).
-
-%= 	 	 
+:- kb_shared((onSpawn)/1).
+ 	 	 
 
 %% onSpawn( :TermA) is semidet.
 %
 % Whenever Spawn.
 %
-:- kb_shared(onSpawn/1).
+
+:- kb_shared((onSpawn)/1).
 
 rtArgsVerbatum(onSpawn).
 
@@ -509,7 +509,9 @@ onSpawn(State)/mpred_literal(State) ==> {doSpawn(State)}.
 
 %:-ain(((ttModuleType(ModType),isa(Thing,ModType),isLoaded(Thing), \+ ttExpressionType(ModType) ==> isLoadedType(ModType)))).
 %==>(((onSpawn(Idea)==> ((isLoadedType(tSourceData),isRuntime) ==> {ain_expanded(Idea,())})))).
-(onStart(Idea)==> (isRuntime ==> {get_startup_uu(UU),ain_expanded(Idea,UU)})).
+
+onStart(Idea)/definitional(Idea) ==> Idea.
+((onStart(Idea)/ ( \+ definitional(Idea))) ==> (isRuntime ==> {get_startup_uu(UU),ain_expanded(Idea,UU)})).
 
 pfcControlled(prologArity(tRelation,ftInt)).
 pfcControlled(isa(ftTerm,tCol)).

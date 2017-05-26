@@ -52,7 +52,7 @@ lmcache:loaded_external_kbs/1,
 % baseKB:agent_call_command/2,
 baseKB:decl_coerce/3,
 baseKB:feature_test/0,
-baseKB:hook_coerce/3, 
+baseKB:coerce_hook/3, 
 baseKB:hook_mpred_listing/1,
 baseKB:hook_one_minute_timer_tick/0,
 baseKB:hook_one_second_timer_tick/0, 
@@ -188,6 +188,7 @@ assert_if_new_hh(G):- (catch(G,_,fail)->true;assert(G)).
 
 :- multifile(baseKB:coerce_hook/3).
 :- dynamic(baseKB:coerce_hook/3).
+
 :- dynamic(lmcache:loaded_external_kbs/1).
 :- volatile(lmcache:loaded_external_kbs/1).
 

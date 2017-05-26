@@ -49,7 +49,7 @@
             evaluatableFunctor/1,
             %compoundSpecs/2,
             %meta_argtypes/1,
-            % hook_coerce/3,
+            % coerce_hook/3,
             is_boolean/1,
             is_declarations/1,
             is_ephemeral/1,
@@ -88,7 +88,7 @@
         coerce/3,
         decl_coerce/3,
         deduceFromArgTypes/1,
-   hook_coerce/3)).
+   coerce_hook/3)).
 */
 
 %% to_format_type( ?COL, ?FT) is semidet.

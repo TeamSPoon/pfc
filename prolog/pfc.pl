@@ -244,7 +244,7 @@ baseKB:mpred_skipped_module(eggdrop).
 
 
 
-:- autoload([verbose(false)]).
+%:- autoload([verbose(false)]).
 
 
 
