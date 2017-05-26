@@ -587,7 +587,18 @@ full_transform(Why,MH,MHH):- has_skolem_attrvars(MH),!,
  rtrace(fully_expand_real(change(assert,skolems(Why)),MH,MHH)),!,
    nop(sanity(on_f_debug(same_modules(MH,MHH)))),!.
 */
+full_transform(Why,MH,MHH):- \+ compound(MH),!,
+   must_det(fully_expand_real(change(assert,Why),MH,MHH)),!.
+     % nop(sanity(on_f_debug(same_modules(MH,MHH)))).
+full_transform(Op,==> CI,SentO):- nonvar(CI),!, full_transform(Op,CI,SentO).
+full_transform(Op,isa(I,C),SentO):- nonvar(C),!,must(fully_expand_real(Op,isa(I,C),SentO)),!.
+full_transform(_,CI,SentO):- CI=..[_C,I], atom(I),!,if_defined(do_renames(CI,SentO),CI=SentO),!.
 full_transform(Why,MH,MHH):-
+ must_det(fully_expand_real(change(assert,Why),MH,MHH)),!.
+   % nop(sanity(on_f_debug(same_modules(MH,MHH)))).
+
+full_transform_compound(Op,ISA,SentO):- nonvar(ISA),isa(I,C)=ISA,!, must(fully_expand_real(Op,isa(I,C),SentO)),!.
+full_transform_compound(Why,MH,MHH):-
  must_det(fully_expand_real(change(assert,Why),MH,MHH)),!.
    % nop(sanity(on_f_debug(same_modules(MH,MHH)))).
 
@@ -1029,14 +1040,16 @@ mpred_post12( ~ P,   S):- sanity(must_be(nonvar,P)),
    notrace(( sanity((ignore(show_failure(\+ is_ftOpenSentence(P))))), \+ mpred_unique_u(P))),
    with_current_why(S,with_no_mpred_breaks((nonvar(P),doall(mpred_remove(P,S)),must(mpred_undo(P))))),fail.
 
-mpred_post12(P,S):- notrace((maybe_updated_value(P,RP,OLD))),!,subst(S,P,RP,RS),mpred_post12(RP,RS),ignore(mpred_retract(OLD)).
+mpred_post12(P,S):- notrace((maybe_updated_value(P,RP,OLD))),!,subst(S,P,RP,RS),mpred_post12a(RP,RS),ignore(mpred_retract(OLD)).
+
+mpred_post12(P,S):- mpred_post12a(P,S).
 
 %  TODO MAYBE mpred_post12(actn(P),S):- !, with_current_why(S,call(P)).
 % Two versions exists of this function one expects for a clean database (fresh_mode) and adds new information.
 % tries to assert a fact or set of fact to the database.
 % The other version is if the program is been running before loading this module.
 %
-mpred_post12(P,S):- fail,
+mpred_post12a_unused(P,S):- fail,
   fresh_mode,!,
   % db mpred_ain_db_to_head(P,P2),
   % mpred_remove_old_version(P),
@@ -1051,21 +1064,8 @@ mpred_post12(P,S):- fail,
   plus_fwc(P),!.
 
 
-% this for complete repropagation
-mpred_post12(P,S):- t_l:is_repropagating(_),!,
- ignore(( %  db mpred_ain_db_to_head(P,P2),
-  % mpred_remove_old_version(P),
-  mpred_add_support(P,S),
-  (mpred_unique_u(P)->
-     assert_u_confirmed_was_missing(P);
-     assert_u_confirm_if_missing(P)),
-  mpred_trace_op(add,P,S),
-  !,
-  mpred_enqueue(P,S))),
-  !.
-
 % this would be the very inital by Tim Finnin...
-mpred_post12(P,S):- fail, fresh_mode,
+mpred_post12a_unused(P,S):- fail, fresh_mode,
  ignore(( %  db mpred_ain_db_to_head(P,P2),
   % mpred_remove_old_version(P),
   mpred_add_support(P,S),
@@ -1079,7 +1079,7 @@ mpred_post12(P,S):- fail, fresh_mode,
 
 /*
 % Expects a clean database and adds new information.
-mpred_post12(P,S):-  fail,!,
+mpred_post12a_unused(P,S):-  fail,!,
   % db mpred_ain_db_to_head(P,P2),
   % mpred_remove_old_version(P),
   must( \+ \+ mpred_add_support(P,S)),
@@ -1093,16 +1093,42 @@ mpred_post12(P,S):-  fail,!,
         !)).
 */
 
+
+
+% this for complete repropagation
+mpred_post12a(P,S):- t_l:is_repropagating(_),!,
+ ignore(( %  db mpred_ain_db_to_head(P,P2),
+  % mpred_remove_old_version(P),
+  mpred_add_support(P,S),
+  (mpred_unique_u(P)->
+     assert_u_confirmed_was_missing(P);
+     assert_u_confirm_if_missing(P)),
+  mpred_trace_op(add,P,S),
+  !,
+  mpred_enqueue(P,S))),
+  !.
+
 % Expects a *UN*clean database and adds new information.
 % (running the program is been running before loading this module)
 %
 %  (gets the status in Support and in Database)
-mpred_post12(P,S):- !,
+mpred_post12a(P,S):- !,
  %  set_varname_list([]),!,
    copy_term_vn((P,S),(PP,SS)),
-
  %  checks to see if we have forward chain the knowledge yet or
   gripe_time(0.1, must(get_mpred_support_status(P,S,PP,SS,Was))),!,
+  mpred_post123(P,S,PP,Was).
+
+% The cyclic_break is when we have regressions arouind ~ ~ ~ ~ ~
+get_mpred_support_status(P,_S, PP,(FF,TT),Was):-
+  Simular=simular(none),
+  ((((lookup_spft_p(PP,F,T),P=@@=PP)) *->
+     ((TT=@@=T,same_file_facts(F,FF)) -> (Was = exact , ! ) ; 
+      (nb_setarg(1,Simular,(F,T)),!,fail))
+    ; Was = none) -> true ; ignore(Was=Simular)).
+
+mpred_post123(_P,_S,_PP,exact):-!.
+mpred_post123(P,S,PP,Was):-
  %  if we''ve asserted what we''ve compiled
   gripe_time(0.1, must(get_mpred_assertion_status(P,PP,WasA))),!,
   gripe_time(0.4, must(mpred_post_update4(WasA,P,S,Was))),!.
@@ -1112,13 +1138,6 @@ get_mpred_assertion_status(P,PP,Was):-
   maybe_notrace(((clause_asserted_u(P)-> Was=identical;
       (clause_u(PP)-> Was= partial(PP);
           Was= unique)))).
-
-% The cyclic_break is when we have regressions arouind ~ ~ ~ ~ ~
-get_mpred_support_status(P,_S, PP,(FF,TT),Was):-
- notrace((( Simular=simular(none),
-  ((((lookup_spft_p(PP,F,T),P=@@=PP)) *->
-     ((TT=@@=T,same_file_facts(F,FF)) -> (Was = exact , ! ) ; (nb_setarg(1,Simular,(F,T)),fail))
-    ; Was = none) -> true ; ignore(Was=Simular))))).
 
 
 same_file_facts(mfl(M,F,_),mfl(M,FF,_)):-nonvar(M),!, FF=@=F.

@@ -838,6 +838,7 @@ rtArgsVerbatum(spft).
 
 quasiQuote('xQuoteFn').
 
+rtArgsVerbatum('with_current_why').
 rtArgsVerbatum('loop_check_term').
 rtArgsVerbatum('loop_check_term_key').
 rtArgsVerbatum('xQuoteFn').

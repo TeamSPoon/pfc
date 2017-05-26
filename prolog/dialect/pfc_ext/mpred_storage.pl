@@ -396,13 +396,20 @@ if_main(G):-(thread_self(M),lmcache:thread_main(_,M))->G ; true.
 addAdmittedArguments(P):- doArgType(t,add_admitted_argument,P).
 
 
+
+dont_aquire_admitted_argument(admittedArgument).
+dont_aquire_admitted_argument(isa).
+dont_aquire_admitted_argument(mudIsa).
+dont_aquire_admitted_argument(safe_wrap).
+dont_aquire_admitted_argument(arity).
+dont_aquire_admitted_argument(mpred_prop).
+
+
 % add_admitted_argument(Str,_,_,_).
-add_admitted_argument(_,F,N,M):- (var(M); number(M); \+ number(N) ; var(F)),!.
-add_admitted_argument(_,admittedArgument,_,_):-!.
-add_admitted_argument(_Str,safe_wrap,_,_):-!.
-add_admitted_argument(_Str,arity,_,_):-!.
-add_admitted_argument(_Str,mpred_prop,_,_):-!.
 add_admitted_argument(_,_,_,M):- \+ atom(M),!.
+add_admitted_argument(_,_,1,_):-!.
+add_admitted_argument(_,F,_,_):- dont_aquire_admitted_argument(F),!.
+add_admitted_argument(_,F,N,M):- (var(M); number(M); \+ number(N) ; var(F)),!.
 add_admitted_argument(Str,F,N,M):- must(add_admitted_argument0(Str,F,N,M)).
 
 add_admitted_argument0(t,F,N,M):- !,add_admitted_argument1(t,F,N,M).

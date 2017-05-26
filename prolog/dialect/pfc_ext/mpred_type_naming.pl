@@ -305,7 +305,7 @@ modality(~,[never],[]).
 % 
 % Spawn. 
 
-doSpawn((A,B)):-!,doSpawn(A),doSpawn(B). 
+doSpawn((A,B)):- must_be(nonvar,A),!,doSpawn(A),doSpawn(B). 
 doSpawn(Class==>Fact):-!,ain(Class==>{doSpawn(Fact)}). 
 doSpawn(ClassFact):-   
    fully_expand(clause(assert,doSpawn),ClassFact,ClassFactO),!,  
@@ -329,7 +329,7 @@ doSpawn_modal(Modality,ClassFact):-  ClassFact=..[FunctArgType,Name],
  createByNameMangle(Name,Inst,TypeA),
  assert_isa(TypeA,tCol),assert_isa(Inst,FunctArgType),assert_isa(Inst,TypeA),
  fully_expand(clause(assert,doSpawn),t(Modality,genls(TypeA,FunctArgType)),TO),
- ain(onStart(TO)))).
+ add_on_start(TO))).
  
 
 doSpawn_modal(Modality,ClassFact):- ClassFact=..[Funct|InstADeclB],
@@ -347,9 +347,17 @@ doSpawn_f_args(Modality,Funct,List):-
    convertSpawnArgs(Funct,1,List,NewList),
    Later =.. [Funct|NewList],
    fully_expand(clause(assert,doSpawn),t(Modality,Later),TO),
-   call_u(ain(onStart(TO))))),!. 
+   add_on_start(TO))),!. 
   % call_after_mpred_load_slow(locally(deduceArgTypes(Funct), ain(Later))))),!.
 
+
+definitional(X):- \+ compound(X),!.
+definitional(isa(_,_)).
+definitional(genls(_,_)).
+definitional(tRegtion(_)).
+
+add_on_start(TO):- definitional(TO),!,ain(TO).
+add_on_start(TO):- call_u(ain(onStart(TO))).
 
 %= 	 	 
 
