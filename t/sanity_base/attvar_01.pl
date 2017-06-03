@@ -4,7 +4,7 @@
 
 % :- ensure_loaded(system:library(logicmoo_utils)).
 :- ensure_loaded(library(pfc)).
-% :- ensure_loaded(library(logicmoo_snark)).
+% :- ensure_loaded(library(logicmoo_clif)).
 :- set_prolog_flag(assert_attvars,true).
 
 
