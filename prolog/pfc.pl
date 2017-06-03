@@ -19,12 +19,33 @@
 :- set_prolog_flag(runtime_safety, 3).  % 3 = very important
 :- set_prolog_flag(unsafe_speedups, false).
 :- set_prolog_flag(pfc_booted,false).
-pfc_rescan_autoload_pack_packages:- dmsg("AUTOLOADING PACKAGES..."),
+pfc_rescan_autoload_pack_packages_part_1:- dmsg("SCAN AUTOLOADING PACKAGES..."),
  forall('$pack':pack(Pack, _),
   forall(((pack_property(Pack, directory(PackDir)),prolog_pack:pack_info_term(PackDir,autoload(true)))),
-  (access_file(PackDir,write) -> prolog_pack:post_install_autoload(PackDir, [autoload(true)]) ; true))),
- dmsg(".. AUTOLOADING COMPLETE"),!.
-:- pfc_rescan_autoload_pack_packages.
+  (access_file(PackDir,write) -> prolog_pack:post_install_autoload(PackDir, [autoload(true)]) ; dmsg(cannot_access_file(PackDir,write))))),
+ dmsg(".. SCAN AUTOLOADING COMPLETE"),!.
+:- pfc_rescan_autoload_pack_packages_part_1.
+
+pack_autoload_packages(NeedExistingIndex):- 
+ forall(user:expand_file_search_path(library(''),Dir),
+  ignore(( (\+ NeedExistingIndex ; absolute_file_name('INDEX',_Absolute,[relative_to(Dir),access(read),file_type(prolog),file_errors(fail)]))->
+   maybe_index_autoload_dir(Dir)))),
+ reload_library_index.
+
+
+
+maybe_index_autoload_dir(PackDir):- \+ access_file(PackDir,write),!,dmsg(cannot_write_autoload_dir(PackDir)).
+maybe_index_autoload_dir(PackDir):- user:library_directory(PackDir), make_library_index(PackDir, ['*.pl']),dmsg(update_library_index(PackDir)).
+maybe_index_autoload_dir(PackDir):- fail,
+  prolog_pack:pack_info_term(PackDir,autoload(true)),
+  prolog_pack:post_install_autoload(PackDir, [autoload(true)]) ,
+  dmsg(post_install_autoload(PackDir,write)).  
+maybe_index_autoload_dir(PackDir):- asserta(user:library_directory(PackDir)), make_library_index(PackDir, ['*.pl']), dmsg(created_library_index_for(PackDir)).
+
+pfc_rescan_autoload_pack_packages_part_2 :- pack_autoload_packages(true).
+
+:- pfc_rescan_autoload_pack_packages_part_2.
+
 
 input_from_file:- prolog_load_context(stream,Stream),current_input(Stream).
 
