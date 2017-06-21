@@ -1096,11 +1096,12 @@ check_clause_count(MMask):- swc,
      ((Diff<0 ,Change is N/abs(Diff ), Change>0.20)
          -> trace_or_throw(bad_count(Mask,(Was --> N))) ; dmsg(good_count(Mask,(Was --> N)))))).
 
-system:check_clause_counts:-!.
-system:check_clause_counts:- flag_call(runtime_speed==true),!.
-system:check_clause_counts:- current_prolog_flag(unsafe_speedups , true) ,!.
-system:check_clause_counts:- ((forall(checked_clause_count(Mask),sanity(check_clause_count(Mask))))),fail.
-system:check_clause_counts.
+check_clause_counts:-!.
+check_clause_counts:- flag_call(runtime_speed==true),!.
+check_clause_counts:- current_prolog_flag(unsafe_speedups , true) ,!.
+check_clause_counts:- ((forall(checked_clause_count(Mask),sanity(check_clause_count(Mask))))),fail.
+check_clause_counts.
+:- sexport(check_clause_counts/0).
 
 %% begin_pfc is det.
 %

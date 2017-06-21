@@ -3198,7 +3198,7 @@ justification(F,J):- supporters_list(F,J).
 
 justifications(F,Js):- bagof_nr(J,justification(F,J),Js).
 
-mpred_why(Conseq,Ante):- var(Conseq),!,mpred_children(Conseq,Ante).
+mpred_why(Conseq,Ante):- nonvar(Ante),!,mpred_children(Conseq,Ante).
 mpred_why(Conseq,Ante):- justifications(Conseq,Ante).
 
 

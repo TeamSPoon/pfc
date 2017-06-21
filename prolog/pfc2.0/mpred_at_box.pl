@@ -331,12 +331,13 @@ mpred_op_each(OpEach):-
 %:- (dbreak,quietly,nortrace).
 
 
-:- if(current_predicate(system:get_current_default_tbox/1)).
-:- redefine_system_predicate(system:get_current_default_tbox/1).
+:- if(current_predicate(get_current_default_tbox/1)).
+:- redefine_system_predicate(get_current_default_tbox/1).
 :- endif.
-:- module_transparent(system:get_current_default_tbox/1).
-system:get_current_default_tbox(TBox):- defaultAssertMt(ABox)->current_module(ABox)->clause(ABox:defaultTBoxMt(TBox),B),call(B),!.
-system:get_current_default_tbox(baseKB).
+:- module_transparent(get_current_default_tbox/1).
+get_current_default_tbox(TBox):- defaultAssertMt(ABox)->current_module(ABox)->clause(ABox:defaultTBoxMt(TBox),B),call(B),!.
+get_current_default_tbox(baseKB).
+:- sexport(get_current_default_tbox/1).
 
 %% set_defaultAssertMt( ?ABox) is semidet.
 %
