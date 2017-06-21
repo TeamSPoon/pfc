@@ -1604,9 +1604,10 @@ mpred_retry(G):- fail; quietly(G).
 % an escape construct for bypassing the FOL''s salient body goals. 
 % 
 %
-:- meta_predicate '{}'(*).
+:- meta_predicate('{}'(*)).
 :- module_transparent( ({})/1).
 '{}'(G):- call_u(G).
+:- sexport(({})/1).
 
 %% neg_in_code( +G) is semidet.
 %

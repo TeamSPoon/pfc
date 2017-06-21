@@ -7,6 +7,7 @@
 :- module(pfc,[use_pfc/0]).
 :- use_module(library(each_call_cleanup)).
 :- user:use_module(library(must_trace)).
+:- set_prolog_flag_until_eof(access_level,system).
 :- user:use_module(library(virtualize_source)).
 :- user:use_module(library(hook_hybrid)).
 :- user:use_module(library(loop_check)).
@@ -26,6 +27,7 @@ pfc_rescan_autoload_pack_packages_part_1:- dmsg("SCAN AUTOLOADING PACKAGES..."),
  dmsg(".. SCAN AUTOLOADING COMPLETE"),!.
 :- pfc_rescan_autoload_pack_packages_part_1.
 
+:- meta_predicate pack_autoload_packages(0).
 pack_autoload_packages(NeedExistingIndex):- 
  forall(user:expand_file_search_path(library(''),Dir),
   ignore(( (\+ NeedExistingIndex ; absolute_file_name('INDEX',_Absolute,[relative_to(Dir),access(read),file_type(prolog),file_errors(fail)]))->
@@ -192,18 +194,21 @@ user:message_hook(T,Type,Warn):- fail, ( \+ current_prolog_flag(runtime_debug,0)
 :- endif.
 
 % Make YALL require ">>" syntax (the problem was it autoloads when its sees PFC code containing "/" and gripes all the time)
+/*
 disable_yall:- multifile(yall:lambda_functor/1),
    dynamic(yall:lambda_functor/1),
    use_module(yall:library(yall)),
    retract(yall:lambda_functor('/')).
 
 :- disable_yall.
+*/
+
+:- set_prolog_flag_until_eof(access_level,system).
 
 /*
 % baseKB:startup_option(datalog,sanity). %  Run datalog sanity tests while starting
 % baseKB:startup_option(clif,sanity). %  Run datalog sanity tests while starting
 :- set_prolog_flag(fileerrors,false).
-:- set_prolog_flag(access_level,system).
 :- set_prolog_flag(gc,false).
 :- set_prolog_flag(gc,true).
 :- set_prolog_flag(optimise,false).

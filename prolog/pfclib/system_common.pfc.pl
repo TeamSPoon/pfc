@@ -84,8 +84,8 @@ without_depth_limit(G):-
 :- kb_shared(mudKeyword/2).
 
 
-:- % better stack traces..
- set_prolog_flag(access_level,system).
+%:- % better stack traces..
+% set_prolog_flag(access_level,system).
 
 arity(genlPreds,2).
 
