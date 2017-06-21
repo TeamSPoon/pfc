@@ -11,7 +11,7 @@
 :- user:use_module(library(virtualize_source)).
 :- user:use_module(library(hook_hybrid)).
 :- user:use_module(library(loop_check)).
-:- user:use_module(library(logicmoo_utils)).
+%:- user:use_module(library(logicmoo_utils)).
 :- use_module(library(attvar_serializer)).
 :- kb_shared(baseKB:admittedArgument/3).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
