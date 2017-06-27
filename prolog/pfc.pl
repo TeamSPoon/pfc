@@ -7,9 +7,32 @@
 :- module(pfc,[use_pfc/0]).
 :- use_module(library(each_call_cleanup)).
 :- user:use_module(library(must_trace)).
+:- user:use_module(library(file_scope)).
 :- set_prolog_flag_until_eof(access_level,system).
+:- set_prolog_flag_until_eof(debug,true).
+
 :- user:use_module(library(virtualize_source)).
 :- user:use_module(library(hook_hybrid)).
+:- kb_shared(first_std_provider/3).
+:- kb_shared(pfcBcTrigger/1).
+:- kb_shared(pfcCallCode/1).
+:- kb_shared(pfcCallCodeAnte/1).
+:- kb_shared(pfcCreates/1).
+:- kb_shared(pfcLHS/1).
+:- kb_shared(pfcMustFC/1).
+:- kb_shared(pfcNegTrigger/1).
+:- kb_shared(pfcPosTrigger/1).
+:- kb_shared(pfcRHS/1).
+:- kb_shared(pfcWatches/1).
+:- kb_shared(predCanHaveSingletons/1).
+:- kb_shared(prologKIF/1).
+:- kb_shared(prologListValued/1).
+:- kb_shared(prologPTTP/1).
+:- kb_shared(prologSingleValued/1).
+:- kb_shared(rtBinaryRelation/1).
+:- kb_shared(rtReflexiveBinaryPredicate/1).
+:- kb_shared(rtUnaryPredicate/1).
+:- kb_shared(without_depth_limit/1).
 :- user:use_module(library(loop_check)).
 %:- user:use_module(library(logicmoo_utils)).
 :- use_module(library(attvar_serializer)).
@@ -378,6 +401,9 @@ base_kb_dynamic(F,A):- ain(mpred_prop(F,A,prologHybrid)),kb_shared(F/A).
 in_dialect_pfc:- is_pfc_file. % \+ current_prolog_flag(dialect_pfc,cwc),!.
 
 is_pfc_file:- source_location(File,_W),( atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File)),!.
+is_pfc_file:- prolog_load_context(source, File),baseKB:expect_file_mpreds(File),!, source_location(SFile,_W), \+ baseKB:ignore_file_mpreds(SFile),!.
+is_pfc_file:- source_location(File,_W),baseKB:expect_file_mpreds(File),!.
+
 
 sub_atom(F,C):- sub_atom(F,_,_,_,C).
 
@@ -556,25 +582,30 @@ clause_expansion(I,O):- pfc_clause_expansion(I,O).
 
 % term_expansion(I,P1,O,P2):- is_pfc_file,mpred_te(term,system,I,P1,O,P2).
 
-:- multifile(user:goal_expansion/4).
-:- dynamic(user:goal_expansion/4).
-:- module_transparent(user:goal_expansion/4).
-/*
-user:goal_expansion(I,P,O,PO):- fail,
+module_uses_pfc(SM):- current_predicate(SM:'$uses_pfc_toplevel'/0).
+
+:- multifile(pfc_goal_expansion/4).
+:- dynamic(pfc_goal_expansion/4).
+:- module_transparent(pfc_goal_expansion/4).
+pfc_goal_expansion(I,P,O,PO):- 
  notrace(( \+ source_location(_,_),
      callable(I),          
      var(P), % Not a file goal     
      \+ current_prolog_flag(xref,true), 
      \+ current_prolog_flag(mpred_te,false),
      '$current_typein_module'(CM),
+     prolog_load_context(module,SM),
+     ((SM \== CM) -> module_uses_pfc(SM); module_uses_pfc(CM)), 
      (I \= (CM : call_u(_))), (I \= call_u(_)))),
      fully_expand(I,M),
      notrace((
      O=CM:call_u(M),
      PO=P)).
-*/
+
 
 use_pfc.
+
+saveBaseKB:- tell(baseKB),listing(baseKB:_),told.
 
 %baseKB:'==>'(Consq) :- sanity( \+ input_from_file), ain_expanded('==>'(Consq)),!.
 %baseKB:'==>'(Ante,Consq):- sanity( \+ input_from_file), mpred_why(Consq,Ante).
@@ -596,5 +627,9 @@ system:clause_expansion(I,O):- pfc_clause_expansion(I,O).
 %:- set_prolog_flag(read_attvars,false).
 :- set_prolog_flag(pfc_booted,true).
 :- retractall(t_l:disable_px).
+system:goal_expansion(I,P,O,PO):-
+   prolog_flag(mpred_te,true),
+   pfc_goal_expansion(I,P,O,PO).
 :- set_prolog_flag(mpred_te,true).
+
 

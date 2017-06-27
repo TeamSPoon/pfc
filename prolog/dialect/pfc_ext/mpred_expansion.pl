@@ -876,6 +876,7 @@ as_is_term(F,I,[]):- !, (F==I;const_or_var(I)).
 % covered  as_is_term(meta_argtypes(_)):-!.
 % covered  as_is_term(meta_argtypes_guessed(_)):-!.
 % covered  as_is_term(rtArgsVerbatum(Atom)):- !, \+ compound(Atom).
+as_is_term(ftListFn,_,[]):-!.
 as_is_term(arity,F,_):- atom(F).
 % covered  as_is_term(functorIsMacro(Atom)):- !, \+ compound(Atom).
 % covered  as_is_term(functorDeclares(Atom)):- !, \+ compound(Atom).
@@ -1675,9 +1676,9 @@ was_isa( not(_),_,_):-!,fail.
 was_isa(M:G,I,C):-atom(M),!,was_isa(G,I,C).
 was_isa(a(C,I),I,C):-!.
 was_isa(t(P,I,C),I,C):-!,P==isa.
-was_isa(t(C,I),I,C):- nonvar(C),!,call_u(tSet(C)).
-was_isa(CI,I,C):- CI=..[C,I],!,call_u(tSet(C)).
 was_isa(t(C,_),_,_):- never_type_why(C,_),!,fail.
+was_isa(t(C,I),I,C):- nonvar(C),!,call_u(tSet(C)).
+was_isa(CI,I,C):- CI=..[C,I],!, \+ atom_concat(_,'Fn',C), call_u(tSet(C)).
 was_isa(G,I,C):- \+(current_predicate(_,G)),
   is_ftCompound(G),functor(G,F,_),quietly((( \+ call_u(decided_not_was_isa(F,_)),once(was_isa0(G,I,C)-> true;((functor(G,F,1),
   get_source_ref1(When),asserta_if_new(decided_not_was_isa(F,When)),!,fail)))))).

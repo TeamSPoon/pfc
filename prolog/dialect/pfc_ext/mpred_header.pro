@@ -170,7 +170,6 @@ end_of_file.
 :- ensure_loaded(library(terms)).
 :- ensure_loaded(library(listing)).
 :- ensure_loaded(library(codesio)).
-% :- ensure_loaded(library(logicmoo_utils)).
 */
 
 
@@ -178,7 +177,6 @@ end_of_file.
 
                    
 /*        
-:- ensure_loaded('../../logicmoo_utils').
 assert_if_new_hh(G):- (catch(G,_,fail)->true;assert(G)).
 :- prolog_load_context(module,M),
  once((M==baseKB ;
@@ -229,8 +227,6 @@ assert_if_new_hh(G):- (catch(G,_,fail)->true;assert(G)).
 :- dynamic( baseKB:predicateConventionMt/2).
 
 
-
-%:- ensure_loaded(library(logicmoo_utils)).
 
 % :- ensure_loaded(library(logicmoo/util/logicmoo_util_catch)).
 % :- ensure_loaded(library(logicmoo/util/logicmoo_util_first)).
