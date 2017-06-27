@@ -4,9 +4,9 @@
 % Douglas Miles
 
 */
-:- module(pfc_toplevel,[uses_pfc_toplevel/0]).
-uses_pfc_toplevel.
-:- current_predicate(M:uses_pfc_toplevel/0),reexport(M:pfc).
+:- module(pfc_toplevel,['$uses_pfc_toplevel'/0]).
+'$uses_pfc_toplevel'.
+:- current_predicate(M:'$uses_pfc_toplevel'/0), reexport(M:pfc).
 :- reexport(pfc).     
 :- set_prolog_flag(mpred_te,true).
 :- set_prolog_flag(verbose_load,true).

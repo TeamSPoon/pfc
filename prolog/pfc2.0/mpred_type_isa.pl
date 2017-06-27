@@ -243,7 +243,9 @@ noncol_type('LogicalConnective').
 %
 % Never Type Generation Of Proof.
 %
+
 never_type_why(V,ftVar(isThis)):-is_ftVar(V),!.
+never_type_why(C,fn):-atom(C),atom_concat(_,'Fn',C),!.
 never_type_why(cheaply_u,cheaply_u(isThis)):-!.
 never_type_why(C,_):-a(tCol,C),!,fail. % already declared to be a type
 never_type_why(_,_):- \+ flag_call(runtime_debug == true) ,!,fail.
