@@ -1204,6 +1204,7 @@ set_file_lang(W):-
   forall((prolog_load_context(file,Source);which_file(Source);prolog_load_context(source,Source)),
   ignore((  % \+ lmcache:mpred_directive_value(Source,language,W),
   source_location(File,Line),
+  (W==pfc-> ain(baseKB:expect_file_mpreds(File)) ; true),
   prolog_load_context(module,Module),
   INFO = source_location_lang(Module,File,Line,Source,W),
   asserta(lmconf:INFO),
