@@ -371,6 +371,9 @@ maybe_should_rename(O,O).
 :- multifile(baseKB:expect_file_mpreds/1).
 :- dynamic(baseKB:expect_file_mpreds/1).
 
+baseKB:expect_file_mpreds(File):- prolog_load_context(file,File),t_l:current_lang(pfc).
+baseKB:expect_file_mpreds(File):- prolog_load_context(source,File),t_l:current_lang(pfc),source_location(SFile,_W), \+ baseKB:ignore_file_mpreds(SFile),!.
+
 % file late late joiners
 :- if( \+ prolog_load_context(reload,true)).
 :- source_location(File, _)-> during_boot((asserta(baseKB:ignore_file_mpreds(File)))).
@@ -403,7 +406,6 @@ in_dialect_pfc:- is_pfc_file. % \+ current_prolog_flag(dialect_pfc,cwc),!.
 is_pfc_file:- source_location(File,_W),( atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File)),!.
 is_pfc_file:- prolog_load_context(source, File),baseKB:expect_file_mpreds(File),!, source_location(SFile,_W), \+ baseKB:ignore_file_mpreds(SFile),!.
 is_pfc_file:- source_location(File,_W),baseKB:expect_file_mpreds(File),!.
-
 
 sub_atom(F,C):- sub_atom(F,_,_,_,C).
 
