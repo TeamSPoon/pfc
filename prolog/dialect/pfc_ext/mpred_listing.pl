@@ -237,7 +237,7 @@ pp_rules :-
 % Pretty Print Triggers.
 %
 pp_triggers :-
-     print_db_items("Positive triggers",pt(_,_,_)),
+     print_db_items("Positive triggers", pt(_,_,_)),
      print_db_items("Negative triggers", nt(_,_,_,_)),
      print_db_items("Goal triggers",bt(_,_,_)).
 

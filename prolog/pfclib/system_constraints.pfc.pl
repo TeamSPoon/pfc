@@ -1,6 +1,12 @@
 :- module(system_constraints,[]).
-:- if('$set_source_module'(baseKB)).
-:- endif.
+:- set_module(class(development)).
+:- '$set_source_module'(baseKB).
+:- use_module(library(rtrace)).
+:- use_module(library(pfc_lib)).
+:- mpred_unload_file.
+:- '$set_source_module'(baseKB).
+:- ensure_abox(baseKB).
+:- ensure_abox(baseKB).
 /** <module> system_constraints
 % =============================================
 % File 'system_constraints.pfc'

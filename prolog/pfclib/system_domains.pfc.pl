@@ -1,4 +1,12 @@
+:- set_module(class(development)).
+:- '$set_source_module'(baseKB).
+:- use_module(library(rtrace)).
+:- use_module(library(pfc_lib)).
+% :- mpred_unload_file.
+:- ensure_abox(baseKB).
 
+:- sanity(ttRelationType(prologMultiValued)).
+:- kb_shared(argsIsa/2).
 
 % set false so make_wff/1 will be noticed (default is true)
 feature_setting(make_wff,true)==> (feature_setting(add_admitted_arguments,true), feature_setting(assume_wff, false)).

@@ -15,6 +15,7 @@
 % Dec 13, 2035
 % Douglas Miles
 */
+:- if(current_prolog_flag(lm_pfc_lean,false)).
 
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_type_constraints.pl
 %:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
@@ -673,22 +674,24 @@ iz_member(iz(X,List)):-!,member(X,List).
 iz_member(G):-G.
 
 
+:- style_check(-singleton).
 
 %% attempt_attribute_args( ?AndOr, ?Hint, :TermVar) is semidet.
 %
 % Attempt Attribute Arguments.
 %
-attempt_attribute_args(AndOr,Hint,Var):- var(Var),add_dom(Var,Hint),!.
-attempt_attribute_args(AndOr,Hint,Grnd):-ground(Grnd),!.
-attempt_attribute_args(AndOr,Hint,Term):- \+ (compound(Term)),!.
+
+attempt_attribute_args(_AndOr,Hint,Var):- var(Var),add_dom(Var,Hint),!.
+attempt_attribute_args(_AndOr,_Hint,Grnd):-ground(Grnd),!.
+attempt_attribute_args(_AndOr,_Hint,Term):- \+ (compound(Term)),!.
 attempt_attribute_args(AndOr,Hint,+(A)):-!,attempt_attribute_args(AndOr,Hint,A).
 attempt_attribute_args(AndOr,Hint,-(A)):-!,attempt_attribute_args(AndOr,Hint,A).
 attempt_attribute_args(AndOr,Hint,?(A)):-!,attempt_attribute_args(AndOr,Hint,A).
 attempt_attribute_args(AndOr,Hint,(A,B)):-!,attempt_attribute_args(AndOr,Hint,A),attempt_attribute_args(AndOr,Hint,B).
 attempt_attribute_args(AndOr,Hint,[A|B]):-!,attempt_attribute_args(AndOr,Hint,A),attempt_attribute_args(AndOr,Hint,B).
 attempt_attribute_args(AndOr,Hint,(A;B)):-!,attempt_attribute_args(';'(AndOr),Hint,A),attempt_attribute_args(';'(AndOr),Hint,B).
-attempt_attribute_args(AndOr,Hint,Term):- use_was_isa(Term,I,C), add_dom(I,C).
-attempt_attribute_args(AndOr,Hint,Term):- Term=..[F,A],tCol(F),!,attempt_attribute_args(AndOr,F,A).
+attempt_attribute_args(_AndOr,_Hint,Term):- use_was_isa(Term,I,C), add_dom(I,C).
+attempt_attribute_args(AndOr,_Hint,Term):- Term=..[F,A],tCol(F),!,attempt_attribute_args(AndOr,F,A).
 attempt_attribute_args(AndOr,Hint,Term):- Term=..[F|ARGS],!,attempt_attribute_args(AndOr,Hint,F,1,ARGS).
 
 
@@ -698,10 +701,10 @@ attempt_attribute_args(AndOr,Hint,Term):- Term=..[F|ARGS],!,attempt_attribute_ar
 %
 % Attempt Attribute Arguments.
 %
-attempt_attribute_args(AndOr,_Hint,_F,_N,[]):-!.
-attempt_attribute_args(AndOr,Hint,t,1,[A]):-attempt_attribute_args(AndOr,callable,A).
+attempt_attribute_args(_AndOr,_Hint,_F,_N,[]):-!.
+attempt_attribute_args(AndOr,_Hint,t,1,[A]):-attempt_attribute_args(AndOr,callable,A).
 attempt_attribute_args(AndOr,Hint,t,N,[A|ARGS]):-atom(A),!,attempt_attribute_args(AndOr,Hint,A,N,ARGS).
-attempt_attribute_args(AndOr,Hint,t,N,[A|ARGS]):- \+ (atom(A)),!.
+attempt_attribute_args(_AndOr,_Hint,t,_N,[A|_ARGS]):- \+ (atom(A)),!.
 attempt_attribute_args(AndOr,Hint,F,N,[A|ARGS]):-attempt_attribute_one_arg(Hint,F,N,A),N2 is N+1,attempt_attribute_args(AndOr,Hint,F,N2,ARGS).
 
 
@@ -711,10 +714,10 @@ attempt_attribute_args(AndOr,Hint,F,N,[A|ARGS]):-attempt_attribute_one_arg(Hint,
 %
 % Attempt Attribute One Argument.
 %
-attempt_attribute_one_arg(Hint,F,N,A):-call_u(argIsa(F,N,Type)),Type\=ftTerm, \+ (compound(Type)),!,attempt_attribute_args(AndOr,Type,A).
-attempt_attribute_one_arg(Hint,F,N,A):-call_u(argQuotedIsa(F,N,Type)),Type\=ftTerm, \+ (compound(Type)),!,attempt_attribute_args(AndOr,Type,A).
-attempt_attribute_one_arg(Hint,F,N,A):-call_u(argIsa(F,N,Type)),Type\=ftTerm,!,attempt_attribute_args(AndOr,Type,A).
-attempt_attribute_one_arg(Hint,F,N,A):-attempt_attribute_args(AndOr,argi(F,N),A).
+attempt_attribute_one_arg(_Hint,F,N,A):-call_u(argIsa(F,N,Type)),Type\=ftTerm, \+ (compound(Type)),!,attempt_attribute_args(and,Type,A).
+attempt_attribute_one_arg(_Hint,F,N,A):-call_u(argQuotedIsa(F,N,Type)),Type\=ftTerm, \+ (compound(Type)),!,attempt_attribute_args(and,Type,A).
+attempt_attribute_one_arg(_Hint,F,N,A):-call_u(argIsa(F,N,Type)),Type\=ftTerm,!,attempt_attribute_args(and,Type,A).
+attempt_attribute_one_arg(_Hint,F,N,A):-attempt_attribute_args(and,argi(F,N),A).
 
 
 
@@ -986,4 +989,5 @@ mpred_type_constraints_file.
 %
 % system:goal_expansion(G,O):- \+ current_prolog_flag(xref,true),\+ pldoc_loading, nonvar(G),boxlog_goal_expansion(G,O).
 
+:- endif.
 

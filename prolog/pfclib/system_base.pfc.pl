@@ -1,10 +1,10 @@
-:- if( current_prolog_flag(xref,true) ).
 :- module(system_base,[]).
-:- else.
-:- module(system_base,[]).
-:- endif.
 :- set_module(class(development)).
-:- use_module(library(pfc)).
+:- '$set_source_module'(baseKB).
+:- use_module(library(rtrace)).
+:- use_module(library(pfc_lib)).
+:- mpred_unload_file.
+:- ensure_abox(baseKB).
 /** <module> system_base
 % =============================================
 % File 'system_base.pfc'
@@ -39,6 +39,9 @@
 */
 :- '$set_source_module'(baseKB).
 :- mpred_unload_file.
+
+
+% :- xlisting( (==>) /2 ).
 
 :- set_prolog_flag(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
 
