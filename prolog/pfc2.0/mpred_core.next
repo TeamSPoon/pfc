@@ -3716,7 +3716,6 @@ triggerSupports(Trigger,[Fact|MoreFacts]):-
 
 % :- '$current_source_module'(M),forall(mpred_database_term(F,A,_),(abolish(mpred_core:F/A),abolish(user:F/A),abolish(M:F/A))).
 % :- initialization(ensure_abox(baseKB)).
-:- kb_shared(mpred_is_spying_pred/2).
 
 
 % % :- set_prolog_flag(mpred_pfc_file,true).

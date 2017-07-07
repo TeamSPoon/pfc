@@ -271,16 +271,28 @@ makeConstant(_Mt).
 :- dynamic(lmcache:has_pfc_database_preds/1).
 ensure_abox(M):- sanity(atom(M)), lmcache:has_pfc_database_preds(M),!.
 ensure_abox(user):- setup_module_ops(user),!,ensure_abox(baseKB),!.
-ensure_abox(M):- ensure_abox_suport(M,baseKB).
+ensure_abox(M):- must(ensure_abox_support(M,baseKB)).
 
-ensure_abox_suport(M,Where):-
+ensure_abox_support(M,Where):-
    asserta(lmcache:has_pfc_database_preds(M)),
    assert_if_new(baseKB:mtCycL(M)),
    retractall(baseKB:mtProlog(M)),
    setup_module_ops(M),
    set_prolog_flag(M:unknown,error),
+   
    forall(mpred_database_term(F,A,Type),
-     import_mpred_database_term(M,F,A,Type,Where)).
+     must(import_mpred_database_term(M,F,A,Type,Where))).
+
+import_mpred_database_term(M,F,A,syntaxic(Type),_):- member(Type,[rule,fact,fact(_),rule(_)]), !,
+  nop((system:export(system:F/A),M:import(system:F/A),M:export(system:F/A))).
+
+import_mpred_database_term(M,F,A,support,_):- !,show_call(kb_shared(M:F/A)).
+import_mpred_database_term(M,F,A,debug,_):- !,show_call(kb_shared(M:F/A)).
+% import_mpred_database_term(M,F,A,trigger,_):- !,show_call(kb_local(M:F/A)).
+
+import_mpred_database_term(M,F,A,_,_):- show_call(localize_mpred(M,F,A)),!,show_call(kb_local(M:F/A)).
+
+import_mpred_database_term(M,F,A,Type,_):- member(Type,[setting,debug]), localize_mpred(M,F,A).
 
 import_mpred_database_term(M,F,A,_,Where):- localize_mpred(Where,F,A),
                                                Where:export(Where:F/A),
@@ -288,7 +300,6 @@ import_mpred_database_term(M,F,A,_,Where):- localize_mpred(Where,F,A),
                                                M:export(M:F/A),!.
 
 import_mpred_database_term(M,F,A,Type,_):- member(Type,[rule,fact,fact(_),rule(_)]), system:export(system:F/A),M:import(system:F/A),M:export(system:F/A).
-import_mpred_database_term(M,F,A,Type,_):- member(Type,[setting,debug]), localize_mpred(M,F,A).
 import_mpred_database_term(M,F,A,_,Where):- localize_mpred(Where,F,A),
                                                Where:export(Where:F/A),
                                                M:import(Where:F/A),
@@ -440,7 +451,10 @@ call_a:- arity(tCol,1),arity(arity,2).
 % Ensure Imports.
 %
 ensure_imports(baseKB):-!.
-ensure_imports(M):- ain(genlMt(M,baseKB)).
+ensure_imports(M):- ain(baseKB:genlMt(M,baseKB)).
+
+:-multifile(baseKB:genlMt/2).
+:-dynamic(baseKB:genlMt/2).
 
 :-multifile(lmcache:is_ensured_imports_tbox/2).
 :-dynamic(lmcache:is_ensured_imports_tbox/2).
@@ -604,7 +618,7 @@ baseKB:hybrid_support(genlMt,2).
 
 :- create_prolog_flag(retry_undefined,default,[type(term),keep(true)]).
 
-istAbove(Mt,Query):- Mt \== baseKB, genlMt(Mt,MtAbove),MtAbove:Query.
+istAbove(Mt,Query):- Mt \== baseKB, baseKB:genlMt(Mt,MtAbove),MtAbove:Query.
 
 
 % make sure we ignore calls to predicate_property/2  (or thus '$define_predicate'/1)

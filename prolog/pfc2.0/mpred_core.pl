@@ -273,6 +273,9 @@ with_each_item(P,[H|T],S) :- !, apply(P,[H|S]), with_each_item(P,T,S).
 with_each_item(P,(H,T),S) :- !, with_each_item(P,H,S), with_each_item(P,T,S).
 with_each_item(P,H,S) :- apply(P,[H|S]).
 
+on_x_rtrace(G):-on_x_debug(G).
+
+:- kb_local(mpred_is_spying_pred/2).
 
 
 %% mpred_database_term(:PI, -TYPE) is nondet.
@@ -286,18 +289,32 @@ with_each_item(P,H,S) :- apply(P,[H|S]).
 :- dynamic(mpred_database_term/3).
 % mined from program database
 
+:- kb_shared(baseKB:pm/1).
+:- kb_shared(baseKB:spft/3).
 
-mpred_database_term(do_and_undo,2,rule).
-mpred_database_term(('::::'),2,rule).
-mpred_database_term((<-),2,rule).
-mpred_database_term((<==>),2,rule).
-mpred_database_term((==>),2,rule).
+:- kb_shared(baseKB:pt/2).                   
+:- kb_shared(baseKB:nt/3).
+:- kb_shared(baseKB:bt/2).
+:- kb_shared(baseKB:do_and_undo/2).
+:- dynamic(baseKB:mpred_is_tracing_exec/0).
+:- export(baseKB:mpred_is_tracing_exec/0).
 
-mpred_database_term((==>),1,fact(_)).
-mpred_database_term((~),1,fact(_)).
+mpred_database_term_syntax(do_and_undo,2,rule).
+
+mpred_database_term_syntax(('::::'),2,rule).
+mpred_database_term_syntax((<-),2,rule).
+mpred_database_term_syntax((<==>),2,rule).
+mpred_database_term_syntax((==>),2,rule).
+
+mpred_database_term_syntax((==>),1,fact(_)).
+mpred_database_term_syntax((~),1,fact(_)).
+
+
+mpred_database_term(F,A,syntaxic(T)):- mpred_database_term_syntax(F,A,T).
 
 % forward,backward chaining database
 mpred_database_term(spft,3,support).
+
 mpred_database_term(nt,3,trigger).
 mpred_database_term(pt,2,trigger).
 mpred_database_term(bt,2,trigger).
@@ -850,6 +867,8 @@ mpred_aina(G,S):- locally(t_l:assert_to(a),mpred_ain(G,S)).
 mpred_ain(_:P):- P==end_of_file,!.
 mpred_ain(P):- get_source_ref(UU),mpred_ain(P,UU).
 
+mpred_add(P):-mpred_ain(P).
+
 %%  mpred_ain(P,S)
 %
 %  asserts P into the dataBase with support from S.
@@ -1004,7 +1023,9 @@ mpred_post1(P, S):- each_E(mpred_post2,P,[S]).
 
 mpred_post2( P,   S):- notrace(( sanity(nonvar(P)),fixed_negations(P,P0),P\=@=P0)),!, mpred_post2( P0,   S).
 
-mpred_post2(Fact, _):- notrace(((true;current_prolog_flag(unsafe_speedups , true)) , ground(Fact),fwc1s_post1s(One,_Two),Three is One * 1,
+mpred_post2(Fact, _):- notrace(((true;current_prolog_flag(unsafe_speedups , true)) , ground(Fact),
+   \+ t_l:is_repropagating(_),
+   fwc1s_post1s(One,_Two),Three is One * 1,
    filter_buffer_n_test('$last_mpred_post1s',Three,Fact))),!.
 
 %mpred_post2(P,S):- gripe_time(0.6,loop_check_early(mpred_post12(P,S),true)).
@@ -1755,7 +1776,9 @@ mpred_fwc(Ps):- each_E(mpred_fwc0,Ps,[]).
 %
 % this line filters sequential (and secondary) dupes
  % mpred_fwc0(genls(_,_)):-!.
-mpred_fwc0(Fact):- notrace(ground(Fact)),maybe_notrace((fwc1s_post1s(_One,Two),Six is Two * 1)), 
+mpred_fwc0(Fact):- notrace(ground(Fact)),
+   \+ t_l:is_repropagating(_),
+   maybe_notrace((fwc1s_post1s(_One,Two),Six is Two * 1)), 
    show_success((filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact))),!.
 mpred_fwc0(Fact):- maybe_notrace(copy_term_vn(Fact,FactC)),
       loop_check(mpred_fwc1(FactC),true).
@@ -1857,7 +1880,7 @@ lookup_spft_t(A,B,C):- baseKB:spft(A,B,C).
 
 
 mpred_do_fcpt(Fact,F):-
-  baseKB:pt(F,Body),
+  on_x_rtrace(call_u(pt(F,Body))),
   mpred_trace_msg('~N~n\tFound positive trigger: ~p~n\t\tbody: ~p~n',
 		[F,Body]),
   mpred_eval_lhs(Body,(Fact,pt(F,Body))),
@@ -1872,7 +1895,7 @@ mpred_do_fcpt(_,_).
 
 mpred_do_fcnt(_ZFact,F):-
   NT = nt(F,Condition,Body),
-  baseKB:NT,
+  call_u(NT),
   lookup_spft(X,F1,NT),
   %clause(SPFT,true),
   mpred_trace_msg('~N~n\tFound negative trigger: ~p~n\t\tcond: ~p~n\t\tbody: ~p~n\tSupport: ~p~n',
@@ -2056,7 +2079,7 @@ lookup_m_g(To,_M,G):- clause(To:G,true).
 % :- table(call_u/1).
 
 % call_u(G):- baseKB:call(G).
-call_u(G):- strip_module(G,M,P), no_repeats(gripe_time(5.3,call_u_mp(M,P))).
+call_u(G):- strip_module(G,M,P), no_repeats(gripe_time(5.3,on_x_rtrace(call_u_mp(M,P)))).
 % call_u(G):- strip_module(G,M,P), call_u_mp(G,M,P).
 
 
@@ -2895,9 +2918,9 @@ mpred_retract_i_or_warn(X):-
 %:- mpred_set_default(baseKB:mpred_warnings(_), baseKB:mpred_warnings(true)).
 %  tms is one of {none,local,cycles} and controles the tms alg.
 %:- baseKB:mpred_set_default(tms(_), tms(cycles)).
-:-dynamic(baseKB:spft/3).
-:-asserta(baseKB:spft(a,b,c)).
-:-retractall(baseKB:spft(a,b,c)).
+%:-dynamic(baseKB:spft/3).
+%:-asserta(baseKB:spft(a,b,c)).
+%:-retractall(baseKB:spft(a,b,c)).
 % :- during_boot(mpred_set_default(mpred_warnings(_), mpred_warnings(true))).
 
 %  mpred_fact(P) is true if fact P was asserted into the database via add.
@@ -3717,7 +3740,7 @@ triggerSupports(Trigger,[Fact|MoreFacts]):-
 
 % :- '$current_source_module'(M),forall(mpred_database_term(F,A,_),(abolish(mpred_core:F/A),abolish(user:F/A),abolish(M:F/A))).
 % :- initialization(ensure_abox(baseKB)).
-:- kb_shared(mpred_is_spying_pred/2).
+% :- kb_shared(mpred_is_spying_pred/2).
 
 
 % % :- set_prolog_flag(mpred_pfc_file,true).

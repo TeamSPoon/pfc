@@ -9,11 +9,10 @@
 */
 % =======================================================
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_type_args.pl
+:- if(current_prolog_flag(lm_pfc_lean,false)).
 :- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
 :- module(mpred_type_args,
-          [ any_to_number/2,
-            any_to_relation/2,
-            any_to_value/2,
+          [ any_to_relation/2,
             argIsa_op_call/4,
             as_one_of/2,
             show_count/1,
@@ -53,7 +52,6 @@
             is_boolean/1,
             is_declarations/1,
             is_ephemeral/1,
-            is_ftText/1,
             is_id/1,
             is_list_of/2,
             is_renamed_to/2,
@@ -318,21 +316,6 @@ pl_arg_type(Arg,Type):-
 
 
 
-
-%% is_ftText( ?Arg) is semidet.
-%
-% If Is A Format Type Text.
-%
-is_ftText(Arg):-string(Arg),!.
-is_ftText(Arg):- \+ compound(Arg),!,fail.
-is_ftText(Arg):- functor(Arg,s,_),!.
-is_ftText([Arg|_]):-string(Arg),!.
-is_ftText(Arg):-is_ftVar(Arg),!,fail.
-is_ftText(Arg):- text_to_string_safe(Arg,_),!.
-is_ftText(Arg):- functor(Arg,S,_), ereq(resultIsa(S,ftText)).
-
-ftText(A):-!, term_is_ft(A, ftText).
-ftText(O):- is_ftText(O).
 
 % :- was_dynamic(coerce/3).
 :- was_export(coerce/4).
@@ -827,49 +810,15 @@ must_equals(A,AA):-must_det(A=AA).
 deduced_is_tCol(A):- (t_l:infSkipArgIsa->true; (a(tCol,A)->true;(fail,ain(isa(A,tCol))))),!.
 :- style_check(+singleton).
 
-:- was_export(any_to_value/2).
 
 %= 	 	 
 
-%% any_to_value( ?Var, ?Var) is semidet.
-%
-% Any Converted To Value.
-%
-any_to_value(Var,Var):-var(Var),!.
-any_to_value(V,Term):-atom(V),!,atom_to_value(V,Term).
-any_to_value(A,V):-any_to_number(A,V).
-any_to_value(A,A).
+:- export(correctArgsIsa/3).
 
-:- was_export(correctArgsIsa/3).
-
-:- was_export(any_to_number/2).
-
-%= 	 	 
-
-%% any_to_number( :TermN, ?N) is semidet.
-%
-% Any Converted To Number.
-%
-any_to_number(N,N):- number(N),!.
-any_to_number(ftDiceFn(A,B,C),N):- ground(A),roll_dice(A,B,C,N),!.
-any_to_number(A,N):-atom(A),atom_to_value(A,V),A\=V,any_to_number(V,N).
-any_to_number(A,N):- catch(number_string(N,A),_,fail).
 
 :- was_export(atom_to_value/2).
 
 %= 	 	 
-
-%% atom_to_value( ?V, :TermTerm) is semidet.
-%
-% Atom Converted To Value.
-%
-atom_to_value(V,Term):-not(atom(V)),!,any_to_value(V,Term).
-% 56
-atom_to_value(V,Term):- catch((read_term_from_atom(V,Term,[variable_names([])])),_,fail),!.
-% 18d18+4000
-atom_to_value(V,ftDiceFn(T1,T2,+T3)):- atomic_list_concat_safe([D1,'d',D2,'+',D3],V), atom_to_value(D1,T1),atom_to_value(D2,T2),atom_to_value(D3,T3),!.
-atom_to_value(V,ftDiceFn(T1,T2,-T3)):- atomic_list_concat_safe([D1,'d',D2,'-',D3],V), atom_to_value(D1,T1),atom_to_value(D2,T2),atom_to_value(D3,T3),!.
-
 
 
 
@@ -897,3 +846,7 @@ roll_dice(Rolls,Sided,Bonus,Result):- LessRolls is Rolls-1, roll_dice(LessRolls,
 :- fixup_exports.
 
 mpred_type_args_file.
+
+:- endif.
+
+

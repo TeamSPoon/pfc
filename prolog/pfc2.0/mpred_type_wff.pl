@@ -92,6 +92,10 @@
             subst_except/4,
             wrap_in_neg_functor/3,
 
+          any_to_number/2,
+          is_ftText/1,
+          any_to_value/2,
+          atom_to_value/2,
 
             mpred_type_wff_file/0
           ]).
@@ -1044,7 +1048,7 @@ set_is_lit(A):-when(nonvar(A),\+ is_ftVar(A)),!.
 %
 % Term Slots.
 %
-% term_slots(Term,Slots):-term_singletons(Term, [],NS, [],S),append(NS,S,Slots).
+% term_slots(Term,Slots):-term_singleslots(Term, [],NS, [],S),append(NS,S,Slots).
 
 
 :- export(head_singletons/2).
@@ -1091,7 +1095,7 @@ head_singles0(Pre,Post):-head_singles01(Pre,Post).
 %
 head_singles01(Pre,Post):-
   quietly((
-    term_singletons(Post,_,CSingles),
+    term_singleslots(Post,_,CSingles),
     term_slots(Pre,PreVars),!,
     subtract_eq(CSingles,PreVars,Bad),!,Bad\==[])).
 
@@ -1177,7 +1181,7 @@ ensure_quantifiers(Wff:- B,WffO):- B== true,!, ensure_quantifiers(Wff,WffO).
 ensure_quantifiers(Wff:- B,Wff:- B):- !.
 % ensure_quantifiers(Wff,Wff):-!.
 ensure_quantifiers(Wff,WffO):-
- must_det_l((show_failure(why,term_singletons(Wff,[],NS,[],Singles)),
+ must_det_l((show_failure(why,term_singleslots(Wff,[],NS,[],Singles)),
   put_singles(Wff,'all',Singles,WffM),put_singles(WffM,'all',NS,WffO))).
 
 
@@ -1240,6 +1244,57 @@ fresh_varname(F,NewVar):-var(F),fresh_varname('mudEquals',NewVar).
 fresh_varname([F0|_],NewVar):-!,fresh_varname(F0,NewVar).
 fresh_varname(F,NewVar):- compound(F),arg(_,F,F1),atom(F1),!,functor(F,F0,_),atom_concat(F0,F1,FN),upcase_atom(FN,FUP),gensym(FUP,VARNAME),NewVar = '$VAR'(VARNAME),!.
 fresh_varname(F,NewVar):- functor(F,FN,_),!, upcase_atom(FN,FUP),gensym(FUP,VARNAME),NewVar = '$VAR'(VARNAME),!.
+
+
+
+
+:- export(any_to_number/2).
+%% any_to_value( ?Var, ?Var) is semidet.
+%
+% Any Converted To Value.
+%
+any_to_value(Var,Var):-var(Var),!.
+any_to_value(V,Term):-atom(V),!,atom_to_value(V,Term).
+any_to_value(A,V):-any_to_number(A,V).
+any_to_value(A,A).
+
+
+%% any_to_number( :TermN, ?N) is semidet.
+%
+% Any Converted To Number.
+%
+any_to_number(N,N):- number(N),!.
+any_to_number(ftDiceFn(A,B,C),N):- ground(A),if_defined(roll_dice(A,B,C,N)),!.
+any_to_number(A,N):-atom(A),atom_to_value(A,V),A\=V,any_to_number(V,N).
+any_to_number(A,N):- catch(number_string(N,A),_,fail).
+
+%% atom_to_value( ?V, :TermTerm) is semidet.
+%
+% Atom Converted To Value.
+%
+atom_to_value(V,Term):-not(atom(V)),!,any_to_value(V,Term).
+% 56
+atom_to_value(V,Term):- catch((read_term_from_atom(V,Term,[variable_names([])])),_,fail),!.
+% 18d18+4000
+atom_to_value(V,ftDiceFn(T1,T2,+T3)):- atomic_list_concat_safe([D1,'d',D2,'+',D3],V), atom_to_value(D1,T1),atom_to_value(D2,T2),atom_to_value(D3,T3),!.
+atom_to_value(V,ftDiceFn(T1,T2,-T3)):- atomic_list_concat_safe([D1,'d',D2,'-',D3],V), atom_to_value(D1,T1),atom_to_value(D2,T2),atom_to_value(D3,T3),!.
+
+
+
+%% is_ftText( ?Arg) is semidet.
+%
+% If Is A Format Type Text.
+%
+is_ftText(Arg):-string(Arg),!.
+is_ftText(Arg):- \+ compound(Arg),!,fail.
+is_ftText(Arg):- functor(Arg,s,_),!.
+is_ftText([Arg|_]):-string(Arg),!.
+is_ftText(Arg):- is_ftVar(Arg),!,fail.
+is_ftText(Arg):- text_to_string_safe(Arg,_),!.
+is_ftText(Arg):- functor(Arg,S,_), ereq(resultIsa(S,ftText)).
+
+ftText(A):- if_defined(term_is_ft(A, ftText),is_ftText(Arg)).
+
 
 
 

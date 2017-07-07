@@ -1,6 +1,10 @@
 :- module(system_common,[]).
-:- if('$set_source_module'(baseKB)).
-:- endif.
+:- set_module(class(development)).
+:- '$set_source_module'(baseKB).
+:- use_module(library(rtrace)).
+:- use_module(library(pfc_lib)).
+:- mpred_unload_file.
+:- ensure_abox(baseKB).
 /** <module> system_common
 % =============================================
 % File 'system_common.pfc'
@@ -35,7 +39,6 @@
 */
 
 % :- require('system_base.pfc').
-:- use_module(library(pfc)).
 :- system:op(1199,fx,('==>')).
 :- system:op(1190,xfx,('::::')).
 :- system:op(1180,xfx,('==>')).
@@ -78,315 +81,6 @@ without_depth_limit(G):-
 % :- prolog_load_context(module,Mod),sanity(Mod==baseKB),writeq(prolog_load_context(module,Mod)),nl.
 
 :- ensure_abox(baseKB).
-
-:- kb_shared(arity/2).
-:- kb_shared(nameString/2).
-:- kb_shared(mudKeyword/2).
-
-
-%:- % better stack traces..
-% set_prolog_flag(access_level,system).
-
-arity(genlPreds,2).
-
-:- dynamic(mpred_undo_sys/3).
-pfcControlled(mpred_undo_sys(ftAssertion, ftCallable, ftCallable)).
-mpred_undo_sys(P, WhenAdded, WhenRemoved) ==> (P ==> {WhenAdded}), mpred_do_and_undo_method(WhenAdded,WhenRemoved).
-
-% DONT mpred_undo_sys(added(P),ain(P),mpred_retract(P)).
-% mpred_undo_sys(asserted(P),assert_eq_quitely(PE),retract_eq_quitely(PE)):-expand_goal(P,PE).
-
-% 
-comment(isa,"Instance of").
-
-~(tCol(genlPreds)).
-
-~(singleValuedInArg(arity,2)).
-~(prologSingleValued(arity)).
-~(prologSingleValued(support_hilog)).
-
-~(arity(argIsa,1)).
-arity(pddlObjects,2).
-
-%assumed prologHybrid(genls/2).
-
-
-
-%denotesTypeType(FT,CT)==>prefered_collection(FT,CT).
-%prefered_collection(ftSubLString,ftString).
-%prefered_collection(rtCycLPredicator,tPred).
-
-
-==> ttRelationType(isEach(
-                  rtReflexiveBinaryPredicate, 
-                  rtBinaryPredicate,
-                  rtBinaryRelation)).
-
-
-
-/*
-:- 
- With = kb_shared, % [multifile,kb_shared,discontiguous],
- with_pfa(With,((logical_functor_pttp/1, pfcControlled/1, pfcRHS/1,  conflict/1,   rtArgsVerbatum/1,     add_args/15,argIsa_known/3,call_mt_t/11))),
-
-% with_pfa(With,((( call_which_t/9,constrain_args_pttp/2,contract_output_proof/2,get_clause_vars_for_print/2,holds_f_p2/2,input_to_forms/2,is_wrapper_pred/1,lambda/5,mpred_f/1,
-%          pp_i2tml_now/1,pp_item_html/2,pttp1a_wid/3,pttp_builtin/2,pttp_nnf_pre_clean_functor/3,quasiQuote/1,relax_term/6,retractall_wid/1,ruleRewrite/2,search/7,support_hilog/2,svar_fixvarname/2)))),
-
-% with_pfa(With,((pfcControlled/1,pfcRHS/1,logical_functor_pttp/1,          add_args/15,argIsa_known/3,call_mt_t/11,call_which_t/9,constrain_args_pttp/2,contract_output_proof/2,get_clause_vars_for_print/2,holds_f_p2/2,input_to_forms/2,is_wrapper_pred/1,lambda/5,mpred_f/1,pp_i2tml_now/1,pp_item_html/2,pttp1a_wid/3,pttp_builtin/2,pttp_nnf_pre_clean_functor/3,
-%          quasiQuote/1,relax_term/6,retractall_wid/1,ruleRewrite/2,search/7,support_hilog/2,svar_fixvarname/2,rtNotForUnboundPredicates/1))),
- with_pfa(With,(((bt/2),(nt/3),(pk/3),(pt/2),(spft/3),(tms/1),(hs/1),(que/2),(pm/1),
-          (('==>')/1),(('::::')/2),(('<-')/2),(('<==>')/2),(('==>')/2),(('~')/1),(('nesc')/1),
- ((mpred_action)/1),
-          (mpred_do_and_undo_method/2), 
-*/
-/*
-	  prologMultiValued/1,prologOrdered/1,prologNegByFailure/1,prologPTTP/1,prologKIF/1,pfcControlled/1,ttRelationType/1,
-           prologHybrid/1,predCanHaveSingletons/1,prologDynamic/1,prologBuiltin/1,functorIsMacro/1,prologListValued/1,prologSingleValued/1,
-          (hs/1),(pfcControlled/1),(prologDynamic/2),(prologSideEffects/1),(prologSingleValued/1),(singleValuedInArg/2),(prologSideEffects/1,
-          functorIsMacro/1,pfcControlled/1,
-           resolveConflict/1,resolverConflict_robot/1)))),
- with_pfa(With,((mpred_isa/2,arity/2,predicateConventionMt/2))),
- with_pfa(With,((vtColor/1))).
- */
-
-/*
-:-  multifile((disjointWith/2,genls/2,isa/2,argIsa/3)).
-:-  dynamic((disjointWith/2,genls/2,isa/2,argIsa/3)).
-:- discontiguous((disjointWith/2,genls/2,isa/2,argIsa/3,typeGenls/2)).
-*/
-
-% :- autoload.
-
-
-
-/*
- %  % :- debug_logicmoo(_).
-:- nodebug_logicmoo(http(_)).
-:- debug_logicmoo(logicmoo(_)).
- % :- mpred_trace_exec.
-:- begin_pfc.
-
-*/
-
-% remove conflicts early 
-% (~(P)/mpred_non_neg_literal(P) ==> ( {mpred_remove(P)}, (\+P ))).
-
-
-/*
-Unneeded yet
-
-% These next 2 might be best as builtins?
-((~(P)/(mpred_non_neg_literal(P),copy_term(P,PP))) ==> \+ PP ).
-% (P/mpred_non_neg_literal(P) ==> (\+ ~(P))).
-% ((P/(mpred_non_neg_literal(P),copy_term(P,PP))) ==> (~ ~ PP )).
-
-% :- nortrace,quietly.
-% a pretty basic conflict (disabled for now)
-%(~(P)/mpred_non_neg_literal(P), P) ==> conflict(~(P)).
-(~(P)/mpred_non_neg_literal(P), P) ==> conflict(~(P)).
-%(P/mpred_non_neg_literal(P), ~(P)) ==> conflict(P).
-
-*/
-
-%:- rtrace,dtrace.
-%==>(prologBuiltin(mpred_select_hook/1)).
-% :- nortrace,quietly.
-
-:- kb_shared(conflict/1).
-% a conflict triggers a Prolog action to resolve it.
-conflict(C) ==> {must(with_mpred_trace_exec((resolveConflict(C),\+conflict(C))))}.
-
-
-% meta rules to schedule inferencing.
-% resolve conflicts asap
-mpred_select_hook(conflict(X)) :- que(conflict(X),_Why).
-
-:- dynamic(rtUnaryPredicate/1).
-:- dynamic(ttExpressionType/1).
-
-tSet(completelyAssertedCollection).
-
-
-%% prologBuiltin( ?ARG1, ?ARG2) is semidet.
-%
-% Prolog Builtin.
-%
-%WRONG prologBuiltin(resolveConflict/1,predicateConventionMt(baseKB)).
-%WRONG prologBuiltin(mpred_select_hook/1,predicateConventionMt(baseKB)).
-%:-rtrace.
-
-
-
-% IN =@=> OUT  ==> 
-
-==>prologBuiltin(agent_text_command/4,prologDynamic).
-
-%tPred(t,prologDynamic).
-
-% tPred(member/2,prologBuiltin).
-
-
-
-tCol(vtVerb).
-
-%:- sanity(fileAssertMt(baseKB)).
-%:- sanity(defaultAssertMt(baseKB)).
-
-rtNotForUnboundPredicates(member/2).
-
-%and(A,B):- cwc, call_u((A,B)).
-%or(A,B):- cwc, call_u((A;B)).
-
-/*
-:- fully_expand(==>pkif("
-(=> 
-    (and 
-      (typeGenls ?COLTYPE1 ?COL1) 
-      (typeGenls ?COLTYPE2 ?COL2) 
-      (disjointWith ?COL1 ?COL2)) 
-    (disjointWith ?COLTYPE1 ?COLTYPE2))"
-),
-O),dmsg(O).
-
-==>pkif("
-(=> 
-    (and 
-      (typeGenls ?COLTYPE1 ?COL1) 
-      (typeGenls ?COLTYPE2 ?COL2) 
-      (disjointWith ?COL1 ?COL2)) 
-    (disjointWith ?COLTYPE1 ?COLTYPE2)) "
-).
-*/
-
-/*
-?- isa(iExplorer2,W),
-*/
-
-% ===================================================================
-% Type checker system / Never Assert / Retraction checks
-% ===================================================================
-
-type_checking ==> (( typeCheckDecl(Each,Must), Each, {\+ Must}) ==> failed_typeCheckDecl(Each,Must)).
-
-failed_typeCheckDecl(Each,Must)==>{trace_or_throw(failed_typeCheckDecl(Each,Must))}.
-
-:- kb_shared(never_assert_u/1).
-:- kb_shared(never_assert_u/2).
-never_assert_u(vtVerb(BAD),vtVerbError):- BAD=='[|]'.
-never_assert_u(prologSingleValued(BAD),var_prologSingleValued(BAD)):-is_ftVar(BAD).
-
-never_assert_u(baseKB:mtProlog(baseKB),must(mtCycL(baseKB))).
-never_assert_u(meta_argtypes(tSet(ftAssertable)),badRules).
-
-
-never_assert_u(A,test_sanity(A)):- never_assert_u(A).
-
-
-
-:- kb_shared(never_retract_u/1).
-:- kb_shared(never_retract_u/2).
-never_retract_u(~(X),is_ftVar(X)):- cwc, is_ftVar(X).
-never_retract_u(A,test_sanity(A)):- cwc, never_retract_u(A).
-never_retract_u(X,is_ftVar(X)):- cwc, is_ftVar(X).
-never_retract_u(human(trudy),sanity_test).
-never_retract_u(tHumanHair(skRelationAllExistsFn(mudSubPart, skRelationAllExistsFn(mudSubPart, skRelationAllExistsFn(mudSubPart, iExplorer1, tHumanBody), tHumanHead), tHumanHair)),sanity_test).
-never_retract_u((father(skArg1ofFatherFn(trudy), trudy)),sanity_test).
-never_retract_u(argQuotedIsa(thereExistAtLeast, 1, ftPositiveInteger),sanity_test).
-% P/never_assert_u(P,Why) ==> conflict(never_assert_u(P,Why))
-
-prologHybrid(arity/2).
-prologDynamic(is_never_type/1).
-prologDynamic(term_expansion/2).
-prologBuiltin(var/1).
-
-completelyAssertedCollection(completelyAssertedCollection).
-completelyAssertedCollection(C)==>tCol(C).
-
-% A Type Specification
-completelyAssertedCollection(tCol).  % a type is a type
-completelyDecidableCollection(ftSpec). % A specification is sort of a type
-completelyDecidableCollection(ftTerm).
-
-:- multifile ftSpec/1.
-:- dynamic ftSpec/1.
-:- discontiguous ftSpec/1.
-tCol(ftSpec).
-ttExpressionType(ftSpec).
-~meta_argtypes(ftSpec(ftString)). % A string may not be considered a legal specification
-functorForFtSpec(prologEquality).
-
-resultIsa(_F,C)/ground(C)==>ftSpec(C).
-rtArgsVerbatum(rtArgsVerbatum).
-rtArgsVerbatum(ftSpec).
-ftSpec(vtActionTemplate).
-rtArgsVerbatum(vtActionTemplate).
-
-% ftSpec(ftSpec).
-% meta_argtypes(ftSpec)
-meta_argtypes(ftSpec(ftSpec)).  % An argtype specification is considered to be a legal specification
-
-genls(ttExpressionType, ftSpec).
-
-genls(tCol, ftSpec).
-
-
-redundantMaybe ==> meta_argtypes(ftSpec(tCol)).  % A typeclass is considered to be a legal specification
-
-~tIndividual(tIndividual).
-
-
-/*
-
-@TODO BASE DOES THIS
-
-pfcControlled(P),arity(P,A)==>hybrid_support(P,A).
-ttRelationType(X)/sanity(atom(X))==>(arity(X,1),pfcControlled(X)).
-
-tSet(ttExpressionType).
-
-:- dynamic(baseKB:ttTypeType/1).
-:- kb_shared(ttTypeType/1).
-ttTypeType(C)==>completelyAssertedCollection(C).
-completelyAssertedCollection(ttTypeType).
-% (isa(Inst,Type), tCol(Inst)) ==> isa(Type,ttTypeType).
-
-% tCols are either syntactic or existential
-completelyAssertedCollection(ttExpressionType).  % syntactic
-completelyAssertedCollection(tSet). % existential
-
-%ttExpressionType(T)==>completelyDecidableCollection(T).
-
-% relations are predsor functions
-completelyAssertedCollection(tRelation).
-completelyAssertedCollection(tPred).
-completelyAssertedCollection(tFunction).
-
-completelyAssertedCollection(functorIsMacro).
-
-completelyAssertedCollection(tPred).
-~completelyAssertedCollection(meta_argtypes).
-completelyAssertedCollection(tTemporalThing).
-completelyAssertedCollection(tInferInstanceFromArgType).
-completelyAssertedCollection(ttNotTemporalType).
-completelyAssertedCollection(ttSpatialType).
-completelyAssertedCollection(ttTemporalType).
-completelyAssertedCollection(ttTypeType).
-completelyAssertedCollection(ttUnverifiableType).
-
-
-tSet(rtNotForUnboundPredicates).
-tSet(tPred).
-tSet(prologBuiltin).
-tSet(tFunction).
-tSet(tRelation).
-tSet(ttTemporalType).
-tSet(functorIsMacro).
-
-
-*/
-
-
-
 
 
 
@@ -1291,6 +985,7 @@ prologHybrid(formatted_resultIsa(ttExpressionType,tCol)).
 
 :- sanity(argIsa(genlPreds,2,_)).
 
+tCol(vtVerb).
 :- sanity(tCol(vtVerb)).
 :- sanity(isa(vtVerb,tCol)).
 :- sanity(t(tCol,vtVerb)).
@@ -1357,6 +1052,9 @@ subFormat(ftVoprop,ftTerm).
 
 subFormat(COL1,COL2)/(atom(COL1);atom(COL2))==>(ttExpressionType(COL1),ttExpressionType(COL2)).
 % tCol(W)==>{quietly(guess_supertypes(W))}.
+
+
+:- sanity(ttRelationType(prologMultiValued)).
 
 
 tSet(tNewlyCreated).

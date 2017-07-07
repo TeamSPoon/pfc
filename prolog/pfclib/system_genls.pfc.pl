@@ -1,6 +1,9 @@
-
-
+:- set_module(class(development)).
+:- '$set_source_module'(baseKB).
+:- use_module(library(rtrace)).
+:- use_module(library(pfc_lib)).
 :- mpred_unload_file.
+:- ensure_abox(baseKB).
 
 :- set_prolog_flag(do_renames,restore).
 :- set_prolog_flag_until_eof(do_renames,term_expansion).

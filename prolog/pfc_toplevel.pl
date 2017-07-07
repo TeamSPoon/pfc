@@ -4,13 +4,28 @@
 % Douglas Miles
 
 */
-:- module(pfc_toplevel,['$uses_pfc_toplevel'/0]).
-'$uses_pfc_toplevel'.
-:- current_predicate(M:'$uses_pfc_toplevel'/0), reexport(M:pfc).
+%:- if(('$current_source_module'(SM),'$current_typein_module'(CM),asserta(baseKB:'using_pfc'(CM,SM,pfc_toplevel)))).
+%:- endif.
+:- module(pfc_toplevel,[use_pfc/0]).
+% :- abolish(use_pfc/0).
+% :- prolog_load_context(file,File),unload_file(File).
+% :- asserta(use_pfc).
+
+use_pfc.
+
+
+:- if(\+ current_prolog_flag(lm_pfc_lean,_)).
+:- set_prolog_flag(lm_no_autoload,false).
+:- set_prolog_flag(lm_pfc_lean,false).
+:- endif.
+
 :- reexport(pfc).     
 :- set_prolog_flag(mpred_te,true).
 :- set_prolog_flag(verbose_load,true).
 :- set_prolog_flag(debug_on_error,true).
 :- set_prolog_flag(report_error,true).
+:- set_prolog_flag(access_level,system).
+:- statistics.
+
 
 
