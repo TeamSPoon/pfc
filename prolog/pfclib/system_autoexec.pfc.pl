@@ -129,26 +129,8 @@ assert_if_newt(G):- cwc,clause_asserted_i(G)->true;call(assert,G).
 
 :- else.
 
-
-:- if(current_prolog_flag(lm_pfc_lean,true)).
-
-:- ensure_loaded('system_base_lite.pfc').
-
-:- else.
-
 :- ensure_loaded('system_base.pfc').
-:- ensure_loaded('system_common.pfc').
-:- ensure_loaded('system_constraints.pfc').
-:- ensure_loaded('system_domains.pfc').
-:- ensure_loaded('system_genls.pfc').
-
-:- endif.
-
-
-:- ensure_loaded('system_if_missing.pfc').
-
 :- ensure_loaded('system_mdefault.pfc').
-
 :- ensure_loaded('system_singleValued.pfc').
 
 :- multifile(baseKB:locked_baseKB/0).

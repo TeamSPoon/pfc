@@ -225,7 +225,7 @@ get_file_type_local(File,Type):-file_name_extension(_,Type,File),!.
 get_file_type_local(File,Type):-clause(lmcache:mpred_directive_value(File,language,Type),true).
 
 mtCanAssert(baseKB).
-mtCanAssert(user):- !,fail.
+% mtCanAssert(user):- !,fail.
 mtCanAssert(abox):- !,dumpST,fail.
 mtCanAssert(Module):- clause_b(mtCycL(Module)).
 mtCanAssert(Module):- clause_b(mtExact(Module)).
@@ -270,7 +270,7 @@ makeConstant(_Mt).
 :- volatile(lmcache:has_pfc_database_preds/1).
 :- dynamic(lmcache:has_pfc_database_preds/1).
 ensure_abox(M):- sanity(atom(M)), lmcache:has_pfc_database_preds(M),!.
-ensure_abox(user):- setup_module_ops(user),!,ensure_abox(baseKB),!.
+% ensure_abox(user):- setup_module_ops(user),!,ensure_abox(baseKB),!.
 ensure_abox(M):- must(ensure_abox_support(M,baseKB)).
 
 ensure_abox_support(M,Where):-
@@ -286,11 +286,11 @@ ensure_abox_support(M,Where):-
 import_mpred_database_term(M,F,A,syntaxic(Type),_):- member(Type,[rule,fact,fact(_),rule(_)]), !,
   nop((system:export(system:F/A),M:import(system:F/A),M:export(system:F/A))).
 
-import_mpred_database_term(M,F,A,support,_):- !,show_call(kb_shared(M:F/A)).
-import_mpred_database_term(M,F,A,debug,_):- !,show_call(kb_shared(M:F/A)).
-% import_mpred_database_term(M,F,A,trigger,_):- !,show_call(kb_local(M:F/A)).
+import_mpred_database_term(M,F,A,support,_):- !,(kb_shared(M:F/A)).
+import_mpred_database_term(M,F,A,debug,_):- !, (kb_shared(M:F/A)).
+% import_mpred_database_term(M,F,A,trigger,_):- !,(kb_local(M:F/A)).
 
-import_mpred_database_term(M,F,A,_,_):- show_call(localize_mpred(M,F,A)),!,show_call(kb_local(M:F/A)).
+import_mpred_database_term(M,F,A,_,_):- show_call(localize_mpred(M,F,A)),!,(kb_local(M:F/A)).
 
 import_mpred_database_term(M,F,A,Type,_):- member(Type,[setting,debug]), localize_mpred(M,F,A).
 

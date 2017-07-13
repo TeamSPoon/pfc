@@ -546,7 +546,7 @@ savedb:- on_x_debug(rsavedb),!.
 % Rsavedb.
 %
 rsavedb:-
- on_x_debug(agenda_mpred_repropigate),
+ nop(on_x_debug(agenda_mpred_repropigate)),
  catch((   
    ignore(catch(make_directory('/tmp/lm/'),_,true)),
    ignore(catch(delete_file('/tmp/lm/savedb'),E,(dmsginfo(E:delete_file('/tmp/lm/savedb'))))),   
@@ -1551,7 +1551,7 @@ mpred_term_expansion(Fact,Output):- load_file_term_to_command_1b(_Dir,Fact,C),!,
 mpred_term_expansion_by_storage_type(_M,'$si$':'$was_imported_kb_content$'(_,_),pl):-!.
 mpred_term_expansion_by_storage_type(M,( \+ C ),HOW):- nonvar(C), !,mpred_term_expansion_by_storage_type(M,C,HOW).
 mpred_term_expansion_by_storage_type(_M,C,compile_clause(static)):- is_static_predicate(C).
-mpred_term_expansion_by_storage_type(_M,C,requires_storage(WHY)):- requires_storage(C,WHY),!.
+%mpred_term_expansion_by_storage_type(_M,C,requires_storage(WHY)):- requires_storage(C,WHY),!.
 mpred_term_expansion_by_storage_type(_M,C,must_compile_special):- must_compile_special_clause(C),t_l:mpred_already_inside_file_expansion(C).
 
 
@@ -1605,7 +1605,7 @@ mpred_term_expansion(Fact,(:- ((cl_assert(pfc(expand_file),Fact))))):-
 %
 can_be_dynamic(H):- predicate_property(H,dynamic),!.
 can_be_dynamic( \+ H):- nonvar(H), predicate_property(H,dynamic),!.
-can_be_dynamic(H):- \+ is_static_pred(H), \+ predicate_property(H,static),  \+ predicate_property(H,meta_predicate(_)).
+can_be_dynamic(H):- \+ is_static_predicate(H), \+ predicate_property(H,static),  \+ predicate_property(H,meta_predicate(_)).
 
 
 

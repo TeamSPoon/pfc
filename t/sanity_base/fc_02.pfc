@@ -15,7 +15,7 @@
 % :- make.
 :- set_prolog_flag(retry_undefined,true).
 */
-:- system:ensure_loaded(library(pfc)).
+:- ensure_loaded(library(pfc)).
 
 :- must(context_module(sanity)).
 
@@ -77,7 +77,7 @@
 (aaa(B),e(B),d(B)) ==> b(B).
 
 d(q).
-% ?- nl,ZU=nt(_,_,_),ZU,spft(UMT,X,Y,Z),\+ \+ ZU=Z,nl.
+% ?- nl,ZU=nt(_,_,_),ZU,spft(UMT,X,Y),\+ \+ ZU=Z,nl.
 
 (b(_),e(q)) ==> c.
 (~aaa(B),~e(B)) ==> q.
@@ -92,7 +92,7 @@ aaa(B)==>d(B).
 
 :- mpred_test(c).
 
-?- /*rtrace*/(mpred_why(c)).
+:- /*rtrace*/(mpred_why(c)).
 
 % Looking for answer like: (b(_),e(q))
 %       Supported By: e(q),pt(e(q),rhs([c]))

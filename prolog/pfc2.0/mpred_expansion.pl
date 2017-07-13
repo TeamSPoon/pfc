@@ -152,10 +152,8 @@
             translate_args/9,
             translateListOps/8,
             translateOneArg/8,
-            was_isa/3,
+            was_isa_ex/3,
 
-            was_isa0/3,
-            to_isa_out/3,
           mpred_expansion_file/0,
           expand_kif_string/2,
          temp_comp/4,
@@ -360,6 +358,7 @@ cheaply_u(G):- quietly(lookup_u(G)).
 %cheaply_u(G):- strip_module(G,_,C),G\==C,!,cheaply_u(C).
 
 
+was_isa_ex(ISA,I,C):- if_defined(was_isa(ISA,I,C),fail).
 %= 	 	 
 
 %% is_pred_declarer( ?P) is semidet.
@@ -395,10 +394,15 @@ functor_declares_instance(F,C):- fail, functor_declares_instance_0(F,C0),!,C=C0.
 % functor declares instance  Primary Helper.
 %
 
-functor_declares_instance_0(P,P):- arg(_,s(ttExpressionType,ttModuleType,tSet,ttTypeType,tFunction),P).
-functor_declares_instance_0(P,P):- arg(_,s(tCol,ftSpec),P).
+
 functor_declares_instance_0(isa,_):-!,fail.
 functor_declares_instance_0(props,_):-!,fail.
+functor_declares_instance_0(F,F):- cheaply_u(functorDeclares(F)).
+
+:- if(false).
+functor_declares_instance_0(P,P):- arg(_,s(ttExpressionType,ttModuleType,tSet,ttTypeType,tFunction),P).
+
+functor_declares_instance_0(P,P):- arg(_,s(tCol,ftSpec),P).
 functor_declares_instance_0(P,P):- 
   arg(_,s(tPred,prologMultiValued, prologOrdered,prologNegByFailure,prologHybrid,prologPTTP,prologSideEffects,
        predIsFlag,prologBuiltin,prologKIF,prologDynamic,prologListValued,prologSingleValued),P).
@@ -410,7 +414,6 @@ functor_declares_instance_0(F,F):- between(2,5,A),arity_no_bc(F,A),!,fail.
 functor_declares_instance_0(F,F):- arity_no_bc(F,A),A>5,!,fail.
 
 % functor_declares_instance_0(F,F):- arity_no_bc(F,1).
-functor_declares_instance_0(F,F):- cheaply_u(functorDeclares(F)).
 
 functor_declares_instance_0(_,_):- !, fail.  % @TODO COMMENT THIS OUT
 
@@ -436,6 +439,135 @@ functor_adds_instance_0(decl_mpred_prolog,prologBuiltin).
 functor_adds_instance_0(decl_mpred_prolog,prologDynamic).
 
 % functor_adds_instance_0(meta_argtypes,tRelation).
+
+:- endif.
+
+
+% ========================================
+% Logic Preds Shared
+% ========================================
+
+%= %= :- was_export(is_svo_functor/1).
+
+
+
+%% is_svo_functor( ?Prop) is semidet.
+%
+% If Is A Svo Functor.
+%
+is_svo_functor(Prop):- quietly((atom(Prop),arg(_,svo(svo,prop,valueOf,rdf),Prop))).
+
+%= %= :- was_export(hilog_functor/1).
+
+
+
+%% hilog_functor( ?VALUE1) is semidet.
+%
+% Hilog Functor.
+%
+hilog_functor(true_t).
+
+%= %= :- was_export(is_holds_true_not_hilog/1).
+
+
+
+%% is_holds_true_not_hilog( ?HOFDS) is semidet.
+%
+% If Is A Holds True Not Hilog.
+%
+is_holds_true_not_hilog(HOFDS):-is_holds_true(HOFDS),\+ hilog_functor(HOFDS).
+
+%= %= :- was_export(is_holds_true/1).
+
+
+
+%% is_holds_true( ?Prop) is semidet.
+%
+% If Is A Holds True.
+%
+is_holds_true(Prop):- quietly((atom(Prop),is_holds_true0(Prop))),!.
+
+% k,p,..
+
+
+is_holds_functor(F):- atom(F),is_holds_functor0(F),!, \+ isBodyConnective(F).
+is_holds_functor0(F):- atom_concat('prove_',_,F).
+is_holds_functor0(F):- atom_concat('ex_',_,F).
+is_holds_functor0(F):- atom_concat(_,'_t',F).
+is_holds_functor0(F):- is_2nd_order_holds(F).
+
+must_be_unqualified(Var):- \+ compound(Var),!.
+must_be_unqualified(Var):-strip_module(Var,_,O),Var\==O,!,dumpST,break.
+must_be_unqualified(Var):-forall(arg(_,Var,E),must_be_unqualified(E)).
+
+
+:- dynamic(isBodyConnective/1).
+
+
+%% isBodyConnective( ?Funct) is semidet.
+%
+% If Is A Body Connective.
+%
+isBodyConnective(Funct):-atom_concat(_,'_',Funct),!.
+isBodyConnective(Funct):-atom_concat('t~',_,Funct),!.
+isBodyConnective(Funct):-atom_concat('f~',_,Funct),!.
+isBodyConnective(Funct):-member(Funct,[and,or,until,',',';',':-',unless,xor,holdsDuring]). % Other Propositional Wrhtml_appers
+
+
+
+
+%% is_holds_true0( ?Prop) is semidet.
+%
+% If Is A Holds True Primary Helper.
+%
+is_holds_true0(Prop):-arg(_,vvv(holds,holds_t,t,t,asserted_mpred_t,assertion_t,true_t,assertion,secondOrder,firstOrder),Prop).
+
+
+% is_holds_true0(Prop):-atom_concat(_,'_t',Prop).
+
+%= %= :- was_export(is_2nd_order_holds/1).
+
+
+
+%% is_2nd_order_holds( ?Prop) is semidet.
+%
+% If Is A 2nd Order Holds.
+%
+is_2nd_order_holds(Prop):- is_holds_true(Prop) ; is_holds_false(Prop).
+
+%= %= :- was_export(is_holds_false/1).
+
+
+
+%% is_holds_false( ?Prop) is semidet.
+%
+% If Is A Holds False.
+%
+is_holds_false(Prop):-quietly((atom(Prop),is_holds_false0(Prop))).
+
+
+
+
+%% is_holds_false0( ?Prop) is semidet.
+%
+% If Is A Holds False Primary Helper.
+%
+is_holds_false0(Prop):-member(Prop,[not,nholds,holds_f,mpred_f,aint,assertion_f,not_true_t,asserted_mpred_f,retraction,not_secondOrder,not_firstOrder]).
+%is_holds_false0(Prop,Stem):-atom_concat('not_',Stem,Prop).
+%is_holds_false0(Prop,Stem):-atom_concat('int_not_',Stem,Prop).
+%is_holds_false0(Prop,Stem):-atom_concat(Stem,'_f',Prop).
+%is_holds_false0(Prop):-is_holds_false0(Prop,Stem),is_holds_true0(Stem).
+%is_holds_false0(Prop,Stem):-atom_concat(Stem,'_not',Prop).
+%is_holds_false0(Prop,Stem):-atom_concat(Stem,'_false',Prop).
+
+
+%= 	 	 
+
+%% with_assert_op_override( ?Op, ?Call) is semidet.
+%
+% Using Assert Oper. Override.
+%
+with_assert_op_override(Op,Call):-locally(t_l:assert_op_override(Op),Call).
 
 
 
@@ -658,17 +790,27 @@ fully_expand_real(Op,Sent,SentO):- has_skolem_attrvars(Sent),!,
       sanity(\+ has_skolem_attrvars(SentI)),
      must_det(fully_expand_real(Op,SentI,SentO)),!)),!.
 
+fully_expand_real(Op,Sent,SentO):-!,
+   gripe_time(0.2,
+    must_det(locally(t_l:disable_px,
+       (locally(t_l:no_kif_var_coroutines(true),
+       (must_det(fully_expand_clause_now(Op,Sent,SentO)))))))).
+
 fully_expand_real(Op,Sent,SentO):-
    gripe_time(0.2,
     must_det(locally(t_l:disable_px,
        (locally(t_l:no_kif_var_coroutines(true),
        (must_det(fully_expand_clause_now(Op,Sent,SentIO)),
-                   must_det(quietly(deserialize_attvars(SentIO,SentO))))))))),!.
+                   must_det(quietly(maybe_deserialize_attvars(SentIO,SentO))))))))),!.
+
+maybe_deserialize_attvars(X,X):-!.
+maybe_deserialize_attvars(X,Y):- current_prolog_flag(expand_attvars,true) -> deserialize_attvars(X,Y) ; X=Y.
+
 
 /*
 fully_expand_real(Op,Sent,SentO):-
    gripe_time(0.2,
-    (quietly(deserialize_attvars(Sent,SentI)),
+    (quietly(maybe_deserialize_attvars(Sent,SentI)),
      locally(t_l:disable_px,
        locally(t_l:no_kif_var_coroutines(true),
        fully_expand_clause_now(Op,SentI,SentO))))),!.
@@ -1203,6 +1345,7 @@ db_expand_0(_Op,P,PO):- fail,
   is_unit(UNIT),!,
   PO=P.
 
+%:- kb_shared(is_svo_functor/1).
 
 db_expand_0(Op,(H:-B),OUT):- temp_comp(H,B,db_expand_0(Op),OUT),!.
 db_expand_0(Op,(:-(CALL)),(:-(CALLO))):-with_assert_op_override(Op,db_expand_0(Op,CALL,CALLO)).
@@ -1210,7 +1353,7 @@ db_expand_0(Op,isa(I,O),INot):-Not==not,!,INot =.. [Not,I],!,db_expand_0(Op,INot
 db_expand_0(Op,isa(I,O),INot):-Not== ( \+ ) ,!,INot =.. [Not,I],!,db_expand_0(Op,INot,O).
 
 db_expand_0(Op,THOLDS,OUT):- THOLDS=..[t,P|ARGS],atom(P),!,HOLDS=..[P|ARGS],db_expand_0(Op,HOLDS,OUT).
-db_expand_0(Op,RDF,OUT):- RDF=..[SVO,S,V,O],is_svo_functor(SVO),!,must_det(from_univ(_,Op,[V,S,O],OUT)).
+db_expand_0(Op,RDF,OUT):- RDF=..[SVO,S,V,O],if_defined(is_svo_functor(SVO)),!,must_det(from_univ(_,Op,[V,S,O],OUT)).
 db_expand_0(Op,G,OUT):- G=..[Pred,InstFn,VO],compound(InstFn),InstFn=isInstFn(Type),is_ftNonvar(Type),from_univ(relationMostInstance,Op,[Pred,Type,VO],OUT).
 db_expand_0(Op,G,OUT):- G=..[Pred,InstFn|VO],compound(InstFn),InstFn=isInstFn(Type),is_ftNonvar(Type),GO=..[Pred,Type|VO],db_expand_0(Op,GO,OUT).
 
@@ -1235,7 +1378,10 @@ db_expand_0(Op,(G:-B),(GG:-BB)):-!,db_expand_0(Op,G,GG),fully_expand_goal(Op,B,B
 db_expand_0(Op,M:Sent,SentO):- atom(M),is_stripped_module(M),!,db_expand_0(Op,Sent,SentO).
 db_expand_0(Op,M:Sent,R:SentO):- replaced_module(Op,M,R),!,db_expand_0(Op,Sent,SentO).
 
+:- if(false).
 db_expand_0(_Op,pddlSomethingIsa(I,EL),(isa(I,IC),O)):- icn_tcn(I,IC), listToE(EL,E),expand_isEach_or_fail(==>genls(IC,E),O),!.
+:- endif.
+
 db_expand_0(_Op,pddlSomethingIsa(I,EL),O):- listToE(EL,E),expand_isEach_or_fail(==>isa(I,E),O).
 db_expand_0(_Op,pddlDescription(I,EL),O):- listToE(EL,E),expand_isEach_or_fail(==>mudDescription(I,E),O).
 db_expand_0(_Op,pddlObjects(I,EL),O):- listToE(EL,E),expand_isEach_or_fail(==>isa(E,I),O).
@@ -1293,12 +1439,16 @@ db_expand_props(Op,DECL,(isa(F,TPRED),O)):-DECL=..[D,F,A|Args],is_ftNameArity(F,
   is_ftNonvar(TPRED),is_relation_type(TPRED),expand_props(_Prefix,Op,props(F,[D|Args]),O),!,
    (maybe_ain_arity(F,A)).
 
+:- if(false).
 db_expand_props(Op,DECL,(isa(F,TPRED),O)):-DECL=..  [D,C|Args],is_ftCompound(C),functor_declares_instance(D,TPRED),
-  \+ is_ftVar(C),is_non_unit(C)->get_functor(C,F,A),  
+  \+ is_ftVar(C),
+  \+ \+ is_non_unit(C),
+  get_functor(C,F,A),  
   arity_zor(D,1),
   is_ftNonvar(TPRED),expand_props(_Prefix,Op,props(F,[D|Args]),M),!,
   (\+((arg(_,C,Arg),is_ftVar(Arg))) -> O = (meta_argtypes(C),M) ; (O= (M))),
    (maybe_ain_arity(F,A)).
+:- endif.
 
 db_expand_props(Op,DECL,O):-DECL=..[D,F,A1|Args], functor_declares_instance(D,DType),
    arity_zor(D,1),
@@ -1500,6 +1650,8 @@ remodulize_pass2(Op,MHH,HHH):- strip_module(MHH,_,HH),functor(HH,F,A),convention
 % remodulize_pass2(Op,HH,HHH):- fix_mp(Op,HH,HHH),!. % this is overzealous
 remodulize_pass2(_Why,HH,HH):- !.
 
+%:- kb_shared(is_sentence_functor/1).
+
 must_remodulize(Op,H,HHH):-must(demodulize(Op,H,HHH)),!.
 %= 	 	 
 
@@ -1507,8 +1659,36 @@ must_remodulize(Op,H,HHH):-must(demodulize(Op,H,HHH)),!.
 %
 % If Is A Meta Functor.
 %
-is_meta_functor(Sent,F,List):-is_ftCompound(Sent),Sent=..[F|List],(predicate_property(Sent,meta_predicate(_));is_sentence_functor(F);F==pfcDefault),!.
- 
+is_meta_functor(Sent,F,List):-is_ftCompound(Sent),Sent=..[F|List],
+ (predicate_property(Sent,meta_predicate(_));
+   is_sentence_functor(F);F==pfcDefault),!.
+
+
+
+
+
+
+%% is_sentence_functor( ?And) is semidet.
+%
+% If Is A Sentence Functor.
+%
+is_sentence_functor(And):-quietly(is_logical_functor0(And)).
+
+
+
+%% is_logical_functor0( ?X) is semidet.
+%
+% If Is A Logical Functor Primary Helper.
+%
+is_logical_functor0(&).
+is_logical_functor0(v).
+is_logical_functor0(exists).
+is_logical_functor0(all).
+is_logical_functor0(X):-atom(X),member(X,[',',';',xor,'\\+',~]).
+is_logical_functor0(X):-call_if_defined(logical_functor_pttp(X)).
+is_logical_functor0(X):-call_if_defined(is_quantifier(X)).
+is_logical_functor0(And):-member(And,[(,),(;),('<-'),('=>'),('<=>'),(':-'),(and),nop]).
+
 
 
 %= 	 	 
@@ -1619,7 +1799,7 @@ into_mpred_form((H:-B),(HH:-BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
 into_mpred_form((H,B),(HH,BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
 into_mpred_form((H;B),(HH;BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
 into_mpred_form((H/B),(HH/BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
-into_mpred_form(WAS,isa(I,C)):-was_isa(WAS,I,C),!.
+into_mpred_form(WAS,isa(I,C)):- was_isa_ex(WAS,I,C),!.
 into_mpred_form(t(P,A),O):-atom(P),!,O=..[P,A].
 into_mpred_form(t(P,A,B),O):-atom(P),!,O=..[P,A,B].
 into_mpred_form(t(P,A,B,C),O):-atom(P),!,O=..[P,A,B,C].
@@ -1648,63 +1828,6 @@ into_mpred_form_ilc(G,O):- functor(G,F,A),G=..[F,P|ARGS],!,into_mpred_form6(G,F,
 
 :- expire_tabled_list(all).
 
-% ========================================
-% was_isa(Goal,I,C) recognises isa/2 and its many alternative forms
-% ========================================
-:- kb_shared(decided_not_was_isa/2).
-
-%= 	 	 
-
-%% was_isa( +G, -INST, -COL) is semidet.
-%
-% was  (isa/2) syntax.
-%
-was_isa(G,_,_):- \+ compound(G),!,fail.
-was_isa('$VAR'(_),_,_):-!,fail.
-was_isa(isa(I,C),I,C):-!.
-was_isa(proved_isa(I,C),I,C):-!.
-was_isa(ttNotTemporalType(I),I,ttNotTemporalType).
-was_isa(tChannel(I),I,tChannel).
-was_isa(tAgent(I),I,tAgent).
-was_isa(is_typef(_),_,_):-!,fail.
-was_isa(quietly(_),_,_):-!,fail.
-was_isa(call(_),_,_):-!,fail.
-was_isa(dtrace(_),_,_):-!,fail.
-was_isa( \+ (_),_,_):-!,fail.
-was_isa( ~(_),_,_):-!,fail.
-was_isa( not(_),_,_):-!,fail.
-was_isa(M:G,I,C):-atom(M),!,was_isa(G,I,C).
-was_isa(a(C,I),I,C):-!.
-was_isa(t(P,I,C),I,C):-!,P==isa.
-was_isa(t(C,_),_,_):- never_type_why(C,_),!,fail.
-was_isa(t(C,I),I,C):- nonvar(C),!,call_u(tSet(C)).
-was_isa(CI,I,C):- CI=..[C,I],!, \+ atom_concat(_,'Fn',C), call_u(tSet(C)).
-was_isa(G,I,C):- \+(current_predicate(_,G)),
-  is_ftCompound(G),functor(G,F,_),quietly((( \+ call_u(decided_not_was_isa(F,_)),once(was_isa0(G,I,C)-> true;((functor(G,F,1),
-  get_source_ref1(When),asserta_if_new(decided_not_was_isa(F,When)),!,fail)))))).
-
-%% was_isa0( ?G, ?I, ?C) is nondet.
-%
-% was  (isa/2) Primary Helper.
-%
-% was_isa0(a(tCol,I),I,tCol).
-was_isa0(G,I,C):-G=..[C,I],!,is_typef(C),!,\+ (is_never_type(C)).
-% was_isa0(t(C,I),I,C):- new_was_isa, atom(C),!.
-
-
-
-%==>baseKB:prologBuiltin(to_isa_out/2).
-
-%% to_isa_out( ?I, ?C, ?OUT) is nondet.
-%
-% Converted To  (isa/2) out.
-%
-to_isa_out(I,C,isa(I,C)).
-to_isa_out(I,C,t(C,I)).
-to_isa_out(I,C,OUT):- atom(C)->OUT=..[C,I].
-
-
-
 
 %% into_mpred_form6( ?X, ?H, ?P, ?N, ?A, ?O) is semidet.
 %
@@ -1716,12 +1839,12 @@ into_mpred_form6(_,F,_,1,[C],O):-alt_calls(F),!,into_mpred_form(C,O),!.
 into_mpred_form6(_,':-',C,1,_,':-'(O)):-!,into_mpred_form_ilc(C,O).
 into_mpred_form6(_,not,C,1,_,not(O)):-into_mpred_form(C,O),!.
 into_mpred_form6(C,isa,_,2,_,C):-!.
-into_mpred_form6(C,_,_,_,_,isa(I,T)):-was_isa(C,I,T),!.
+into_mpred_form6(C,_,_,_,_,isa(I,T)):-was_isa_ex(C,I,T),!.
 into_mpred_form6(_X,t,P,_N,A,O):-!,(atom(P)->O=..[P|A];O=..[t,P|A]).
 into_mpred_form6(G,_,_,1,_,G):-predicate_property(G,number_of_rules(N)),N >0, !.
 into_mpred_form6(G,F,C,1,_,O):-real_builtin_predicate(G),!,into_mpred_form(C,OO),O=..[F,OO].
-into_mpred_form6(_X,H,P,_N,A,O):-is_holds_false(H),(atom(P)->(G=..[P|A],O=not(G));O=..[holds_f,P|A]).
-into_mpred_form6(_X,H,P,_N,A,O):-is_holds_true(H),(atom(P)->O=..[P|A];O=..[t,P|A]).
+into_mpred_form6(_X,H,P,_N,A,O):-a(is_holds_false,H),(atom(P)->(G=..[P|A],O=not(G));O=..[holds_f,P|A]).
+into_mpred_form6(_X,H,P,_N,A,O):-a(is_holds_true,H),(atom(P)->O=..[P|A];O=..[t,P|A]).
 into_mpred_form6(G,F,_,_,_,G):-a(prologHybrid,F),!.
 into_mpred_form6(G,F,_,_,_,G):-a(prologDynamic,F),!.
 into_mpred_form6(G,F,_,_,_,G):-nop(dmsg(warn(unknown_mpred_type(F,G)))).
@@ -1736,7 +1859,7 @@ into_mpred_form6(G,F,_,_,_,G):-nop(dmsg(warn(unknown_mpred_type(F,G)))).
 %
 % Acceptable Xform.
 %
-acceptable_xform(From,To):- From \=@= To,  (To = isa(I,C) -> was_isa(From,I,C); true).
+acceptable_xform(From,To):- From \=@= To,  (To = isa(I,C) -> was_isa_ex(From,I,C); true).
 
 % ========================================
 % transform_holds(Functor,In,Out)
@@ -1791,24 +1914,23 @@ transform_holds_3(_,A,A):-compound(A),functor(A,F,N), predicate_property(A,_),ar
 transform_holds_3(HFDS,M:Term,M:OUT):-atom(M),!,transform_holds_3(HFDS,Term,OUT).
 transform_holds_3(HFDS,[P,A|ARGS],DBASE):- is_ftVar(P),!,DBASE=..[HFDS,P,A|ARGS].
 transform_holds_3(HFDS, ['[|]'|ARGS],DBASE):- trace_or_throw(list_transform_holds_3(HFDS,['[|]'|ARGS],DBASE)).
-transform_holds_3(Op,[SVOFunctor,Obj,Prop|ARGS],OUT):- is_svo_functor(SVOFunctor),!,transform_holds_3(Op,[Prop,Obj|ARGS],OUT).
+transform_holds_3(Op,[SVOFunctor,Obj,Prop|ARGS],OUT):- if_defined(is_svo_functor(SVOFunctor)),!,transform_holds_3(Op,[Prop,Obj|ARGS],OUT).
 transform_holds_3(Op,[P|ARGS],[P|ARGS]):- not(atom(P)),!,dmsg(transform_holds_3),trace_or_throw(transform_holds_3(Op,[P|ARGS],[P|ARGS])).
-transform_holds_3(HFDS,[HOFDS,P,A|ARGS],OUT):- is_holds_true(HOFDS),!,transform_holds_3(HFDS,[P,A|ARGS],OUT).
+transform_holds_3(HFDS,[HOFDS,P,A|ARGS],OUT):- a(is_holds_true,HOFDS),!,transform_holds_3(HFDS,[P,A|ARGS],OUT).
 transform_holds_3(HFDS,[HOFDS,P,A|ARGS],OUT):- HFDS==HOFDS, !, transform_holds_3(HFDS,[P,A|ARGS],OUT).
-transform_holds_3(_,HOFDS,isa(I,C)) :- was_isa(HOFDS,I,C),!.
+transform_holds_3(_,HOFDS,isa(I,C)) :- was_isa_ex(HOFDS,I,C),!.
 transform_holds_3(_,[Type,Inst],isa(Inst,Type)):-is_ftNonvar(Type),a(tCol,Type),!.
 transform_holds_3(_,HOFDS,isa(I,C)):- holds_args(HOFDS,[ISA,I,C]),ISA==isa,!.
 
 transform_holds_3(Op,[Fogical|ARGS],OUT):-  
-         call(call,is_sentence_functor(Fogical)),!,sanity(not(is_svo_functor(Fogical))),
+         call(call,is_sentence_functor(Fogical)),!,sanity( \+ (a(is_svo_functor,Fogical))),
          must_det(foreach_arg(ARGS,1,ArgIn,ArgN,ArgOut,transform_functor_holds(Op,Fogical,ArgIn,ArgN,ArgOut),FARGS)),
          OUT=..[Fogical|FARGS].
 
 transform_holds_3(_,[props,Obj,Props],props(Obj,Props)).
 transform_holds_3(_,[Type,Inst|PROPS],props(Inst,[isa(Type)|PROPS])):- 
-                  is_ftNonvar(Inst), not(Type=props), cheaply_u(tCol(Type)), must_det(\+(is_never_type(Type))),!.
-transform_holds_3(_,[Type,Inst|PROPS],props(Inst,[isa(Type)|PROPS])):- 
-                  is_ftNonvar(Inst), not(Type=props), t(functorDeclares,Type), must_det(\+(is_never_type(Type))),!.
+                  is_ftNonvar(Inst), not(Type=props), (cheaply_u(tCol(Type));a(functorDeclares,Type)), 
+                  must_det(\+(if_defined(is_never_type(Type)))),!.
 
 transform_holds_3(_,[P,A|ARGS],DBASE):- atom(P),!,DBASE=..[P,A|ARGS].
 transform_holds_3(Op,[P,A|ARGS],DBASE):- !, is_ftNonvar(P),dumpST,trace_or_throw(transform_holds_3(Op,[P,A|ARGS],DBASE)), DBASE=..[P,A|ARGS].
@@ -1822,8 +1944,8 @@ transform_holds_3(Op,DBASE_T,OUT):- DBASE_T=..[P,A|ARGS],!,transform_holds_3(Op,
 %
 % Holds Arguments.
 %
-holds_args([H|FIST],FISTO):- !, is_holds_true(H),!,FIST=FISTO.
-holds_args(HOFDS,FIST):- is_ftCompound(HOFDS),HOFDS=..[H|FIST],is_holds_true(H),!.
+holds_args([H|FIST],FISTO):- !, a(is_holds_true,H),!,FIST=FISTO.
+holds_args(HOFDS,FIST):- is_ftCompound(HOFDS),HOFDS=..[H|FIST],a(is_holds_true,H),!.
 
 
 %% do_expand_args( ?Op, ?Term, ?Term) is semidet.
@@ -2123,8 +2245,8 @@ db_quf(_ ,C,Pretest,Template):-as_is_term(C),!,must(Pretest=true),must(Template=
 
 db_quf(Op,M:C,Pretest,M:Template):-atom(M),!,must(db_quf(Op,C,Pretest,Template)).
 
-db_quf(Op,C,Pretest,Template):- C=..[Holds,OBJ|ARGS],is_holds_true(Holds),atom(OBJ),!,C1=..[OBJ|ARGS],must(db_quf(Op,C1,Pretest,Template)).
-db_quf(_Op,C,true,C):- C=..[Holds,OBJ|_],is_holds_true(Holds),is_ftVar(OBJ),!.
+db_quf(Op,C,Pretest,Template):- C=..[Holds,OBJ|ARGS],a(is_holds_true,Holds),atom(OBJ),!,C1=..[OBJ|ARGS],must(db_quf(Op,C1,Pretest,Template)).
+db_quf(_Op,C,true,C):- C=..[Holds,OBJ|_],a(is_holds_true,Holds),is_ftVar(OBJ),!.
 db_quf(Op,Sent,D2,D3):- Sent=..[And|C12],C12=[_|_],is_sentence_functor(And),!, db_quf_l(Op,And,C12,D2,D3).
 db_quf(Op,C,Pretest,Template):- C=..[Prop,OBJ|ARGS],
       functor(C,Prop,A),
@@ -2275,8 +2397,9 @@ into_functor_form(HFDS,X,O):-call((( X=..[F|A],into_functor_form(HFDS,X,F,A,O)))
 into_functor_form(Dbase_t,X,Dbase_t,_A,X):-!.
 into_functor_form(Dbase_t,_X,holds_t,A,Call):-Call=..[Dbase_t|A].
 into_functor_form(Dbase_t,_X,t,A,Call):-Call=..[Dbase_t|A].
-% into_functor_form(Dbase_t,_X,HFDS,A,Call):- is_holds_true(HFDS), Call=..[Dbase_t|A].
+% into_functor_form(Dbase_t,_X,HFDS,A,Call):- a(is_holds_true,HFDS), Call=..[Dbase_t|A].
 into_functor_form(Dbase_t,_X,F,A,Call):-Call=..[Dbase_t,F|A].
+
 
 
 :- fixup_exports.

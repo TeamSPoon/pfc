@@ -45,21 +45,21 @@ dmost(Q)/(mpred_positive_literal(Q),if_missing_mask(Q,R,Test)) ==> ( ((R/( \+(R=
 
 dmost(b(1)).
 
-:- mpred_test(dmost(b(1))).
+:- mpred_why(dmost(b(1))).
 
-:- mpred_test(b(1)).
+:- mpred_why(b(1)).
 
 b(2).
 
-:- mpred_test(\+ b(1)).
-:- mpred_test( b(2)).
+:- mpred_why(\+ b(1)).
+:- mpred_why( b(2)).
 
 \+ b(2).
 
 :- listing(b/1).
 
 :- mpred_test(\+ b(2)).
-:- mpred_test( b(1)).
+:- mpred_why( b(1)).
 
 
  
