@@ -17,7 +17,7 @@
 
 %:- break.
 
-:- file_begin(pfc).
+%:- file_begin(pfc).
 
 %:- show_kb_structure.
 
@@ -43,11 +43,14 @@
 
 :- sanity(\+ current_prolog_flag(mpred_te,false)).
 
+:- sanity(is_pfc_file).
+
+:- mpred_trace_exec.
 
 a11 ==> b11.
-:- mpred_trace_exec.
 a11.
-:- mpred_notrace_exec.
+
+% :- mpred_notrace_exec.
 
 %:- pp_DB.
 

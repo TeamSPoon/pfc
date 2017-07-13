@@ -9,8 +9,6 @@
 :- module(bc_01,[]).
 
 :- make.
-:- flag_call(runtime_debug=true).
-:- flag_call(runtime_debug=true).
 
 :- use_module(library(pfc)).
 
@@ -23,7 +21,7 @@
 :- mpred_trace_msg("before trace").
  % :- mpred_trace_exec.
 
-:- begin_pfc.
+% :- begin_pfc.
 
 :- mpred_trace_msg("after trace").
 
@@ -37,15 +35,15 @@ bc_p(b).
 
 
 
-?- must(call_u(bc_p(b))).
+:- must(call_u(bc_p(b))).
 
 %= nothing cached
-?- listing(bc_q/1).
+:- listing(bc_q/1).
 
-:- must(rtrace(call_u(bc_q(b)))).
+:- must((call_u(bc_q(b)))).
 
 %= something cached
-?- listing(bc_q/1).
+:- listing(bc_q/1).
 
 
 end_of_file.

@@ -15,260 +15,110 @@
 %:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
 :- module(mpred_kb_ops,[]).
 
-:- module_transparent((deducedSimply/1,
-get_consequent/2,
-how_to_op/2,
-is_callable/1,
-lookup_inverted_op/3,
-mpred_op/2,
-naf/1,
-oncely/1,
-reduce_mpred_op/2,
-second_order/2,
-whenAnd/2,
-if_missing1/1,
-
-ain_minfo/2,
-cnstrn0/2,
-attempt_side_effect/1,
-mpred_update_literal/4,
-cnstrn/1,
-predicate_to_goal/2,
-
-map_unless/4,
-mpred_update_literal/4,
-cnstrn/1,
-mpred_facts_only/1,
-pred_head/2,
-ain_minfo/2,
-cnstrn/2,
-ain_minfo_2/2,
-cnstrn0/2,
-attempt_side_effect_mpa/3,
-predicate_to_goal/2,
-mpred_kb_ops_file/0,
-mpred_wfflist/2,
-mpred_wff/3,
-
-
-attvar_op/2,
-no_side_effects/1,
-mpred_non_neg_literal/1,
-% defaultAssertMt/1,
-retract_mu/1,
-assert_mu/4,
-asserta_mu/2,
-asserta_mu/1,
-assertz_mu/2,
-assertz_mu/1,
-ruleBackward0/2,
-ruleBackward/2,
-fwd_ok/1,
-repropagate_meta_wrapper_rule/1,
-repropagate_1/1,
-repropagate_0/1,
-repropagate/1,
-mpred_facts_and_universe/1,
-rescan_pfc/0,
-pred_r0/1,
-pred_t0/1,
-has_db_clauses/1,
-pred_u2/1,
-pred_u1/1,
-pred_u0/1,
-pred_all/1,
-meta_wrapper_rule/1,
-rewritten_metawrapper/1,
-nonfact_metawrapper/1,
-pred_head_all/1,
-mpred_prove_neg/1,
-is_resolved/1,
-compute_resolve/3,
-compute_resolve/5,
-no_side_effects/1,
-should_call_for_facts/3,
-should_call_for_facts/1,
-clause_or_call/2,
-is_relative/1,
-mpred_non_neg_literal/1,
-is_reprop_0/1,
-is_reprop/1,
-mpred_literal_nv/1,
-mpred_is_assertable/1,
-mpred_cleanup_0/1,
-mpred_cleanup/2,
-mpred_cleanup/0,
-mpred_negation_w_neg/2,
-has_cl/1,
-mpred_ignored/1,
-maybeSupport/2,
-pfcBC_Cache/1,
-pfcBC_NoFacts_TRY/1,
-mpred_slow_search/0,
-pfcBC_NoFacts/1,
-mpred_bc_only0/1,
-mpred_bc_only/1,
-mpred_call_with_no_triggers_uncaugth/1,
-mpred_call_with_no_triggers_bound/1,
-mpred_call_with_no_triggers/1,
-call_with_bc_triggers/1,
-mpred_call_1/3,
-mpred_call_0/1,
-mpred_call_only_facts/2,
-mpred_call_only_facts/1,
-call_u_req/1,
-neg_in_code/1,
-neg_in_code0/1,
-% {}/1,
-trigger_supporters_list/2,
-spft_precanonical/3,
-mpred_get_support_precanonical/2,
-support_ok_via_clause_body/3,
-support_ok_via_clause_body/1,
-mpred_get_support_via_clause_db/2,
-mpred_get_support_via_sentence/2,
-mpred_get_support_one/2,
-mpred_get_support_precanonical_plus_more/2,
-mpred_deep_support0/2,
-mpred_deep_support/2,
-user_atom/1,
-mpred_scan_tms/1,
-well_founded/2,
-mpred_tms_supported0/3,
-mpred_tms_supported/3,
-mpred_tms_supported/2,
-mpred_remove_file_support/1,
-without_running/1,
-mpred_run_resume/0,
-mpred_run_pause/0,
-which_missing_argnum/2,
-if_missing_mask/4,
-if_missing_mask/3,
-is_already_supported/3,
-clause_asserted_local/1,
-correctify_support/2,
-pfcVersion/1,
-mpred_current_op_support/1,
-mpred_freeLastArg/2,
-pfcVerifyMissing/3,
-map_first_arg/3,
-map_first_arg/2,
-map_literals/3,
-map_literals/2,
-update_single_valued_arg/3,
-has_body_atom/2,
-% is_fc_body/1,is_bc_body/1,is_action_body/1,
-wac/0,
-bwc/0,
-fwc/0,
-cwc/0,
-mpred_rewrap_h/2,
-mpred_is_info/1,
-ain_minfo/1,
-mpred_rule_hb_0/3,
-mpred_rule_hb/3,
-all_different_head_vals_2/2,
-all_different_head_vals/1,
-sub_term_v/2,
-sub_term_eq/2,
-mpred_pbody_f/5,
-get_why/4,
-mpred_pbody/5,
-pfc_provide_storage_op/2,
-is_retract_first/1,
-mpred_is_taut/1,
-mpred_is_tautology/1,
-assert_eq_quitely/1,
-retract_eq_quitely_f/1,
-retract_eq_quitely/1,
-mpred_each_literal/2,
-has_functor/1,
-make_uu_remove/1,
-match_source_ref1/1,
-mpred_nochaining/1,
-erase_w_attvars/2,
-call_s2/1,
-call_s/1,
-clauseq_s/3,
-clause_s/3,
-assertz_s/1,
-asserta_s/1,
-lookq_s/2,
-lookq_s/1,
-lookup_s/2,
-lookup_s/1,
-retract_s/1,
-clause_s/2,
-retractall_s/1,
-assert_s/1,
-listing_s/1,
-add_side_effect/2,
-record_se/0,
-mpred_is_builtin/1,
-is_mpred_action/1,
-w_get_fa/3,
-f_to_mfa/4,
-is_side_effect_disabled/0,
-mreq/1,
-check_real_context_module/0,
-check_context_module/0,
-lookup_inverted_op/3,
-how_to_op/2,
-reduce_mpred_op/2,
-second_order/2,
-assert_mu/1,
-assertz_mu/2,
-assertz_mu/1,
-mpred_op/2,
-mpred_retry/1,
-
-has_functor/1,
-          call_s/1,call_s2/1,asserta_s/1,assert_s/1,assertz_s/1,retract_s/1,retractall_s/1,
-          clause_s/2,clause_s/3,lookup_s/1,lookup_s/2,lookq_s/2,lookq_s/1,
-
-
-
-update_single_valued_arg/3,
-ruleBackward/2,
-retract_eq_quitely_f/1,
-neg_in_code/1,
-neg_in_code0/1,
-mreq/1,
-mpred_rule_hb/3,
-mpred_remove_file_support/1,
-mpred_nochaining/1,
-mpred_negation_w_neg/2,          
-mpred_negation_w_neg/2,
-map_first_arg/2,
-mpred_rule_hb/3,mpred_rule_hb_0/3,
-is_side_effect_disabled/0,
-is_resolved/1,
-% is_fc_body/1,is_bc_body/1,is_action_body/1,has_body_atom/2,
-has_cl/1,
-cwc/0,
-compute_resolve/3,
-clause_or_call/2,          
-clause_or_call/2,
-check_context_module/0,
-call_with_bc_triggers/1,
-
-attvar_op/2,
-%supporters_list/2,
-%justifications/2,
-% baseKB:mpred_provide_storage_clauses/3,
-% justification/2,
-
-mpred_facts_and_universe/1
-            
-          )).
-
 
 :- include('mpred_header.pi').
+
+:- user:use_module(library(clpfd),['#='/2]).
+%% get_arity( :TermTerm, ?F, ?A) is semidet.
+%
+% Get Arity.
+%
+get_arity(Term,F,A):- atom(Term),F=Term,!,ensure_arity(F,A).
+get_arity(F/A,F,A):-!,atom(F),ensure_arity(F,A),!,(A>0).
+get_arity(F // A,F,A2):- must(integer(A)),!, atom(F), is(A2 , A+2), ensure_arity(F,A2),!,(A2>0).
+get_arity(F // A,F,A2):- use_module(library(clpfd),['#='/2]),!, atom(F), clpfd:call(#=(A2 , A+2)), ensure_arity(F,A2),!,(A2>0).
+get_arity(M:FA,F,A):-atom(M),!,get_arity(FA,F,A).
+get_arity(FA,F,A):- get_functor(FA,F,A),must(A>0).
+
+% arity_no_bc(F,A):- call_u(arity(F,A)).
+arity_no_bc(F,A):- clause_b(arity(F,A)).
+arity_no_bc(F,A):- clause_b(tCol(F)),!,A=1.
+arity_no_bc(completeExtentAsserted,1).
+arity_no_bc(home,2).
+arity_no_bc(record,2).
+arity_no_bc(F,A):- clause_b(mpred_prop(F,AA,_)),nonvar(AA),A=AA.
+%arity_no_bc(F,A):- current_predicate(F/A)
+% arity_no_bc(F,A):- current_predicate(_:F/A),\+(current_predicate(_:F/AA),AA\=A). =
+
+%% ensure_arity( ?VALUE1, ?VALUE2) is semidet.
+%
+% Ensure Arity.
+%
+ensure_arity(F,A):- one_must(arity_no_bc(F,A),one_must((current_predicate(F/A),
+    (A>0),assert_arity(F,A)),(ground(F:A),(A>0),assert_arity(F,A)))),!.
+
+
+%=
+
+%% assert_arity( ?F, :PRED2A) is semidet.
+%
+% Assert Arity.
+%
+
+assert_arity(F,A):- sanity(\+ ((bad_arity(F,A), trace_or_throw(assert_arity(F,A))))), arity_no_bc(F,A),!.
+assert_arity(F,A):- arity_no_bc(F,AA), A\=AA,dmsg(assert_additional_arity(F,AA->A)),!,ain_fast(arity(F,A)).
+assert_arity(F,A):- ain_fast(arity(F,A)),!.
+
+bad_arity(F,_):- \+ atom(F).
+bad_arity(_,A):- \+ integer(A).
+bad_arity('[|]',_).
+bad_arity(typeProps,0).
+bad_arity(argIsa,2).
+bad_arity(isEach,_).
+bad_arity(_,0).
+bad_arity(prologDynamic,2).
+bad_arity(F,A):- \+ good_pred_relation_name(F,A).
+
+
+%=
+
+%% good_pred_relation_name( ?F, ?A) is semidet.
+%
+% Good Predicate Relation Name.
+%
+good_pred_relation_name(F,A):- \+ bad_pred_relation_name0(F,A).
+
+
+%=
+
+%% bad_pred_relation_name0( ?V, ?VALUE2) is semidet.
+%
+% Bad Predicate Relation Name Primary Helper.
+%
+bad_pred_relation_name0(V,_):- \+ atom(V),!.
+bad_pred_relation_name0('[]',_).
+bad_pred_relation_name0('',_).
+bad_pred_relation_name0('!',_).
+bad_pred_relation_name0('{}',_).
+bad_pred_relation_name0(',',_).
+bad_pred_relation_name0('[|]',_).
+
+%=
+
+%% bad_pred_relation_name1( ?X, ?Y) is semidet.
+%
+% Bad Predicate Relation Name Secondary Helper.
+%
+bad_pred_relation_name1(X,Y):-bad_pred_relation_name0(X,Y).
+bad_pred_relation_name1(F,A):-must_det((atom_codes(F,[C|_]),to_upper(C,U))),!, U == C, A>1.
+bad_pred_relation_name1(F,A):-arity_no_bc(F,AO), A \= AO.
+
+% :-after_boot(writeq("Seen Mpred_props at start!\n")),!.
+
+%=
+
+%% functor_check_univ( ?G1, ?F, ?List) is semidet.
+%
+% Functor Check Univ.
+%
+functor_check_univ(M:G1,F,List):-atom(M),member(M,[dbase,user]),!,functor_check_univ(G1,F,List),!.
+functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_det(G1 \= _/_),G1=..[F|List],!.
+
 
 %:- endif.
 % :- ensure_loaded(library('logicmoo/util/logicmoo_util_bugger.pl')).
 :- use_module(mpred_core).
-:- use_module(mpred_type_isa).
+%:- use_module(mpred_type_isa).
 :- use_module(library(listing_vars)).
 
 :- module_transparent retract_mu/1,
@@ -291,11 +141,11 @@ mpred_facts_and_universe/1
       call_s2(*),
       mpred_update_literal(*,*,0,*),
       mpred_retry(*),
-      mpred_op(?, ?),
+%      mpred_op(?, ?),
       mpred_facts_only(*),
       map_unless(1,:,*,*),      
       is_callable(*),     
-      deducedSimply(*),
+%      deducedSimply(*),
       cnstrn0(:,+),
       cnstrn(*),
       cnstrn(+,:),
@@ -309,7 +159,7 @@ mpred_facts_and_universe/1
       assert_mu(+,+,+,+),
       ain_minfo_2(1,*),
       ain_minfo(1,*),
-      whenAnd(0,0),
+%      whenAnd(0,0),
       mpred_call_0(*),
       mpred_bc_only(*),
       mpred_bc_only0(*),
@@ -349,132 +199,6 @@ once(A,B,C,D):-trace_or_throw(once(A,B,C,D)).
 */
 
 
-
-
-%% second_order( ?VALUE1, ?VALUE2) is semidet.
-%
-% Second Order.
-%
-second_order(_,_):-fail.
-
-:- meta_predicate(deducedSimply(*)).
-:- was_export(deducedSimply/1).
-
-
-
-%% deducedSimply( :Goal) is semidet.
-%
-% Deduced Simply.
-%
-deducedSimply(Call):- clause(deduce_facts(Fact,Call),Body),\+ clause_u((Call)),nonvar(Fact),Body,dmsg((deducedSimply2(Call):-Fact)),!,show_call(why,(clause_u(Fact),ground(Call))).
-
-% deducedSimply(Call):- clause(deduce_facts(Fact,Call),Body),nonvar(Fact),Body,ground(Call),dmsg((deducedSimply1(Call):-Fact)),show_call(why,(clause_u(Fact),ground(Call))).
-
-:- meta_predicate(mpred_op(?,+)).
-
-
-
-%% mpred_op( ?Op, ?H) is semidet.
-%
-% Managed Predicate Oper..
-%
-mpred_op(Op,     H ):- (var(Op);var(H)),!,trace_or_throw(var_database_call(Op,  H )).
-mpred_op(clause_u,H):-!,clause_u(H).
-mpred_op(Op,     H ):- once(fully_expand(Op,H,HH)),H\=@=HH,!,mpred_op(Op, HH).
-mpred_op(~(_,Op),  H ):- !, show_call(why, \+ (mpred_op(Op,  H ))).
-mpred_op(change(assert,Op),H):-!,must(mpred_modify(change(assert,Op),H)),!.
-mpred_op(change(retract,Op),H):-!,must(mpred_modify(change(retract,Op),H)),!.
-mpred_op(query(t,Ireq),  H ):-!, mpred_op(Ireq,H).
-mpred_op(query(Dbase_t,_Ireq),  H ):-!, mpred_op(Dbase_t,H).
-mpred_op(call(Op),H):-!,mpred_op(Op,H).
-mpred_op(Op,((include(A)))):- locally_hide(t_l:already_in_file_term_expansion,mpred_op(Op,((load_data_file(A))))),!.
-mpred_op(Op, call(H)):- nonvar(H),!, mpred_op(Op,H).
-mpred_op(Op,  not(H)):- nonvar(H),!, mpred_op(~(not,Op),H).
-mpred_op(Op,'\\+'(H)):- nonvar(H),!, mpred_op(~(('\\+'),Op),H).
-mpred_op(Op,    ~(H)):- nonvar(H),!, mpred_op(~(~,Op),H).
-mpred_op(Op,     {H}):- nonvar(H),!, mpred_op(Op,H).
-
-mpred_op(must,Call):- !,must(mpred_op(call_u,Call)).
-mpred_op(once,Call):- !,once(mpred_op(call_u,Call)).
-
-mpred_op(assertedOnly,Call):- !,locally(t_l:infInstanceOnly(Call),mpred_op(call_u,Call)).
-mpred_op(_ , clause(H,B) ):- !, clause_u(H,B).
-mpred_op(_ , clause(H,B,Ref) ):- !,  clause_u(H,B,Ref).
-mpred_op(_ , (H :- B) ):- !, clause_u(H,B).
-mpred_op(clauses(Op),  H):-!,mpred_op((Op),  H).
-mpred_op(_,C):- call_u(C).
-
-:- was_export(whenAnd/2).
-:- module_transparent(whenAnd/2).
-
-
-
-%% whenAnd( :GoalA, :GoalB) is semidet.
-%
-% When And.
-%
-whenAnd(A,B):-A,ground(B),once(B).
-
-
-% =======================================
-% Transforming DBASE OPs
-% ========================================
-
-
-
-
-%% reduce_mpred_op( ?Op, ?Op2) is semidet.
-%
-% Reduce Managed Predicate Oper..
-%
-reduce_mpred_op(Op,Op2):-must(quietly(transitive(how_to_op,Op,Op2))),!.
-reduce_mpred_op(A,A).
-
-
-
-
-%% how_to_op( ?HowOP, ?HowOP) is semidet.
-%
-% How Converted To Oper..
-%
-how_to_op(assert(a),asserta_new).
-how_to_op(assert(z),assertz_if_new).
-how_to_op(retract(one),retract).
-how_to_op(retract(all),retract_all).
-how_to_op(retract(all),retractall).
-how_to_op(change(assert,z),assertz_if_new).
-how_to_op(change(assert,_),asserta_if_new).
-how_to_op(change(retract,one),retract).
-how_to_op(change(retract,_),retract_all).
-how_to_op(asserta,asserta_new).
-how_to_op(assertz,assertz_if_new).
-how_to_op(call(W),W).
-how_to_op(clauses(W),W).
-how_to_op(assert,assert_if_new).
-how_to_op(assert(_),asserta_new).
-how_to_op(retract(_),retract_all).
-how_to_op(conjecture,call).
-how_to_op(query(t, call_u),call_u).
-how_to_op(query(t, Req),Req).
-how_to_op(change(Op,HOW),O):- !, O=..[Op,HOW].
-how_to_op(HowOP,HowOP).
-
-
-
-
-
-%% lookup_inverted_op( ?VALUE1, ?VALUE2, +OUT3) is semidet.
-%
-% Lookup Inverted Oper..
-%
-lookup_inverted_op(retract,assert,-).
-lookup_inverted_op(retractall,assert,-).
-lookup_inverted_op(assert_if_new,retract,+).
-lookup_inverted_op(assert_new,retract,+).
-lookup_inverted_op(assertz_if_new,retract,+).
-lookup_inverted_op(assertz_new,retract,+).
-lookup_inverted_op(asserta_if_new,retract,+).
-lookup_inverted_op(asserta_new,retract,+).
 
 
 % ================================================
@@ -727,7 +451,7 @@ attvar_op(Op,MData):-
    strip_module(Op,_,OpA), sanity( \+ atom(OpA)),
    fix_mp(clause(assert,OpA),MData,M,Data),
    add_side_effect(OpA,M:Data),
-   (current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0))),!,
+   notrace(current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0))),!,
    attempt_side_effect_mpa(M,OpA,Data0).
 
 
@@ -1069,8 +793,8 @@ mpred_is_info((Fail,_)):-Fail==fail.
 %
 % PFC Rewrap Head.
 %
-mpred_rewrap_h(A,A):-is_ftNonvar(A),\+ is_static_pred(A).
-mpred_rewrap_h(A,F):- functor(A,F,_),\+ is_static_pred(F),!.
+mpred_rewrap_h(A,A):-is_ftNonvar(A),\+ is_static_predicate(A).
+mpred_rewrap_h(A,F):- functor(A,F,_),\+ is_static_predicate(F),!.
 %mpred_rewrap_h(A,not_not(A)):-!.
 
 
@@ -1700,8 +1424,8 @@ mpred_call_0(retractall(X)):- !, mpred_prolog_retractall(X).
 
 mpred_call_0((H)):- !, call(H).
 
-mpred_call_0((H)):- is_static_pred(H),!,call(H).
-mpred_call_0((H)):- is_static_pred(H),!,show_pred_info(H),dtrace(mpred_call_0((H))).
+mpred_call_0((H)):- is_static_predicate(H),!,call(H).
+mpred_call_0((H)):- is_static_predicate(H),!,show_pred_info(H),dtrace(mpred_call_0((H))).
 
 %mpred_call_0(HB):-quietly((full_transform_warn_if_changed(mpred_call_0,HB,HHBB))),!,mpred_call_0(HHBB).
 mpred_call_0(H):- !, locally(t_l:infAssertedOnly(H),call_u(H)).
@@ -2514,7 +2238,7 @@ retract_mu((H:-B)):-!, clause_u(H,B,R),erase(R).
  :- meta_predicate repropagate_2(*).
  :- meta_predicate mpred_get_support_via_sentence(*,*).
 
-:- kb_shared(infoF/1).
+:- dynamic(infoF/1).
 
 
 

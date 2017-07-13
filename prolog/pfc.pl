@@ -12,7 +12,6 @@
 :- endif.
 
 :- if(\+ current_prolog_flag(lm_pfc_lean,_)).
-:- break.
 :- set_prolog_flag(lm_no_autoload,true).
 :- set_prolog_flag(lm_pfc_lean,true).
 :- endif.

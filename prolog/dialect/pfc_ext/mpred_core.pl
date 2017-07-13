@@ -14,7 +14,7 @@
 %:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
 
 :- module(mpred_core, [
-
+    /*
   get_startup_uu/1,
   call_u_no_bc/1,%fix_mp/3,
   fix_mp/4, %fix_mp/3,
@@ -190,6 +190,7 @@ push_current_choice/1,
   mpred_pp_db_justification1/3,mpred_pp_db_justifications2/4,mpred_spy1/3,
   mpred_unfwc_check_triggers0/1,mpred_unfwc1/1,mpred_why1/1,mpred_blast/1
   % trigger_trigger1/2  , trigger_trigger/3,
+  */
   ]).
 
 %:- use_module(mpred_kb_ops).
@@ -200,39 +201,39 @@ push_current_choice/1,
 %:- endif.
 
 :- meta_predicate
+      %call_u_mp(+,*,+),
+      call_u(*),
+      call_u_mp_lc(*,*,*,*),
+      call_u_no_bc(+),
+      clause_asserted_u(+),
+      clause_u(+),
+      clause_u(+,+,-),
+      clause_u(+,-),
       each_E(+,+,+),
-     % pfcl_do(0),
-      pfcl_do(*), % not all arg1s are callable
-      ain_expanded(+),
+      fc_eval_action(0,-),
+      fix_mp(+,+,-,-),
+      foreachl_do(+,?), % not all arg1s are callable
+      foreachl_do(0,?),
       lookup_u(*),
       lookup_u(?,?),
       mnotrace(0),
-      fix_mp(+,+,-,-),
-      clause_asserted_u(+),
-      mpred_get_support(+,-),
-      mpred_fact(?,0),
-      %call_u_mp(+,*,+),
-      mpred_test(+),
-      mpred_test_fok(+),
-      mpred_METACALL(1,-,+),
-      mpred_METACALL(1,-,+),
-      mpred_METACALL(1,+),
-      call_u_no_bc(+),
-      call_u_mp_lc(*,*,*,*),
-      mpred_call_no_bc0(+),
-      call_u(*),
-      retract_u0(+),
+      ain_expanded(:),
+      mpred_add(:),
+      mpred_ain(*),
       mpred_BC_CACHE(+,+),
       mpred_BC_CACHE0(+,+),
-      foreachl_do(0,?),
-      foreachl_do(+,?), % not all arg1s are callable
+      mpred_call_no_bc0(+),
+      mpred_fact(?,0),
+      mpred_get_support(+,-),
+      mpred_METACALL(1,+),
+      mpred_METACALL(1,-,+),
+      mpred_test(+),
+      mpred_test_fok(+),
+      pfcl_do(*), % not all arg1s are callable
+      retract_u0(+),
       with_no_mpred_breaks(0),
-      fc_eval_action(0,-),
-      clause_u(+,+,-),
-
-      clause_u(+,-),
-      clause_u(+),
       with_umt(+,+),
+     % pfcl_do(0),
       brake(0),
       with_no_mpred_trace_exec(0),
       with_mpred_trace_exec(0),
@@ -289,13 +290,14 @@ on_x_rtrace(G):-on_x_debug(G).
 :- dynamic(mpred_database_term/3).
 % mined from program database
 
-:- kb_shared(baseKB:pm/1).
-:- kb_shared(baseKB:spft/3).
-
-:- kb_shared(baseKB:pt/2).                   
-:- kb_shared(baseKB:nt/3).
-:- kb_shared(baseKB:bt/2).
-:- kb_shared(baseKB:do_and_undo/2).
+:- dynamic(baseKB:pm/1).
+:- dynamic(baseKB:spft/3).
+:- dynamic(baseKB:pt/2).                   
+:- dynamic(baseKB:nt/3).
+:- dynamic(baseKB:bt/2).
+:- dynamic(baseKB:do_and_undo/2).
+/*
+*/
 :- dynamic(baseKB:mpred_is_tracing_exec/0).
 :- export(baseKB:mpred_is_tracing_exec/0).
 
@@ -719,7 +721,7 @@ lookup_u(MH,Ref):- must(mnotrace(fix_mp(Why,MH,M,H))),
 with_umt(mud_telnet,P):- !,with_umt(baseKB,P).
 with_umt(U,G):- sanity(stack_check(5000)),
   (t_l:current_defaultAssertMt(W)->W=U,!,call_from_module(U,G)).
-with_umt(user,P):- !,with_umt(baseKB,P).
+%with_umt(user,P):- !,with_umt(baseKB,P).
 with_umt(M,P):-
   (clause_b(mtCycL(M))-> W=M;defaultAssertMt(W)),!,
    locally(t_l:current_defaultAssertMt(W),
@@ -836,11 +838,9 @@ mpred_set_default(GeneralTerm,Default):-
 % :- must(mpred_set_default(pm(_), pm(direct))).
 
 
-ain_expanded(IIIOOO):- mpred_ain(IIIOOO).
+ain_expanded(IIIOOO):- mpred_ain((IIIOOO)).
 
-ain_expanded(IIIOOO,S):- mpred_ain(IIIOOO,S).
-
-% system:ain_expanded(IIIOOO):- mpred_ain(IIIOOO).
+ain_expanded(IIIOOO,S):- mpred_ain((IIIOOO),S).
 
 
 %% mpred_ainz(+G, ?S) is semidet.
@@ -875,16 +875,26 @@ mpred_add(P):-mpred_ain(P).
 %
 
 mpred_ain(MTP,S):- notrace(is_ftVar(MTP)),!,trace_or_throw(var_mpred_ain(MTP,S)).
-mpred_ain(user:MTP,S):- !, must(mpred_ain(MTP,S)).
-mpred_ain(user:MTP :-B,S):- !, must(mpred_ain(MTP:-B,S)).
+%mpred_ain(User:MTP,S):- User=user, !, must(mpred_ain(MTP,S)).
+%mpred_ain(User:MTP :-B,S):- User=user, !, must(mpred_ain(MTP:-B,S)).
 
+mpred_ain(ToMt:P,(mfl(ToMt,File,Lineno),UserWhy)):- !, ToMt:mpred_ain(P,(mfl(ToMt,File,Lineno),UserWhy)).
+mpred_ain((ToMt:P :- B),(mfl(ToMt,File,Lineno),UserWhy)):- !, ToMt:mpred_ain((P:-B),(mfl(ToMt,File,Lineno),UserWhy)).
+
+
+
+%TODO see if this corrects anything
 mpred_ain( ToMt:P :- B , (mfl(FromMt,File,Lineno),UserWhy)):- ToMt \== FromMt,
  defaultAssertMt(ABox), ToMt \== ABox,!,
-  with_umt(ToMt,(mpred_ain(ToMt:P :- B,(mfl(ToMt,File,Lineno),UserWhy)))).
+  with_umt(ToMt,(mpred_ain(P :- B,(mfl(ToMt,File,Lineno),UserWhy)))).
 
 mpred_ain(ToMt:P,(mfl(FromMt,File,Lineno),UserWhy)):- ToMt \== FromMt,
  defaultAssertMt(ABox), ToMt \== ABox,!,
-  with_umt(ToMt,(mpred_ain(ToMt:P,(mfl(ToMt,File,Lineno),UserWhy)))).
+  with_umt(ToMt,(mpred_ain(P,(mfl(ToMt,File,Lineno),UserWhy)))).
+
+/*
+
+*/
 
 mpred_ain(MTP,S):- sanity(stack_check), strip_module(MTP,MT,P),P\==MTP,!,
   with_umt(MT,mpred_ain(P,S)),!.
@@ -1821,7 +1831,8 @@ mpred_fwc1(==>(Fact)):- sanity(nonvar(Fact)),!,
   each_E(mpred_fwc1,ExpandFact,[]).
 
 mpred_fwc1(Fact):-
-  mpred_trace_msg(mpred_fwc1(Fact)),
+  '$current_source_module'(Sm),
+  mpred_trace_msg(Sm:mpred_fwc1(Fact)),
   %ignore((mpred_non_neg_literal(Fact),remove_negative_version(Fact))),
   mpred_do_rule(Fact),!.
 
@@ -2083,8 +2094,9 @@ call_u(G):- strip_module(G,M,P), no_repeats(gripe_time(5.3,on_x_rtrace(call_u_mp
 % call_u(G):- strip_module(G,M,P), call_u_mp(G,M,P).
 
 
-call_u_mp(user, P1 ):-!,  call_u_mp(baseKB,P1).
-call_u_mp(mpred_core, P1 ):-!,  call_u_mp(baseKB,P1).
+%call_u_mp(user, P1 ):- !,  call_u_mp(baseKB,P1).
+call_u_mp(mpred_core, P1 ):- '$current_source_module'(SM),SM\==mpred_core,!,  call_u_mp(SM,P1).
+call_u_mp(user, P1 ):- '$current_source_module'(SM),SM\==user,!,  call_u_mp(SM,P1).
 call_u_mp(M,P):- var(P),!,call((baseKB:mtExact(M)->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
 call_u_mp(_, M:P1):-!,call_u_mp(M,P1).
 call_u_mp(M, (P1,P2)):-!,call_u_mp(M,P1),call_u_mp(M,P2).
@@ -2782,7 +2794,7 @@ mpred_assertz_w_support(P,Support):-
 :- module_transparent(clause_asserted_call/2).
 clause_asserted_call(H,B):-clause_asserted(H,B).
 
-clause_asserted_u(P):- clause_asserted(P),!.
+clause_asserted_u(P):- clause_asserted_i(P),!.
   
 
 /*
