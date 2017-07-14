@@ -206,38 +206,36 @@ push_current_choice/1,
       call_u_mp_lc(*,*,*,*),
       call_u_no_bc(+),
       clause_asserted_u(+),
-      clause_u(+),
-      clause_u(+,+,-),
-      clause_u(+,-),
+      clause_u(*),
+      clause_u(*,*,-),
+      clause_u(*,-),
       each_E(+,+,+),
       fc_eval_action(0,-),
       fix_mp(+,+,-,-),
-      foreachl_do(+,?), % not all arg1s are callable
-      foreachl_do(0,?),
+      foreachl_do(*,?),
       lookup_u(*),
       lookup_u(?,?),
-      mnotrace(0),
+      mnotrace(*),
       ain_expanded(:),
       mpred_add(:),
       mpred_ain(*),
       mpred_BC_CACHE(+,+),
       mpred_BC_CACHE0(+,+),
-      mpred_call_no_bc0(+),
-      mpred_fact(?,0),
-      mpred_get_support(+,-),
+      mpred_call_no_bc0(*),
+      mpred_fact(?,*),
+      mpred_get_support(*,-),
       mpred_METACALL(1,+),
       mpred_METACALL(1,-,+),
       mpred_test(+),
       mpred_test_fok(+),
       pfcl_do(*), % not all arg1s are callable
       retract_u0(+),
-      with_no_mpred_breaks(0),
+      with_no_mpred_breaks(*),
       with_umt(+,+),
-     % pfcl_do(0),
-      brake(0),
-      with_no_mpred_trace_exec(0),
-      with_mpred_trace_exec(0),
-      with_fc_mode(+,0),
+      brake(*),
+      with_no_mpred_trace_exec(*),
+      with_mpred_trace_exec(*),
+      with_fc_mode(+,*),
       bagof_or_nil(?,^,-).
 
 :- meta_predicate mpred_retract_i_or_warn(*).
@@ -296,6 +294,8 @@ on_x_rtrace(G):-on_x_debug(G).
 :- dynamic(baseKB:nt/3).
 :- dynamic(baseKB:bt/2).
 :- dynamic(baseKB:do_and_undo/2).
+:- dynamic(baseKB:tms/1).
+
 /*
 */
 :- dynamic(baseKB:mpred_is_tracing_exec/0).
@@ -315,7 +315,7 @@ mpred_database_term_syntax((~),1,fact(_)).
 mpred_database_term(F,A,syntaxic(T)):- mpred_database_term_syntax(F,A,T).
 
 % forward,backward chaining database
-mpred_database_term(spft,3,support).
+mpred_database_term(spft,3,state).
 
 mpred_database_term(nt,3,trigger).
 mpred_database_term(pt,2,trigger).
@@ -690,7 +690,7 @@ clause_u(MH,B,R):- Why = clause(clause,clause_u),
 %clause_u(pfc,H,B,Proof):-clause_u(H,B,Proof).
 
 % lookup_u/cheaply_u/call_u/clause_b
-lookup_u(SPFT):- baseKB:call(SPFT).
+lookup_u(SPFT):- on_x_rtrace(SPFT).
 % baseKB:SPFT:- current_prolog_flag(unsafe_speedups , true) , !,baseKB:mtCycL(MT),call(MT:SPFT).
 % lookup_u(H):-lookup_u(H,_).
 
@@ -1889,13 +1889,13 @@ lookup_spft(A,B,C):- nonvar(A),!,lookup_spft_p(A,B,C).
 lookup_spft(A,B,C):- var(B),!,lookup_spft_t(A,B,C).
 lookup_spft(A,B,C):- lookup_spft_f(A,B,C).
 
-lookup_spft_p(A,B,C):- baseKB:spft(A,B,C).
+lookup_spft_p(A,B,C):- lookup_u(spft(A,B,C)).
 % TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_p(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,show_success(baseKB:spft(AA,B,C)).
 
-lookup_spft_f(A,B,C):- baseKB:spft(A,B,C).
+lookup_spft_f(A,B,C):- lookup_u(spft(A,B,C)).
 % TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_f(A,B,C):- full_transform(lookup,B,BB),!,B\=@=BB,!,show_success(baseKB:spft(A,BB,C)).
 
-lookup_spft_t(A,B,C):- baseKB:spft(A,B,C).
+lookup_spft_t(A,B,C):- lookup_u(spft(A,B,C)).
 
 
 mpred_do_fcpt(Fact,F):-
@@ -2097,13 +2097,12 @@ lookup_m_g(To,_M,G):- clause(To:G,true).
 
 % :- table(call_u/1).
 
-% call_u(G):- baseKB:call(G).
 call_u(G):- strip_module(G,M,P), no_repeats(gripe_time(5.3,on_x_rtrace(call_u_mp(M,P)))).
 % call_u(G):- strip_module(G,M,P), call_u_mp(G,M,P).
 
 
 %call_u_mp(user, P1 ):- !,  call_u_mp(baseKB,P1).
-call_u_mp(mpred_core, P1 ):- '$current_source_module'(SM),SM\==mpred_core,!,  call_u_mp(SM,P1).
+call_u_mp(mpred_core, P1 ):- dumpST,break,'$current_source_module'(SM),SM\==mpred_core,!,  call_u_mp(SM,P1).
 call_u_mp(user, P1 ):- '$current_source_module'(SM),SM\==user,!,  call_u_mp(SM,P1).
 call_u_mp(M,P):- var(P),!,call((baseKB:mtExact(M)->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
 call_u_mp(_, M:P1):-!,call_u_mp(M,P1).
@@ -2937,10 +2936,6 @@ mpred_retract_i_or_warn(X):-
 
 %:- mpred_set_default(baseKB:mpred_warnings(_), baseKB:mpred_warnings(true)).
 %  tms is one of {none,local,cycles} and controles the tms alg.
-%:- baseKB:mpred_set_default(tms(_), tms(cycles)).
-%:-dynamic(baseKB:spft/3).
-%:-asserta(baseKB:spft(a,b,c)).
-%:-retractall(baseKB:spft(a,b,c)).
 % :- during_boot(mpred_set_default(mpred_warnings(_), mpred_warnings(true))).
 
 %  mpred_fact(P) is true if fact P was asserted into the database via add.
@@ -3369,24 +3364,24 @@ bagof_or_nil(T,G,B):- (bagof_nr(T,G,B) *-> true; B=[]).
 %  predicates for manipulating support relationships
 %
 
-mpred_add_support(P,(Fact,Trigger)):- % current_prolog_flag(unsafe_speedups , true) , 
-  SPFT = spft(P,Fact,Trigger),!,  
-  (clause_asserted(SPFT)-> true; assertz_mu(SPFT)).
-
 %  mpred_add_support(+Fact,+Support)
 mpred_add_support(P,(Fact,Trigger)):-
-   SPFT = spft(P,Fact,Trigger),
-  (Trigger= nt(F,Condition,Action) ->
-    (mpred_trace_msg('~N~n\tAdding NEG mpred_do_fcnt via support~n\t\ttrigger: ~p~n\t\tcond: ~p~n\t\taction: ~p~n\t from: ~p~N',
-      [F,Condition,Action,mpred_add_support(P,(Fact,Trigger))]));true),
-  (clause_asserted_u(SPFT)-> true; assertz_mu(SPFT)),!.
+  SPFT = spft(P,Fact,Trigger),  
+   notify_if_neg_trigger(SPFT),
+  (clause_asserted_u(SPFT)-> true; assertz_mu(SPFT)).
 
-%  mpred_add_support(+Fact,+Support)
+%  mpred_add_support_fast(+Fact,+Support)
 mpred_add_support_fast(P,(Fact,Trigger)):-
+  SPFT = spft(P,Fact,Trigger),  
+   notify_if_neg_trigger(SPFT),
+   call_u(assertz_mu(SPFT)),
+   sanity(clause_asserted_u(SPFT)).
+
+
+notify_if_neg_trigger(spft(P,Fact,Trigger)):- 
   (Trigger= nt(F,Condition,Action) ->
     (mpred_trace_msg('~N~n\tAdding NEG mpred_do_fcnt via support~n\t\ttrigger: ~p~n\t\tcond: ~p~n\t\taction: ~p~n\t from: ~p~N',
-      [F,Condition,Action,mpred_add_support_fast(P,(Fact,Trigger))]));true),
-  assertz_mu(spft(P,Fact,Trigger)).
+      [F,Condition,Action,mpred_add_support_fast(P,(Fact,Trigger))]));true).
 
 
 mpred_get_support((H:-B),(Fact,Trigger)):- lookup_u(spft((H <- B),_,_),Ref),clause(spft(HH<-BB,Fact,Trigger),true,Ref),H=@=HH,B=@=BB.

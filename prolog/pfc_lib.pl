@@ -53,7 +53,7 @@
 :- set_prolog_flag(unsafe_speedups, false).
 :- set_prolog_flag(pfc_booted,false).
 
-:- kb_shared(baseKB:spft/3).
+%:- kb_shared(baseKB:spft/3).
 
 pfc_rescan_autoload_pack_packages_part_1:- dmsg("SCAN AUTOLOADING PACKAGES..."),
  forall('$pack':pack(Pack, _),
