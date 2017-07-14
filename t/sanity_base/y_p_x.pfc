@@ -6,7 +6,7 @@
 % Douglas Miles
 
 % Still amodule scoping bug?
-%:- module(y_p_x,[]).
+:- module(y_p_x,[]).
 
 :- use_module(library(pfc)).
 

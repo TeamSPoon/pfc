@@ -601,7 +601,7 @@ baseKB:hybrid_support(predicateConventionMt,2).
 baseKB:hybrid_support(functorDeclares,1).
 baseKB:hybrid_support(arity,2).
 
-baseKB:hybrid_support(spft,3).
+%baseKB:hybrid_support(spft,3).
 
 baseKB:hybrid_support(mtCycL,1).
 baseKB:hybrid_support(mtCycLBroad,1).
