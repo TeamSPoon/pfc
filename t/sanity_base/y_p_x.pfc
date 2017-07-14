@@ -1,0 +1,34 @@
+#!/usr/bin/env swipl
+%
+%  PFC is a language extension for prolog.. there is so much that can be done in this language extension to Prolog
+%
+% Dec 13, 2035
+% Douglas Miles
+
+% Still amodule scoping bug?
+%:- module(y_p_x,[]).
+
+:- use_module(library(pfc)).
+
+ttt(a,p,b).
+ttt(b,p,c). 
+ttt(c,p,d).
+ttt(d,p,c). 
+ttt(c,p,b).
+ttt(b,p,a).
+
+:- mpred_trace_exec.
+
+ttt(Z,p,Y),ttt(Y,p,X) ==> ttt(X,p,Z).
+
+:- printAll(ttt(_What,p,a)).
+
+/*
+Expected:
+
+ttt(a,p,a).
+ttt(b,p,a).
+ttt(c,p,a).
+ttt(d,p,a).
+
+*/

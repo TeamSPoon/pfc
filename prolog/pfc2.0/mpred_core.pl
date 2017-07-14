@@ -1076,6 +1076,12 @@ mpred_post12(P,S):- notrace((maybe_updated_value(P,RP,OLD))),!,subst(S,P,RP,RS),
 mpred_post12(P,S):- mpred_post12a(P,S).
 
 %  TODO MAYBE mpred_post12(actn(P),S):- !, with_current_why(S,call(P)).
+
+
+mpred_post12l(P,_):- clause_asserted_u(P),!.
+mpred_post12l(P,_):- assert_u(P),sanity(clause_asserted_u(P)),mpred_add_support(P,S),!,mpred_enqueue(P,S).
+
+
 % Two versions exists of this function one expects for a clean database (fresh_mode) and adds new information.
 % tries to assert a fact or set of fact to the database.
 % The other version is if the program is been running before loading this module.
@@ -1125,6 +1131,7 @@ mpred_post12a_unused(P,S):-  fail,!,
 */
 
 
+mpred_post12a(P,S):- current_prolog_flag(pfc_mode,lazy),!,mpred_post12l(P,S).
 
 % this for complete repropagation
 mpred_post12a(P,S):- t_l:is_repropagating(_),!,
@@ -1336,11 +1343,12 @@ set_fc_mode(Mode):- asserta(t_l:mpred_fc_mode(Mode)).
 % PFC Enqueue P for forward chaining
 %
 
+mpred_enqueue(P):- ground(P),is_asserted(P),!.
 mpred_enqueue(P):- current_why(S),mpred_enqueue(P,S).
 
 mpred_enqueue(P,_):- show_success(lookup_u(que(P,_))),!.
 %mpred_enqueue(P,_):- clause_asserted(t_l:current_local_why(_,P)),!,trace_or_throw(why(P)).
-mpred_enqueue(P,_):- t_l:busy(P),!,dmsg(t_l:busy(P)).
+mpred_enqueue(P,_):- t_l:busy(P),!,nop(dmsg(t_l:busy(P))).
 mpred_enqueue(P,S):- locally(t_l:busy(P),mpred_enqueue0(P,S)).
 
 mpred_enqueue0(P,S):-
