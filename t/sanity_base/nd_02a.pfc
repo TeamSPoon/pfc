@@ -10,8 +10,6 @@
 
 :- use_module(library(pfc)).
 
-:- file_begin(pfc).
-
 :- abolish(a,1).
 :- abolish(b,2).
 :- dynamic((a/1,b/2)).
@@ -19,6 +17,8 @@
 :- debug_logicmoo(logicmoo(_)).
  % :- mpred_trace_exec.
 :- mpred_warn.
+
+nondet.
 
 (nondet, {member(Y,[1,2,3])}) ==> a(Y).
 :- mpred_test(a(1)).

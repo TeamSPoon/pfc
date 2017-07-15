@@ -1,4 +1,4 @@
-:- module(red_test01,[]).
+:- module(red_test03,[]).
 
 :- ensure_loaded(library(pfc)).
 % :- use_listing_vars.
@@ -15,13 +15,13 @@
 %:- ensure_loaded(library(pfc)).
 % :- use_module(library(pfc)).
 
-:- mpred_reset.
+% :- rtrace(mpred_reset).
 
 
 :- defaultAssertMt(M),dynamic((M:current_ooQ2/1,M:default_ooQ2/1,M:if_mooQ2/2)).
 :- mpred_trace.
 :- mpred_watch.
-:- mpred_reset.
+%:- mpred_reset.
 
 
 :- mpred_ain(default_ooQ2(booQ2)).
@@ -111,12 +111,12 @@
 
 :- mpred_test(current_ooTt(defaultValueTt)).
 
+:- kb_shared(genlPreds/2).
 
 
 
 
-
-:- must(mpred_reset).
+:- on_x_rtrace(mpred_reset).
 
 
 :- if(current_module(mpred_loader)).

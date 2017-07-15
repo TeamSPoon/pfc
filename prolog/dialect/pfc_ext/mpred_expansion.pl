@@ -1685,8 +1685,8 @@ is_logical_functor0(v).
 is_logical_functor0(exists).
 is_logical_functor0(all).
 is_logical_functor0(X):-atom(X),member(X,[',',';',xor,'\\+',~]).
-is_logical_functor0(X):-call_if_defined(logical_functor_pttp(X)).
-is_logical_functor0(X):-call_if_defined(is_quantifier(X)).
+is_logical_functor0(X):- a(logical_functor_pttp,X).
+is_logical_functor0(X):- a(is_quantifier,X).
 is_logical_functor0(And):-member(And,[(,),(;),('<-'),('=>'),('<=>'),(':-'),(and),nop]).
 
 
@@ -2045,7 +2045,7 @@ expand_goal_correct_argIsa(A,B):- expand_goal(A,B).
 %
 db_op_simpler(Op,Sent,SentO):- call_last_is_var(db_op_simpler(Op,Sent,SentO)).
 
-db_op_simpler(_,TypeTerm,props(Inst,[isa(Type)|PROPS])):- TypeTerm=..[Type,Inst|PROPS],is_ftNonvar(Inst),t(functorDeclares,Type),!.
+db_op_simpler(_,TypeTerm,props(Inst,[isa(Type)|PROPS])):- TypeTerm=..[Type,Inst|PROPS],is_ftNonvar(Inst),a(functorDeclares,Type),!.
 
 
 

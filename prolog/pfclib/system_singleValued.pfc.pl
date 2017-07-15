@@ -38,6 +38,10 @@ prologHybrid(singleValuedInArgDefault(prologSingleValued,ftInt,ftTerm)).
 
 % This would been fun! singleValuedInArgDefault(singleValuedInArgDefault,3,isMissing).
 
+compilerDirective(somtimesBuggyFwdChaining,comment("Can sometimes be buggy when FwdChaining")).
+compilerDirective(somtimesBuggyBackChaining,comment("Can sometimes be buggy when BackChaining")).
+compilerDirective(somtimesBuggy,comment("Can sometimes be buggy")).
+
 ((somtimesBuggyFwdChaining==> ((
   ((singleValuedInArgDefault(P, 2, V), arity(P,2), argIsa(P,1,Most)) ==> relationMostInstance(P,Most,V)))))).
 
@@ -78,8 +82,8 @@ someSV_testeed(a,b,2).
 someSV_testeed(a,c,3).
 
 % :- listing(someSV_testeed/3).
-:- must( \+ someSV_testeed(a,b,1)).
-:- must(someSV_testeed(a,b,2)).
+:- sanity( \+ someSV_testeed(a,b,1)).
+:- sanity(someSV_testeed(a,b,2)).
 
 
 % :- flag_call(runtime_debug=true).
@@ -96,9 +100,9 @@ singleValuedInArg(someSV_testing,3).
 someSV_testing(a,c,4).
 
 % :- listing(someSV_testing/3).
-:- must(someSV_testing(a,c,4)).
-:- must(someSV_testing(a,b,2)).
-:- must( \+ someSV_testing(a,b,1)).
+:- sanity(someSV_testing(a,c,4)).
+:- sanity(someSV_testing(a,b,2)).
+:- sanity( \+ someSV_testing(a,b,1)).
 :- mpred_notrace_exec.
 :- endif.
 

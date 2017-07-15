@@ -287,11 +287,11 @@ if_result(TF,Call):-(TF->Call;true).
 %
 % Managed Predicate Plist True Stucture.
 %
-mpred_plist_t(P,[]):-!,t(P).
+/* mpred_plist_t(P,[]):-!,t(P). */
 mpred_plist_t(P,LIST):-var(P),!,is_list(LIST),CALL=..[t,P|LIST],on_x_debug((CALL)).
 mpred_plist_t(t,[P|LIST]):-!, mpred_plist_t(P,LIST).
 %mpred_plist_t(mpred_isa,[C,_A,I]):-!,ground(I:C),local_qh_mpred_isa(C,I).
-mpred_plist_t(isa,[I,C]):-!,t(C,I).
+mpred_plist_t(isa,[I,C]):-!,call(call,t,C,I).
 mpred_plist_t(P,_):-never_mpred_tcall(P),!,fail.
 mpred_plist_t(P,[L|IST]):-is_holds_true(P),!,mpred_plist_t(L,IST).
 mpred_plist_t(P,LIST):-is_holds_false(P),!,call_u(mpred_f(LIST)).

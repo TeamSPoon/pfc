@@ -283,15 +283,20 @@ ensure_abox_support(M,Where):-
    forall(mpred_database_term(F,A,Type),
      must(import_mpred_database_term(M,F,A,Type,Where))).
 
+
+import_mpred_database_term(M,F,A,_,_):- show_failure(localize_mpred(M,F,A)),!,kb_local(M:F/A).
+
 import_mpred_database_term(M,F,A,syntaxic(Type),_):- member(Type,[rule,fact,fact(_),rule(_)]), !,
+  show_failure(localize_mpred(M,F,A)),!,(kb_local(M:F/A)),
   nop((system:export(system:F/A),M:import(system:F/A),M:export(system:F/A))).
 
-import_mpred_database_term(M,F,A,support,_):- !,(kb_shared(M:F/A)).
-import_mpred_database_term(M,F,A,debug,_):- !, (kb_shared(M:F/A)).
+% import_mpred_database_term(M,F,A,debug,_):- !, (kb_shared(M:F/A)).
+% import_mpred_database_term(M,F,A,support,_):- !,(kb_shared(M:F/A)).
 % import_mpred_database_term(M,F,A,trigger,_):- !,(kb_local(M:F/A)).
 
-import_mpred_database_term(M,F,A,_,_):- show_call(localize_mpred(M,F,A)),!,(kb_local(M:F/A)).
+import_mpred_database_term(M,F,A,_,_):- show_failure(localize_mpred(M,F,A)),!,(kb_local(M:F/A)).
 
+/* 
 import_mpred_database_term(M,F,A,Type,_):- member(Type,[setting,debug]), localize_mpred(M,F,A).
 
 import_mpred_database_term(M,F,A,_,Where):- localize_mpred(Where,F,A),
@@ -304,6 +309,8 @@ import_mpred_database_term(M,F,A,_,Where):- localize_mpred(Where,F,A),
                                                Where:export(Where:F/A),
                                                M:import(Where:F/A),
                                                M:export(M:F/A).
+
+*/
 
 localize_mpred(M,F,A):-
        (((
