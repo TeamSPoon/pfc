@@ -10,19 +10,25 @@
 
 :- module(sanity,[]).
 
-:- system:ensure_loaded(library(pfc)).
+:- ensure_loaded(library(pfc)).
 :- make.
 
 :- begin_pfc.
 
-:-ain(sanity:(must_is_entailed(G):- cwc, must(is_entailed_u(G)))).
-:-ain((must_is_entailed(G):- cwc, must(is_entailed_u(G)))).
+:-ain(sanity:(must_clause_asserted(G):- cwc, must(clause_asserted_u(G)))).
+:-ain((must_clause_asserted(G):- cwc, must(clause_asserted_u(G)))).
 
-must_is_entailed(G):- cwc, must(is_entailed_u(G)).
+:- user:listing(must_clause_asserted).
 
-:- listing(must_is_entailed).
+must_clause_asserted(G):- cwc, must(clause_asserted_u(G)).
+
+:- user:listing(must_clause_asserted).
+
+:- sanity(predicate_property(must_clause_asserted(_),number_of_clauses(1))).
 
 a.
 
-:- must_is_entailed(a).
+:- user:listing(a).
+
+:- must_clause_asserted(a).
 

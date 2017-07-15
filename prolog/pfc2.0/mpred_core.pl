@@ -37,7 +37,7 @@
   get_consequent_functor/3,
   mpred_post1_rem/2,
   mpred_post1/1,
-  mpred_post1_rem1/2,
+  mpred_post1_rem2/2,
   mpred_post2/2,
   mpred_post12/2,
   fwc1s_post1s/2,
@@ -175,7 +175,6 @@ remove_meta_wrapper/2,
 mpred_undo1/1,
 convention_to_symbolic_mt_ec/4,
 
-mpred_retract_i_or_warn_0/1,
 push_current_choice/1,
 
 
@@ -210,11 +209,11 @@ push_current_choice/1,
       clause_u(*,*,-),
       clause_u(*,-),
       each_E(+,+,+),
-      fc_eval_action(0,-),
+      fc_eval_action(*,-),
       fix_mp(+,+,-,-),
       foreachl_do(*,?),
       lookup_u(*),
-      lookup_u(?,?),
+      lookup_u(*,?),
       mnotrace(*),
       ain_expanded(:),
       mpred_add(:),
@@ -239,7 +238,6 @@ push_current_choice/1,
       bagof_or_nil(?,^,-).
 
 :- meta_predicate mpred_retract_i_or_warn(*).
-:- meta_predicate mpred_retract_i_or_warn_0(*).
 :- meta_predicate mpred_retract_i_or_warn_1(*).
 :- meta_predicate not_not_ignore_mnotrace(*).
 :- meta_predicate must_notrace_pfc(*).
@@ -272,9 +270,10 @@ with_each_item(P,[H|T],S) :- !, apply(P,[H|S]), with_each_item(P,T,S).
 with_each_item(P,(H,T),S) :- !, with_each_item(P,H,S), with_each_item(P,T,S).
 with_each_item(P,H,S) :- apply(P,[H|S]).
 
+:- meta_predicate on_x_rtrace(*).
 on_x_rtrace(G):-on_x_debug(G).
 
-:- kb_local(mpred_is_spying_pred/2).
+:- dynamic(baseKB:mpred_is_spying_pred/2).
 
 
 %% mpred_database_term(:PI, -TYPE) is nondet.
@@ -315,7 +314,7 @@ mpred_database_term_syntax((~),1,fact(_)).
 mpred_database_term(F,A,syntaxic(T)):- mpred_database_term_syntax(F,A,T).
 
 % forward,backward chaining database
-mpred_database_term(spft,3,state).
+mpred_database_term(spft,3,support).
 
 mpred_database_term(nt,3,trigger).
 mpred_database_term(pt,2,trigger).
@@ -380,7 +379,7 @@ decl_rt(RT) :-
      abolish(RT,1));true),
 
    asserta(AIN),
-   compile_predicates([Head]),
+  % compile_predicates([Head]),
    nop(decl_rt(RT)))))),baseKB).
 
 mnotrace(G):- notrace(G),!.
@@ -639,6 +638,8 @@ assert_u_no_dep(MH):- fix_mp(change(assert,assert_u),MH,MHA),
     attvar_op_fully(db_op_call(assert,assert_i), MHA),expire_tabled_list(MHA).
 asserta_u(MH):- fix_mp(change(assert,asserta_u),MH,MHA),attvar_op_fully(db_op_call(asserta,asserta_i),MHA).
 assertz_u(MH):- fix_mp(change(assert,assertz_u),MH,MHA),attvar_op_fully(db_op_call(asserta,assertz_i),MHA).
+
+retract_u((H:-B)):- !, show_failure(retract((H:-B))).
 retract_u(H):- retract_u0(H) *-> true; attvar_op_fully(db_op_call(retract,retract_u0),H).
 
 retract_u0(H0):- strip_module(H0,_,H),(H = ( \+ _ )),!,trace_or_throw(mpred_warn(retract_u(H0))),expire_tabled_list(H).
@@ -1064,7 +1065,7 @@ is_ftOpenSentence(P):- is_ftOpen(P).
 mpred_post12(P, _):- sanity(must_be(nonvar,P)),P==true,!.
 % mpred_post12(P, S):- notrace((is_ftOpenSentence(P)->wdmsg((warn((var_mpred_post1(P, S))))))),fail.
 
-mpred_post12( \+ P,   S):- sanity(must_be(nonvar,P)), !, must(mpred_post1_rem(P,S)).
+mpred_post12( \+ P,   S):- sanity(must_be(nonvar,P)), !,doall( must(mpred_post1_rem(P,S))).
 
 % TODO - FIGURE OUT WHY THIS IS NEEDED
 mpred_post12( ~ P,   S):- sanity(must_be(nonvar,P)), 
@@ -1077,9 +1078,6 @@ mpred_post12(P,S):- mpred_post12a(P,S).
 
 %  TODO MAYBE mpred_post12(actn(P),S):- !, with_current_why(S,call(P)).
 
-
-mpred_post12l(P,_):- clause_asserted_u(P),!.
-mpred_post12l(P,_):- assert_u(P),sanity(clause_asserted_u(P)),mpred_add_support(P,S),!,mpred_enqueue(P,S).
 
 
 % Two versions exists of this function one expects for a clean database (fresh_mode) and adds new information.
@@ -1131,7 +1129,6 @@ mpred_post12a_unused(P,S):-  fail,!,
 */
 
 
-mpred_post12a(P,S):- current_prolog_flag(pfc_mode,lazy),!,mpred_post12l(P,S).
 
 % this for complete repropagation
 mpred_post12a(P,S):- t_l:is_repropagating(_),!,
@@ -1343,8 +1340,7 @@ set_fc_mode(Mode):- asserta(t_l:mpred_fc_mode(Mode)).
 % PFC Enqueue P for forward chaining
 %
 
-mpred_enqueue(P):- ground(P),is_asserted(P),!.
-mpred_enqueue(P):- current_why(S),mpred_enqueue(P,S).
+mpred_enqueue(P):- mpred_enqueue(P,_S).
 
 mpred_enqueue(P,_):- show_success(lookup_u(que(P,_))),!.
 %mpred_enqueue(P,_):- clause_asserted(t_l:current_local_why(_,P)),!,trace_or_throw(why(P)).
@@ -1352,9 +1348,10 @@ mpred_enqueue(P,_):- t_l:busy(P),!,nop(dmsg(t_l:busy(P))).
 mpred_enqueue(P,S):- locally(t_l:busy(P),mpred_enqueue0(P,S)).
 
 mpred_enqueue0(P,S):-
- must(get_fc_mode(P,S,Mode)) 
+ (var(S)->current_why(S);true),
+ (must(get_fc_mode(P,S,Mode)) 
   -> mpred_enqueue_w_mode(S,Mode,P)
-   ; mpred_error("No pm mode").
+   ; mpred_error("No pm mode")).
 
 mpred_enqueue_w_mode(S,Mode,P):-
     (Mode=direct  -> loop_check_term(mpred_fwc(P),mpred_enqueueing(P),true)) ;
@@ -1622,10 +1619,10 @@ mpred_withdraw1(P,S):-
   % TODO this is for idiomatic withdrawls sanity(is_ftNonvar(S)),
   (get_first_user_reason(P,S)*->true;true),
   sanity(is_ftNonvar(P)),
-  mpred_trace_msg('~N~n\tRemoving~n\t\tterm: ~p~n\t\tsupport (was): ~p~n',[P,S]),
+  mpred_trace_msg('~N~n\tRemoving (withdraw1)~n\t\tterm: ~p~n\t\tsupport (was): ~p~n',[P,S]),
   must((
    mpred_rem_support(P,S)
-     -> with_current_why(S,must(remove_if_unsupported(P)))
+     *-> with_current_why(S,must(remove_if_unsupported(P)))
       ; mpred_trace_msg("mpred_withdraw/2 Could not find support ~p to remove from fact ~p",
                 [S,P]))).
 
@@ -1646,11 +1643,13 @@ mpred_remove1(P,S):-
 
 mpred_post1_rem(P,S):-
   clause_asserted_u(P),
-  must((mpred_post1_rem1(P,S), \+ clause_asserted_u(P))).
+  must((mpred_post1_rem2(P,S), \+ clause_asserted_u(P))),!.
 % mpred_post1_rem(P,_S):- if_defined(kif_hook(P),fail),!.
-mpred_post1_rem(P,S):- mpred_post1_rem1(P,S),!.
+mpred_post1_rem(P,S):- mpred_post1_rem2(P,S).
 
-mpred_post1_rem1(P,S):-
+
+mpred_post1_rem2(P,S):-must(mpred_withdraw(P, S)),!.
+mpred_post1_rem2(P,S):-
    must(mpred_withdraw(P, S)),
    must(mpred_remove(P,S)),
    doall(mpred_undo(P)),
@@ -1701,31 +1700,31 @@ mpred_undo1(actn(A)):-
   mpred_undo_action(actn(A)).
 
 mpred_undo1(pt(Key,Head,Body)):-
-  % undo a positive trigger.
+  % undo a positive trigger 3.
   %
   !,
-  (show_success(unfwc,retract_u(pt(Key,Head,Body)))
+  (show_success(mpred_undo1_pt_unfwc_3,retract_u(pt(Key,Head,Body)))
     -> mpred_unfwc(pt(Head,Body))
      ; mpred_warn("Trigger not found to undo: ~p",[pt(Head,Body)])).
 
-mpred_undo1(pt(Head,Body)):- fail,
+mpred_undo1(pt(Head,Body)):- 
   % undo a positive trigger.
   %
   !,
-  (show_success(unfwc,retract_u(pt(Head,Body)))
+  (show_success(mpred_undo1_pt_unfwc,retract_u(pt(Head,Body)))
     -> mpred_unfwc(pt(Head,Body))
      ; mpred_warn("Trigger not found to undo: ~p",[pt(Head,Body)])).
 
 mpred_undo1(nt(Head,Condition,Body)):-
   % undo a negative trigger.
   !,
-  (show_success(unfwc,retract_u(nt(Head,Condition,Body)))
+  (show_success(mpred_undo1_nt_unfwc,retract_u(nt(Head,Condition,Body)))
     -> mpred_unfwc(nt(Head,Condition,Body))
      ; mpred_warn("Trigger not found to undo: ~p",[nt(Head,Condition,Body)])).
 
 mpred_undo1(Fact):-
   % undo a random fact, printing out the dtrace, if relevant.
-  retract_u(Fact),
+  (show_failure(mpred_undo1,retract_u(Fact))*->true;fail),
   mpred_trace_op(rem,Fact),
   mpred_unfwc(Fact).
 
@@ -1739,7 +1738,7 @@ mpred_undo1(Fact):-
 %  should stay in the database or should also be removed.
 %
 mpred_unfwc(F):-
-  show_call(mpred_retract_supported_relations(F)),
+  show_failure(mpred_retract_supported_relations(F)),
   mpred_unfwc1(F).
 
 mpred_unfwc1(F):-
@@ -1776,7 +1775,8 @@ mpred_retract_supported_relations(_).
 %  remove_if_unsupported(+Ps) checks to see if all Ps are supported and removes
 %  it from the DB if they are not.
 remove_if_unsupported(P):-
-   mpred_supported(P) -> mpred_trace_msg('~p',[still_supported(P)]) ;  must(mpred_undo(P)).
+   mpred_supported(P) 
+     -> mpred_trace_msg('~p',[still_supported(P)]) ;  doall(must(mpred_undo(P))).
 
 
 
@@ -1898,8 +1898,9 @@ lookup_spft_f(A,B,C):- lookup_u(spft(A,B,C)).
 lookup_spft_t(A,B,C):- lookup_u(spft(A,B,C)).
 
 
+% do all positive triggers
 mpred_do_fcpt(Fact,F):-
-  on_x_rtrace(call_u(pt(F,Body))),
+  call_u(pt(F,Body)),
   mpred_trace_msg('~N~n\tFound positive trigger: ~p~n\t\tbody: ~p~n',
 		[F,Body]),
   mpred_eval_lhs(Body,(Fact,pt(F,Body))),
@@ -1912,10 +1913,10 @@ mpred_do_fcpt(Fact,F):-
 
 mpred_do_fcpt(_,_).
 
+% do all negative triggers
 mpred_do_fcnt(_ZFact,F):-
   NT = nt(F,Condition,Body),
-  call_u(NT),
-  lookup_spft(X,F1,NT),
+  (call_u(NT)*-> lookup_spft(X,F1,NT) ; lookup_spft(X,F1,NT)),
   %clause(SPFT,true),
   mpred_trace_msg('~N~n\tFound negative trigger: ~p~n\t\tcond: ~p~n\t\tbody: ~p~n\tSupport: ~p~n',
                  [F,Condition,Body,spft(X,F1,NT)]),  
@@ -2020,6 +2021,7 @@ mpred_eval_rhs1( P,Support):-
   !,
   mpred_withdraw(PN).
 
+% if negated litteral
 mpred_eval_rhs1( P,Support):-
  % predicate to remove.
   \+ \+ mpred_negated_literal( P),
@@ -2878,51 +2880,42 @@ mpred_conjoin(C1,C2,(C1,C2)).
 %
 % removes all forward chaining rules and justifications from db.
 %
-mpred_reset:-
-  lookup_spft(P,ZF,ZTrigger),
-  mpred_retract_i_or_warn(P),
+mpred_reset:- context_module(Module),mpred_reset(Module).
+mpred_reset(Module):-
+  Module:lookup_spft(P,ZF,ZTrigger),current_predicate(_,Module:P),
+  (retract_u(P)->true;mpred_warn("Couldn't retract ~p: ~p.~n",[Module,P])),
   mpred_retract_i_or_warn(spft(P,ZF,ZTrigger)),
   fail.
-mpred_reset:-
-  mpred_database_item(T),!,
-  mpred_warn("Couldn't full mpred_reset: ~p.~n",[T]), must(pp_DB),!,
+mpred_reset(Module):-
+  mpred_database_item(Module,T),!,
+  mpred_warn("Couldn't full mpred_reset: ~p ~p.~n",[T,Module]), must(pp_DB),!,
   mpred_error("Pfc database not empty after mpred_reset, e.ax., ~p.~n",[T]),!.
-mpred_reset:- mpred_trace_msg("Reset DB complete").
+mpred_reset(Module):- mpred_trace_msg("Reset DB complete for ~p",[Module]).
 
 % true if there is some Pfc crud still in the database.
-mpred_database_item(P):-
+mpred_database_item(Module,P):-
   mpred_database_term(F,A,Type),
   Type\=debug,
   P \= ~(_),
   Type\=setting,
   functor(H,F,A),
-  clause_u(H,B),
+  Module:clause_u(H,B),
   B\= _:loop_check_nr(_),
   \+ (B=@@=(cwc, neg_in_code(_G))),
   \+ ( B= H),
   ((B== true)-> P=H; P=(H:B)).
 
 
-mpred_retract_i_or_warn_1(X):- sanity(is_ftNonvar(X)), call_u(X), retract_u(X), !, mpred_trace_msg('~NSUCCESS: ~p~n',[retract_u(X)]).
+mpred_retract_i_or_warn(X):- mpred_retract_i_or_warn_1(X) *-> true; mpred_retract_i_or_warn_2(X).
 
+mpred_retract_i_or_warn_1(X):- sanity(is_ftNonvar(X)), 
+  ((((X=spft(_,_,_), call_u(X), retract_u(X))) *-> true ; retract_u(X))),
+  mpred_trace_msg('~NSUCCESS: ~p~n',[retract_u(X)]).
 
-mpred_retract_i_or_warn_0(X):- mpred_retract_i_or_warn_1(X).
-mpred_retract_i_or_warn_0(spft(P,T,mfl(M,F,A))):- nonvar(A),mpred_retract_i_or_warn_1(spft(P,T,mfl(M,F,_))).
-mpred_retract_i_or_warn_0(spft(P,mfl(M,F,A),T)):- nonvar(A),mpred_retract_i_or_warn_1(spft(P,mfl(M,F,_),T)).
-mpred_retract_i_or_warn_0(spft(P,T,mfl(M,A,F))):- nonvar(A),mpred_retract_i_or_warn_1(spft(P,T,mfl(M,_,F))).
-mpred_retract_i_or_warn_0(spft(P,mfl(M,A,F),T)):- nonvar(A),mpred_retract_i_or_warn_1(spft(P,mfl(M,_,F),T)).
-mpred_retract_i_or_warn_0(spft(P,F,A)):- nonvar(A),mpred_retract_i_or_warn_1(spft(P,F,_)).
-mpred_retract_i_or_warn_0(spft(P,A,T)):- nonvar(A),mpred_retract_i_or_warn_1(spft(P,_,T)).
-mpred_retract_i_or_warn_0(spft(P,_,_)):- mpred_retract_i_or_warn_1(spft(P,_,_)).
-
-
-mpred_retract_i_or_warn(X):- mpred_retract_i_or_warn_0(X).
-mpred_retract_i_or_warn(SPFT):- \+ \+ SPFT = spft(_,a,a),!,fail.
-mpred_retract_i_or_warn(X):- fail,
-  mpred_warn("Couldn't retract_u ~p.~n",[X]),
-  (debugging_logicmoo(logicmoo(pfc))->rtrace(retract_u(X));true),!.
-mpred_retract_i_or_warn(X):-
-  mpred_warn("Couldn't retract_u ~p.~n",[X]),!.
+% mpred_retract_i_or_warn_2(SPFT):- \+ \+ SPFT = spft(_,a,a),!,fail.
+% mpred_retract_i_or_warn_2(X):- fail,mpred_warn("Couldn't retract_u ~p.~n",[X]),(debugging_logicmoo(logicmoo(pfc))->rtrace(retract_u(X));true),!.
+mpred_retract_i_or_warn_2(X):- mpred_trace_msg("Couldn't retract_i: ~p.~n",[X]),!.
+%mpred_retract_i_or_warn_2(X):- mpred_warn("Couldn't retract_i: ~p.~n",[X]),!.
 
 
 
@@ -3397,7 +3390,7 @@ mpred_get_support(F,J):-
 
 mpred_rem_support_if_exists(P,(Fact,Trigger)):-
   lookup_spft(P,Fact,Trigger),
-  mpred_retract_i_or_warn(spft(P,Fact,Trigger)),!.
+  mpred_retract_i_or_warn(spft(P,Fact,Trigger)).
 
 
 mpred_rem_support(P,(Fact,Trigger)):-
@@ -3412,12 +3405,12 @@ mpred_rem_support(P,S):-
 closest_u(Was,WasO):-clause_asserted_u(Was),!,Was=WasO.
 closest_u(Was,WasO):-lookup_u(Was),!,Was=WasO,!.
 closest_u(Was,WasO):-lookup_u(WasO),ignore(Was=WasO),!.
-
-closest_u(H,HH):- ref(_) = Result,closest_u(H,H,HH,Result),ref(Ref)= Result,
+closest_u(H,HH):- ref(_) = Result,closest_uu(H,H,HH,Result),ref(Ref)= Result,
   (H==HH -> true ; nonvar(Ref)),!.
-closest_u(H,P,PP):- copy_term(H+P,HH+PP),
+
+closest_uu(H,P,PP):- copy_term(H+P,HH+PP),
       ((lookup_u(HH)*-> (=@=(P,PP)->(!,HH=H);(fail));(!,fail));(true)).
-closest_u(H,P,PP,Result):-
+closest_uu(H,P,PP,Result):-
       sanity(Result=@=ref(Ref)),
       (copy_term(H+P,HH+PP),
       ((lookup_u(HH,Ref)*-> (=@=(P,PP)->(!,HH=H);

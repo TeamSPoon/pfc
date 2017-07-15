@@ -8,9 +8,9 @@ end_of_file.
 % Dec 13, 2035
 % Douglas Miles
 */
-:- module(mt_01,[]).
+:- module(mt_06a,[]).
 
-:- user:ensure_loaded(system:library(logicmoo_utils)).
+% :- user:ensure_loaded(system:library(logicmoo_utils)).
 :- ensure_loaded(library(pfc)).
 
 
@@ -23,7 +23,7 @@ mtCycL(kb2).
 mtCycL(kb3).
 
 % code1: (a <- b).
-code1: (a:- printAll('$current_source_module'(M)),b).
+code1: (a:- printAll('$current_source_module'(_M)),b).
 
 
 kb2: (b).
@@ -34,9 +34,11 @@ kb2: (?- a).
 
 genlMt(kb3,kb2).
 
+predicateConventionMt(a,kb2).
+%predicateConventionMt(P,MT)==>{kb_shared(MT:P)}.
 
-baseKB:predicateConventionMt(a,kb2).
+%==> (baseKB:predicateConventionMt(a,kb2)).
 
-kb3: (a==>c).
+:- ain((kb3: (a==>c))).
 
 :- mpred_must(clause(kb2:a,_)).

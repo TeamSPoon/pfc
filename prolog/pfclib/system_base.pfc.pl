@@ -70,7 +70,7 @@
 :- kb_shared(tooSlow/0).
 :- kb_shared(ttRelationType/1).
 
-:- forall(between(1,11,A),kb_shared(t/A)).
+% :- forall(between(1,11,A),kb_shared(t/A)).
 
 :- meta_predicate t(*,?).
 :- meta_predicate t(*,?,?).
@@ -81,7 +81,7 @@
 :- meta_predicate t(*,?,?,?,?,?,?,?).
 
 
-:- kb_shared( ('~') /1).
+%:- kb_shared( ('~') /1).
 
 ttRelationType(RT)==> { decl_rt(RT) },functorDeclares(RT).
 functorDeclares(RT)==>{kb_shared(RT/1)},arity(RT,1),prologHybrid(RT),functorIsMacro(RT).
@@ -143,7 +143,7 @@ compilerDirective(isRuntime,comment("Only use rule/fact at runtime")).
 
 % :- listing(ttRelationType/1).
 
-% :- kb_local(do_and_undo/2).
+:- kb_local(do_and_undo/2).
 
 do_and_undo(A,U):-cwc,atom(A),atom_concat('assert',Suffix,A),!,atom_concat('delete',Suffix,U),current_predicate(U/_).
 do_and_undo(A,U):-cwc,atom(A),atom_concat('def',_,A),atom_concat('un',A,U),current_predicate(U/_).
@@ -193,21 +193,22 @@ rtNotForUnboundPredicates(call).
 pfc_checking ==> (mpred_prop(F,A,pfcPosTrigger)==>{warn_if_static(F,A)}).
 pfc_checking ==> (mpred_prop(F,A,pfcNegTrigger)==>{warn_if_static(F,A)}).
 pfc_checking ==> (mpred_prop(F,A,pfcBcTrigger)==>{warn_if_static(F,A)}).
+mpred_prop(F,A,What)/(\+ ground(F/A))==>{trace_or_throw(mpred_prop(F,A,What))}.
 
-prop_mpred(pfcCreates,F,A)==> {kb_local(F/A)}.
+
+prop_mpred(pfcCreates,F,A)==> 
+ % {functor(P,F,A),notrace(make_dynamic(P)),kb_shared(F/A),create_predicate_istAbove(abox,F,A)},
+  {kb_local(F/A)},
+  {warn_if_static(F,A)}.
 prop_mpred(pfcControlled,F,A)==> {kb_local(F/A)}.
+prop_mpred(pfcWatches,F,A)==> {kb_local(F/A)}.
 
-mpred_prop(F,A,pfcPosTrigger)/(\+ ground(F/A))==>{trace_or_throw(mpred_prop(F,A,pfcPosTrigger))}.
+
 mpred_prop(F,A,pfcPosTrigger)==>prop_mpred(pfcWatches,F,A).
 mpred_prop(F,A,pfcNegTrigger)==>prop_mpred(pfcWatches,F,A).
 mpred_prop(F,A,pfcBcTrigger)==>prop_mpred(pfcCreates,F,A).
-mpred_prop(F,A,pfcLHS)==>arity(F,A),functorIsMacro(F),prop_mpred(pfcWatches,F,A).
-/*mpred_prop(F,A,pfcRHS)==>
-  {functor(P,F,A),notrace(make_dynamic(P)),kb_shared(F/A),
-    create_predicate_istAbove(abox,F,A)},
-    prop_mpred(pfcCreates,F,A).*/
-mpred_prop(F,A,pfcRHS)==> {kb_local(F/A)}.
-mpred_prop(F,A,pfcLHS)==> {kb_local(F/A)}.
+mpred_prop(F,A,pfcLHS)==> arity(F,A),functorIsMacro(F),prop_mpred(pfcWatches,F,A).
+mpred_prop(F,A,pfcRHS)==> prop_mpred(pfcCreates,F,A).
 
 
 
@@ -222,7 +223,8 @@ genlPreds(pfcRHS,pfcControlled).
 
 genlPreds(prologSideEffects,rtNotForUnboundPredicates).
 
-
+:- kb_shared(nondet/0).
+:- kb_shared(typeCheckDecl/2).
 
 ==> nondet.
 
@@ -242,7 +244,7 @@ warningsAbout(Msg,Why)==>{wdmsg(error(warningsAbout(Msg,Why))),break}.
 %
 % True Structure.
 %
-:- kb_shared(t/1).
+%:- kb_shared(t/1).
 %t([P|LIST]):- cwc, !,mpred_plist_t(P,LIST).
 %t(naf(CALL)):- cwc, !,not(t(CALL)).
 %t(not(CALL)):- cwc, !,mpred_f(CALL).
@@ -325,6 +327,10 @@ arity(comment,2).
 :- kb_shared(support_hilog/2).
 :- kb_shared(mpred_undo_sys/3).
 :- kb_shared(arity/2).
+:- kb_shared(alwaysGaf/1).
+:- kb_shared(quasiQuote/1).
+
+
 
 arity(alwaysGaf,1).
 alwaysGaf(alwaysGaf).
@@ -365,6 +371,7 @@ rtArgsVerbatum(mpred_rem).
 rtArgsVerbatum(added).
 rtArgsVerbatum(call).
 rtArgsVerbatum(call_u).
+rtArgsVerbatum(clause_asserted_i).
 rtArgsVerbatum(member).
 rtArgsVerbatum( <- ).
 rtArgsVerbatum(=..).
