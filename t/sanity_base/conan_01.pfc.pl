@@ -17,7 +17,10 @@ prologHybrid(isEach(mudLastCommand/2,mudNamed/2, mudSpd/2,mudStr/2,typeGrid/3)).
 
 */
 
-:- must((fully_expand( rtF(foo/2),O), O = (arity(foo, 2), rtF(foo), tPred(foo)))).
+:- ain(ttRelationType(rtF)).
+% :- must((fully_expand( rtF(foo/2),O), O = (arity(foo, 2), rtF(foo), tPred(foo)))).
+
+:- must((fully_expand( rtF(foo/2),O), sub_term(Sub,O),Sub==rtF(foo))).
 
 
 

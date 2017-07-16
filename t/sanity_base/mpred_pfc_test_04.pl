@@ -23,7 +23,7 @@
 :- mpred_reset.
 
 
-:- rtrace(mpred_ain(default_ooQ1(whenMissingQ1))).
+:- notrace(rtrace(mpred_ain(default_ooQ1(whenMissingQ1)))).
 
 :- must(call_u(default_ooQ1(whenMissingQ1))).
 
@@ -86,6 +86,13 @@
 
 :- mpred_ain(default_ooTt(defaultValueTt)).
 
+:- make,check,ensure_loaded(library(pfc)),make,check.
+
+:- wdmsg(warning(outdated_tests)).
+
+end_of_file.
+
+
 :- mpred_test(current_ooTt(defaultValueTt)).
 
 :- (mpred_ain(current_ooTt(fooTt))).
@@ -109,6 +116,8 @@
 :- mpred_test(~current_ooTt(fooTt)).
 
 :- mpred_ain(default_ooTt(defaultValueTt)).
+
+
 
 :- mpred_test(current_ooTt(defaultValueTt)).
 

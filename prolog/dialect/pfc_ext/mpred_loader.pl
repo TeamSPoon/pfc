@@ -1203,7 +1203,11 @@ file_begin(WIn):-
 
 :- nodebug(logicmoo(loader)).
 
-set_file_lang(W):- !, set_lang(W).
+set_file_lang(W):- 
+   source_location(File,_Line),
+   assert_if_new(lmcache:mpred_directive_value(File,language,W)),
+   (W==pfc-> assert_if_new(baseKB:expect_file_mpreds(File)) ; true),!,
+  set_lang(W).
 set_file_lang(W):-
   forall((prolog_load_context(file,Source);which_file(Source);prolog_load_context(source,Source)),
   ignore((  % \+ lmcache:mpred_directive_value(Source,language,W),
