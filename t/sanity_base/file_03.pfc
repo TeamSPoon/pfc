@@ -11,16 +11,6 @@
 :- module(sanity,[]).
 
 :- use_module(library(pfc)).
+:- make.
 
-:- begin_pfc.
-
-% :- process_this_script.
-
-must_is_entailed(G):- cwc, must(is_entailed_u(G)).
-
-% :- xlisting(must_is_entailed).
-
-a.
-
-:- must_is_entailed(a).
-
+:- wdmsg(test_was_dupe).

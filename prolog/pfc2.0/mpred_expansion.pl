@@ -398,6 +398,7 @@ functor_declares_instance(F,C):- fail, functor_declares_instance_0(F,C0),!,C=C0.
 functor_declares_instance_0(isa,_):-!,fail.
 functor_declares_instance_0(props,_):-!,fail.
 functor_declares_instance_0(F,F):- cheaply_u(functorDeclares(F)).
+functor_declares_instance_0(F,F):- a(ttRelationType,F).
 
 :- if(false).
 functor_declares_instance_0(P,P):- arg(_,s(ttExpressionType,ttModuleType,tSet,ttTypeType,tFunction),P).

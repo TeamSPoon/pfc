@@ -401,9 +401,10 @@ is_pfc_file:- prolog_flag(never_pfc,true),!,is_pfc_file0, rtrace(is_pfc_file0),t
 is_pfc_file:- is_pfc_file0,!.
 
 is_pfc_file0:- source_location(File,_W),( atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File)),!.
+is_pfc_file0:- source_location(File,_W),call(call,lmcache:mpred_directive_value(File, language, pfc)).
+is_pfc_file0:- source_location(File,_W),baseKB:expect_file_mpreds(File),!.
 is_pfc_file0:- source_location(SFile,_W), baseKB:ignore_file_mpreds(SFile),!,fail.
 is_pfc_file0:- prolog_load_context(source, File),baseKB:expect_file_mpreds(File),!.
-is_pfc_file0:- source_location(File,_W),baseKB:expect_file_mpreds(File),!.
 is_pfc_file0:- source_context_module(M),baseKB:using_pfc(_, M, pfc_mod).
 
 

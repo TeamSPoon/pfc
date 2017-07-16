@@ -1548,7 +1548,8 @@ mpred_slow_search.
 %
 % Rule Backward.
 %
-ruleBackward(R,Condition):- call_u(( ruleBackward0(R,Condition),functor(Condition,F,_),\+ consequent_arg(_,v(call_u_no_bc,call,call_u),F))).
+ruleBackward(R,Condition):- call_u(( ruleBackward0(R,Condition),functor(Condition,F,_),
+  \+ consequent_arg(_,v(call_u_no_bc,call,call_u),F))).
 %ruleBackward0(F,Condition):-clause_u(F,Condition),\+ (is_true(Condition);mpred_is_info(Condition)).
 
 %% ruleBackward0( +F, ?Condition) is semidet.
@@ -1567,8 +1568,28 @@ ruleBackward0(F,Condition):- call_u((  '<-'(F,Condition),\+ (is_true(Condition);
 %
 pfcBC_NoFacts_TRY(F) :- no_repeats(ruleBackward(F,Condition)),
   % neck(F),
-  call_u(Condition),
-  maybeSupport(F,(g,ax)).
+  no_repeats(F,call_u(Condition)),
+  maybe_support_bt(F,Condition).
+
+maybe_support_bt(F,Condition):- 
+  no_repeats(Why,call_u(bt(F,pt(A,Why)))) *-> maybeSupport(F,(A,Why)) ;
+  no_repeats(Why,call_u(bt(F,Why))) *-> maybeSupport(F,(bt(F,Why),g)) ;
+   maybeSupport(F,(Condition,g)).
+
+
+mpred_memo_bc(Call):- 
+      call_u(Call),
+      doall((
+        lookup_u(Call),
+        ignore(show_failure(mpred_why(Call))),
+        dmsg(result=Call),nl)).
+   forall(Call,ignore(show_failure(mpred_why(Call)))).
+
+mpred_why_all(Call):-
+      doall((
+        call_u(Call),
+        ignore(show_failure(mpred_why(Call))),
+        dmsg(result=Call),nl)).
 
 
 

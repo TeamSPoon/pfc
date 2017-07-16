@@ -15,8 +15,9 @@
 
 :- begin_pfc.
 
-:-ain(sanity:(must_clause_asserted(G):- cwc, must(clause_asserted_u(G)))).
+sanity:(must_clause_asserted(G):- cwc, must(clause_asserted_u(G))).
 :-ain((must_clause_asserted(G):- cwc, must(clause_asserted_u(G)))).
+
 
 :- user:listing(must_clause_asserted).
 

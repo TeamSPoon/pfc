@@ -9,11 +9,18 @@
 */
 :- module(mt_01a,[]).
 
-% :- ensure_loaded(library(pfc)).
 
-:- set_defaultAssertMt(mt_01a).
+:- ensure_loaded(library(pfc)).
 
-:- begin_pfc.
+:- on_f_rtrace((on_x_rtrace(begin_pfc),is_pfc_file)).
+
+:- wdmsg(feature_test_may_fail).
+
+% :- set_defaultAssertMt(mt_01a).
+
+mtCycL(socialMt).
+
+:- user:listing(mtCycL/1).
 
 baseKB:mtCycL(socialMt).
 
@@ -24,7 +31,8 @@ baseKB:mtCycL(socialMt).
 
 baseKB:predicateConventionMt(loves,socialMt).
 
-:- must((fix_mp(clause(_,_),loves(x,y),M,P),M:P==socialMt:loves(x,y))).
+:- must((fix_mp(clause(_,_),loves(x,y),M,P),
+   M:P==socialMt:loves(x,y))).
 
 loves(sally,joe).
 

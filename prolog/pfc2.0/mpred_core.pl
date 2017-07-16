@@ -876,8 +876,7 @@ mpred_add(P):-mpred_ain(P).
 %
 
 mpred_ain(MTP,S):- notrace(is_ftVar(MTP)),!,trace_or_throw(var_mpred_ain(MTP,S)).
-%mpred_ain(User:MTP,S):- User=user, !, must(mpred_ain(MTP,S)).
-%mpred_ain(User:MTP :-B,S):- User=user, !, must(mpred_ain(MTP:-B,S)).
+mpred_ain(==>P,S):- !,mpred_ain(P,S).
 
 mpred_ain(ToMt:P,(mfl(ToMt,File,Lineno),UserWhy)):- !, ToMt:mpred_ain(P,(mfl(ToMt,File,Lineno),UserWhy)).
 mpred_ain((ToMt:P :- B),(mfl(ToMt,File,Lineno),UserWhy)):- !, ToMt:mpred_ain((P:-B),(mfl(ToMt,File,Lineno),UserWhy)).
@@ -898,10 +897,10 @@ mpred_ain(ToMt:P,(mfl(FromMt,File,Lineno),UserWhy)):- ToMt \== FromMt,
 */
 
 mpred_ain(MTP,S):- sanity(stack_check), strip_module(MTP,MT,P),P\==MTP,!,
-  with_umt(MT,mpred_ain(P,S)),!.
+  with_umt(MT,mpred_ain_now(P,S)),!.
 
 mpred_ain(MTP :- B,S):- strip_module(MTP,MT,P),P\==MTP,!,
-  with_umt(MT,mpred_ain(P :- B,S)),!.
+  with_umt(MT,mpred_ain_now(P :- B,S)),!.
 
 /*
 mpred_ain(PIn,S):-
@@ -909,7 +908,9 @@ mpred_ain(PIn,S):-
    with_current_why(S, motel_ain(PIn,S)),!.
 */
 
-mpred_ain(PIn,S):-
+mpred_ain(PIn,S):-mpred_ain_now(PIn,S).
+
+mpred_ain_now(PIn,S):-
   % must(add_eachRulePreconditional(PIn,P)),
   PIn=P,
   must(full_transform(ain,P,P0)),!,
@@ -917,7 +918,7 @@ mpred_ain(PIn,S):-
   must(ain_fast(P0,S)),!,
   nop(ignore((P\=@=P0, mpred_db_type(P,fact(_)),show_failure(mpred_fwc(P))))).
 
-mpred_ain(P,S):- mpred_warn("mpred_ain(~p,~p) failed",[P,S]),!,fail.
+mpred_ain_now(P,S):- mpred_warn("mpred_ain(~p,~p) failed",[P,S]),!,fail.
 
 
 ain_fast(P):-  \+ t_l:is_repropagating(_),clause_asserted(P),!.
@@ -1143,6 +1144,21 @@ mpred_post12a(P,S):- t_l:is_repropagating(_),!,
   mpred_enqueue(P,S))),
   !.
 
+/*
+mpred_post12a(P,S):- true, !,
+ ignore(( %  db mpred_ain_db_to_head(P,P2),
+  % mpred_remove_old_version(P),
+  mpred_add_support(P,S),
+  (mpred_unique_u(P)->
+     assert_u_confirmed_was_missing(P);
+     assert_u_confirm_if_missing(P)),
+  mpred_trace_op(add,P,S),
+  !,
+  mpred_enqueue(P,S))),
+  !.
+*/
+
+
 % Expects a *UN*clean database and adds new information.
 % (running the program is been running before loading this module)
 %
@@ -1162,11 +1178,11 @@ get_mpred_support_status(P,_S, PP,(FF,TT),Was):-
       (nb_setarg(1,Simular,(F,T)),!,fail))
     ; Was = none) -> true ; ignore(Was=Simular)).
 
-mpred_post123(_P,_S,_PP,exact):-!.
+mpred_post123(_P,_S,_PP,exact):- current_prolog_flag(pfc_cheats,true), !.
 mpred_post123(P,S,PP,Was):-
  %  if we''ve asserted what we''ve compiled
-  gripe_time(0.1, must(get_mpred_assertion_status(P,PP,WasA))),!,
-  gripe_time(0.4, must(mpred_post_update4(WasA,P,S,Was))),!.
+  gripe_time(0.1, must(get_mpred_assertion_status(P,PP,AStatus))),!,
+  gripe_time(0.4, must(mpred_post_update4(AStatus,P,S,Was))),!.
 
 
 get_mpred_assertion_status(P,PP,Was):-
@@ -3361,14 +3377,13 @@ bagof_or_nil(T,G,B):- (bagof_nr(T,G,B) *-> true; B=[]).
 mpred_add_support(P,(Fact,Trigger)):-
   SPFT = spft(P,Fact,Trigger),  
    notify_if_neg_trigger(SPFT),
-  (clause_asserted_u(SPFT)-> true; assertz_mu(SPFT)).
+  (clause_asserted_u(SPFT)-> true; (assertz_mu(SPFT),sanity(clause_asserted_u(SPFT)))).
 
 %  mpred_add_support_fast(+Fact,+Support)
 mpred_add_support_fast(P,(Fact,Trigger)):-
   SPFT = spft(P,Fact,Trigger),  
    notify_if_neg_trigger(SPFT),
-   call_u(assertz_mu(SPFT)),
-   sanity(clause_asserted_u(SPFT)).
+   assertz_mu(SPFT),sanity(clause_asserted_u(SPFT)).
 
 
 notify_if_neg_trigger(spft(P,Fact,Trigger)):- 
@@ -3555,11 +3570,12 @@ mpred_why(N):-
 mpred_why(M:P):-atom(M),!,call_from_module(M,mpred_why_sub(P)).
 mpred_why(P):- mpred_why_sub(P).
 
-mpred_why_maybe(P):-wdmsgl(proof=P),!.
-mpred_why_maybe(P):-ignore(mpred_why(P)).
+mpred_why_maybe(_,(F:-P)):-!,wdmsgl(F:-P),!.
+mpred_why_maybe(F,P):-wdmsgl(F:-P),!.
+mpred_why_maybe(_,P):-ignore(mpred_why(P)).
 
 mpred_why_sub(P):- loop_check(mpred_why_sub0(P),true).
-mpred_why_sub0(P):-mpred_why(P,Why),!,wdmsg(:-mpred_why(P)),wdmsgl(mpred_why_maybe,Why).
+mpred_why_sub0(P):-mpred_why(P,Why),!,wdmsg(:-mpred_why(P)),wdmsgl(mpred_why_maybe(P),Why).
 mpred_why_sub0(P):-loop_check(mpred_why_sub_lc(P),trace_or_throw(mpred_why_sub_lc(P)))-> \+ \+ call_u(why_buffer(_,_)),!.
 mpred_why_sub_lc(P):- 
   justifications(P,Js),
