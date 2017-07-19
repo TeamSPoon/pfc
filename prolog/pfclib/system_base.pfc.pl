@@ -83,6 +83,9 @@
 
 %:- kb_shared( ('~') /1).
 
+ttTypeType(ttTypeType).
+ttTypeType(ttRelationType).
+ttTypeType(TT)==>functorDeclares(TT).
 ttRelationType(RT)==> { decl_rt(RT) },functorDeclares(RT).
 functorDeclares(RT)==>{kb_shared(RT/1)},arity(RT,1),prologHybrid(RT),functorIsMacro(RT).
 % ttRelationType(RT) ==> ( ~genlPreds(RT,tFunction) <==> genlPreds(RT,tPred)).
@@ -484,5 +487,28 @@ never_retract_u(X,is_ftVar(X)):- cwc, is_ftVar(X).
 prologHybrid(arity/2).
 prologDynamic(term_expansion/2).
 prologBuiltin(var/1).
+
+% ===================================================================
+%  Microtheory System
+% ===================================================================
+
+%((ttTypeType(TT),abox:isa(T,TT))==>tSet(T)).
+%tSet(T)==>functorDeclares(T).
+
+(genlMt(C,P) ==> {decl_assertable_module(C),decl_assertable_module(P)}).
+(genlMt(C,P),mtProlog(C) ==> {decl_assertable_module(C),add_import_module(C,P,end)}).
+(mtCycL(C) ==> {decl_assertable_module(C),ensure_abox(C)}).
+(mtProlog(C) ==> {decl_assertable_module(C)}).
+%:- install_constant_renamer_until_eof.
+
+ % :- mpred_trace_exec.
+ttTypeType(ttModuleType,mudToCyc('MicrotheoryType')).
+
+==>ttModuleType(tSourceCode,mudToCyc('tComputerCode'),comment("Source code files containing callable features")).
+==>ttModuleType(tSourceData,mudToCyc('iboPropositionalInformationThing'),comment("Source data files containing world state information")).
+:- mpred_notrace_exec.
+
+
+typeGenls(ttModuleType,tMicrotheory).
 
 

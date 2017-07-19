@@ -20,6 +20,8 @@
 
 mtCycL(socialMt).
 
+:- must(maseKB:mtCycL(socialMt)).
+
 :- user:listing(mtCycL/1).
 
 baseKB:mtCycL(socialMt).
@@ -30,6 +32,7 @@ baseKB:mtCycL(socialMt).
 
 
 baseKB:predicateConventionMt(loves,socialMt).
+:- user:listing(predicateConventionMt/2).
 
 :- must((fix_mp(clause(_,_),loves(x,y),M,P),
    M:P==socialMt:loves(x,y))).
