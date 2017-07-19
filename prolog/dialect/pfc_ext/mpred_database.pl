@@ -1582,7 +1582,7 @@ mpred_memo_bc(Call):-
       doall((
         lookup_u(Call),
         ignore(show_failure(mpred_why(Call))),
-        dmsg(result=Call),nl)).
+        dmsg(result=Call),nl)),
    forall(Call,ignore(show_failure(mpred_why(Call)))).
 
 mpred_why_all(Call):-

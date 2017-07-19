@@ -284,15 +284,17 @@ ensure_abox_support(M,Where):-
      must(import_mpred_database_term(M,F,A,Type,Where))).
 
 
+/*
 import_mpred_database_term(M,F,A,_,_):- show_failure(localize_mpred(M,F,A)),!,kb_local(M:F/A).
 
-import_mpred_database_term(M,F,A,syntaxic(Type),_):- member(Type,[rule,fact,fact(_),rule(_)]), !,
+import_mpred_database_term(M,F,A,syntaxic(Type),_):- fail, member(Type,[rule,fact,fact(_),rule(_)]), !,
   show_failure(localize_mpred(M,F,A)),!,(kb_local(M:F/A)),
   nop((system:export(system:F/A),M:import(system:F/A),M:export(system:F/A))).
 
 % import_mpred_database_term(M,F,A,debug,_):- !, (kb_shared(M:F/A)).
 % import_mpred_database_term(M,F,A,support,_):- !,(kb_shared(M:F/A)).
 % import_mpred_database_term(M,F,A,trigger,_):- !,(kb_local(M:F/A)).
+*/
 
 import_mpred_database_term(M,F,A,_,_):- show_failure(localize_mpred(M,F,A)),!,(kb_local(M:F/A)).
 
@@ -369,8 +371,8 @@ set_defaultAssertMt(ABox):-
     asserta_new(ABox:defaultTBoxMt(TBox)),
     assert_setting(t_l:current_defaultAssertMt(ABox)),
     ensure_abox(ABox),
-    '$set_source_module'(ABox),
-    '$set_typein_module'(ABox),
+    %'$set_source_module'(ABox),
+    %'$set_typein_module'(ABox),
     nop(inherit_into_module(ABox,TBox))))),
   ain(baseKB:mtCycL(ABox)).
 

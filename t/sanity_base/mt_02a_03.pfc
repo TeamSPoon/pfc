@@ -11,9 +11,7 @@
 
 :- ensure_loaded(library(pfc)).
 
-% :- set_defaultAssertMt(myMt).
-
-% :- begin_pfc.
+:- set_defaultAssertMt(myMt).
 
 baseKB:predicateConventionMt(loves,socialMt).
 
@@ -32,7 +30,7 @@ mt1:like(sally,joe).
 :- mt_02:import(mt1:like/2).
 :- xlisting(like/2).
 
-genlMt(mt1,socialMt).
+baseKB:genlMt(mt1,socialMt).
 
 % this will raise upward the assertion.. is this OK?
 like(A,B)==>loves(B,A).
