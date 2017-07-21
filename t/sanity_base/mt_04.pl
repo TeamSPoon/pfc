@@ -16,8 +16,8 @@
 %:- set_defaultAssertMt(myMt).
 
 baseKB:mtProlog(code1).
-baseKB:mtCycL(kb2).
-baseKB:mtCycL(kb3).
+baseKB:mtHybrid(kb2).
+baseKB:mtHybrid(kb3).
 
 baseKB:genlMt(kb3,code1).
 baseKB:genlMt(kb3,kb2).

@@ -10,17 +10,17 @@
 
 :- include(test_header).
 
-:- header_sane:listing(mtCycL/1).
+:- header_sane:listing(mtHybrid/1).
 
 :- wdmsg(feature_test_may_fail).
 
 %:- set_defaultAssertMt(header_sane).
 
-mtCycL(socialMt).
+mtHybrid(socialMt).
 
-:- must(baseKB:mtCycL(socialMt)).
+:- must(baseKB:mtHybrid(socialMt)).
 
-:- header_sane:listing(mtCycL/1).
+:- header_sane:listing(mtHybrid/1).
 
 
 :- set_defaultAssertMt(myMt).

@@ -483,7 +483,7 @@ fix_mp0(Why,'?-'(G0),M, '?-'(CALL)):-nonvar(G0),!,fix_mp0(Why,G0,M,CALL).
 fix_mp0(Why,':-'(G0),M, ':-'(CALL)):-nonvar(G0),!,fix_mp0(Why,G0,M,CALL).
 fix_mp0(Why,(G :- B),M,( GO :- B)):- !, fix_mp0(Why,G,M,GO).
 fix_mp0(Why,_:(G :- B),M,( GO :- B)):- !, fix_mp0(Why,G,M,GO).
-fix_mp0(_Why,Mt:P,Mt,P):- clause_b(mtCycL(Mt)),!.
+fix_mp0(_Why,Mt:P,Mt,P):- clause_b(mtHybrid(Mt)),!.
 fix_mp0(_Why,Mt:P,Mt,P):- clause_b(mtExact(Mt)),!.
 fix_mp0(_Why,P,S,GO):- predicate_property(P,imported_from(S)),!,strip_module(P,_,GO).
 fix_mp0(Why,M:P,MT,P):- to_real_mt(Why,M,MT)->M\==MT,!.
@@ -552,7 +552,7 @@ convention_to_symbolic_mt_ec(Why,F,A,Mt):-convention_to_symbolic_mt(Why,F,A,Mt).
 
 convention_to_symbolic_mt(_Why,predicateConventionMt,2,baseKB):-!.
 convention_to_symbolic_mt(_Why,genlMt,2,baseKB):-!.
-convention_to_symbolic_mt(_Why,mtCycL,1,baseKB):-!.
+convention_to_symbolic_mt(_Why,mtHybrid,1,baseKB):-!.
 convention_to_symbolic_mt(_Why,tCol,1,baseKB):-!.
 convention_to_symbolic_mt(_Why,mtProlog,1,baseKB):-!.
 convention_to_symbolic_mt(_Why,functorDeclares,1,baseKB):-!.
@@ -658,7 +658,7 @@ clause_u(MH,B,R):- Why = clause(clause,clause_u),
 
 % lookup_u/cheaply_u/call_u/clause_b
 lookup_u(SPFT):- baseKB:call(SPFT).
-% baseKB:SPFT:- current_prolog_flag(unsafe_speedups , true) , !,baseKB:mtCycL(MT),call(MT:SPFT).
+% baseKB:SPFT:- current_prolog_flag(unsafe_speedups , true) , !,baseKB:mtHybrid(MT),call(MT:SPFT).
 % lookup_u(H):-lookup_u(H,_).
 
 
@@ -690,7 +690,7 @@ with_umt(U,G):- sanity(stack_check(5000)),
   (t_l:current_defaultAssertMt(W)->W=U,!,call_from_module(U,G)).
 with_umt(user,P):- !,with_umt(baseKB,P).
 with_umt(M,P):-
-  (clause_b(mtCycL(M))-> W=M;defaultAssertMt(W)),!,
+  (clause_b(mtHybrid(M))-> W=M;defaultAssertMt(W)),!,
    locally(t_l:current_defaultAssertMt(W),
      call_from_module(W,P)).
 
@@ -2073,7 +2073,7 @@ call_u_mp(M,( \+ P1)):-!, \+ call_u_mp(M,P1).
 call_u_mp(M,must(P1)):-!, must( call_u_mp(M,P1)).
 call_u_mp(M, 't'(P1)):-!, call_u_mp(M,P1).
 call_u_mp(M,'{}'(P1)):-!, call_u_mp(M,P1).
-call_u_mp(_,mtCycL(P)):-!,clause(baseKB:mtCycL(P),true).
+call_u_mp(_,mtHybrid(P)):-!,clause(baseKB:mtHybrid(P),true).
 %call_u_mp(_,is_string(P)):- !, logicmoo_util_bugger:is_string(P).
 
 
@@ -2112,13 +2112,13 @@ call_u_mp_lc(M,P,_,_):- predicate_property(M:P,file(_)),!,call(M:P).
 call_u_mp_lc(M,P,_,_):- source_file(M:P,_),!,call(M:P).
 call_u_mp_lc(R,P,F,A):- source_file(M:P,_),!,make_visible(R,M:F/A),call(R:P).
 call_u_mp_lc(R,P,F,A):- find_module(R:P,M),dmsg(find_module(R:P,M)),make_visible(R,M:F/A),!,catch(R:call(P),E,(wdmsg(call_u_mp(R,M:P)),wdmsg(E),dtrace)).
-%call_u_mp_lc(M,P):- \+ clause(baseKB:mtCycL(M),true),!,clause(baseKB:mtCycL(MT),true),call_u_mp(MT,P).
+%call_u_mp_lc(M,P):- \+ clause(baseKB:mtHybrid(M),true),!,clause(baseKB:mtHybrid(MT),true),call_u_mp(MT,P).
 call_u_mp_lc(M,P,F,A):- wdmsg(dynamic(M:P)),must_det_l((dynamic(M:F/A),make_visible(user,M:F/A),multifile(M:F/A))),!,fail.
 
 /*
 Next
 call_u_mp(_G,M,P):- var(P),!,call((baseKB:mtExact(M)->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
-% call_u_mp(mtCycL(P),_,mtCycL(P)):-!,baseKB:mtCycL(P).
+% call_u_mp(mtHybrid(P),_,mtHybrid(P)):-!,baseKB:mtHybrid(P).
 call_u_mp((P),M,(P)):-!,catch(baseKB:call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
 % call_u_mp(P,M,P):- !,catch(M:call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
 call_u_mp(_G,M,P):- call((baseKB:mtExact(M)->call(P);baseKB:call(P))).

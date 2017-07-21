@@ -17,7 +17,7 @@
 :- set_defaultAssertMt(myMt).
 
 mtProlog(code1).
-mtCycL(kb2).
+mtHybrid(kb2).
 
 
 

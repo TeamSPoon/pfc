@@ -88,20 +88,25 @@
 
 %((ttTypeType(TT),abox:isa(T,TT))==>tSet(T)).
 %tSet(T)==>functorDeclares(T).
-:- kb_shared(mtCycL/1).
+:- kb_shared(functorDeclares/1).
+:- kb_shared(mtHybrid/1).
 :- kb_shared(mtProlog/1).
+:- kb_shared(mtNonAssertable/1).
 :- kb_shared(predicateConventionMt/2).
+:- kb_shared(genlMt/2).
+
 
 (genlMt(C,P) ==> {decl_assertable_module(C),decl_assertable_module(P)}).
 %(genlMt(C,P),mtProlog(C) ==> {decl_assertable_module(C),add_import_module(C,P,end)}).
 %(genlMt(C,P),mtProlog(P) ==> {decl_assertable_module(C),add_import_module(C,P,end)}).
 (genlMt(C,P) ==> {decl_assertable_module(C),add_import_module(C,P,end)}).
-(mtCycL(C) ==> {decl_assertable_module(C),ensure_abox(C)}).
+(mtHybrid(C) ==> {decl_assertable_module(C),ensure_abox(C)}).
 % (mtProlog(C) ==> {decl_assertable_module(C)}).
 predicateConventionMt(genlMt,baseKB).
 predicateConventionMt(predicateConventionMt,baseKB).
-predicateConventionMt(mtCycL,baseKB).
+predicateConventionMt(mtHybrid,baseKB).
 predicateConventionMt(mtProlog,baseKB).
+predicateConventionMt(mtNonAssertable,baseKB).
 (predicateConventionMt(F,MT),arity(F,A))==>{kb_shared(MT:F/A)}.
 
 ttRelationType(RT)==>predicateConventionMt(RT,baseKB).
@@ -167,8 +172,9 @@ compilerDirective(isRuntime,comment("Only use rule/fact at runtime")).
                   rtAvoidForwardChain,
                   rtSymmetricBinaryPredicate,
                   predCanHaveSingletons,
-/*
                   pfcControlled,  % pfc decides when to forward and backchain this pred
+/*
+                  
                   pfcWatches,   % pfc needs to know about new assertions
                   pfcCreates,   % pfc asserts 
 
@@ -194,7 +200,7 @@ compilerDirective(isRuntime,comment("Only use rule/fact at runtime")).
 do_and_undo(A,U):-cwc,atom(A),atom_concat('assert',Suffix,A),!,atom_concat('delete',Suffix,U),current_predicate(U/_).
 do_and_undo(A,U):-cwc,atom(A),atom_concat('def',_,A),atom_concat('un',A,U),current_predicate(U/_).
 do_and_undo(A,U):-cwc,strip_module(A,M,P),compound(P),P=..[F|ARGS],lookup_u(do_and_undo(F,UF)),UA=..[UF|ARGS], U = (M:UA).
-ll:- cwc,call(listing,[isa/2,mtCycL/1,col_as_unary/1, tRRP2/1,tRR/1,tRRP/1]). % ttTypeType,
+ll:- cwc,call(listing,[isa/2,mtHybrid/1,col_as_unary/1, tRRP2/1,tRR/1,tRRP/1]). % ttTypeType,
 
 
 :- mpred_notrace_exec.
@@ -514,7 +520,7 @@ rtNotForUnboundPredicates(member/2).
 
 never_assert_u(prologSingleValued(BAD),var_prologSingleValued(BAD)):-is_ftVar(BAD).
 
-never_assert_u(baseKB:mtProlog(baseKB),must(mtCycL(baseKB))).
+never_assert_u(baseKB:mtProlog(baseKB),must(mtHybrid(baseKB))).
 
 never_assert_u(A,test_sanity(A)):- never_assert_u(A).
 

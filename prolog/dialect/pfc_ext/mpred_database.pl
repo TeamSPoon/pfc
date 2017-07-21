@@ -883,7 +883,7 @@ mpred_update_literal(P,N,Q,R):-
 update_single_valued_arg(M,M:Pred,N):-!,update_single_valued_arg(M,Pred,N).
 
 update_single_valued_arg(world,P,N):- !, update_single_valued_arg(baseKB,P,N).
-update_single_valued_arg(M,P,N):- \+ clause_b(mtCycL(M)), clause_b(mtCycL(M2)),!,update_single_valued_arg(M2,P,N).
+update_single_valued_arg(M,P,N):- \+ clause_b(mtHybrid(M)), clause_b(mtHybrid(M2)),!,update_single_valued_arg(M2,P,N).
 
 update_single_valued_arg(M,P,N):- 
   consequent_arg(N,P,UPDATE),
@@ -897,7 +897,7 @@ update_single_valued_arg(M,P,N):-
 update_single_valued_arg(M,P,N):- 
  call_u((must_det_l((
 
-  call_u(mtCycL(M)),
+  call_u(mtHybrid(M)),
   mpred_type_args \= M,
   mpred_kb_ops \= M,
   consequent_arg(N,P,UPDATE),
