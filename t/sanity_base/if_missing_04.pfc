@@ -8,10 +8,10 @@
 
 %  was_module(sanity,[]).
 
+:- include(test_header).
 
 :- dynamic((foob/1,if_missing/2,good/1)).
 
-:- include(test_header).
 
 :- begin_pfc.
 

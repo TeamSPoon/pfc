@@ -25,7 +25,7 @@ mt2:predicateConventionMt(loves,socialTwoMt).
 
 loves(sally,joe).
 
-:- listing(loves/2).
+:- xlisting(loves/2).
 
 :- mpred_test(clause_u(socialOneMt:loves(_,_));clause_u(socialTwoMt:loves(_,_))).
 

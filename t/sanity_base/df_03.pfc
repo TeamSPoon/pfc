@@ -8,7 +8,7 @@
 
 %  was_module(sanity,[]).
 
-:- system:include(test_header).
+:- include(test_header).
 
 :- begin_pfc.
 

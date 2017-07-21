@@ -383,8 +383,8 @@ maybe_should_rename(O,O).
 % file late late joiners
 :- if( \+ prolog_load_context(reload,true)).
 :- source_location(File, _)-> during_boot((asserta(baseKB:ignore_file_mpreds(File)))).
-:- doall((module_property(M,file(File)),module_property(M,class(library)),asserta(baseKB:ignore_file_mpreds(File)))).
-:- doall((source_file(File),asserta(baseKB:ignore_file_mpreds(File)))).
+:- doall((module_property(M,file(File)),module_property(M,class(CT)),memberchk(CT,[library,system]),asserta(baseKB:ignore_file_mpreds(File)))).
+%:- doall((source_file(File),asserta(baseKB:ignore_file_mpreds(File)))).
 :- doall((virtualize_ereq(F,A),base_kb_dynamic(F,A))).
 :- endif.
 
@@ -409,17 +409,27 @@ base_kb_dynamic(F,A):- ain(mpred_prop(F,A,prologHybrid)),kb_shared(F/A).
 
 in_dialect_pfc:- is_pfc_file. % \+ current_prolog_flag(dialect_pfc,cwc),!.
 
+is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_toplevel)),!.
+is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_mod)),!,baseKB:mtCanAssert(SM).
+is_pfc_module(SM):- clause_b(mtHybrid(SM)).
 
 % First checks to confirm there is nothing inhibiting
 is_pfc_file:- prolog_flag(never_pfc,true),!,is_pfc_file0, rtrace(is_pfc_file0),trace,!,fail.
 is_pfc_file:- is_pfc_file0,!.
 
-is_pfc_file0:- source_location(File,_W),( atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File)),!.
-is_pfc_file0:- source_location(File,_W),call(call,lmcache:mpred_directive_value(File, language, pfc)).
-is_pfc_file0:- source_location(File,_W),baseKB:expect_file_mpreds(File),!.
-is_pfc_file0:- source_location(SFile,_W), baseKB:ignore_file_mpreds(SFile),!,fail.
-is_pfc_file0:- prolog_load_context(source, File),baseKB:expect_file_mpreds(File),!.
-is_pfc_file0:- source_context_module(M),baseKB:using_pfc(_, M, pfc_mod).
+is_pfc_file0:- source_location(File,_W),!,is_pfc_file(File).
+is_pfc_file0:- prolog_load_context(module, M),is_pfc_module(M),!,clause_b(mtHybrid(M)).
+%is_pfc_file0:- source_context_module(M),is_pfc_module(M).
+
+:- meta_predicate is_pfc_file(:).
+is_pfc_file(M:File):- is_pfc_file(M,File).
+is_pfc_file(_,File):- atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File),!.
+is_pfc_file(_,File):- call(call,lmcache:mpred_directive_value(File, language, pfc)).
+is_pfc_file(_,File):- baseKB:expect_file_mpreds(File),!.
+is_pfc_file(_,File):- baseKB:ignore_file_mpreds(File),!,fail.
+is_pfc_file(_,_):- prolog_load_context(source, File),baseKB:expect_file_mpreds(File),!, \+ baseKB:ignore_file_mpreds(File).
+is_pfc_file(M,_):- prolog_load_context(module, SM), SM\==M,is_pfc_module(SM).
+is_pfc_file(M,_):- is_pfc_module(M).
 
 
 sub_atom(F,C):- sub_atom(F,_,_,_,C).
