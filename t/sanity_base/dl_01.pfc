@@ -10,9 +10,9 @@
 
 %  was_module(sanity,[]).
 
-:- dynamic(meta_argtypes/1).
-
 :- include(test_header).
+
+:- dynamic(meta_argtypes/1).
 
 :- begin_pfc.
 

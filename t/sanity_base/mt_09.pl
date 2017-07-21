@@ -11,6 +11,7 @@
 
 :- include(test_header).
 
+:- must(is_pfc_file).
 
 %:- add_import_module(mt_01,baseKB,end).
 

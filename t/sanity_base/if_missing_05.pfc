@@ -8,6 +8,8 @@
 
 % %  was_module(sanity,[]).
 
+:- include(test_header).
+
 :- op(500,fx,'-').
 :- op(300,fx,'~').
 :- op(1050,xfx,('==>')).
@@ -19,7 +21,6 @@
 
 :- dynamic((foob/1,if_missing/2,good/1)).
 
-:- include(test_header).
 
 :- mpred_trace.
 :- mpred_watch.
