@@ -57,7 +57,7 @@ scce4(Setup,Goal,Undo):-
    DoUndo = once(true),
    DoSetup = once((Setup,nb_setarg(1,DoUndo,Undo))),
    repeat, 
-   prolog_current_choice(RepCP),
+   prolog_current_choice(_RepCP),
    ((DoSetup;(true,fail)),
       (do_call(Goal,Done,Next)*->true;(prolog_cut_to(ExitCP),fail)),
       (Done==true->prolog_cut_to(ExitCP);true),
@@ -67,8 +67,8 @@ scce4(Setup,Goal,Undo):-
    
 
 scce3(S,Goal,C):- scce2(
-   (asserta(scce0,REF)),
-   (nop(between(1,3,X)),S,Goal,C),
+   (asserta(scce0,_REF)),
+   (nop(between(1,3,_X)),S,Goal,C),
    true),fail.
 
 a :- reset(newpred(Term),Cont,Term), w(after_reset), call_continuation(Cont).

@@ -35,7 +35,7 @@ sk_in(_DUNNO).
 
 :- must((findall(FEx,(clause_u(sk_in(FEx),_,_),wdmsg(sk_in(FEx))),L),length(L,THREE),THREE=3)).
 
-:- test_header:listing([pt/2,sk_in/1,sk_out/1]).
+:- listing([pt/2,sk_in/1,sk_out/1]).
 
 sk_in(Ex)==>sk_out(Ex).
 

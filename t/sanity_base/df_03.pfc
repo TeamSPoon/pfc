@@ -57,10 +57,13 @@ b(1).
 a(X) ==> c(X).
 most(c(X) ==> ~b(X)) .
 a(1).
+a(2).
 
 
 :- listing([a/1,b/1,c/1,(==>)/2,most/1,pt,nt,bt]).
 
-:- mpred_test( ~ b(1) ).
+:- mpred_test( \+  ~ b(1) ).
+:- mpred_test( ~ b(2) ).
+
 
 
