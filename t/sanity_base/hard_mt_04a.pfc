@@ -12,8 +12,8 @@
 :- include(test_header).
 :- set_defaultAssertMt(myMt).
 
-baseKB:mtCycL(socialOneMt).
-baseKB:mtCycL(socialTwoMt).
+baseKB:mtHybrid(socialOneMt).
+baseKB:mtHybrid(socialTwoMt).
 
 mt1:predicateConventionMt(loves,socialOneMt).
 

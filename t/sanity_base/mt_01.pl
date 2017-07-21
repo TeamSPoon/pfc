@@ -17,7 +17,7 @@
 
 :- set_defaultAssertMt(myMt).
 
-baseKB:mtCycL(socialMt).
+baseKB:mtHybrid(socialMt).
 
 socialMt:loves(sally,joe).
 

@@ -13,8 +13,8 @@
 :- begin_pfc.
 
 baseKB:mtProlog(code1).
-baseKB:mtCycL(kb2).
-baseKB:mtCycL(kb3).
+baseKB:mtHybrid(kb2).
+baseKB:mtHybrid(kb3).
 
 arity(a0,0).
 baseKB:predicateConventionMt(a0,kb2).

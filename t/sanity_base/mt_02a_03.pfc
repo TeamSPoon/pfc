@@ -30,7 +30,7 @@ mt1:like(sally,joe).
 :- header_sane:import(mt1:like/2).
 :- xlisting(like/2).
 
-baseKB:mtCycL(socialMt).
+baseKB:mtHybrid(socialMt).
 baseKB:genlMt(mt1,socialMt).
 
 % this will raise upward the assertion.. is this OK?

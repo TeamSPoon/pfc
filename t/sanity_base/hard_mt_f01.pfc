@@ -13,8 +13,8 @@
 
 :- begin_pfc.
 
-baseKB:mtCycL(socialOneMt).
-baseKB:mtCycL(socialTwoMt).
+baseKB:mtHybrid(socialOneMt).
+baseKB:mtHybrid(socialTwoMt).
 
 :- set_defaultAssertMt(myMt).
 

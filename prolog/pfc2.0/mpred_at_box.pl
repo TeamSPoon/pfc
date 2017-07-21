@@ -119,7 +119,7 @@ user_m_check(_Out).
 % add_abox_module(baseKB):-!.
 add_abox_module(ABox):- must(atom(ABox)),
   must(mtCanAssert(ABox)),
-  ain(baseKB:mtCycL(ABox)).
+  ain(baseKB:mtHybrid(ABox)).
 
 :- dynamic(baseKB:mtProlog/1).
 :- dynamic(baseKB:mtNoPrologCode/1).
@@ -128,11 +128,12 @@ add_abox_module(ABox):- must(atom(ABox)),
 
 baseKB:mtNoPrologCode(mpred_userkb).
 
-baseKB:mtProlog(Mt):- var(Mt),!,current_module(Mt),\+ clause_b(mtCycL(Mt)).
+baseKB:mtProlog(Mt):- var(Mt),!,current_module(Mt),\+ clause_b(mtHybrid(Mt)).
 baseKB:mtProlog(Mt):- \+ atom(Mt),!,fail.
 baseKB:mtProlog(Mt):- \+ current_module(Mt),!,fail.
-baseKB:mtProlog(Mt):- clause_b(mtCycL(Mt)),!,fail.
+baseKB:mtProlog(Mt):- clause_b(mtHybrid(Mt)),!,fail.
 baseKB:mtProlog(Mt):- module_property(Mt,class(library)).
+baseKB:mtProlog(Mt):- module_property(Mt,class(system)).
 baseKB:mtProlog(Mt):- arg(_,v(lmcache,t_l,system,user),Mt).
 
 :- multifile(lmcache:has_pfc_database_preds/1).
@@ -228,7 +229,7 @@ get_file_type_local(File,Type):-clause(lmcache:mpred_directive_value(File,langua
 mtCanAssert(baseKB).
 % mtCanAssert(user):- !,fail.
 mtCanAssert(abox):- !,dumpST,fail.
-mtCanAssert(Module):- clause_b(mtCycL(Module)).
+mtCanAssert(Module):- clause_b(mtHybrid(Module)).
 mtCanAssert(Module):- clause_b(mtExact(Module)).
 mtCanAssert(Module):-  module_property(Module,file(_)),!,fail.
 mtCanAssert(Module):- (loading_source_file(File),get_file_type_local(File,pfc),prolog_load_context(module,Module)).
@@ -282,7 +283,7 @@ ensure_abox(M):- must(ensure_abox_support(M,baseKB)).
 
 ensure_abox_support(M,Where):-
    asserta(lmcache:has_pfc_database_preds(M)),
-   assert_if_new(baseKB:mtCycL(M)),
+   assert_if_new(baseKB:mtHybrid(M)),
    retractall(baseKB:mtProlog(M)),
    setup_module_ops(M),
    set_prolog_flag(M:unknown,error),
@@ -374,14 +375,14 @@ set_defaultAssertMt(ABox):-
   sanity(mtCanAssert(ABox)),
   must(((
     get_current_default_tbox(TBox),
-    asserta_new(TBox:mtCycL(ABox)),
+    asserta_new(TBox:mtHybrid(ABox)),
     asserta_new(ABox:defaultTBoxMt(TBox)),
     assert_setting(t_l:current_defaultAssertMt(ABox)),
     ensure_abox(ABox),
     %'$set_source_module'(ABox),
     %'$set_typein_module'(ABox),
     nop(inherit_into_module(ABox,TBox))))),
-  ain(baseKB:mtCycL(ABox)).
+  ain(baseKB:mtHybrid(ABox)).
 
 % :- '$hide'(set_defaultAssertMt(_)).
 
@@ -415,7 +416,7 @@ make_module_name_local0(Source,KB):- clause_b(mtProlog(Source)),t_l:current_defa
 make_module_name_local0(Source,KB):- clause_b(mtGlobal(Source)),t_l:current_defaultAssertMt(KB),!.
 make_module_name_local0(Source,SetName):- baseKB:file_to_module(Source,SetName),!.
 make_module_name_local0(Source,Source):- lmcache:has_pfc_database_preds(Source).
-make_module_name_local0(Source,Source):- clause_b(mtCycL(Source)),!.
+make_module_name_local0(Source,Source):- clause_b(mtHybrid(Source)),!.
 make_module_name_local0(user,KB):- t_l:current_defaultAssertMt(KB),!.
 make_module_name_local0(user,baseKB):-!.
 make_module_name_local0(Source,GetName):- make_module_name00(Source,GetName).
@@ -619,7 +620,7 @@ baseKB:hybrid_support(arity,2).
 
 %baseKB:hybrid_support(spft,3).
 
-baseKB:hybrid_support(mtCycL,1).
+baseKB:hybrid_support(mtHybrid,1).
 baseKB:hybrid_support(mtCycLBroad,1).
 baseKB:hybrid_support(genlMt,2).
 
@@ -659,7 +660,7 @@ uses_predicate(_,Module,Name,Arity,Action) :-
 	'$autoload'(Module, Name, Arity), !,
 	Action = retry.
 
-uses_predicate(BaseKB,System, F,A,R):-  System\==BaseKB, call_u(mtCycL(BaseKB)),\+ call_u(mtCycL(System)),!,
+uses_predicate(BaseKB,System, F,A,R):-  System\==BaseKB, call_u(mtHybrid(BaseKB)),\+ call_u(mtHybrid(System)),!,
    must(uses_predicate(System,BaseKB,F,A,R)),!.
 
 uses_predicate(_,_, (:-), 1, error) :- !,dumpST,dbreak.
@@ -693,7 +694,7 @@ uses_predicate(_CallerMt,baseKB,predicateConventionMt,2,retry):-
   create_predicate_istAbove(baseKB,predicateConventionMt,2).
 
 
-uses_predicate(BaseKB,System, F,A,R):-  System\==BaseKB, call_u(mtCycL(BaseKB)),\+ call_u(mtCycL(System)),
+uses_predicate(BaseKB,System, F,A,R):-  System\==BaseKB, call_u(mtHybrid(BaseKB)),\+ call_u(mtHybrid(System)),
    loop_check_term(must(uses_predicate(System,BaseKB,F,A,R)),
                    term(uses_predicate(System,BaseKB,F,A,R)),fail),!.
 
@@ -701,7 +702,7 @@ uses_predicate(_CallerMt, baseKB, F, A,retry):-
   create_predicate_istAbove(baseKB,F,A),
    nop(system:import(baseKB:F/A)),!.
 
-uses_predicate(System, BaseKB, F,A, retry):-  System\==BaseKB, call_u(mtCycL(BaseKB)),\+ call_u(mtCycL(System)),!,
+uses_predicate(System, BaseKB, F,A, retry):-  System\==BaseKB, call_u(mtHybrid(BaseKB)),\+ call_u(mtHybrid(System)),!,
    create_predicate_istAbove(BaseKB,F,A),
     nop(system:import(BaseKB:F/A)),!.
 
@@ -739,7 +740,7 @@ create_predicate_istAbove(baseKB,F,A):- !,
      ignore((( \+ (defaultAssertMt(CallerMt),CallerMt\==baseKB,create_predicate_istAbove(CallerMt,F,A) )))).
 create_predicate_istAbove(abox,F,A):-  must(defaultAssertMt(CallerMt)),sanity(CallerMt\=abox),!,create_predicate_istAbove(CallerMt,F,A).
 %create_predicate_istAbove(_, do_and_undo, 2):-dtrace.
-create_predicate_istAbove(CallerMt,F,A):- clause_b(mtProlog(CallerMt)), must(\+ clause_b(mtCycL(CallerMt))) ,!,wdmsg(warn(create_predicate_istAbove_mtProlog(CallerMt,F,A))),dtrace.
+create_predicate_istAbove(CallerMt,F,A):- clause_b(mtProlog(CallerMt)), must(\+ clause_b(mtHybrid(CallerMt))) ,!,wdmsg(warn(create_predicate_istAbove_mtProlog(CallerMt,F,A))),dtrace.
 create_predicate_istAbove(CallerMt,F,A):-
    make_as_dynamic(create_predicate_istAbove(CallerMt,F,A),CallerMt,F,A),
    functor(Goal,F,A),

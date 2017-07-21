@@ -368,7 +368,7 @@ mpred_file_term_expansion0(Type,LoaderMod,I,O):-
   sanity((ground(Type:LoaderMod),nonvar(I),var(O))),
   quietly_must(get_source_ref1(mfl(MF,F,L))),!,
   % \+ mpred_prolog_only_file(F),
-  call_u(baseKB:mtCycL(MT1)),
+  call_u(baseKB:mtHybrid(MT1)),
   must((proper_source_mod([LoaderMod,MF,MT1],AM))),
   (((nb_current('$source_term',TermWas), TermWas == I);
     (b_getval('$term',TermWas), TermWas == I))),
@@ -381,7 +381,7 @@ mpred_file_term_expansion0(Type,LoaderMod,I,O):-
     b_setval('$term',TermWas)),!, wdmsg(I-->O).
 
 
-proper_source_mod(List,AM):- member(AM,List),call_u(mtCycL(AM)),!.
+proper_source_mod(List,AM):- member(AM,List),call_u(mtHybrid(AM)),!.
 proper_source_mod(List,AM):- member(AM,List),call_u(mtCanAssert(AM)),!.
 
 %% mpred_expand_file_module_clause( +File, +Module, +:Term, -:Expanded) is det.
@@ -1688,7 +1688,7 @@ make_dynamic_ilc(baseKB:C):- predicate_property(baseKB:C, dynamic),!.
 % make_dynamic_ilc(C):- predicate_property(C, dynamic).
 make_dynamic_ilc(C):- % trace_or_throw(make_dynamic_ilc(C)),
    compound(C),strip_module(C,MIn,_),get_functor(C,F,A),quietly_must(F\=='$VAR'),
-  (\+ a(mtCycL,MIn) -> must(defaultAssertMt(M)) ; MIn =M),
+  (\+ a(mtHybrid,MIn) -> must(defaultAssertMt(M)) ; MIn =M),
   functor(P,F,A),
 
   ( \+predicate_property(M:P,_) -> kb_shared(M:F/A) ; 
@@ -2015,8 +2015,8 @@ force_reload_mpred_file(World,MFileIn):-
 % Helper for Force Reloading of a Managed Predicate File.
 %
 force_reload_mpred_file2(WorldIn,MFileIn):- 
- sanity(call_u(baseKB:mtCycL(WorldIn))),
- must(call_u(baseKB:mtCycL(WorldIn)->World=WorldIn;defaultAssertMt(World))),
+ sanity(call_u(baseKB:mtHybrid(WorldIn))),
+ must(call_u(baseKB:mtHybrid(WorldIn)->World=WorldIn;defaultAssertMt(World))),
  strip_module(MFileIn,_MaybeNewModule,_),
  NewModule = World,
  with_source_module(NewModule,((

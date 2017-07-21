@@ -17,8 +17,8 @@
 :- set_defaultAssertMt(myMt).
 
 mtProlog(code1).
-mtCycL(kb2).
-mtCycL(kb3).
+mtHybrid(kb2).
+mtHybrid(kb3).
 
 % code1: (a <- b).
 code1: (a:-b).
