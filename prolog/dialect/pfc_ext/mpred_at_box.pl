@@ -102,6 +102,7 @@
 
 :-dynamic(unused_predicate/4).
 
+:- include('mpred_header.pi').
 :- flag_call(runtime_debug=false).
 
 :- virtualize_source_file.
@@ -894,8 +895,6 @@ import_predicate(CM,M:_):- default_module(CM,M),!.
 import_predicate(CM,M:F/A):- show_call(nop(CM:z333import(M:F/A))),CM:multifile(M:F/A),
   on_xf_cont(CM:discontiguous(M:F/A)).
 
-
-:- include('mpred_header.pi').
 
 :- fixup_exports.
 

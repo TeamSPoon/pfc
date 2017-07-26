@@ -17,7 +17,7 @@
 %:- sanity(current_prolog_flag(retry_undefined,true)).
 %:- set_prolog_flag(retry_undefined,true).
 
-:- mpred_test(\+ mtHybrid(header_sane)).
+:- pfc_test_feature(\+ mtHybrid(header_sane)).
 :- mpred_test(\+ mtProlog(header_sane)).
 %:- mpred_test(tMicrotheory(header_sane)).
 

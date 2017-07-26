@@ -4,7 +4,7 @@
 % Douglas Miles
 
 */
-:- if(('$current_source_module'(SM),'$current_typein_module'(CM),asserta(baseKB:'using_pfc'(CM,SM,pfc_lib)))).
+:- if(('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'using_pfc'(M,CM,SM,pfc_lib)))).
 :- module(pfc_lib,[]).
 :- endif.
 
@@ -410,11 +410,15 @@ base_kb_dynamic(F,A):- ain(mpred_prop(F,A,prologHybrid)),kb_shared(F/A).
 in_dialect_pfc:- is_pfc_file. % \+ current_prolog_flag(dialect_pfc,cwc),!.
 
 is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_toplevel)),!.
-is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_mod)),!,baseKB:mtCanAssert(SM).
+%is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_mod)),!,baseKB:mtCanAssert(SM).
+is_pfc_module(SM):- clause_b(mtProlog(SM)),!,fail.
 is_pfc_module(SM):- clause_b(mtHybrid(SM)).
 
 % First checks to confirm there is nothing inhibiting
-is_pfc_file:- prolog_flag(never_pfc,true),!,is_pfc_file0, rtrace(is_pfc_file0),trace,!,fail.
+must_not_be_pfc_file:- is_pfc_file0, rtrace(is_pfc_file0),trace,!,fail.
+must_not_be_pfc_file:- !.
+
+is_pfc_file:- prolog_flag(never_pfc,true),!,must_not_be_pfc_file,!,fail.
 is_pfc_file:- is_pfc_file0,!.
 
 is_pfc_file0:- source_location(File,_W),!,is_pfc_file(File).
