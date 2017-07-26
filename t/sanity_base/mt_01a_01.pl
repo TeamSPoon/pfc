@@ -11,8 +11,11 @@
 :- include(test_header).
 
 :- must_not_be_pfc_file.
+
+
 :- pfc_test_feature(\+ mtHybrid(header_sane)).
-:- pfc_test_feature(header_sane:listing(mtHybrid/1)).
+
+:- listing(mtHybrid/1).
 
 :- wdmsg(feature_test_may_fail).
 
@@ -42,15 +45,17 @@ baseKB:arity(loves,2).
 
 loves(sally,joe).
 
-% baseKB:genlMt(myMt,socialMt).
+baseKB:genlMt(myMt,socialMt).
 
 :- mpred_test(clause_u(socialMt:loves(_,_))).
 
 :- set_prolog_flag(retry_undefined,true).
 
+:- mpred_test(clause(myMt:loves(_,_),_B,_R)).
+
 :- pfc_test_feature(\+clause_u(myMt:loves(_,_))).
 
-:- pfc_test_feature(\+ myMt:loves(_,_)).
+:- mpred_test(myMt:loves(_,_)).
 
 
 

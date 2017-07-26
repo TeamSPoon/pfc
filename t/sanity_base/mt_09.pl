@@ -11,17 +11,36 @@
 
 :- include(test_header).
 
-:- must(is_pfc_file).
+:- must(\+ is_pfc_file).
 
 %:- add_import_module(mt_01,baseKB,end).
 
 :- set_defaultAssertMt(myMt).
 
-mtProlog(code1).
+baseKB:mtProlog(code1).
 mtHybrid(kb2).
 
+/*
+;; All living people have an organ
+(forall ((p PersonAlive)) (exists ((o Organ)) (have p o)))
+;; An organ exists in which every living Persons ever will exists
+(exists ((o Organ)) (forall ((p PersonAlive)) (co-temporal p o)))
 
 
+Maybe people dont even exist?  Wait.. 'co-temporal' does this mean we have created People?
+Have we created people with Eternal life as well?  At least until the Eternal Organ is no more?
+
+To make my question fair 
+
+(forall (x t) 
+ (if 
+  (and (ist t (instance x TemporalObject))
+       (co-temporal x y))
+    (ist t (exists (y) (instance y TemporalObject))))
+  
+(forall (x y) (iff (co-temporal x y)  (co-temporal y x)))
+    
+*/
 
 code1: (a:- printAll('$current_source_module'(_M)),b).
 

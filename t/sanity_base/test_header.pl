@@ -3,6 +3,9 @@
 
 :- if(prolog_load_context(module,user)).
 :- module(header_sane,[]).
+
+pfc_test_feature(_).
+
 :- endif.
 
 :- '$current_typein_module'(W), (W\==user->'$set_typein_module'(W);true).
@@ -20,5 +23,6 @@
 :- set_prolog_flag(runtime_debug, 3). % 2 = important but dont sacrifice other features for it
 :- set_prolog_flag(runtime_safety, 3).  % 3 = very important
 :- set_prolog_flag(unsafe_speedups, false).
+
 
 
