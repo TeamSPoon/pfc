@@ -16,6 +16,7 @@
 :- begin_pfc.
 
 arity(loves,2).
+mtHybrid(socialMt).
 baseKB:predicateConventionMt(loves,socialMt).
 
 :- if(true).

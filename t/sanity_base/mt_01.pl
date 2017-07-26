@@ -21,10 +21,9 @@ baseKB:mtHybrid(socialMt).
 
 socialMt:loves(sally,joe).
 
-:- set_defaultAssertMt(myMt).
-
 :- mpred_test(clause_u(socialMt:loves(_,_))).
 :- mpred_test(\+clause_u(myMt:loves(_,_))).
+:- mpred_test(\+clause_u(header_sanity:loves(_,_))).
 
 
 

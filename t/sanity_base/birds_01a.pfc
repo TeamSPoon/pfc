@@ -1,14 +1,27 @@
 :- include(test_header).
+:- set_prolog_flag(retry_undefined,false).
 
 % -*-Prolog-*-
 % here is an example which defines default_01a facts and rules.  Will it work?
 
+:- is_pfc_file.
+
 :- begin_pfc.
+
+:- is_pfc_file.
+
+:- dynamic(default_01a/1).
+
+:- listing(mtHybrid).
+:- listing(mtProlog).
 
 (default_01a(P)/mpred_literal(P))  ==>  (~( ~P) ==> P).
 
 default_01a((P ==> Q))/mpred_literal(Q) ==> (P, \+( ~Q) ==> Q).
 
+:- set_prolog_flag(gc,false).
+
+:- set_prolog_flag(retry_undefined,true).
 % birds fly by default_01a.
 ==> default_01a((bird(X) ==> fly(X))).
 

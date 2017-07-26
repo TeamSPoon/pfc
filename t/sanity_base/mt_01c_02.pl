@@ -13,9 +13,9 @@
 
 :- begin_pfc.
 
-:- set_defaultAssertMt(cycKB1).
+:- set_fileAssertMt(cycKB1).
 
-loves(sally,joe).
+cycKB1:loves(sally,joe).
 
 :- mpred_test(clause_u(cycKB1:loves(_,_))).
 
@@ -30,9 +30,15 @@ loves(sally,joe).
 
 :- pfc_test_feature(\+ call_u(baseKB:loves(_,_))).
 
-:- pfc_test_feature(\+ call_u(header_sane:loves(_,_))).
+:- pfc_test_feature(listing(loves)).
 
-:- pfc_test_feature(call_u(loves(_,_))).
+:- pfc_test_feature(mpred_test(\+ call_u(header_sane:loves(_,_)))).
+
+:- pfc_test_feature(mpred_test(call_u(loves(_,_)))).
+
+
+
+
 
 
 

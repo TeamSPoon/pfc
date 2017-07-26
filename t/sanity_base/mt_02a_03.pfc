@@ -13,6 +13,7 @@
 
 arity(loves,2).
 
+baseKB:mtHybrid(socialMt).
 baseKB:predicateConventionMt(loves,socialMt).
 
 :- if(true).
@@ -30,7 +31,6 @@ mt1:like(sally,joe).
 :- header_sane:import(mt1:like/2).
 :- xlisting(like/2).
 
-baseKB:mtHybrid(socialMt).
 baseKB:genlMt(mt1,socialMt).
 
 % this will raise upward the assertion.. is this OK?
