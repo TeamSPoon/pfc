@@ -2576,12 +2576,52 @@ mpred_neg_connective('-').
 % mpred_neg_connective('~').
 mpred_neg_connective('\\+').
 
+is_simple_lhs(ActN):- is_ftVar(ActN),!,fail.
+is_simple_lhs( \+ _ ):-!,fail.
+is_simple_lhs((Lhs1,Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
+is_simple_lhs((Lhs1;Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
+is_simple_lhs(ActN):- is_active_lhs(ActN),!,fail.
+is_simple_lhs((Lhs1/Lhs2)):- !,fail, is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
+is_simple_lhs(_).
+
+
+is_active_lhs(ActN):- var(ActN),!,fail.
+is_active_lhs(!).
+is_active_lhs(cut_c).
+is_active_lhs(actn(_Act)).
+is_active_lhs('{}'(_Act)).
+is_active_lhs((Lhs1/Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+is_active_lhs((Lhs1,Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+is_active_lhs((Lhs1;Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+
+
+add_lhs_cond(Lhs1/Cond,Lhs2,Lhs1/(Cond,Lhs2)):-!.
+add_lhs_cond(Lhs1,Lhs2,Lhs1/Lhs2).
 
 %% process_rule(+Lhs, ?Rhs, ?Parent_rule) is semidet.
 %
 % Process Rule.
 %
-process_rule(Lhs,Rhs,Parent_rule):-
+
+/*
+
+Next Line converts:
+((prologHybrid(F),arity(F,A))==>{kb_shared(F/A)}).
+
+To:
+arity(F,A)/prologHybrid(F)==>{kb_shared(F/A)}.
+prologHybrid(F)/arity(F,A)==>{kb_shared(F/A)}.
+
+In order to reduce the number of postivie triggers (pt/2s)
+*/
+process_rule(LhsIn,Rhs,Parent_rule):- is_simple_lhs(LhsIn),LhsIn = (Lhs1,Lhs2),
+  add_lhs_cond(Lhs1,Lhs2,LhsA),
+  add_lhs_cond(Lhs2,Lhs1,LhsB),!,
+  process_rule0(LhsA,Rhs,Parent_rule),
+  process_rule0(LhsB,Rhs,Parent_rule).
+process_rule(Lhs,Rhs,Parent_rule):-process_rule0(Lhs,Rhs,Parent_rule).
+
+process_rule0(Lhs,Rhs,Parent_rule):-
   must_notrace_pfc(get_source_ref1(U)),!,
   copy_term(Parent_rule,Parent_ruleCopy),
   build_rhs(U,Rhs,Rhs2),

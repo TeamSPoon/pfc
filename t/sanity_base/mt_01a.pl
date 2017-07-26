@@ -10,7 +10,7 @@
 
 :- include(test_header).
 
-:- must_not_be_pfc_file.
+:- pfc_test_feature(must_not_be_pfc_file).
 :- pfc_test_feature(\+ mtHybrid(header_sane)).
 :- pfc_test_feature(header_sane:listing(mtHybrid/1)).
 
