@@ -348,7 +348,9 @@ cheaply_u(G):- quickly(quietly(Goal)).
 
 % lookup_u/cheaply_u/call_u/clause_b
 
-cheaply_u(rtArgsVerbatum(G)):- !,lookup_u(rtArgsVerbatum(G)).
+cheaply_u(rtArgsVerbatum(G)):- !, clause_b(rtArgsVerbatum(G)).
+cheaply_u(functorDeclares(F)):-!, clause_b(functorDeclares(F)).
+cheaply_u(prologBuiltin(G)):- !,clause_b(prologBuiltin(G)).
 cheaply_u(call(ereq,G)):- !,sanity(callable(G)),cheaply_u(G).
 cheaply_u(G):- quietly(lookup_u(G)).
 

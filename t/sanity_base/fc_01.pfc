@@ -30,6 +30,8 @@
 
 :- debug_logicmoo(logicmoo(_)).
 
+:- set_prolog_flag(gc, true).
+
 :- mpred_trace_msg(beginxxxxxxxxxxxxxxxxXXXXXXXXXXXXXXXXXXXXXXXXxxxxxxxxxxxxxxxxxxxxxxxx_abc).
 
 

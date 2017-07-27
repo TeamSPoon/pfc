@@ -1388,7 +1388,12 @@ mpred_call_only_facts(_Why,Clause):- mpred_call_only_facts(Clause).
 mpred_call_only_facts(Clause) :-  strip_module(Clause,_,ClauseF), on_x_debug(no_repeats(loop_check(mpred_call_0(ClauseF),fail))). 
 
 
+mpred_call_ru(functorDeclares(H)):- !, get_var_or_functor(H,F),clause_b(functorDeclares(F)).
+mpred_call_ru(singleValuedInArg(H,A)):- !, get_var_or_functor(H,F),clause_b(singleValuedInArg(F,A)).
+mpred_call_ru(M:G):- !,call(M:G).
+mpred_call_ru(G):- defaultAssertMt(M),call(M:G).
 
+get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.
 
 %% mpred_call_0( +Var) is semidet.
 %
@@ -1579,7 +1584,7 @@ maybe_support_bt(F,Condition):-
   no_repeats(Why,call_u(bt(F,Why))) *-> maybeSupport(F,(bt(F,Why),g)) ;
    maybeSupport(F,(Condition,g)).
 
-
+:- meta_predicate mpred_why_all(*).
 mpred_why_all(Call):- !,
       call_u(Call),
       doall((
@@ -1982,8 +1987,8 @@ pred_u1(P):-a(prologDynamic,F),arity_no_bc(F,A),functor(P,F,A).
 %
 % Predicate For User Code Extended Helper.
 %
-pred_u2(P):- compound(P),functor(P,F,A),sanity(no_repeats(support_hilog(F,A);arity_no_bc(F,A))),!,has_db_clauses(P).
-pred_u2(P):- no_repeats(support_hilog(F,A);arity_no_bc(F,A)),functor(P,F,A),has_db_clauses(P).
+pred_u2(P):- compound(P),functor(P,F,A),sanity(no_repeats(arity_no_bc(F,A))),!,has_db_clauses(P).
+pred_u2(P):- no_repeats(arity_no_bc(F,A)),functor(P,F,A),has_db_clauses(P).
 
 
 
@@ -2193,7 +2198,7 @@ assertz_mu(MH):- fix_mp(clause(assert,assertz_u),MH,M,H),assertz_mu(M,H).
 %
 assert_mu(M,M2:Pred,F,A):- M == M2,!, assert_mu(M,Pred,F,A).
 assert_mu(M,_:Pred,F,A):- dtrace,sanity(\+ is_ftVar(Pred)),!, assert_mu(M,Pred,F,A).
-assert_mu(M,Pred,F,_):- call_u(singleValuedInArg(F,SV)),!,must(update_single_valued_arg(M,Pred,SV)),!.
+assert_mu(M,Pred,F,_):- clause_b(singleValuedInArg(F,SV)),!,must(update_single_valued_arg(M,Pred,SV)),!.
 assert_mu(M,Pred,F,A):- a(prologSingleValued,F),!,must(update_single_valued_arg(M,Pred,A)),!.
 assert_mu(M,Pred,F,_):- a(prologOrdered,F),!,assertz_mu(M,Pred).
 assert_mu(M,Pred,_,_):- t_l:assert_to(Where),!, (Where = a -> asserta_mu(M,Pred); assertz_mu(M,Pred)).

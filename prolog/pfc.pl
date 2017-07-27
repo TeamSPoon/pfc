@@ -5,11 +5,14 @@
 
 */
 :- if(('$current_source_module'(SM),'$current_typein_module'(CM),asserta(baseKB:'using_pfc'(CM,SM,pfc_mod)))).
+:- endif.
 :- module(pfc_mod,[use_pfc_mod/0]).
 :- abolish(use_pfc_mod/0).
 :- prolog_load_context(file,File),unload_file(File).
 :- asserta(use_pfc_mod).
-:- endif.
+
+:- if( \+ current_prolog_flag(xref,true)).
+
 
 :- if(\+ current_prolog_flag(lm_pfc_lean,_)).
 :- set_prolog_flag(lm_no_autoload,true).
@@ -27,3 +30,4 @@
 
 
 
+:- endif.
