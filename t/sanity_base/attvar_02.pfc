@@ -5,6 +5,7 @@
 % Dec 13, 2035
 % Douglas Miles
 
+% Tests Forward chaining of assertable attributed variables
 
 %  was_module(attvar_02,[]).
 

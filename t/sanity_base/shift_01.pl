@@ -1,4 +1,8 @@
 
+
+:- include(test_header).
+
+
 w(W):-writeln(W).
 
 p :- reset(q,Cont,Term),

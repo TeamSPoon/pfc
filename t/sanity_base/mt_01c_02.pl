@@ -21,20 +21,20 @@ cycKB1:loves(sally,joe).
 
 :- mpred_test(\+ clause_u(baseKB:loves(_,_))).
 
-:- pfc_test_feature(\+ clause_u(header_sane:loves(_,_))).
+:- pfc_test_feature(mt,\+ clause_u(header_sane:loves(_,_))).
 
 :- mpred_test(clause_u(loves(_,_))).
 
 
 :- mpred_test(call_u(cycKB1:loves(_,_))).
 
-:- pfc_test_feature(\+ call_u(baseKB:loves(_,_))).
+:- pfc_test_feature(mt,\+ call_u(baseKB:loves(_,_))).
 
-:- pfc_test_feature(listing(loves)).
+:- pfc_test_feature(mt,listing(loves)).
 
-:- pfc_test_feature(mpred_test(\+ call_u(header_sane:loves(_,_)))).
+:- pfc_test_feature(mt,mpred_test(\+ call_u(header_sane:loves(_,_)))).
 
-:- pfc_test_feature(mpred_test(call_u(loves(_,_)))).
+:- pfc_test_feature(mt,mpred_test(call_u(loves(_,_)))).
 
 
 

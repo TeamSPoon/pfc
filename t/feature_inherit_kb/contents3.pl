@@ -1,0 +1,1 @@
+everythingPSC::residesIn(andrewDougherty,townhomeOfEleanorAndAndrewAndMeredith).

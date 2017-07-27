@@ -7,6 +7,9 @@
 
 :- include(test_header).
 
+:- ABox = user, '$set_source_module'(ABox),'$set_typein_module'(ABox).
+% Tests Non-module Forward chaining of assertable attributed variables
+
 :- debug_logicmoo(_).
 :- nodebug_logicmoo(http(_)).
 :- debug_logicmoo(logicmoo(_)).

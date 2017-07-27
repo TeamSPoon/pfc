@@ -19,6 +19,9 @@ arity(loves,2).
 mtHybrid(socialMt).
 baseKB:predicateConventionMt(loves,socialMt).
 
+
+:- if((pfc_test_feature(mt,X=1),X==1)).
+
 :- if(true).
 mt1:like(sally,joe).
 :- else.
@@ -43,4 +46,5 @@ genlMt(mt1,socialMt).
 
 :- mpred_must(socialMt:loves(joe,sally)).
 
+:- endif.
 

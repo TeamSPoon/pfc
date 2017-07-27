@@ -21,6 +21,8 @@
 
 %  was_module(sanity_birdt,[]).
 
+%# Tests Finin original defeasabilty system is working over 2nd order
+
 :- include(test_header).
 
 :- file_begin(pfc).

@@ -15,11 +15,11 @@ if [ "$1" == "-k" ]; then
   shift
 fi
 
-
+# -f /dev/null
 #// For test_prolog fc_08.pfc
 if [ -f "$1" ] ; then 
-   echo -e "\\n\\nRunning Single Test: " swipl -f /dev/null -g "\"set_prolog_flag(runtime_testing,${runtime_testing})\"" -g "\"['""$1""']\"" "${@:2}" -g "\"halt(4)\"" "\\n\\n"
-   exec time swipl -f /dev/null -g "set_prolog_flag(runtime_testing,${runtime_testing})" -g "['""$1""']" "${@:2}" -g "halt(4)"
+   echo -e "\\n\\nRunning Single Test: " swipl -g "\"set_prolog_flag(runtime_testing,${runtime_testing})\"" -g "\"['""$1""']\"" "${@:2}" -g "\"test_completed\"" "\\n\\n"
+   exec swipl -g "set_prolog_flag(runtime_testing,${runtime_testing})" -g "['""$1""']" "${@:2}" -g "test_completed"
 fi
 
 
@@ -78,7 +78,10 @@ for ele2 in "${listOfNames[@]}"
 	    fi
         cls=0
 		
-		echo -e "\\n\\nFAILED: $0 ${keep_going} ${ele} (returned ${exitcode})\\n\\n"
+		[ $exitcode -ne 7 ] && echo -e "\\n\\nFAILED: $0 ${keep_going} ${ele} (returned ${exitcode})\\n\\n"
+      [ $exitcode -eq 7 ] && echo -e "\\n\\nSUCCESS: $0 ${keep_going} ${ele} (returned ${exitcode})\\n\\n"
+
+      [ $exitcode -eq 6 ] && retry=1 && continue 
 		
 		# // 2 -> 1
 		[ $exitcode -eq 2 ] && exit 1
@@ -102,14 +105,18 @@ for ele2 in "${listOfNames[@]}"
 				n) break;;
 				e) break;;
 				E) break;;
+            D) break;;
 			esac
 			echo ans=$ans
 		done
+      echo ans=$ans
+
+      [ "$ans" == '' ] && [ $exitcode -eq 7 ] && retry=1 && cls && continue  # 7 + enter
 
 		[ "$ans" == 'y' ] && continue
 		[ "$ans" == 'B' ] && continue # down arrow
 		[ "$ans" == 'A' ] && retry=1 && cls && continue  # up arrow
-		[ "$ans" == 'r' ] && retry=1 && cls && continue
+		[ "$ans" == 'r' ] && retry=1 && continue 
 		echo "Exiting the script. Have a nice day!"
 		exit $exitcode    
 	  done

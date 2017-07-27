@@ -5,6 +5,8 @@
 % Dec 13, 2035
 % Douglas Miles
 
+% Tests if Finin Backchaining memo idea is working
+
 
 %  was_module(bc_01,[]).
 

@@ -2,6 +2,7 @@
 
 %  was_module(sanity_ks_two,[]).
 
+%# Test not present yet
 :- include(test_header).
 
 /*

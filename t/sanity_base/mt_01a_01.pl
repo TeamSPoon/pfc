@@ -10,11 +10,11 @@
 
 :- include(test_header).
 
-:- pfc_test_feature(must_not_be_pfc_file).
+:- pfc_test_feature(mt,must_not_be_pfc_file).
 
-:- \+ is_pfc_file.
+:- pfc_test_feature(mt,\+ is_pfc_file).
 
-:- pfc_test_feature(\+ mtHybrid(header_sane)).
+:- pfc_test_feature(mt,\+ mtHybrid(header_sane)).
 
 :- listing(mtHybrid/1).
 
@@ -54,7 +54,7 @@ baseKB:genlMt(myMt,socialMt).
 
 :- mpred_test(clause(myMt:loves(_,_),_B,_R)).
 
-:- pfc_test_feature(\+clause_u(myMt:loves(_,_))).
+:- pfc_test_feature(mt,\+clause_u(myMt:loves(_,_))).
 
 :- mpred_test(myMt:loves(_,_)).
 

@@ -14,9 +14,9 @@
 
 %:- add_import_module(header_sane,baseKB,end).
 
-:- set_defaultAssertMt(kb1).
+:- set_defaultAssertMt(myMt).
 
-baseKB:mtProlog(code1).
+mtProlog(code1).
 mtHybrid(kb2).
 
 
@@ -30,13 +30,13 @@ genlMt(kb2,code1).
 
 
 % before test, to make sure a was not accdently defined in kb2
-:- mpred_must(\+ clause(kb2:a,_)).
+:- sanity(\+ clause(kb2:a,_)).
 
 % before test, genlMt makes the rule available and should not corrupt the code1 module
-:- mpred_must(\+ clause(code1:b,_)).
+:- sanity(\+ clause(code1:b,_)).
 
 % make sure genlMt didnt unassert 
-:- mpred_must(clause(kb2:b,_)).
+:- sanity(clause(kb2:b,_)).
 
 
 

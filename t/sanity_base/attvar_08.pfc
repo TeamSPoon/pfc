@@ -30,6 +30,6 @@ sk_in(_DUNNO).
 
 :- listing([pt/2,sk_in/1,sk_out/1]).
 
-:- must((sk_in(FOUND),get_attr(FOUND,sk,What),What='SKF-666')),dmsg(fOUND=FOUND).
+:- must((sk_in(FOUND),get_attr(FOUND,sk,What),What=='SKF-666')),dmsg(fOUND=FOUND).
 
 

@@ -7,9 +7,14 @@
 % will maintain an assertion sum(S) where S is the sum of all of the values.
 
 
+:- dynamic(sum/1).
+
+
+% RULES
+
 value(X) ==> {addToSum(X)}.
 
-fcUndoMethod(addToSum(X), subFromSum(X)).
+do_and_undo(addToSum(X), subFromSum(X)).
 
 addToSum(X) :-
   retract(sum(S)),
@@ -27,5 +32,22 @@ subFromSum(X) :-
   format('~n I can''t find a sum to subtract ~w from.',[X]).
 
 
+% FACTS
+
+value(1).
+value(2).
+value(3).
+
+
+% TEST RESULTS
+:- mpred_test(sum(6)).
+
+% TEST REMOVAL HIT
+\+ value(2).
+:- mpred_test(sum(4)).
+
+% TEST REMOVAL MISS
+\+ value(2).
+:- mpred_test(sum(4)).
 
 

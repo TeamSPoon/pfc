@@ -7,17 +7,17 @@
 % Dec 13, 2035
 % Douglas Miles
 */
-%  was_module(mt_01,[]).
+%  was_module(mt_09,[]).
 
 :- include(test_header).
 
-:- must(\+ is_pfc_file).
+:- pfc_test_feature(pfc_file_detect,must(\+ is_pfc_file)).
 
 %:- add_import_module(mt_01,baseKB,end).
 
 :- set_defaultAssertMt(myMt).
 
-baseKB:mtProlog(code1).
+mtProlog(code1).
 mtHybrid(kb2).
 
 /*

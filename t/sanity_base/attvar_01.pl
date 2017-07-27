@@ -1,8 +1,11 @@
 #!/usr/bin/env swipl
 
+% Tests Emulation of assertable attributed variables
 :- include(test_header).
 
 :- ensure_loaded(library(attvar_reader)).
+
+:- pfc_test_feature(mt,must_not_be_pfc_file).
 
 sk:attr_unify_hook(_,_).
 
