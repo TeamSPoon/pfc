@@ -66,7 +66,6 @@
 :- kb_shared(prologHybrid/1).
 :- kb_shared(prologOnly/1).
 :- kb_shared(rtAvoidForwardChain/1).
-:- kb_shared(startup_option/2).
 :- kb_shared(tooSlow/0).
 :- kb_shared(ttRelationType/1).
 
@@ -473,7 +472,6 @@ without_depth_limit(G):- call_with_depth_limit(G,72057594037927935,Result),sanit
 :- scan_missed_source.
 
 
-:- kb_shared(startup_option/2).
 
 :- dynamic(mpred_undo_sys/3).
 pfcControlled(mpred_undo_sys(ftAssertion, ftCallable, ftCallable)).

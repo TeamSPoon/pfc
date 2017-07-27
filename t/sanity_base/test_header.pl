@@ -45,7 +45,7 @@ test_completed_exit:- test_completed_exit(4).
 :- set_prolog_flag(unsafe_speedups, false).
 % :- mpred_trace_exec.
 
-:- set_prolog_flag(gc, false).
+% :- set_prolog_flag(gc, false).
 
 
 :- if((pfc_test_feature(localMt,X=1),X==1)).
@@ -63,6 +63,6 @@ test_completed_exit:- test_completed_exit(4).
 
 %:- set_prolog_flag(retry_undefined,true).
 :- endif.
-%:- kb_shared(rtArgsVerbatum/1).
+:- kb_shared(baseKB:rtArgsVerbatum/1).
 %:- pfc_mod:import(rtArgsVerbatum/1).
 

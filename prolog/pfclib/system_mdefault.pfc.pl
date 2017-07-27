@@ -32,13 +32,11 @@
 */
 
 
-:- mpred_unload_file.
+%:- mpred_unload_file.
 
 :- file_begin(pfc).
 
 :- set_fileAssertMt(baseKB).
-
-:- kb_local(mdefault/1).
 
 meta_argtypes(mdefault(ftAssertable)).
 
@@ -63,10 +61,11 @@ mdefault(Q)/(mpred_positive_literal(Q),if_missing_mask(Q,R,Test)) ==> ( ((R/(gro
 %(mdefault(P=>Q)/(mpred_literal_nv(Q),if_missing_mask(Q,R,Test)))  ==> ((P, \+ R/Test) => Q).
 %(mdefault(P=>Q)/nonvar(Q)) ==> (P => mdefault(Q)).
 
+%:- listing(baseKB:mdefault/1).
+%:- listing(( (==>) /2)).
 
 :- if(baseKB:startup_option(datalog,sanity);baseKB:startup_option(clif,sanity)).
 
 % :- reconsult(pack(logicmoo_base/t/examples/pfc/'sanity_birdt.pfc')).
 
 :- endif.
-

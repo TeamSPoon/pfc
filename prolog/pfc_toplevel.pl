@@ -4,8 +4,8 @@
 % Douglas Miles
 
 */
-%:- if(('$current_source_module'(SM),'$current_typein_module'(CM),asserta(baseKB:'using_pfc'(CM,SM,pfc_toplevel)))).
-%:- endif.
+:- if(('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'using_pfc'(M,CM,SM,pfc_toplevel)))).
+:- endif.
 :- module(pfc_toplevel,[use_pfc/0]).
 % :- abolish(use_pfc/0).
 % :- prolog_load_context(file,File),unload_file(File).
@@ -27,5 +27,9 @@ use_pfc.
 :- set_prolog_flag(access_level,system).
 :- statistics.
 
-
+:- retract(baseKB:'wusing_pfc'(M,CM,SM,pfc_toplevel)),
+   assert(baseKB:'using_pfc'(M,CM,SM,pfc_toplevel)),
+   (M==SM -> 
+     (ensure_abox(SM),ain(genlMt(SM,baseKB)));
+     wdmsg(baseKB:'lusing_pfc'(M,CM,SM,pfc_toplevel))).
 

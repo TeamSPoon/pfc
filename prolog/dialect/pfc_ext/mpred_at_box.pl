@@ -324,12 +324,13 @@ import_mpred_database_term(M,F,A,_,Where):- localize_mpred(Where,F,A),
 */
 
 localize_mpred(M,F,A):-
-       (((
+       must_det_l(((
         M:multifile(M:F/A),
         M:dynamic(M:F/A),
         M:discontiguous(M:F/A),
-        create_predicate_istAbove(M,F,A),
-        M:module_transparent(M:F/A)))),!.
+		M:module_transparent(M:F/A),
+        create_predicate_istAbove(M,F,A)
+        ))),!.
 
 setup_module_ops(M):- mpred_op_each(mpred_op_unless(M)).
 
@@ -482,8 +483,9 @@ ensure_imports(M):- ain(baseKB:genlMt(M,baseKB)).
 %
 % Skip over 'user' module and still see 'system'.
 %
+skip_user(Mt):- Mt==user,!.
 skip_user(Mt):- import_module(Mt,system), \+ default_module(Mt,user), !.
-skip_user(Mt):- !, add_import_module(Mt,system,start),ignore(delete_import_module(Mt,user)),
+skip_user(Mt):- add_import_module(Mt,system,start),ignore(delete_import_module(Mt,user)),
   forall((import_module(Mt,X),default_module(X,user)),skip_user(X)).
 
 inherit_into_module(Child,Parent):- ==(Child,Parent),!.
@@ -743,7 +745,7 @@ create_predicate_istAbove(abox,F,A):-  must(defaultAssertMt(CallerMt)),sanity(Ca
 %create_predicate_istAbove(_, do_and_undo, 2):-dtrace.
 create_predicate_istAbove(CallerMt,F,A):- clause_b(mtProlog(CallerMt)), must(\+ clause_b(mtHybrid(CallerMt))) ,!,wdmsg(warn(create_predicate_istAbove_mtProlog(CallerMt,F,A))),dtrace.
 create_predicate_istAbove(CallerMt,F,A):-
-   make_as_dynamic(create_predicate_istAbove(CallerMt,F,A),CallerMt,F,A),
+   % make_as_dynamic(create_predicate_istAbove(CallerMt,F,A),CallerMt,F,A),
    functor(Goal,F,A),
    assert_if_new(( CallerMt:Goal :- istAbove(CallerMt,Goal))).
 

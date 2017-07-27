@@ -307,6 +307,7 @@ mpred_database_term_syntax((<-),2,rule).
 mpred_database_term_syntax((<==>),2,rule).
 mpred_database_term_syntax((==>),2,rule).
 
+mpred_database_term_syntax(mdefault,1,fact(_)).
 mpred_database_term_syntax((==>),1,fact(_)).
 mpred_database_term_syntax((~),1,fact(_)).
 
@@ -585,8 +586,8 @@ convention_to_symbolic_mt(_Why,mtProlog,1,baseKB):-!.
 convention_to_symbolic_mt(_Why,functorDeclares,1,baseKB):-!.
 convention_to_symbolic_mt(_Why,functorIsMacro,1,baseKB):-!.
 convention_to_symbolic_mt(_Why,F,A,abox):- mpred_database_term(F,A,_).
-convention_to_symbolic_mt(_Why,F,_,Mt):-  call(baseKB:predicateConventionMt(F,Mt)),!.
-convention_to_symbolic_mt(_Why,F,A,abox):- baseKB:safe_wrap(F,A,ereq).
+convention_to_symbolic_mt(_Why,F,_,Mt):-  clause_b(predicateConventionMt(F,Mt)),!.
+convention_to_symbolic_mt(_Why,F,A,abox):- clause_b(safe_wrap(F,A,ereq)).
 % convention_to_symbolic_mt(_Why,_,_,M):- atom(M),!.
 
 full_transform_warn_if_changed(_,MH,MHH):-!,MH=MHH.
@@ -872,7 +873,7 @@ mpred_aina(G,S):- locally(t_l:assert_to(a),mpred_ain(G,S)).
 %  database and have forward reasoning done.
 %
 mpred_ain(_:P):- P==end_of_file,!.
-mpred_ain(M:P):- get_source_ref(UU),M:mpred_ain(M:P,UU).
+mpred_ain(M:P):- M:get_source_ref(UU),M:mpred_ain(M:P,UU).
 
 mpred_add(P):-mpred_ain(P).
 
@@ -1759,7 +1760,7 @@ mpred_undo(X):- mpred_undo1(X),!.
 % maybe still un-forward chain?
 mpred_undo(Fact):-
   % undo a random fact, printing out the dtrace, if relevant.
-  show_call(mpred_unfwc(Fact)).
+  (mpred_unfwc(Fact) *-> mpred_trace_msg(mpred_unfwc(Fact));mpred_trace_msg( \+ mpred_unfwc(Fact))).
 % mpred_undo(X):- doall(mpred_undo1(X)).
 
 mpred_undo1((H:-B)):- reduce_clause(unpost,(H:-B),HB), HB\=@= (H:-B),!,mpred_undo1((HB)).
@@ -1793,7 +1794,7 @@ mpred_undo1(nt(Head,Condition,Body)):-
 
 mpred_undo1(Fact):-
   % undo a random fact, printing out the dtrace, if relevant.
-  (show_failure(mpred_undo1,retract_u(Fact))*->true;fail),
+  (retract_u(Fact)*->true; mpred_trace_msg(show_failure(mpred_undo1,retract_u(Fact)))),
   mpred_trace_op(rem,Fact),
   mpred_unfwc(Fact).
 
@@ -2370,8 +2371,10 @@ action_is_undoable(G):- functor(G,F,_),lookup_u(do_and_undo(F,Undo)),atom(Undo).
 %  predicate will produce additional clauses.
 %
 
+/*
 mpred_nf({LHS},List):- !,
   mpred_nf((nondet,{LHS}),List).
+*/
 
 mpred_nf(LHS,List):-
   mpred_nf1(LHS,List2),
