@@ -885,8 +885,8 @@ mpred_add(P):-mpred_ain(P).
 decl_assertable_module(AM):- must(dynamic(AM:spft/3)).
 
 % mpred_ain_cm(SM:(==>(AM:P)),P,AM,SM):- SM\==AM, current_predicate(SM:spft/3),!,decl_assertable_module(SM).
-mpred_ain_cm(SM:(==>(AM:P)),P,AM,SM):- AM==SM,!.
-mpred_ain_cm(_:(==>(AM:P)),P,AM,AM):- decl_assertable_module(AM),!.
+mpred_ain_cm(SM:(==>(AM:P)),P,AM,SM):- AM==SM,!,decl_assertable_module(AM).
+mpred_ain_cm(SM:(==>(AM:P)),P,AM,AM):- decl_assertable_module(AM),!,decl_assertable_module(SM).
 mpred_ain_cm((==>(AM:P)),P,AM,AM):- decl_assertable_module(AM),!.
 mpred_ain_cm((==>(P)),P,AM,SM):- get_assert_to(AM), guess_pos_source_to(SM),!.
 mpred_ain_cm(M:(==>(P)),P,AM,AM):- context_module(M),get_assert_to(AM),!. %  guess_pos_source_to(SM).

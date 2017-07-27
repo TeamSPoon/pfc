@@ -66,6 +66,7 @@
 :- kb_shared(prologHybrid/1).
 :- kb_shared(prologOnly/1).
 :- kb_shared(rtAvoidForwardChain/1).
+:- kb_shared(startup_option/2).
 :- kb_shared(tooSlow/0).
 :- kb_shared(ttRelationType/1).
 
@@ -98,7 +99,7 @@
 (genlMt(C,P) ==> {decl_assertable_module(C),decl_assertable_module(P)}).
 %(genlMt(C,P),mtProlog(C) ==> {decl_assertable_module(C),add_import_module(C,P,end)}).
 %(genlMt(C,P),mtProlog(P) ==> {decl_assertable_module(C),add_import_module(C,P,end)}).
-(genlMt(C,P) ==> {decl_assertable_module(C),add_import_module(C,P,end)}).
+(genlMt(C,P)/(mtProlog(P);mtProlog(C)) ==> {decl_assertable_module(C),add_import_module(C,P,end)}).
 (mtHybrid(C) ==> {decl_assertable_module(C),ensure_abox(C)}).
 % (mtProlog(C) ==> {decl_assertable_module(C)}).
 predicateConventionMt(genlMt,baseKB).
