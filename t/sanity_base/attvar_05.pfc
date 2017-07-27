@@ -15,21 +15,22 @@
  % :- mpred_trace_exec.
 :- begin_pfc.
 
-:- dynamic(sk_out/1).
-:- dynamic(sk_in/1).
+:- dynamic(sk5_out/1).
+:- dynamic(sk5_in/1).
 
 % :- process_this_script.
 
 :- read_attvars(true).
+:- set_prolog_flag(assert_attvars,true).
 
-sk_in(Ex)==>sk_out(Ex).
+sk5_in(Ex)==>sk5_out(Ex).
 
 :- listing(pt).
 
-:- ain(sk_in(avar([vn='ExIn',sk='SKF-666']))).
+:- ain(sk5_in(avar([vn='ExIn',sk5='SKF-666']))).
 
-:- must(lookup_u(sk_in(avar([vn='ZEx',sk='SKF-666'])))).
+:- must(lookup_u(sk5_in(avar([vn='ZEx',sk5='SKF-666'])))).
 
 
-:- must(lookup_u(pt(sk_in(avar([vn='IS',sk='SKF-666'])),FOUND))),dmsg(fOUND=FOUND).
+:- must(lookup_u(pt(sk5_in(avar([vn='IS',sk5='SKF-666'])),FOUND))),dmsg(fOUND=FOUND).
 

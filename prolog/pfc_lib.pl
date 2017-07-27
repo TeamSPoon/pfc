@@ -34,6 +34,7 @@ kb_shared_base(FA):-!,kb_shared(baseKB:FA).
 :- kb_shared_base(first_std_provider/3).
 :- kb_shared_base(functorDeclares/1).
 :- kb_shared_base(functorIsMacro/1).
+:- kb_shared_base(mpred_prop/3).
 :- kb_shared_base(mpred_undo_sys/3).
 :- kb_shared_base(pfcBcTrigger/1).
 :- kb_shared_base(pfcCallCode/1).
@@ -515,7 +516,7 @@ base_clause_expansion(IN, ':-'(ain(ASSERT))):- must_pfc(IN,ASSERT).
 
 
 base_clause_expansion('==>'(I),  ':-'(ain('==>'(O)))):- !, sanity(nonvar(I)),must( fully_expand('==>'(I),O)),
-   mpred_core:get_consequent_functor(O,F,A),kb_shared(F/A),ain(mpred_prop(F,A,prologHybrid)).
+   mpred_core:get_consequent_functor(O,F,A),kb_shared_base(F/A),ain(mpred_prop(F,A,prologHybrid)).
 base_clause_expansion('<-'(I,M),':-'(ain('<-'(I,M)))):- !,mpred_core:get_consequent_functor(I,F,A),base_kb_dynamic(F,A).
 base_clause_expansion(':-'(I,(Cwc,O)),':-'(ain(':-'(I,(Cwc,O))))):- Cwc == cwc,!,mpred_core:get_consequent_functor(I,F,A),base_kb_dynamic(F,A).
 base_clause_expansion(I, O):- mpred_core:get_consequent_functor(I,F,A)->base_clause_expansion_fa(I,O,F,A),!. % @TODO NOT NEEDED REALY UNLESS DO mpred_core:reexport(library('pfc2.0/mpred_core.pl')),

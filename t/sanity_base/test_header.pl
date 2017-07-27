@@ -8,10 +8,17 @@
 :- if(( \+ current_prolog_flag(test_header,_),set_prolog_flag(test_header,loaded))).
 
 :- if(prolog_load_context(module,user)).
-:- module(header_sane,[]).
+:- module(header_sane,[pfc_test_feature/2]).
+pfc_test_feature(_,_).
+:- export(pfc_test_feature/2).
+:- system:import(pfc_test_feature/2).
+:- else.
+pfc_test_feature(_,_).
 :- endif.
 
-pfc_test_feature(_,_).
+
+
+
 :- if((pfc_test_feature(mt,X=1),X==1)).
 :- endif.
 :- dynamic(system:test_results/3).
@@ -20,14 +27,15 @@ pfc_test_feature(_,_).
 user:message_hook(T,Type,Warn):- memberchk(Type,[error,warnings]),
   assertz(system:test_results(T,Type,Warn)),dumpST,fail.
 
-system:test_completed:- listing(system:test_results/3),test_completed_exit.
+system:test_completed:- listing(system:test_results/3),test_completed_exit_maybe(4).
+system:test_retake:- listing(system:test_results/3),test_completed_exit_maybe(7).
 
 test_completed_exit(N):- halt(N).
 
-test_completed_exit:- system:test_results(_,error,_),test_completed_exit(9).
-test_completed_exit:- system:test_results(_,warning,_),test_completed_exit(3).
-test_completed_exit:- system:test_results(_,warn,_),test_completed_exit(3).
-test_completed_exit:- test_completed_exit(4).
+test_completed_exit_maybe(_):- system:test_results(_,error,_),test_completed_exit(9).
+test_completed_exit_maybe(_):- system:test_results(_,warning,_),test_completed_exit(3).
+test_completed_exit_maybe(_):- system:test_results(_,warn,_),test_completed_exit(3).
+test_completed_exit_maybe(N):- test_completed_exit(N).
 
 
 :- use_module(library(pfc)).

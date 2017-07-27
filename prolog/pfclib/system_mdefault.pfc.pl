@@ -32,7 +32,7 @@
 */
 
 
-%:- mpred_unload_file.
+:- mpred_unload_file.
 
 :- file_begin(pfc).
 

@@ -15,8 +15,8 @@
 
 :- ensure_loaded(library(dictoo)).
 :- ensure_loaded(library(attvar_reader)).
-%:- dynamic(sk_out/1).
-%:- dynamic(sk_in/1).
+%:- dynamic(sk2_out/1).
+%:- dynamic(sk2_in/1).
 
 
 % :- process_this_script.
@@ -33,42 +33,42 @@
 :- set_prolog_flag(expand_attvars,false).
 :- flag_call(runtime_debug=true).
 
-sk:attr_unify_hook(_,_).
+sk2:attr_unify_hook(_,_).
  
 :- mpred_trace_exec.
 
-:-  call((rtrace)).
-:- assert_mu(sk_in(avar([vn='Ex',sk='SKF-6667']))).
-% :- listing_u(sk_in/1).
+% :-  call((rtrace)).
+:- assert_mu(sk2_in(avar([vn='Ex',sk2='SKF-6667']))).
+% :- listing_u(sk2_in/1).
 
-:- header_sane:listing(sk_in/1).
+:- listing(sk2_in/1).
 
-:- must((sk_in(Ex),get_attr(Ex,sk,What),What=='SKF-6667')).
+:- must((sk2_in(Ex),get_attr(Ex,sk2,What),What=='SKF-6667')).
 
 :- read_attvars(true).
-:- must(clause_asserted_i(sk_in(avar([vn='Ex',sk='SKF-6667'])))).       
+:- must(clause_asserted_i(sk2_in(avar([vn='Ex',sk2='SKF-6667'])))).       
 :- read_attvars(false).
-:- must( \+ clause_asserted_i(sk_in(avar([vn='Ex',sk='SKF-6667'])))).       
+:- must( \+ clause_asserted_i(sk2_in(avar([vn='Ex',sk2='SKF-6667'])))).       
 
 
 :- set_prolog_flag(assert_attvars,false).
 :- set_prolog_flag(expand_attvars,false).
 :- read_attvars(false).
-ca:- clause_asserted_i(sk_in(avar([vn='Ex',sk='SKF-6667']))).
+ca:- clause_asserted_i(sk2_in(avar([vn='Ex',sk2='SKF-6667']))).
 
 :- listing(ca).
 
-:- abolish(sk_in/1).
+:- abolish(sk2_in/1).
 
 :- with_fc_mode(zdirect,must((get_fc_mode(xx,(xxxf,ax),DMode),DMode=zdirect))).
 
-sk_in(avar([vn='Ex',sk='SKF-666'])).
+sk2_in(avar([vn='Ex',sk2='SKF-666'])).
 
 :- set_prolog_flag(expand_attvars,false).
-sk_in(Ex)==>sk_out(Ex).
+sk2_in(Ex)==>sk2_out(Ex).
 
 
 % :- set_prolog_flag(read_attvars,true).
-:- ((sk_out(Ex),oo_get_attr(Ex,sk,What),What='SKF-666')).
+:- ((sk2_out(Ex),oo_get_attr(Ex,sk2,What),What='SKF-666')).
 
 
