@@ -12,6 +12,9 @@
 
 :- begin_pfc.
 
+:- show_call(defaultAssertMt(_)).
+:- show_call(fileAssertMt(_)).
+
 :- dynamic(meta_argtypes/1).
 
 %

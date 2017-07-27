@@ -18,16 +18,22 @@
  % :- mpred_trace_exec.
 :- mpred_warn.
 
-nondet.
 
-(nondet, {member(Y,[1,2,3])}) ==> a(Y).
-:- mpred_test(a(1)).
-:- mpred_test(a(3)).
+nondet_local.
+
+
+(nondet_local, {member(Y,[1,2,3])}) ==> nondet_local_a(Y).
+
+:- listing(header_sane:nondet_local/0).
+
+:- mpred_test(nondet_local_a(1)).
+:- mpred_test(nondet_local_a(3)).
 
 :- garbage_collect.
 :- garbage_collect_atoms.
 :- garbage_collect_clauses.
 %:- (cls,rtrace,trace).
+
 {member(Y,[1,2,3])} ==> b(t,Y).
 
 :- mpred_test(b(t,1)).

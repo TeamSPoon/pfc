@@ -4,6 +4,8 @@
 
 :- include(test_header).
 
+% Tests assertable attributed variables
+
 :- debug_logicmoo(_).
 :- nodebug_logicmoo(http(_)).
 :- debug_logicmoo(logicmoo(_)).

@@ -1,5 +1,6 @@
 :- include(test_header).
-:- set_prolog_flag(retry_undefined,false).
+
+%# Tests Finin original "default" defeasabilty system is working over
 
 % -*-Prolog-*-
 % here is an example which defines default_01a facts and rules.  Will it work?
@@ -7,13 +8,6 @@
 :- is_pfc_file.
 
 :- begin_pfc.
-
-:- is_pfc_file.
-
-:- dynamic(default_01a/1).
-
-:- listing(mtHybrid).
-:- listing(mtProlog).
 
 (default_01a(P)/mpred_literal(P))  ==>  (~( ~P) ==> P).
 
@@ -25,7 +19,7 @@ default_01a((P ==> Q))/mpred_literal(Q) ==> (P, \+( ~Q) ==> Q).
 % birds fly by default_01a.
 ==> default_01a((bird(X) ==> fly(X))).
 
-% here's one way to do an zisa hierarchy.
+% here''s one way to do an type of hierarchy.
 % zisa = subclass.
 
 zisa(C1,C2) ==>

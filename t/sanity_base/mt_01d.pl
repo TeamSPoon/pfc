@@ -21,7 +21,7 @@ loves(sally,joe).
 
 :- mpred_test(\+clause_u(baseKB:loves(_,_))).
 
-:- pfc_test_feature(\+clause_u(header_sane:loves(_,_))).
+:- pfc_test_feature(mt,\+clause_u(header_sane:loves(_,_))).
 
 
 

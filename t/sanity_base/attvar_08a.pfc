@@ -28,6 +28,6 @@ sk_in(X)==>sk_out(X).
 
 %:- listing([pt/2,sk_in/1,sk_out/1]).
 
-:- must((sk_out(FOUND),get_attr(FOUND,sk,What),What='SKF-666',wdmsg(fOUND=FOUND))).
+:- must((sk_out(FOUND),get_attr(FOUND,sk,What),What=='SKF-666',wdmsg(fOUND=FOUND))).
 
 

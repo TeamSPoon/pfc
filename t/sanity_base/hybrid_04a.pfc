@@ -1,6 +1,6 @@
 % -*-Prolog-*-
 
-% Tests Hybrid KB and Forward Chaining for the predicate do_and_undo/2 from module user
+% Tests Hybrid KB and Forward Chaining for the predicate do_and_undo/2
 
 % this is similar to the sum example.
 % given a set of assertions of the form:

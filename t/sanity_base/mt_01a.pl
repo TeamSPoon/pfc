@@ -10,9 +10,9 @@
 
 :- include(test_header).
 
-:- pfc_test_feature(must_not_be_pfc_file).
-:- pfc_test_feature(\+ mtHybrid(header_sane)).
-:- pfc_test_feature(header_sane:listing(mtHybrid/1)).
+:- pfc_test_feature(mt,must_not_be_pfc_file).
+:- pfc_test_feature(mt,\+ mtHybrid(header_sane)).
+:- pfc_test_feature(mt,header_sane:listing(mtHybrid/1)).
 
 :- wdmsg(feature_test_may_fail).
 
@@ -48,9 +48,9 @@ loves(sally,joe).
 
 :- set_prolog_flag(retry_undefined,true).
 
-:- pfc_test_feature(\+clause_u(myMt:loves(_,_))).
+:- pfc_test_feature(mt,\+clause_u(myMt:loves(_,_))).
 
-:- pfc_test_feature(\+ myMt:loves(_,_)).
+:- pfc_test_feature(mt,\+ myMt:loves(_,_)).
 
 
 

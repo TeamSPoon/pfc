@@ -17,7 +17,7 @@ loves(sally,joe).
 
 :- mpred_test(clause_u(header_sane:loves(_,_))).
 
-:- pfc_test_feature(\+clause_u(baseKB:loves(_,_))).
+:- mpred_test(\+clause_u(baseKB:loves(_,_))).
 
 
 end_of_file.

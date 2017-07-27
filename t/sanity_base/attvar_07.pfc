@@ -28,7 +28,7 @@ sk_in(fl(X,Y,X,Y)).
 :- listing(sk_in/1).
 :- listing(sk_out/1).
 
-:- must((sk_out(FOUND),get_attr(FOUND,sk,What),What='SKF-666')),dmsg(fOUND=FOUND).
+:- must((sk_out(FOUND),get_attr(FOUND,sk,What),What=='SKF-666')),dmsg(fOUND=FOUND).
 
 
 

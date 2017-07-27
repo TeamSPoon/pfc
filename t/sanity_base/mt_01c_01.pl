@@ -25,17 +25,17 @@ cycKB1:loves(sally,joe).
 
 :- mpred_must(\+clause_u(baseKB:loves(_,_))).
 
-:- pfc_test_feature(\+ clause_u(header_sane:loves(_,_))).
+:- pfc_test_feature(mt,\+ clause_u(header_sane:loves(_,_))).
 
 :- mpred_must(clause_u(loves(_,_))).
 
 
 :- mpred_must(call_u(cycKB1:loves(_,_))).
 
-:- pfc_test_feature(\+ call_u(baseKB:loves(_,_))).
+:- pfc_test_feature(mt,\+ call_u(baseKB:loves(_,_))).
 
-:- pfc_test_feature((call_u(loves(_,_)))).
+:- pfc_test_feature(mt,(call_u(loves(_,_)))).
 
-:- pfc_test_feature(\+ call_u(header_sane:loves(_,_))).
+:- pfc_test_feature(mt,\+ call_u(header_sane:loves(_,_))).
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env swipl
 %
-%  PFC is a language extension for prolog.. there is so much that can be done in this language extension to Prolog
+% Tests Emulation of assertable attributed variables
 %
 % Dec 13, 2035
 % Douglas Miles

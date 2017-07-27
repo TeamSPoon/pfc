@@ -16,6 +16,8 @@ arity(loves,2).
 baseKB:mtHybrid(socialMt).
 baseKB:predicateConventionMt(loves,socialMt).
 
+:- if((pfc_test_feature(mt,X=1),X==1)).
+
 :- if(true).
 mt1:like(sally,joe).
 :- else.
@@ -39,5 +41,8 @@ like(A,B)==>loves(B,A).
 :- xlisting(loves/2).
 
 :- mpred_must(socialMt:loves(joe,sally)).
+
+:- endif.
+
 
 

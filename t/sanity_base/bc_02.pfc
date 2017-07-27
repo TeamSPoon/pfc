@@ -6,6 +6,8 @@
 % Douglas Miles
 
 
+%# Tests if Finin Backchaining memo idea is working (fact/rules reversed)
+
 %  was_module(sanity_bc,[]).
 
 :- include(test_header).

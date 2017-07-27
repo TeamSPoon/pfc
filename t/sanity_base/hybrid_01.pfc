@@ -1,0 +1,27 @@
+% -*-Prolog-*-
+
+% thisis similar to the sum example.
+% given a set of assertions of the form:
+%
+%    income(person,source,year,$)
+%
+% this rule will maintain a set of yearly totals of the form
+%    
+%    total_income(person,year,$)
+%
+
+:- include(test_header).
+
+:- if((pfc_test_feature(localMt,X=1),X==1)).
+
+nondet.
+
+:- endif.
+
+
+:- if((pfc_test_feature(mt,X=1),X==1)).
+
+
+:- endif.
+
+
