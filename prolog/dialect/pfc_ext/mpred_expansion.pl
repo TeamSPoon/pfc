@@ -352,6 +352,7 @@ cheaply_u(rtArgsVerbatum(G)):- !, clause_b(rtArgsVerbatum(G)).
 cheaply_u(functorDeclares(F)):-!, clause_b(functorDeclares(F)).
 cheaply_u(prologBuiltin(G)):- !,clause_b(prologBuiltin(G)).
 cheaply_u(call(ereq,G)):- !,sanity(callable(G)),cheaply_u(G).
+% cheaply_u(G):-!,call(G).
 cheaply_u(G):- quietly(lookup_u(G)).
 
 %cheaply_u(G):- need_speed,!, (ground(G)->(quietly(baseKB:G),!);quietly(lookup_u(G))).
@@ -1392,11 +1393,10 @@ db_expand_0(_Op,pddlSorts(I,EL),O):- listToE(EL,E),expand_isEach_or_fail(==>genl
 db_expand_0(_Op,pddlTypes(EL),O):- listToE(EL,E),expand_isEach_or_fail(==>isa(E,tCol),O).
 db_expand_0(_Op,pddlPredicates(EL),O):- listToE(EL,E),expand_isEach_or_fail(==>prologHybrid(E),O).
 
-db_expand_0(_,prop_mpred(RT,F,A),mpred_prop(F,A,RT)).
+db_expand_0(_,prop_mpred(M,RT,F,A),mpred_prop(M,F,A,RT)).
 
-db_expand_0(_,Sent,mpred_prop(F,A,RT)):- compound(Sent),functor(Sent,RT,1),Sent=..[RT,F],atom(F),
-  clause_b(ttRelationType(RT)),arity_no_bc(F,A),!.
-db_expand_0(_,Sent,mpred_prop(F,_,RT)):- compound(Sent),functor(Sent,RT,1),Sent=..[RT,F],atom(F),clause_b(ttRelationType(RT)),!.
+db_expand_0(_,Sent,mpred_prop(M,F,A,RT)):- Sent=..[RT,MFA],a(ttRelationType,RT),nonvar(MFA),get_mfa(MFA,M,F,A),atom(F),!.
+  
 
 
 db_expand_0(Op,DECL,OUT):- 
@@ -1406,6 +1406,11 @@ db_expand_0(Op,DECL,OUT):-
     flat_list(Args0,Args)->   
     maplist(nonvar,[FA|Args]) ->
     db_expand_set(Op,[DT,FA|Args],OUT).
+
+
+get_mfa(M:FA,M,F,A):- !, get_fa(FA,F,A).
+get_mfa(FA,M,F,A):- get_fa(FA,F,A),current_assertion_module(M).
+
 
 flat_list([Args],Args):-is_list(Args),!.
 flat_list(Args,Args).
@@ -1610,6 +1615,7 @@ replaced_module(_,umt,ABox):-defaultAssertMt(ABox).
 replaced_module(_,abox,ABox):-defaultAssertMt(ABox).
 replaced_module(_,tbox,TBox):-get_current_default_tbox(TBox).
 
+:- thread_local(t_l:current_defaultAssertMt/1).
 
 maybe_prepend_mt(MT,I,O):- t_l:current_defaultAssertMt(ABOX)->ABOX==MT,!,maybe_prepend_mt(abox,I,O).
 maybe_prepend_mt(abox,H,HH):-nonvar(HH),dtrace,maybe_prepend_mt(abox,H,HHH),must(HHH=HH),!.

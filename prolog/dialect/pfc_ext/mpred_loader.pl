@@ -496,7 +496,7 @@ read_one_term(Term,Vs):- catch(once(( read_term(Term,[double_quotes(string),vari
 %
 read_one_term(Stream,Term,Vs):- catch(once(( read_term(Stream,Term,[double_quotes(string),variable_names(Vs)]))),E,(Term=error(E),dmsg(error(E,read_one_term(Term))))).
 
-% rescan_mpred_stubs:- doall((mpred_prop(F,A,prologHybrid),arity(F,A),A>0,warnOnError(declare_mpred_local_dynamic(moo,F,A)))).
+% rescan_mpred_stubs:- doall((mpred_prop(M,F,A,prologHybrid),arity(F,A),A>0,warnOnError(declare_mpred_local_dynamic(moo,F,A)))).
 
 
 
@@ -980,14 +980,14 @@ expanded_already_functor('$si$':'$was_imported_kb_content$').
 expanded_already_functor(was_enabled).
 expanded_already_functor(_:NV):-nonvar(NV),!,expanded_already_functor(NV).
 
-% expanded_already_functor(F):-mpred_prop(F,A,pl).
+% expanded_already_functor(F):-mpred_prop(M,F,A,pl).
 
 
 %:- thread_local is_compiling_clause/0.
 %is_compiling:-is_compiling_clause;compiling.
 
-%:- kb_shared(user:term_expansion/2).
-%:- kb_shared(system:goal_expansion/2).
+%:- kb_local(user:term_expansion/2).
+%:- kb_local(system:goal_expansion/2).
 % system:goal_expansion(A,_B):-fail,quietly((source_module(M),(M=mpred_sanity;M=user;M=system),if_defined(pmsg(M:goal_expansion(A)),format(user_output /*e*/,'~N% ~q~n',M:goal_expansion(A))))),fail.
 % user:term_expansion(A,_B):-fail,quietly((source_module(M),(M=mpred_sanity;M=user;M=system),if_defined(pmsg(M:term_expansion(A)),format(user_output /*e*/,'~N% ~q~n',M:term_expansion(A))))),fail.
 
@@ -1202,8 +1202,10 @@ begin_pfc:-
  must_det_l((   
    mpred_ops,
    op_lang(pfc),
-   set_file_lang(pfc),   
-   get_fileAssertMt(Mt),set_fileAssertMt(Mt),
+   set_file_lang(pfc),
+   get_fileAssertMt(Mt),
+   ensure_abox(Mt),
+   set_fileAssertMt(Mt),
    enable_mpred_expansion)),!,
    sanity(get_lang(pfc)).
 
@@ -1225,14 +1227,14 @@ set_file_lang(W):-
   decache_file_type(Source),
   debug(logicmoo(loader),'~N~p~n',[INFO]),
   % (Source = '/root/lib/swipl/pack/logicmoo_base/prolog/logicmoo/pfc/system_common.pfc.pl'-> must(W=pfc);true),
-  assert_until_eof(Source,lmcache:mpred_directive_value(Source,language,W))))),
+  assert(lmcache:mpred_directive_value(Source,language,W))))),
   sanity(get_lang(W)),
-  assert_until_eof(t_l:current_lang(W)),!.
+  asserta_until_eof(t_l:current_lang(W)),!.
 
 
 set_lang(WIn):- simplify_language_name(WIn,W),!,
    set_prolog_flag_until_eof(dialect_pfc,W),
-   assert_until_eof(t_l:current_lang(W)).
+   asserta_until_eof(t_l:current_lang(W)).
     
 
 %% file_end( ?W) is det.
@@ -1691,9 +1693,9 @@ make_dynamic_ilc(C):- % trace_or_throw(make_dynamic_ilc(C)),
   (\+ a(mtHybrid,MIn) -> must(defaultAssertMt(M)) ; MIn =M),
   functor(P,F,A),
 
-  ( \+predicate_property(M:P,_) -> kb_shared(M:F/A) ; 
+  ( \+predicate_property(M:P,_) -> kb_local(M:F/A) ; 
     (predicate_property(M:P,dynamic)->true;dynamic_safe(M:P))),!,
-  kb_shared(M:F/A),
+  kb_local(M:F/A),
   quietly_must((predicate_property(M:P,dynamic))).
 
 % once(baseKB:mpred_is_impl_file(F);asserta(baseKB:mpred_is_impl_file(F))).
@@ -2264,6 +2266,71 @@ push_predicates(M:F/A,STATE):- functor(H,F,A),findall((H:-B), (M:clause(H,B,Ref)
 % Pop Predicates.
 %
 pop_predicates(M:F/A,STATE):- functor(H,F,A),forall(member((H:-B),STATE),M:assert((H:-B))).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    
+:- module_transparent(pfc_feature/1).
+:- dynamic(pfc_feature/1).
+:- export(pfc_feature/1).
+pfc_feature(test_a_feature).
+
+:- module_transparent(pfc_test_feature/2).
+:- export(pfc_test_feature/2).
+
+pfc_test_feature(Feature,Test):- pfc_feature(Feature)*-> mpred_test(Test) ; true.
+
+:- system:import(pfc_feature/1).
+:- system:export(pfc_feature/1).
+:- system:import(pfc_test_feature/2).
+:- system:export(pfc_test_feature/2).
+
+:- system:import(pfc_feature/1).
+:- system:export(pfc_feature/1).
+:- baseKB:import(pfc_test_feature/2).
+:- baseKB:export(pfc_test_feature/2).
+
+
+:- dynamic(system:test_results/3).
+
+maybe_message_hook(compiler_warnings(_,[always(true,var,_),always(false,integer,_),
+   always(false,integer,_),always(true,var,_),always(false,integer,_),always(false,integer,_)]),warning,[]):- !.
+
+maybe_message_hook(ignored_weak_import(header_sane,_),_,_).
+maybe_message_hook(T,Type,Warn):-
+  nl,writeln(message_hook(T,Type,Warn)),nl,
+  assertz(system:test_results(T,Type,Warn)),dumpST,nl,writeln(message_hook(T,Type,Warn)),nl,!.
+
+system:test_completed:- listing(system:test_results/3),test_completed_exit_maybe(4).
+system:test_retake:- listing(system:test_results/3),test_completed_exit_maybe(7).
+
+test_completed_exit(4):- halt(4).
+test_completed_exit(5):- halt(5).
+test_completed_exit(N):- (debugging-> break ; true), halt(N).
+
+test_completed_exit_maybe(_):- system:test_results(_,error,_),test_completed_exit(9).
+test_completed_exit_maybe(_):- system:test_results(_,warning,_),test_completed_exit(3).
+test_completed_exit_maybe(_):- system:test_results(_,warn,_),test_completed_exit(3).
+test_completed_exit_maybe(N):- test_completed_exit(N).
+
+set_file_abox_module(User):- '$set_typein_module'(User), '$set_source_module'(User). 
+set_file_abox_module_wa(User):- '$set_typein_module'(User), '$set_source_module'(User), set_fileAssertMt(User),set_defaultAssertMt(User).
+
+
+
+
 
 
 :- fixup_exports.

@@ -8,19 +8,19 @@
 
 %  was_module(header_sane,[]).
 :- include(test_header).
+:- set_prolog_flag(retry_undefined,true).
 :- if(prolog_load_context(module,user)).
 :- use_module(library(pfc)).
 :- endif.
+:- set_file_abox_module(user).
 
 :- autoload([verbose(false)]).
 :- set_prolog_flag(runtime_debug,3).
 
 
-((set_file_abox_module(User):- '$set_typein_module'(User), '$set_source_module'(User), set_defaultAssertMt(User), set_fileAssertMt(User))).
-
-
-% :- set_file_abox_module(user).
-
+:- printAll(mtProlog(_)).
+:- printAll(genlMt(_,_)).
+:- printAll(mtHybrid(_)).
 :- printAll(defaultAssertMt(_)).
 :- printAll(fileAssertMt(_)).
 
@@ -124,6 +124,11 @@ sk5_in(Ex)==>sk5_out(Ex).
 
 
 :- must(lookup_u(pt(sk5_in(avar([vn='IS',sk5='SKF-666'])),FOUND))),dmsg(fOUND=FOUND).
+
+
+({member(Y,[1,2,3])}) ==> nondet_a_memb(Y).
+:- mpred_test(nondet_a_memb(1)).
+:- mpred_test(nondet_a_memb(3)).
 
 
 :- if((pfc_test_feature(localMt,X=1),X==1)).
@@ -253,7 +258,6 @@ default_01a((P ==> Q))/mpred_literal(Q) ==> (P, \+( ~Q) ==> Q).
 
 :- set_prolog_flag(gc,false).
 
-:- set_prolog_flag(retry_undefined,true).
 % birds fly by default_01a.
 :- (ain(( default_01a((bird(X) ==> fly(X)))))).
 
@@ -283,7 +287,7 @@ penguin(X) ==> ( ~fly(X)).
 :- mpred_test(fly(tweety)).
 
 
-:- defaultAssertMt(User),listing(User:_).
+% :- defaultAssertMt(User),listing(User:_).
 
 
 

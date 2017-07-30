@@ -5,11 +5,12 @@
 % Dec 13, 2035
 % Douglas Miles
 
-%  was_module(sanity_if_missong_01,[]).
+%  was_module(sanity_if_missong_01a,[]).
 
 :- include(test_header).
 
 :- dynamic(foob/1).
+:- dynamic(good/0).
 
 
 :- debug_logicmoo(logicmoo(_)).
@@ -22,35 +23,18 @@
 
 if_missing(Missing,Create) ==>  
    ( ( \+ Missing/(
-                  %  nonvar(Missing),nonvar(Create),
-  Missing\=@=Create))
+   % nonvar(Missing),nonvar(Create)
+  Missing\=@=Create)) 
  ==> Create).
 
-   % prevents segfaults
+% prevents segfaults
 :- set_prolog_flag(gc,true).
 
-% :- rtrace.
-if_missing(foob(_),foob(a)).
-:- nortrace.
-
-
-:- mpred_test(foob(a)).
+(good ==> if_missing(foob(_),foob(a))).
 
 :- set_prolog_flag(gc,false).
 
-:- ain(foob(b)).
+(good ==> aa).
 
-:- mpred_test(\+foob(a)).
-
-:- mpred_test(foob(b)).
-
-:- ain(~foob(b)).
-
-:- mpred_test(\+foob(b)).
-
-:- mpred_test(foob(a)).
-
-if_missing(fooc(_),fooc(a)).
-
-:- mpred_test(fooc(a)).
+:- mpred_test(\+ foob(a)).
 

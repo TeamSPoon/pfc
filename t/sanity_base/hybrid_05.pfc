@@ -1,59 +1,98 @@
-% -*-Prolog-*-
-
-% thisis similar to the sum example.
-% given a set of assertions of the form:
-%
-%    income(person,source,year,$)
-%
-% this rule will maintain a set of yearly totals of the form
-%    
-%    total_income(person,year,$)
-%
 
 :- include(test_header).
 
-:- dynamic(total_income/3).
+:- if(exists_source(library(logicmoo_user))).
 
-% RULES
-income(Person,_Source,Year,Dollars) ==> {increment_income(Person,Year,Dollars)}.
-
-==> do_and_undo(increment_income(P,Y,D),decrement_income(P,Y,D)).
-
-increment_income(P,Y,D) :-
-  (retract(total_income(P,Y,Old)) -> New is Old+D ; New = D),
-  assert(total_income(P,Y,New)).
-
-decrement_income(P,Y,D) :-
-  retract(total_income(P,Y,Old)),
-  New is Old-D,
-  assert(total_income(P,Y,New)).
-
-% FACTS
-income(person,sourceOne,2035,6666).
-income(person,sourceTwo,2035,1111).
-income(person,sourceTwo,2036,2222).
+:- use_module(library(logicmoo_user)).
 
 
-% RESULTS PT 1
-:- listing(total_income/3).
-/*
+% From https://www.webeks.net/prolog-example-exercise-flights/
+flight(lju,cdg,2,955).
+flight(lju,fco,1,506).
+flight(cdg,fco,3,1100).
+flight(cdg,jfk,7,5830).
+flight(cdg,lax,10,9096).
+flight(cdg,sin,12,10712).
+flight(jfk,lax,5,3971).
+flight(jfk,nrt,6,5486).
+flight(lax,nrt,7,6230).
+flight(fco,jfk,8,6861).
+flight(fco,sin,11,10039).
+flight(sin,nrt,11,9857).
 
-total_income(person, 2035, 7777).
-total_income(person, 2036, 2222).
-
-*/
+% See:  https://www.webeks.net/wp-content/uploads/2008/09/prolog-excercise-graph-airport.gif
 
 
-% UPDATE Remove some income
-\+ income(person,_,2035,1111).
+flight(Start, Destination,_,_) ==> holds(flight,Start,Destination).
 
 
-% RESULTS PT 2
-:- listing(total_income/3).
-/*
 
-total_income(person, 2036, 2222).
-total_income(person, 2035, 6666).
+holds(flight,Start,Destination) =>  holds(connExists,Start,Destination).
+holds(connExists,Start,Connect) & holds(flight,Connect,Destination) =>  holds(connExists,Start,Destination).
 
-*/
+
+inFOL( 
+ exists(Ri,
+   exists(RPlus, 
+     holds(RPlus,X,Y) , holds(Ri,Y,Z) => 
+           ( holds(RPlus,X,Z) , ~holds(Ri,X,Z))))).
+
+
+:- inFOL(FOL),kif_to_boxlog(FOL,Entailments),wdmsgl(Entailments).
+
+
+:- endif.
+
+
+end_of_file.
+
+This and everyting below is commented out due to the 'end_of_file' above
+
+
+waiting(cdg,4).
+waiting(fco,5).
+waiting(jfk,2).
+waiting(lax,2).
+waiting(sin,1).
+waiting(lju,1).
+waiting(nrt,1).
+
+connExists(Start,Destination):-
+ flight(Start, Destination,_,_).
+connExists(Start,Destination):-
+ flight(Start, X,_,_),
+ connExists(X,Destination).
+
+travelTime(Start,Destination,Time,Path):-
+ flight(Start,Destination,FlightTime,_),
+ waiting(Start,WTimeStart),
+ waiting(Destination,WTimeDest),
+ Time is FlightTime + WTimeStart + WTimeDest,
+ conc([Start],[Destination],Path).
+ 
+travelTime(Start,Destination,Time,Path):-
+ flight(Start,X,FlightTime,_),
+ waiting(Start,WTimeStart1),
+ travelTime(X,Destination,TimeX,PathX),
+ Time is FlightTime + TimeX +WTimeStart1,
+ conc([Start],PathX,Path).
+
+allShorthestPaths:-
+ waiting(X,_),
+ waiting(Y,_),
+ X == Y,
+ setof(T,(X^Y^C^P^travelTime(X,Y,T,P)),L),
+ sort(L,[M|_]),
+ assert(shortestPath(X,Y,M)),
+ fail.
+
+%pathLength(Path,Length)
+pathLength([],0).
+pathLength([_],0).
+pathLength([X,Y|L],Length):-
+ flight(X,Y,_,T),
+ pathLength([Y|L], Length1),
+ Length is Length1+ T.
+
+
 

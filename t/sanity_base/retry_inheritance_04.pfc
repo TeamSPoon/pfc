@@ -1,6 +1,6 @@
 % -*-Prolog-*-
 
-% Tests soemthing not specified
+% Tests if this will lazily define new predicates
 %
 
 :- include(test_header).
@@ -17,4 +17,11 @@
 
 :- set_prolog_flag(retry_undefined, true).
 
-:- \+ a.
+:- \+ a_01.
+
+:- listing(a_01).
+
+:- repropagate(mtHybrid(_)).
+:- listing(header_sane:_).
+
+

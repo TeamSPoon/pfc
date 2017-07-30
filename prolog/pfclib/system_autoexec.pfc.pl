@@ -138,11 +138,16 @@ assert_if_newt(G):- cwc,clause_asserted_i(G)->true;call(assert,G).
 :- dynamic(baseKB:locked_baseKB/0).
 :- asserta((baseKB:locked_baseKB)).
 
+:- endif.
+
+end_of_file.
+
 
 :- if(false).
 :- statistics.
 :- endif.
 
+:- if(false).
 
 % :- mpred_test(ensure_loaded('pttpFWC.pfc')).
 

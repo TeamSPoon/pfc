@@ -32,11 +32,12 @@ get_arity(FA,F,A):- get_functor(FA,F,A),must(A>0).
 
 % arity_no_bc(F,A):- call_u(arity(F,A)).
 arity_no_bc(F,A):- clause_b(arity(F,A)).
-arity_no_bc(F,A):- clause_b(tCol(F)),!,A=1.
+arity_no_bc(F,A):- clause_b(support_hilog(F,A)).
+arity_no_bc(F,A):- clause_b(functorDeclares(F)),!,A=1.
 arity_no_bc(completeExtentAsserted,1).
 arity_no_bc(home,2).
 arity_no_bc(record,2).
-arity_no_bc(F,A):- clause_b(mpred_prop(F,AA,_)),nonvar(AA),A=AA.
+arity_no_bc(F,A):- suggest_m(M),clause_b(mpred_prop(M,F,AA,_)),nonvar(AA),A=AA.
 %arity_no_bc(F,A):- current_predicate(F/A)
 % arity_no_bc(F,A):- current_predicate(_:F/A),\+(current_predicate(_:F/AA),AA\=A). =
 
@@ -243,7 +244,7 @@ get_consequent(P,P).
 
 % TODO READD
 %:- foreach(consequent_arg(_,isEach(prologMultiValued,prologOrdered,prologNegByFailure,prologPTTP,prologKIF,pfcControlled,ttRelationType,
-%     prologHybrid,predCanHaveSingletons,prologDynamic,prologBuiltin,functorIsMacro,prologListValued,prologSingleValued),P),
+%     prologHybrid,predCanHaveSingletons,prologDynamic,prologBuiltin,functorIsMacro,prologListValued,prologSingleValued),P),.. )
 
 
 % TODO ISSUE https://github.com/TeamSPoon/PrologMUD/issues/7
@@ -252,9 +253,12 @@ get_consequent(P,P).
 %
 % Check Context Module. (throws if it turns out wrong)
 %
-% check_context_module:- !.
+
+check_context_module:- !.
 % check_context_module:- is_release,!.
-check_context_module:- sanity((source_context_module(M1),defaultAssertMt(M2),must(M1==M2))).
+check_context_module:- 
+  sanity((source_context_module(M1),clause_b(mtHybrid(M1)))),
+  sanity((defaultAssertMt(M2),clause_b(mtHybrid(M2)))).
 
 %% check_real_context_module is semidet.
 %
@@ -628,7 +632,7 @@ pfc_provide_storage_op(change(retract,all),FactOrRule):- loop_check_nr(mpred_rem
 %
 % PFC Pbody.
 %
-mpred_pbody(_H,mpred_bc_only(_BC),_R,fail,deduced(backchains)):-!.
+mpred_pbody(H,B,_R,fail,deduced(backchains)):- get_bc_clause(H,(H:-B)),!.
 mpred_pbody(H,infoF(INFO),R,B,Why):-!,mpred_pbody_f(H,INFO,R,B,Why).
 mpred_pbody(H,B,R,BIn,WHY):- is_true(B),!,BIn=B,get_why(H,H,R,WHY).
 mpred_pbody(H,B,R,B,asserted(R,(H:-B))).
@@ -753,15 +757,15 @@ ain_minfo(G):-ain_minfo(assertz_if_new,G).
 %
 :- module_transparent(ain_minfo/2).
 ain_minfo(How,(H:-True)):-is_true(True),must(is_ftNonvar(H)),!,ain_minfo(How,H).
-ain_minfo(How,(H<-B)):- !,ain_minfo(How,(H:-infoF(H<-B))),!,ain_minfo(How,(H:-mpred_bc_only(H))),ain_minfo_2(How,(B:-infoF(H<-B))).
+ain_minfo(How,(H<-B)):- !,ain_minfo(How,(H:-infoF(H<-B))),!,get_bc_clause(H,Post),ain_minfo(How,Post),ain_minfo_2(How,(B:-infoF(H<-B))).
 ain_minfo(How,(B==>H)):- !,ain_minfo(How,(H:-infoF(B==>H))),!,ain_minfo_2(How,(B:-infoF(B==>H))).
 ain_minfo(How,(B<==>H)):- !,ain_minfo(How,(H:-infoF(B<==>H))),!,ain_minfo(How,(B:-infoF(B<==>H))),!.
 ain_minfo(How,((A,B):-INFOC)):-mpred_is_info(INFOC),(is_ftNonvar(A);is_ftNonvar(B)),!,ain_minfo(How,((A):-INFOC)),ain_minfo(How,((B):-INFOC)),!.
 ain_minfo(How,((A;B):-INFOC)):-mpred_is_info(INFOC),(is_ftNonvar(A);is_ftNonvar(B)),!,ain_minfo(How,((A):-INFOC)),ain_minfo(How,((B):-INFOC)),!.
 ain_minfo(How,(-(A):-infoF(C))):-is_ftNonvar(C),is_ftNonvar(A),!,ain_minfo(How,((A):-infoF((C)))). % attvar_op(How,(-(A):-infoF(C))).
 ain_minfo(How,(~(A):-infoF(C))):-is_ftNonvar(C),is_ftNonvar(A),!,ain_minfo(How,((A):-infoF((C)))). % attvar_op(How,(-(A):-infoF(C))).
-ain_minfo(How,(A:-INFOC)):-is_ftNonvar(INFOC),INFOC= mpred_bc_only(A),!,attvar_op(How,(A:-INFOC)),!.
-ain_minfo(How,bt(_ABOX,H,_)):-!,attvar_op(How,(H:-mpred_bc_only(H))).
+ain_minfo(How,(A:-INFOC)):- is_ftNonvar(INFOC), get_bc_clause(A,(A:-INFOC)),!,attvar_op(How,(A:-INFOC)),!.
+ain_minfo(How,bt(_ABOX,H,_)):-!,get_bc_clause(H,Post),attvar_op(How,Post).
 ain_minfo(How,nt(H,Test,Body)):-!,attvar_op(How,(H:-fail,nt(H,Test,Body))).
 ain_minfo(How,pt(H,Body)):-!,attvar_op(How,(H:-fail,pt(H,Body))).
 ain_minfo(How,(A0:-INFOC0)):- mpred_is_info(INFOC0), copy_term_and_varnames((A0:-INFOC0),(A:-INFOC)),!,must((mpred_rewrap_h(A,AA),imploded_copyvars((AA:-INFOC),ALLINFO), attvar_op(How,(ALLINFO)))),!.
@@ -1663,22 +1667,22 @@ baseKB:hook_one_minute_timer_tick:-mpred_cleanup.
 %
 % PFC Cleanup.
 %
-mpred_cleanup:- forall((no_repeats(F-A,(call_u(mpred_prop(F,A,pfcRHS)),A>1))),mpred_cleanup(F,A)).
+mpred_cleanup:- forall((no_repeats(F-A,(call_u(mpred_prop(M,F,A,pfcRHS)),A>1))),mpred_cleanup(M,F,A)).
 
 
-%% mpred_cleanup( +F, ?A) is semidet.
+%% mpred_cleanup(M, +F, ?A) is semidet.
 %
 % PFC Cleanup.
 %
-mpred_cleanup(F,A):-functor(P,F,A),predicate_property(P,dynamic)->mpred_cleanup_0(P);true.
+mpred_cleanup(M,F,A):-functor(P,F,A),predicate_property(P,dynamic)->mpred_cleanup_0(M,P);true.
 
 
-%% mpred_cleanup_0( +P) is semidet.
+%% mpred_cleanup_0(M, +P) is semidet.
 %
 % PFC cleanup  Primary Helper.
 %
-mpred_cleanup_0(P):- findall(P-B-Ref,clause(P,B,Ref),L),
-  forall(member(P-B-Ref,L),erase_w_attvars(clause(P,B,Ref),Ref)),forall(member(P-B-Ref,L),attvar_op(db_op_call(assertz,assertz_if_new),((P:-B)))).
+mpred_cleanup_0(M,P):- findall(P-B-Ref,M:clause(P,B,Ref),L),
+  M:forall(member(P-B-Ref,L),erase_w_attvars(clause(P,B,Ref),Ref)),forall(member(P-B-Ref,L),M:attvar_op(db_op_call(assertz,assertz_if_new),((P:-B)))).
 
 % :-debug.
 %isInstFn(A):-!,trace_or_throw(isInstFn(A)).
@@ -1761,7 +1765,7 @@ is_reprop_0(X):-get_functor(X,repropagate,_).
 mpred_non_neg_literal(X):- is_reprop(X),!,fail.
 mpred_non_neg_literal(X):- atom(X),!.
 mpred_non_neg_literal(X):- sanity(stack_check),
-    mpred_positive_literal(X), X \= ~(_), X \= mpred_prop(_,_,_), X \= conflict(_).
+    mpred_positive_literal(X), X \= ~(_), X \= mpred_prop(_,_,_,_), X \= conflict(_).
 
 % ======================= mpred_file('pfcsupport').	% support maintenance
 
@@ -1847,8 +1851,8 @@ should_call_for_facts(H):- get_functor(H,F,A),call_u(should_call_for_facts(H,F,A
 %
 should_call_for_facts(_,F,_):- a(prologSideEffects,F),!,fail.
 should_call_for_facts(H,_,_):- modulize_head(H,HH), \+ predicate_property(HH,number_of_clauses(_)),!.
-should_call_for_facts(_,F,A):- clause_b(mpred_prop(F,A,pfcRHS)),!,fail.
-should_call_for_facts(_,F,A):- clause_b(mpred_prop(F,A,pfcMustFC)),!,fail.
+should_call_for_facts(_,F,A):- clause_b(mpred_prop(_M,F,A,pfcRHS)),!,fail.
+should_call_for_facts(_,F,A):- clause_b(mpred_prop(_M,F,A,pfcMustFC)),!,fail.
 should_call_for_facts(_,F,_):- a(prologDynamic,F),!.
 should_call_for_facts(_,F,_):- \+ a(pfcControlled,F),!.
 
@@ -2189,7 +2193,7 @@ asserta_mu(MH):- fix_mp(clause(assert,asserta_u),MH,M,H),asserta_mu(M,H).
 assertz_mu(MH):- fix_mp(clause(assert,assertz_u),MH,M,H),assertz_mu(M,H).
 
 
-:- kb_shared(baseKB:singleValuedInArg/2).
+% :- kb_shared(baseKB:singleValuedInArg/2).
 :- thread_local(t_l:assert_to/1).
 
 %% assert_mu(+Module, +Pred, ?Functor, ?Arity) is semidet.

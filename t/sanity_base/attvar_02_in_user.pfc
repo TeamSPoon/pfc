@@ -7,8 +7,12 @@
 
 :- include(test_header).
 
-:- ABox = user, '$set_source_module'(ABox),'$set_typein_module'(ABox).
+:- set_file_abox_module(user).
+
+
 % Tests Non-module Forward chaining of assertable attributed variables
+
+
 
 :- debug_logicmoo(_).
 :- nodebug_logicmoo(http(_)).
@@ -16,26 +20,26 @@
  % :- mpred_trace_exec.
 % :- process_this_script.
 
-:- dynamic(sk_out/1).
-:- dynamic(sk_in/1).
+:- dynamic(sk2_out/1).
+:- dynamic(sk2_in/1).
 
 :- begin_pfc.
 
 :- read_attvars(true).
 
-:- assert_u(sk_in(avar([vn='Ex',sk='SKF-666']))).
-:- listing_u(sk_in/1).
-:- must(clause_asserted_i(sk_in(avar([vn='Ex',sk='SKF-666'])))).
-:- abolish(sk_in/1).
+:- assert_u(sk2_in(avar([vn='Ex',sk2='SKF-666']))).
+:- listing_u(sk2_in/1).
+:- must(clause_asserted_i(sk2_in(avar([vn='Ex',sk2='SKF-666'])))).
+:- abolish(sk2_in/1).
 
 :- with_fc_mode(zdirect,must((get_fc_mode(xx,(xxxf,ax),DMode),DMode=zdirect))).
 
-sk_in(avar([vn='Ex',sk='SKF-666'])).
+sk2_in(avar([vn='Ex',sk2='SKF-666'])).
 
-sk_in(Ex)==>sk_out(Ex).
+sk2_in(Ex)==>sk2_out(Ex).
 
 
-:- ((sk_out(Ex),get_attr(Ex,sk,What),What='SKF-666')).
+:- ((sk2_out(Ex),get_attr(Ex,sk2,What),What='SKF-666')).
 
 
 

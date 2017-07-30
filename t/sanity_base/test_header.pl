@@ -7,70 +7,49 @@
 
 :- if(( \+ current_prolog_flag(test_header,_),set_prolog_flag(test_header,loaded))).
 
-:- if(prolog_load_context(module,user)).
-:- module(header_sane,[pfc_test_feature/2]).
-pfc_test_feature(_,_).
-:- export(pfc_test_feature/2).
-:- system:import(pfc_test_feature/2).
-:- else.
-pfc_test_feature(_,_).
+
+:- if((prolog_load_context(module,user), \+ current_module(pfc_lib))).
+:- module(header_sane,[test_header_include/0]).
+test_header_include.
 :- endif.
 
-
-
-
-:- if((pfc_test_feature(mt,X=1),X==1)).
-:- endif.
-:- dynamic(system:test_results/3).
-
-:- multifile prolog:message//1, user:message_hook/3.
-user:message_hook(T,Type,Warn):- memberchk(Type,[error,warnings]),
-  assertz(system:test_results(T,Type,Warn)),dumpST,fail.
-
-system:test_completed:- listing(system:test_results/3),test_completed_exit_maybe(4).
-system:test_retake:- listing(system:test_results/3),test_completed_exit_maybe(7).
-
-test_completed_exit(N):- halt(N).
-
-test_completed_exit_maybe(_):- system:test_results(_,error,_),test_completed_exit(9).
-test_completed_exit_maybe(_):- system:test_results(_,warning,_),test_completed_exit(3).
-test_completed_exit_maybe(_):- system:test_results(_,warn,_),test_completed_exit(3).
-test_completed_exit_maybe(N):- test_completed_exit(N).
-
-
-:- use_module(library(pfc)).
-
-:- endif.
-
-:- prolog_load_context(module,W), '$set_typein_module'(W).
-:- '$current_typein_module'(W), '$current_source_module'(W).
-:- ensure_loaded(library(pfc)).
 
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
 :- set_prolog_flag(runtime_speed, 0). % 1 = default
 :- set_prolog_flag(runtime_debug, 3). % 2 = important but dont sacrifice other features for it
 :- set_prolog_flag(runtime_safety, 3).  % 3 = very important
 :- set_prolog_flag(unsafe_speedups, false).
-% :- mpred_trace_exec.
 
-% :- set_prolog_flag(gc, false).
+:- endif.
 
 
-:- if((pfc_test_feature(localMt,X=1),X==1)).
-:- prolog_load_context(source,File),
-   (atom_contains(File,'.pfc')-> sanity(is_pfc_file) ; must_not_be_pfc_file).
+:- if(( \+ current_module(pfc_lib) )).
+:- use_module(library(pfc)).
+:- prolog_load_context(source,File),(atom_contains(File,'.pfc')-> sanity(is_pfc_file) ; must_not_be_pfc_file).
+:- endif.
 
-:- '$current_source_module'(W), (W\==user->'$set_typein_module'(W);true).
+:- multifile prolog:message//1, user:message_hook/3.
+user:message_hook(import_private(pfc_lib,_:_/_),warning,_):-!.
+user:message_hook(T,Type,Warn):- memberchk(Type,[error,warning]),once(maybe_message_hook(T,Type,Warn)),fail.
+
 
 :- if(is_pfc_file).
-:- '$current_source_module'(W),set_fileAssertMt(W).
-%:- '$current_typein_module'(W),set_defaultAssertMt(W).
+
+:- mpred_trace_exec.
+
+:- else.
+
+:- mpred_trace_exec.
+
 :- endif.
 
-% :- set_prolog_flag(debug, true).
+:- '$current_source_module'(W), '$set_typein_module'(W).
 
-%:- set_prolog_flag(retry_undefined,true).
-:- endif.
-:- kb_shared(baseKB:rtArgsVerbatum/1).
-%:- pfc_mod:import(rtArgsVerbatum/1).
+
+
+:- set_prolog_flag(debug, true).
+:- set_prolog_flag(retry_undefined,true).
+:- set_prolog_flag(gc, false).
+
+:- sanity((defaultAssertMt(Mt1),fileAssertMt(Mt2),source_module(Mt3),Mt1==Mt2,Mt1==Mt3)).
 

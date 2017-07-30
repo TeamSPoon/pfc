@@ -30,6 +30,6 @@ use_pfc.
 :- retract(baseKB:'wusing_pfc'(M,CM,SM,pfc_toplevel)),
    assert(baseKB:'using_pfc'(M,CM,SM,pfc_toplevel)),
    (M==SM -> 
-     (ensure_abox(SM),ain(genlMt(SM,baseKB)));
+     (ensure_abox(SM),nop((M:ain(genlMt(SM,baseKB)))));
      wdmsg(baseKB:'lusing_pfc'(M,CM,SM,pfc_toplevel))).
 

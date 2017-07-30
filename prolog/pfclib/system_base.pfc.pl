@@ -12,7 +12,7 @@
 % Maintainer: Douglas Miles
 % Contact: $Author: dmiles $@users.sourceforge.net ;
 % Version: 'interface' 1.0.0
-% Revision: $Revision: 1.9 $
+% Revision: $Revision: 1.9 $                                                        
 % Revised At: $Date: 2002/06/27 14:13:20 $
 % =============================================
 %
@@ -49,26 +49,39 @@
 
 
 % :- kb_local( ('~') /1).
-:- kb_shared(arity/2).
-:- kb_shared(col_as_unary/1).  % never used for arg2 of isa/2
-:- kb_shared(comment/2).
-:- kb_shared(feature_setting/2).
-:- kb_shared(functorIsMacro/1).
-:- kb_shared(hybrid_support/2).
-:- kb_shared(mpred_prop/3).
-:- kb_shared(mtExact/1).
-:- kb_shared(never_assert_u/1).
-:- kb_shared(never_assert_u/2).
-:- kb_shared(never_retract_u/1).
-:- kb_shared(never_retract_u/2).
-:- kb_shared(pfcControlled/1).
-:- kb_shared(predicateConventionMt/2).
-:- kb_shared(prologHybrid/1).
-:- kb_shared(prologOnly/1).
-:- kb_shared(rtAvoidForwardChain/1).
-:- kb_shared(startup_option/2).
-:- kb_shared(tooSlow/0).
-:- kb_shared(ttRelationType/1).
+:- kb_local(mtExact/1).
+% :- kb_local(arity/2).
+:- kb_local(col_as_unary/1).  % never used for arg2 of isa/2
+:- kb_local(comment/2).
+:- kb_local(feature_setting/2).
+:- kb_local(hybrid_support/2).
+:- kb_local(never_assert_u/1).
+:- kb_local(never_assert_u/2).
+:- kb_local(never_retract_u/1).
+:- kb_local(never_retract_u/2).
+:- kb_local(predicateConventionMt/2).
+:- kb_local(startup_option/2).
+:- kb_local(tooSlow/0).
+:- kb_local(ttRelationType/1).
+:- kb_local(singleValuedInArg/2).
+:- kb_local(functorIsMacro/1).
+:- kb_local(support_hilog/2).
+:- kb_local(mpred_undo_sys/3).
+:- kb_local(genlPreds/2).
+
+
+
+:- kb_local(alwaysGaf/1).
+
+:- kb_local(rtReformulatorDirectivePredicate/1).
+:- kb_local(rtArgsVerbatum/1).
+:- kb_local(rtAvoidForwardChain/1).
+
+:- kb_local(pfcControlled/1).
+:- kb_local(prologHybrid/1).
+:- kb_local(prologOnly/1).
+:- kb_local(quasiQuote/1).
+
 
 % :- forall(between(1,11,A),kb_shared(t/A)).
 
@@ -88,57 +101,57 @@
 
 %((ttTypeType(TT),abox:isa(T,TT))==>tSet(T)).
 %tSet(T)==>functorDeclares(T).
-:- kb_shared(functorDeclares/1).
-:- kb_shared(mtHybrid/1).
-:- kb_shared(mtProlog/1).
-:- kb_shared(mtNonAssertable/1).
-:- kb_shared(predicateConventionMt/2).
-:- kb_shared(genlMt/2).
+:- kb_local(functorDeclares/1).
+:- kb_local(mtHybrid/1).
+:- kb_local(mtProlog/1).
+:- kb_local(mtNonAssertable/1).
+:- kb_local(prologBuiltin/1).
+:- kb_local(predicateConventionMt/2).
+:- kb_local(genlMt/2).
+:- kb_local(do_import_modules/0).
 
+%(genlMt(C,P)/(is_ftNonvar(C),is_ftNonvar(P),P\==baseKB,(mtProlog(C);mtProlog(P))) ==> {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}).
 
-(genlMt(C,P) ==> {decl_assertable_module(C),decl_assertable_module(P)}).
-%(genlMt(C,P),mtProlog(C) ==> {decl_assertable_module(C),add_import_module(C,P,end)}).
-%(genlMt(C,P),mtProlog(P) ==> {decl_assertable_module(C),add_import_module(C,P,end)}).
-(genlMt(C,P)/(mtProlog(P);mtProlog(C)) ==> {decl_assertable_module(C),add_import_module(C,P,end)}).
-(mtHybrid(C) ==> {decl_assertable_module(C),ensure_abox(C)}).
-% (mtProlog(C) ==> {decl_assertable_module(C)}).
+((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C)}).
+
+(genlMt(C,P)/(C\=baseKB)) ==> {doall(((predicate_m_f_a_decl(P,F,A,Type)),C:call(Type,C:F/A)))}.
+
+%(do_import_modules,genlMt(C,P),mtHybrid(C),mtProlog(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}.
+%(do_import_modules,genlMt(C,P),mtProlog(C),mtHybrid(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}.
+%((mtHybrid(C),{is_ftNonvar(C)},{ensure_abox(C)}, \+ mtProlog(C)) <==> (genlMt(C,baseKB),{is_ftNonvar(C)}, \+ mtProlog(C))).
+
+%
+%mtProlog(C) ==> {decl_assertable_module(C)}. % , \+ mtHybrid(C). 
+%(predicateConventionMt(F,MT),arity(F,A))==>{(MT==baseKB;mtProlog(MT))->kb_shared(MT:F/A);kb_local(MT:F/A)}.
+% :- break.
 predicateConventionMt(genlMt,baseKB).
 predicateConventionMt(predicateConventionMt,baseKB).
 predicateConventionMt(mtHybrid,baseKB).
 predicateConventionMt(mtProlog,baseKB).
 predicateConventionMt(mtNonAssertable,baseKB).
-(predicateConventionMt(F,MT),arity(F,A))==>{kb_shared(MT:F/A)}.
+(predicateConventionMt(F,MT),arity(F,A))==>{kb_local(MT:F/A)}.
+
 
 ttRelationType(RT)==>predicateConventionMt(RT,baseKB).
-
-%:- install_constant_renamer_until_eof.
-
- % :- mpred_trace_exec.
-ttTypeType(ttModuleType,mudToCyc('MicrotheoryType')).
-
-==>ttModuleType(tSourceCode,mudToCyc('tComputerCode'),comment("Source code files containing callable features")).
-==>ttModuleType(tSourceData,mudToCyc('iboPropositionalInformationThing'),comment("Source data files containing world state information")).
-:- mpred_notrace_exec.
-
-
-typeGenls(ttModuleType,tMicrotheory).
-
-
-
-%:- kb_shared( ('~') /1).
 
 ttTypeType(ttTypeType).
 ttTypeType(ttRelationType).
 ttTypeType(TT)==>functorDeclares(TT).
+
+ttTypeType(ttModuleType,mudToCyc('MicrotheoryType')).
+typeGenls(ttModuleType,tMicrotheory).
+==>ttModuleType(tSourceCode,mudToCyc('tComputerCode'),comment("Source code files containing callable features")).
+==>ttModuleType(tSourceData,mudToCyc('iboPropositionalInformationThing'),comment("Source data files containing world state information")).
+
 ttRelationType(RT)==> { decl_rt(RT) },functorDeclares(RT).
-%functorDeclares(RT)==>{kb_shared(RT/1)},arity(RT,1),prologHybrid(RT),functorIsMacro(RT).
+
 functorDeclares(RT)==>{kb_local(RT/1)},arity(RT,1),prologHybrid(RT),functorIsMacro(RT).
+
 % ttRelationType(RT) ==> ( ~genlPreds(RT,tFunction) <==> genlPreds(RT,tPred)).
 
-
-ttRelationType(compilerDirective).
-% compilerDirective(F)==>{kb_local(F/0)}.
-compilerDirective(F)==>{kb_shared(F/0)}.
+:- kb_local(baseKB:compilerDirective/1).
+functorDeclares(compilerDirective).
+compilerDirective(F)==>{kb_local(F/0)}.
 
 compilerDirective(hardCodedExpansion,comment("Is Already Implemented From Code")).
 compilerDirective(codeTooSlow,comment("A faster more incomplete version is filling in for it")).
@@ -193,9 +206,7 @@ compilerDirective(isRuntime,comment("Only use rule/fact at runtime")).
                   )).
 
 
-% :- listing(ttRelationType/1).
-
-:- kb_local(do_and_undo/2).
+%:- listing(ttRelationType/1).
 
 do_and_undo(A,U):-cwc,atom(A),atom_concat('assert',Suffix,A),!,atom_concat('delete',Suffix,U),current_predicate(U/_).
 do_and_undo(A,U):-cwc,atom(A),atom_concat('def',_,A),atom_concat('un',A,U),current_predicate(U/_).
@@ -203,22 +214,22 @@ do_and_undo(A,U):-cwc,strip_module(A,M,P),compound(P),P=..[F|ARGS],lookup_u(do_a
 ll:- cwc,call(listing,[isa/2,mtHybrid/1,col_as_unary/1, tRRP2/1,tRR/1,tRRP/1]). % ttTypeType,
 
 
-:- mpred_notrace_exec.
+
 
 arity(arity,2).
 arity(functorIsMacro,1).
 functorIsMacro(functorIsMacro).
 
-((prologHybrid(F)/arity(F,A))==>{kb_local(F/A)}).
-((arity(F,A)/prologHybrid(F))==>{kb_local(F/A)}).
+((prologHybrid(F),arity(F,A))==>{kb_local(F/A)}).
 
 :- sanity(ttRelationType(prologMultiValued)).
 
 :- scan_missed_source.
 
-:- mpred_notrace_exec.
 
-hybrid_support(F,A)==> {kb_local(F/A)}.
+
+:- ((ain((hybrid_support(F,A)/(F\==arity))==> {must(kb_local(F/A))}))).
+
 
 
 pfcControlled(P),arity(P,A)==>hybrid_support(P,A).
@@ -233,8 +244,6 @@ rtNotForUnboundPredicates(call).
 
 
 
-:- kb_shared(mpred_prop/3).
-
 % ==> pfc_checking.
 
 
@@ -242,41 +251,41 @@ rtNotForUnboundPredicates(call).
 /*
 % catching of misinterpreations
 */
-pfc_checking ==> (mpred_prop(F,A,pfcPosTrigger)==>{warn_if_static(F,A)}).
-pfc_checking ==> (mpred_prop(F,A,pfcNegTrigger)==>{warn_if_static(F,A)}).
-pfc_checking ==> (mpred_prop(F,A,pfcBcTrigger)==>{warn_if_static(F,A)}).
-mpred_prop(F,A,What)/(\+ ground(F/A))==>{trace_or_throw(mpred_prop(F,A,What))}.
+pfc_checking ==> (mpred_prop(M,F,A,pfcPosTrigger)==>{M:warn_if_static(F,A)}).
+pfc_checking ==> (mpred_prop(M,F,A,pfcNegTrigger)==>{M:warn_if_static(F,A)}).
+pfc_checking ==> (mpred_prop(M,F,A,pfcBcTrigger)==>{M:warn_if_static(F,A)}).
+mpred_prop(M,F,A,What)/(\+ ground(F/A))==>{trace_or_throw(mpred_prop(M,F,A,What))}.
 
 
-prop_mpred(pfcCreates,F,A)==> 
- % {functor(P,F,A),notrace(make_dynamic(P)),kb_shared(F/A),create_predicate_istAbove(abox,F,A)},
-  {kb_local(F/A)},
-  {warn_if_static(F,A)}.
-prop_mpred(pfcControlled,F,A)==> {kb_local(F/A)}.
-prop_mpred(pfcWatches,F,A)==> {kb_local(F/A)}.
+prop_mpred(M,pfcCreates,F,A)==> 
+ % {functor(P,F,A),notrace(make_dynamic(P)),kb_shared(F/A),create_predicate_inheritance(abox,F,A)},
+  {kb_local(M:F/A)},
+  {M:warn_if_static(F,A)}.
+prop_mpred(M,pfcControlled,F,A)==> {kb_local(M:F/A)}.
+prop_mpred(M,pfcWatches,F,A)==> {kb_local(M:F/A)}.
 
 
-mpred_prop(F,A,pfcPosTrigger)==>prop_mpred(pfcWatches,F,A).
-mpred_prop(F,A,pfcNegTrigger)==>prop_mpred(pfcWatches,F,A).
-mpred_prop(F,A,pfcBcTrigger)==>prop_mpred(pfcCreates,F,A).
-mpred_prop(F,A,pfcLHS)==> arity(F,A),functorIsMacro(F),prop_mpred(pfcWatches,F,A).
-mpred_prop(F,A,pfcRHS)==> prop_mpred(pfcCreates,F,A).
+mpred_prop(M,F,A,pfcPosTrigger)==>prop_mpred(M,pfcWatches,F,A).
+mpred_prop(M,F,A,pfcNegTrigger)==>prop_mpred(M,pfcWatches,F,A).
+mpred_prop(M,F,A,pfcBcTrigger)==>prop_mpred(M,pfcCreates,F,A).
+mpred_prop(M,F,A,pfcLHS)==> arity(F,A),functorIsMacro(F),prop_mpred(M,pfcWatches,F,A).
+mpred_prop(M,F,A,pfcRHS)==> prop_mpred(M,pfcCreates,F,A).
 
 
 
-mpred_prop(F,A,pfcCallCode)/predicate_is_undefined_fa(F,A)
-    ==> prop_mpred(needsDefined,F,A).
+mpred_prop(M,F,A,pfcCallCode)/predicate_is_undefined_fa(F,A)
+    ==> prop_mpred(M,needsDefined,F,A).
 /*
-mpred_prop(F,A,pfcCallCodeAnte)/predicate_is_undefined_fa(F,A)
-    ==> prop_mpred(pfcWatches,F,A).
+mpred_prop(M,F,A,pfcCallCodeAnte)/predicate_is_undefined_fa(F,A)
+    ==> prop_mpred(M,pfcWatches,F,A).
 */
 
 genlPreds(pfcRHS,pfcControlled).
 
 genlPreds(prologSideEffects,rtNotForUnboundPredicates).
 
-:- kb_shared(nondet/0).
-:- kb_shared(typeCheckDecl/2).
+:- kb_local(nondet/0).
+:- kb_local(typeCheckDecl/2).
 
 ==> nondet.
 
@@ -287,7 +296,7 @@ genlPreds(prologSideEffects,rtNotForUnboundPredicates).
 
 ((~(G):-  (cwc, neg_in_code(G)))).
 
-:- kb_shared(warningsAbout/2).
+:- kb_local(warningsAbout/2).
 
 prologHybrid(warningsAbout/2,rtArgsVerbatum).
 warningsAbout(Msg,Why)==>{wdmsg(error(warningsAbout(Msg,Why))),break}.
@@ -296,7 +305,7 @@ warningsAbout(Msg,Why)==>{wdmsg(error(warningsAbout(Msg,Why))),break}.
 %
 % True Structure.
 %
-%:- kb_shared(t/1).
+%:- kb_local(t/1).
 %t([P|LIST]):- cwc, !,mpred_plist_t(P,LIST).
 %t(naf(CALL)):- cwc, !,not(t(CALL)).
 %t(not(CALL)):- cwc, !,mpred_f(CALL).
@@ -374,13 +383,6 @@ typeCheckDecl(pfcControlled(C),callable(C)).
 
 
 arity(comment,2).
-:- kb_shared(singleValuedInArg/2).
-:- kb_shared(rtReformulatorDirectivePredicate/1).
-:- kb_shared(support_hilog/2).
-:- kb_shared(mpred_undo_sys/3).
-:- kb_shared(arity/2).
-:- kb_shared(alwaysGaf/1).
-:- kb_shared(quasiQuote/1).
 
 
 
@@ -394,7 +396,7 @@ alwaysGaf(pfcLHS).
 %arity(prologSingleValued,1).
 %arity(Prop,1):- cwc, clause_b(ttRelationType(Prop)).
 arity(F,A):- cwc, is_ftNameArity(F,A), current_predicate(F/A),A>1.
-arity(F,1):- cwc, ttRelationType(F). % current_predicate(F/1)).  % is_ftNameArity(F,1), , (col_as_unary(F);ttTypeType(F)), \+((call((dif:dif(Z,1))), arity(F,Z))).
+arity(F,1):- cwc, call_u(ttRelationType(F)). % current_predicate(F/1)).  % is_ftNameArity(F,1), , (col_as_unary(F);ttTypeType(F)), \+((call((dif:dif(Z,1))), arity(F,Z))).
 
 
 arity(rtArgsVerbatum,1).
@@ -435,7 +437,7 @@ rtArgsVerbatum(second_order).
 
 
 
-:- kb_shared(support_hilog/2).
+:- kb_local(support_hilog/2).
 
 
 
@@ -445,13 +447,13 @@ rtArgsVerbatum(second_order).
 %prologBuiltin(resolveConflict/1).
 
 % :- kb_local(bt/2).
-bt(P,_)/nonvar(P) ==> (P:- mpred_bc_only(P)).
+(bt(P,_)/(nonvar(P),get_bc_clause(P,Post))) ==> ({kb_local(P)},Post).
 
-%redundantMaybe ==> ((prologHybrid(F),arity(F,A))==>prop_mpred(pfcVisible,F,A)).
-%redundantMaybe ==> (prop_mpred(pfcVisible,F,A)==>prologHybrid(F),arity(F,A)).
+%redundantMaybe ==> ((prologHybrid(F),arity(F,A))==>prop_mpred(M,pfcVisible,F,A)).
+%redundantMaybe ==> (prop_mpred(M,pfcVisible,F,A)==>prologHybrid(F),arity(F,A)).
 
-% ((mpred_prop(F,A,pfcRHS)/(A\=0)) ==> {kb_local(F/A)}).
-% ((mpred_prop(F,A,_)/(A\=0)) ==> {kb_local(F/A)}).
+% ((mpred_prop(M,F,A,pfcRHS)/(A\=0)) ==> {kb_local(F/A)}).
+% ((mpred_prop(M,F,A,_)/(A\=0)) ==> {kb_local(F/A)}).
 
 % pfcMustFC(F) ==> pfcControlled(F).
 genlPreds(pfcMustFC, pfcControlled).
@@ -459,13 +461,14 @@ genlPreds(pfcMustFC, pfcControlled).
 % pfcControlled(C)==>prologHybrid(C).
 genlPreds(pfcControlled, prologHybrid).
 
+((genlPreds(R1,R2),mpred_prop(M,F,A,R1))==>mpred_prop(M,F,A,R2)).
 
 do_and_undo(mpred_post_exactly,mpred_remove_exactly).
 
 
 
 
-:- mpred_notrace_exec.
+
 
 
 :- meta_predicate(without_depth_limit(0)).
@@ -475,7 +478,7 @@ without_depth_limit(G):- call_with_depth_limit(G,72057594037927935,Result),sanit
 
 
 :- dynamic(mpred_undo_sys/3).
-pfcControlled(mpred_undo_sys(ftAssertion, ftCallable, ftCallable)).
+:- (ain(pfcControlled(mpred_undo_sys(ftAssertion, ftCallable, ftCallable)))).
 mpred_undo_sys(P, WhenAdded, WhenRemoved) ==> (P ==> {WhenAdded}), mpred_do_and_undo_method(WhenAdded,WhenRemoved).
 
 % DONT mpred_undo_sys(added(P),ain(P),mpred_retract(P)).
@@ -498,7 +501,7 @@ without_depth_limit(G):-
 %==>(prologBuiltin(mpred_select_hook/1)).
 % :- nortrace,quietly.
 
-:- kb_shared(conflict/1).
+:- kb_local(conflict/1).
 % a conflict triggers a Prolog action to resolve it.
 conflict(C) ==> {must(with_mpred_trace_exec((resolveConflict(C),\+conflict(C))))}.
 
@@ -525,8 +528,8 @@ never_assert_u(A,test_sanity(A)):- never_assert_u(A).
 
 
 
-:- kb_shared(never_retract_u/1).
-:- kb_shared(never_retract_u/2).
+:- kb_local(never_retract_u/1).
+:- kb_local(never_retract_u/2).
 never_retract_u(~(X),is_ftVar(X)):- cwc, is_ftVar(X).
 never_retract_u(A,test_sanity(A)):- cwc, never_retract_u(A).
 never_retract_u(X,is_ftVar(X)):- cwc, is_ftVar(X).

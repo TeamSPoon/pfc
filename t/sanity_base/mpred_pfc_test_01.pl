@@ -2,7 +2,7 @@
 
 :- include(test_header).
 
-:- begin_pfc.
+:- must(begin_pfc).
 
 :- show_call(defaultAssertMt(_)).
 
