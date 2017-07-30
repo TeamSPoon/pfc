@@ -1,61 +1,56 @@
-% -*-Prolog-*-
 
-% Tests Hybrid KB and Forward Chaining for the predicate do_and_undo/2
-
-% this is similar to the sum example.
-% given a set of assertions of the form:
-%
-%    income(person,source,year,$)
-%
-% this rule will maintain a set of yearly totals of the form
-%    
-%    total_income(person,year,$)
-%
 
 :- include(test_header).
 
-:- dynamic(total_income/3).
+:- if(exists_source(library(logicmoo_user))).
 
-% RULES
-income(Person,_Source,Year,Dollars) ==> {increment_income(Person,Year,Dollars)}.
-
-==> do_and_undo(increment_income(P,Y,D),decrement_income(P,Y,D)).
-
-increment_income(P,Y,D) :-
-  (retract(total_income(P,Y,Old)) -> New is Old+D ; New = D),
-  assert(total_income(P,Y,New)).
-
-decrement_income(P,Y,D) :-
-  retract(total_income(P,Y,Old)),
-  New is Old-D,
-  assert(total_income(P,Y,New)).
-
-% FACTS
-income(person,sourceOne,2035,6666).
-income(person,sourceTwo,2035,1111).
-income(person,sourceTwo,2036,2222).
+:- use_module(library(logicmoo_user)).
 
 
-% RESULTS PT 1
-:- listing(total_income/3).
 /*
+% From HCMa:
 
-total_income(person, 2035, 7777).
-total_income(person, 2036, 2222).
+ someFunnyRel(R1,R2,x,y) = 
+   (forall x y z . (R1(x,y) & R1(y,z) -> R1(x,z))) 
+ & (forall p qa . R1(p,qa) -> R2(p,qa)) 
+ & (forall Q . 
+       ((forall a b c . 
+          (Q(a,b) & Q(b,c) -> Q(a,c)))
+        & (forall m n . 
+           Q(m,n)->R2(m,n)) -> (forall l g . Q(l,g) -> R1(l,g)))).
 
 */
 
+wasHCMA(
+ someFunnyRel(R1,R2,X,Y) <=>
+   (all([ X,Y,Z ], (R1(X,Y) & R1(Y,Z) => R1(X,Z)))) 
+ & (all([ P,QA ], R1(P,QA) => R2(P,QA)))
+ & (all([ Q ], 
+       ((all([ A,B,C ], 
+          (Q(A,B) & Q(B,C) => Q(A,C)))
+           & (all([ M, N ], Q(M,N)=>R2(M,N)) => (all([ L,G ], Q(L,G) => R1(L,G))))))))).
 
-% UPDATE Remove some income
-\+ income(person,_,2035,1111).
-
-
-% RESULTS PT 2
-:- listing(total_income/3).
 /*
-
-total_income(person, 2036, 2222).
-total_income(person, 2035, 6666).
-
+asDefaulted(
+ someFunnyRel(R1,R2,X,Y) <=>
+  ((R1(X,Y) & R1(Y,Z) => R1(X,Z))
+ & (R1(P,QA) => R2(P,QA))
+ & (all(Q
+      (Q(A,B) & Q(B,C) => Q(A,C))
+   & ((Q(M,N)=>R2(M,N)) => (Q(L,G) => R1(L,G))))))).
 */
 
+
+asHolds3(
+ someFunnyRel(R1,R2,X,Y) <=>
+  ((holds(R1,X,Y) & holds(R1,Y,Z) => holds(R1,X,Z))
+ & (holds(R1,P,Qa) => holds(R2,P,Qa))
+ & (holds(Q,A,B) & holds(Q,B,C) => holds(Q,A,C))
+ & ((holds(Q,M,N) => holds(R2,M,N)) => (holds(Q,L,G) => holds(R1,L,G))))).
+
+
+
+:- asHolds3(FOL),kif_to_boxlog(FOL,Entailments),wdmsgl(Entailments).
+
+
+:- endif.

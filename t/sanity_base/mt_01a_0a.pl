@@ -30,6 +30,7 @@ baseKB:mtHybrid(socialMt).
 
 
 :- set_defaultAssertMt(myMt).
+:- set_fileAssertMt(myMt).
 
 :- on_f_rtrace((on_x_rtrace(begin_pfc),is_pfc_file)).
 
@@ -52,11 +53,32 @@ baseKB:genlMt(myMt,socialMt).
 
 :- set_prolog_flag(retry_undefined,true).
 
+:- listing(pfc_test_feature/2).
+
+:- trace,pfc_test_feature(localMt,myMt:loves(_,_)).
+
 :- mpred_test(clause(myMt:loves(_,_),_B,_R)).
 
 :- pfc_test_feature(mt,\+clause_u(myMt:loves(_,_))).
 
 :- mpred_test(myMt:loves(_,_)).
+
+:- mpred_test((ain(genlMt(tooLazyMt,socialMt)),clause(tooLazyMt:loves(_,_),_B,_R))).
+
+:- mpred_test(clause(tooLazyMt:loves(_,_),_B,_R)).
+
+:- pfc_test_feature(mt,\+clause_u(tooLazyMt:loves(_,_))).
+
+:- mpred_test(tooLazyMt:loves(_,_)).
+
+
+:- must((ain(baseKB:genlMt(tooLazyBaseMt,socialMt)),clause(tooLazyBaseMt:loves(_,_),_B,_R))).
+
+:- mpred_test(clause(tooLazyBaseMt:loves(_,_),_B,_R)).
+
+:- pfc_test_feature(mt,\+clause_u(tooLazyBaseMt:loves(_,_))).
+
+:- mpred_test(tooLazyBaseMt:loves(_,_)).
 
 
 

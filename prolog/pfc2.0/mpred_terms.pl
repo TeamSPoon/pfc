@@ -259,7 +259,7 @@ never_mpred_tcall(isa).
 never_mpred_tcall(arity).
 
 
-local_qh_mpred_prop(F,A,C):- call_u(mpred_prop(F,A,C)).
+local_qh_mpred_prop(M,F,A,C):- call_u(mpred_prop(M,F,A,C)).
 
 
 % :- setup_mpred_ops.
@@ -324,10 +324,11 @@ mpred_fa_call(F,_,Call):-F\==t,current_predicate(F,M:_OtherCall),!,M:Call.
 % Managed Predicate Fact Arity.
 %
 mpred_fact_arity(F,A):- call_u(arity(F,A)),
-  once(local_qh_mpred_prop(F,A,prologHybrid);
-     local_qh_mpred_prop(F,A,pfcControlled);
-     local_qh_mpred_prop(F,A,prologPTTP);
-     local_qh_mpred_prop(F,A,prologKIF)).
+  suggest_m(M),
+  once(local_qh_mpred_prop(M,F,A,prologHybrid);
+     local_qh_mpred_prop(M,F,A,pfcControlled);
+     local_qh_mpred_prop(M,F,A,prologPTTP);
+     local_qh_mpred_prop(M,F,A,prologKIF)),!.
 
 
 %= 	 	 

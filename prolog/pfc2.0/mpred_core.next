@@ -344,7 +344,7 @@ decl_rt(RT) :-
  '@'((
    sanity(atom(RT)),
    Head=..[RT,FP],
-   AIN = ((Head :- cwc, /* dmsg(warn(call(Head))), */ mpred_prop(FP,_,RT))),
+   AIN = ((Head :- cwc, /* dmsg(warn(call(Head))), */ mpred_prop(M,FP,_,RT))),
    (clause_asserted(AIN) -> 
     (nop(listing(RT)),
      sanity((predicate_property(RHead,number_of_clauses(CL)),predicate_property(RHead,number_of_rules(RL)),CL=RL)));
@@ -353,8 +353,8 @@ decl_rt(RT) :-
    (current_predicate(RT/1)->
    ( nop(listing(RT)),
      RHead=..[RT,F/A],
-     forall(retract(RHead),ain(mpred_prop(F,A,RT))),
-     forall(retract(Head),(get_arity(FP,F,A),sanity(atom(F)),sanity(integer(A)),ain(mpred_prop(F,A,RT)))),
+     forall(retract(RHead),ain(mpred_prop(M,F,A,RT))),
+     forall(retract(Head),(get_arity(FP,F,A),sanity(atom(F)),sanity(integer(A)),ain(mpred_prop(M,F,A,RT)))),
      sanity((predicate_property(RHead,number_of_clauses(CL)),CL==0)),
      sanity((predicate_property(RHead,number_of_rules(RL)),RL==0)),
      abolish(RT,1));true),
@@ -559,7 +559,7 @@ convention_to_symbolic_mt(_Why,functorDeclares,1,baseKB):-!.
 convention_to_symbolic_mt(_Why,functorIsMacro,1,baseKB):-!.
 convention_to_symbolic_mt(_Why,F,A,abox):- mpred_database_term(F,A,_).
 convention_to_symbolic_mt(_Why,F,_,Mt):-  call(baseKB:predicateConventionMt(F,Mt)),!.
-convention_to_symbolic_mt(_Why,F,A,abox):- baseKB:safe_wrap(F,A,ereq).
+convention_to_symbolic_mt(_Why,F,A,abox):- baseKB:safe_wrap(M,F,A,ereq).
 % convention_to_symbolic_mt(_Why,_,_,M):- atom(M),!.
 
 full_transform_warn_if_changed(_,MH,MHH):-!,MH=MHH.
@@ -834,6 +834,7 @@ mpred_aina(G,S):- locally(t_l:assert_to(a),mpred_ain(G,S)).
 %  database and have forward reasoning done.
 %
 mpred_ain(_:P):- P==end_of_file,!.
+mpred_ain(M:P):-!, M:get_source_ref(UU),M:mpred_ain(M:P,UU).
 mpred_ain(P):- get_source_ref(UU),mpred_ain(P,UU).
 
 %%  mpred_ain(P,S)
@@ -1332,7 +1333,7 @@ mpred_enqueue_w_mode(S,Mode,P):-
 %
 mpred_remove_old_version((Identifier::::Body)):-
   % this should never happen.
-  var(identifier),
+  var(Identifier),
   !,
   mpred_warn("variable used as an  rule name in ~p :::: ~p",
           [Identifier,Body]).
@@ -1806,9 +1807,9 @@ mpred_fwc1(Fact):-
 % does some special, built in forward chaining if P is
 %  a rule.
 
-% mpred_do_rule((H:-attr_bind(B,_))):- get_functor(H,F,A),lookup_u(mpred_prop(F,A,pfcLHS)), sanity(nonvar(B)), repropagate(H),!.
+% mpred_do_rule((H:-attr_bind(B,_))):- get_functor(H,F,A),lookup_u(mpred_prop(M,F,A,pfcLHS)), sanity(nonvar(B)), repropagate(H),!.
 mpred_do_rule((H:-B)):- var(H),sanity(nonvar(B)),forall(call_u(B),mpred_ain(H)),!.
-mpred_do_rule((H:-B)):- get_functor(H,F,A),lookup_u(mpred_prop(F,A,pfcLHS)), sanity(nonvar(B)),forall(call_u(B),mpred_fwc(H)),!.
+mpred_do_rule((H:-B)):- get_functor(H,F,A),lookup_u(mpred_prop(M,F,A,pfcLHS)), sanity(nonvar(B)),forall(call_u(B),mpred_fwc(H)),!.
 
 % mpred_do_rule((H:-B)):- !,ignore((call_u(B),mpred_fwc1(H),fail)).
 
@@ -2617,9 +2618,9 @@ mpred_mark_fa_as(Sup, _P,F,A,Type):- really_mpred_mark(Sup,Type,F,A),!.
 
 % i hope i am not exagerating but anniepoo used to enter this yearly contest for whom could build graphical assets the most pretty and complex the quickest in secondlife.. (now it makes sense she used a 3d mouse)  she won so much, they and she had to ban herself becasue she always won hands down.. so with this agility to create the physical aspects of a wolrd veery easily .. we realized we could make a fun leanring inpiring world for AIs .. however 
 
-really_mpred_mark(_  ,Type,F,A):- call_u_no_bc(mpred_prop(F,A,Type)),!.
+really_mpred_mark(_  ,Type,F,A):- call_u_no_bc(mpred_prop(M,F,A,Type)),!.
 really_mpred_mark(Sup,Type,F,A):-
-  MARK = mpred_prop(F,A,Type),
+  MARK = mpred_prop(M,F,A,Type),
   check_never_assert(MARK),
   with_no_mpred_trace_exec(with_fc_mode(direct,mpred_post1(MARK,(why_marked(Sup),ax)))).
   % with_no_mpred_trace_exec(with_fc_mode(direct,mpred_fwc1(MARK,(why_marked(Sup),ax)))),!.

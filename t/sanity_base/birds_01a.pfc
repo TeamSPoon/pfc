@@ -11,11 +11,12 @@
 
 (default_01a(P)/mpred_literal(P))  ==>  (~( ~P) ==> P).
 
-default_01a((P ==> Q))/mpred_literal(Q) ==> (P, \+( ~Q) ==> Q).
+(default_01a((P ==> Q))/mpred_literal(Q)) ==> (P, \+( ~Q) ==> Q).
 
 :- set_prolog_flag(gc,false).
 
-:- set_prolog_flag(retry_undefined,true).
+%:- set_prolog_flag(retry_undefined,true).
+
 % birds fly by default_01a.
 ==> default_01a((bird(X) ==> fly(X))).
 

@@ -18,9 +18,9 @@
 %:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
 :- module(mpred_at_box,[
          assert_setting01/1,
-         create_predicate_istAbove/3,
          make_module_name_local/2,
          make_module_name_local0/2,
+         (make_shared_multifile)/1,
          (make_shared_multifile)/3,
          (make_shared_multifile)/4,
          % (kb_shared)/1,
@@ -43,8 +43,7 @@
           setup_module_ops/1,
 
          in_mpred_kb_module/0,
-         istAbove/2,
-         make_as_dynamic/4,
+         
          makeConstant/1,
          mtCanAssert/1,
          %registerCycPred/4,
@@ -96,9 +95,7 @@
                                 has_parent_goal/2,
          fileAssertMt/1,
 
-         in_mpred_kb_module/0,
-         istAbove/2,
-         make_as_dynamic/4)).
+         in_mpred_kb_module/0)).
 
 :-dynamic(unused_predicate/4).
 
@@ -112,15 +109,13 @@ user_m_check(_Out).
 :- meta_predicate make_shared_multifile(+,+,+), mpred_op_each(3).
 :- meta_predicate make_shared_multifile(*,*,*,*).
 
-:- meta_predicate with_no_retry_undefined(:).
-%:- meta_predicate kb_shared(:).
 
 :- meta_predicate transitive_path(2,*,*).
 
 % add_abox_module(baseKB):-!.
 add_abox_module(ABox):- must(atom(ABox)),
   must(mtCanAssert(ABox)),
-  ain(baseKB:mtHybrid(ABox)).
+  ABox:ain(baseKB:mtHybrid(ABox)).
 
 :- dynamic(baseKB:mtProlog/1).
 :- dynamic(baseKB:mtNoPrologCode/1).
@@ -129,13 +124,15 @@ add_abox_module(ABox):- must(atom(ABox)),
 
 baseKB:mtNoPrologCode(mpred_userkb).
 
-baseKB:mtProlog(Mt):- var(Mt),!,current_module(Mt),\+ clause_b(mtHybrid(Mt)).
-baseKB:mtProlog(Mt):- \+ atom(Mt),!,fail.
-baseKB:mtProlog(Mt):- \+ current_module(Mt),!,fail.
-baseKB:mtProlog(Mt):- clause_b(mtHybrid(Mt)),!,fail.
-baseKB:mtProlog(Mt):- module_property(Mt,class(library)).
-baseKB:mtProlog(Mt):- module_property(Mt,class(system)).
-baseKB:mtProlog(Mt):- arg(_,v(lmcache,t_l,system,user),Mt).
+baseKB:mtProlog(Mt):- baseKB_mtProlog(Mt).
+
+baseKB_mtProlog(Mt):- \+ atom(Mt),!,var(Mt),!,current_module(Mt),baseKB:mtProlog(Mt).
+baseKB_mtProlog(Mt):- \+ current_module(Mt),!,fail.
+baseKB_mtProlog(Mt):- clause_b(mtHybrid(Mt)),!,fail.
+baseKB_mtProlog(Mt):- module_property(Mt,class(library)).
+baseKB_mtProlog(Mt):- module_property(Mt,class(system)).
+baseKB_mtProlog(Mt):- arg(_,v(lmcache,t_l,system),Mt).
+% baseKB_mtProlog(user).
 
 :- multifile(lmcache:has_pfc_database_preds/1).
 :- dynamic(lmcache:has_pfc_database_preds/1).
@@ -210,8 +207,12 @@ box_type(_,_,abox).
 %
 % not just user modules
 
-defaultAssertMt(ABox):- (t_l:current_defaultAssertMt(BBox);find_and_call(fileAssertMt(BBox)))->ABox=BBox.
+defaultAssertMt(ABox):- nonvar(ABox), defaultAssertMt(ABoxVar),!,ABox=@=ABoxVar.
+defaultAssertMt(ABox):- get_fallBackAssertMt(ABox),!.
 
+%defaultAssertMt(ABox):- loading_source_file(File),baseKB:file_to_module(File,ABox),!.
+%defaultAssertMt(ABox):- t_l:current_defaultAssertMt(ABox),!.
+%defaultAssertMt(ABox):- (t_l:current_defaultAssertMt(BBox);find_and_call(fileAssertMt(BBox)))->ABox=BBox.
 
 
 
@@ -225,17 +226,20 @@ defaultAssertMt(ABox):- (t_l:current_defaultAssertMt(BBox);find_and_call(fileAss
 get_file_type_local(File,Type):-var(File),!,quietly_must(loading_source_file(File)),get_file_type_local(File,Type),!.
 get_file_type_local(File,pfc):-file_name_extension(_,'.pfc.pl',File),!.
 get_file_type_local(File,Type):-file_name_extension(_,Type,File),!.
-get_file_type_local(File,Type):-clause(lmcache:mpred_directive_value(File,language,Type),true).
+get_file_type_local(File,Type):-clause_b(lmcache:mpred_directive_value(File,language,Type)).
 
-mtCanAssert(baseKB).
-% mtCanAssert(user):- !,fail.
-mtCanAssert(abox):- !,dumpST,fail.
+
+mtCanAssert(Module):- clause_b(mtNonAssertable(Module)),!,fail.
 mtCanAssert(Module):- clause_b(mtHybrid(Module)).
+mtCanAssert(ABox):- \+ \+ (ABox=abox),!,trace_or_throw(mtCanAssert(ABox)),fail.
+mtCanAssert(user):-  is_user_pfc.
 mtCanAssert(Module):- clause_b(mtExact(Module)).
 mtCanAssert(Module):-  module_property(Module,file(_)),!,fail.
 mtCanAssert(Module):- (loading_source_file(File),get_file_type_local(File,pfc),prolog_load_context(module,Module)).
 mtCanAssert(Module):- clause_b(mtProlog(Module)),!,fail.
 mtCanAssert(_).
+
+is_user_pfc:- clause_b(mtHybrid(user)).
 
 
 % :- ensure_loaded(mpred_loader).
@@ -253,17 +257,25 @@ get_fileAssertMt(MT):- fileAssertMt(MT).
 %
 % not just user modules
 fileAssertMt(ABox):- nonvar(ABox), fileAssertMt(ABoxVar),!,ABox=@=ABoxVar.
-fileAssertMt(Module):- (loading_source_file(File),get_file_type_local(File,pfc)),prolog_load_context(module,Module),Module\==user.
-fileAssertMt(ABox):-
-  (t_l:current_defaultAssertMt(ABox);
-    ((('$current_source_module'(ABox);'$current_typein_module'(ABox)),mtCanAssert(ABox)))),!.
-fileAssertMt(ABox):-
-   which_file(File)->current_module(ABox),module_property(ABox,file(File)),File\==ABox,
-   mtCanAssert(ABox).
-fileAssertMt(ABox):-
-  which_file(File)->make_module_name_local(File,ABox),current_module(ABox),File\==ABox,
-   mtCanAssert(ABox).
-fileAssertMt(baseKB).
+fileAssertMt(ABox):- loading_source_file(File),clause_b(baseKB:file_to_module(File,ABox)).
+fileAssertMt(ABox):- loading_source_file(File),clause_b(lmcache:mpred_directive_value(File,module,ABox)).
+fileAssertMt(ABox):- '$current_source_module'(ABox),!.
+fileAssertMt(ABox):- get_fallBackAssertMt(ABox),!.
+
+get_fallBackAssertMt(ABox):- t_l:current_defaultAssertMt(ABox),!.
+get_fallBackAssertMt(ABox):- loading_source_file(File),clause_b(baseKB:file_to_module(File,ABox)).
+get_fallBackAssertMt(ABox):- loading_source_file(File),clause_b(lmcache:mpred_directive_value(File,module,ABox)).
+get_fallBackAssertMt(ABox):- guess_maybe_assertMt(ABox),clause_b(mtHybrid(ABox)),!.
+get_fallBackAssertMt(ABox):- guess_maybe_assertMt(ABox),mtCanAssert(ABox),!.
+get_fallBackAssertMt(ABox):- guess_maybe_assertMt(ABox).
+
+guess_maybe_assertMt(ABox):- '$current_source_module'(ABox).
+guess_maybe_assertMt(ABox):- context_module(ABox).
+guess_maybe_assertMt(ABox):-  which_file(File)->current_module(ABox),module_property(ABox,file(File)),File\==ABox.
+guess_maybe_assertMt(Module):- (loading_source_file(File),get_file_type_local(File,pfc)),prolog_load_context(module,Module).
+guess_maybe_assertMt(ABox):- '$current_typein_module'(ABox).
+guess_maybe_assertMt(ABox):- which_file(File)->make_module_name_local(File,ABox),current_module(ABox),File\==ABox.   
+
 
 
 % baseKB:mtGlobal
@@ -273,64 +285,31 @@ fileAssertMt(baseKB).
 
 makeConstant(_Mt).
 
+is_pfc_module_file(M,F,TF):- (module_property(M,file(F)),is_pfc_file(F)) *-> TF=true ; 
+  (module_property(M,file(F))*->TF=false ; (F= (-), TF=false)).
+
+maybe_ensure_abox(M):- is_pfc_module_file(M,F,_), (F \== (-)), !, 
+  (is_pfc_file(F)->show_call(is_pfc_file(F),ensure_abox(M));dmsg(not_is_pfc_module_file(M,F))).
+maybe_ensure_abox(M):- show_call(not_is_pfc_file,ensure_abox(M)).
+
 
 :- module_transparent((ensure_abox)/1).
-:- multifile(lmcache:has_pfc_database_preds/1).
-:- volatile(lmcache:has_pfc_database_preds/1).
-:- dynamic(lmcache:has_pfc_database_preds/1).
-ensure_abox(M):- sanity(atom(M)), lmcache:has_pfc_database_preds(M),!.
-% ensure_abox(user):- setup_module_ops(user),!,ensure_abox(baseKB),!.
-ensure_abox(M):- must(ensure_abox_support(M,baseKB)).
-
-ensure_abox_support(M,Where):-
-   asserta(lmcache:has_pfc_database_preds(M)),
-   assert_if_new(baseKB:mtHybrid(M)),
-   retractall(baseKB:mtProlog(M)),
+ensure_abox(M):- dynamic(M:defaultTBoxMt/1),must(ensure_abox_support(M,baseKB)),!.
+:- module_transparent((ensure_abox_support)/2).
+ensure_abox_support(M,TBox):- clause_b(M:defaultTBoxMt(TBox)),!.
+ensure_abox_support(M,TBox):- asserta_new(M:defaultTBoxMt(TBox)),
+ must_det_l((
+  forall(mpred_database_term(F,A,Type),
+    must(import_mpred_database_term(M,F,A,Type,TBox))),
+   %nop(inherit_into_module(M,TBox)),
+   %retractall(TBox:mtProlog(M)),
+   %assert_if_new(TBox:mtHybrid(M)),   
    setup_module_ops(M),
-   set_prolog_flag(M:unknown,error),
+   set_prolog_flag(M:unknown,error),  
+   M:ain(TBox:mtHybrid(M)),
+   nop(skip_user(M)))).
    
-   forall(mpred_database_term(F,A,Type),
-     must(import_mpred_database_term(M,F,A,Type,Where))).
-
-
-/*
-import_mpred_database_term(M,F,A,_,_):- show_failure(localize_mpred(M,F,A)),!,kb_local(M:F/A).
-
-import_mpred_database_term(M,F,A,syntaxic(Type),_):- fail, member(Type,[rule,fact,fact(_),rule(_)]), !,
-  show_failure(localize_mpred(M,F,A)),!,(kb_local(M:F/A)),
-  nop((system:export(system:F/A),M:import(system:F/A),M:export(system:F/A))).
-
-% import_mpred_database_term(M,F,A,debug,_):- !, (kb_shared(M:F/A)).
-% import_mpred_database_term(M,F,A,support,_):- !,(kb_shared(M:F/A)).
-% import_mpred_database_term(M,F,A,trigger,_):- !,(kb_local(M:F/A)).
-*/
-
-import_mpred_database_term(M,F,A,_,_):- show_failure(localize_mpred(M,F,A)),!,(kb_local(M:F/A)).
-
-/* 
-import_mpred_database_term(M,F,A,Type,_):- member(Type,[setting,debug]), localize_mpred(M,F,A).
-
-import_mpred_database_term(M,F,A,_,Where):- localize_mpred(Where,F,A),
-                                               Where:export(Where:F/A),
-                                               M:import(Where:F/A),
-                                               M:export(M:F/A),!.
-
-import_mpred_database_term(M,F,A,Type,_):- member(Type,[rule,fact,fact(_),rule(_)]), system:export(system:F/A),M:import(system:F/A),M:export(system:F/A).
-import_mpred_database_term(M,F,A,_,Where):- localize_mpred(Where,F,A),
-                                               Where:export(Where:F/A),
-                                               M:import(Where:F/A),
-                                               M:export(M:F/A).
-
-*/
-
-localize_mpred(M,F,A):-
-       must_det_l(((
-        M:multifile(M:F/A),
-        M:dynamic(M:F/A),
-        M:discontiguous(M:F/A),
-		M:module_transparent(M:F/A),
-        create_predicate_istAbove(M,F,A)
-        ))),!.
+import_mpred_database_term(M,F,A,_,_):- kb_local(M:F/A),!.
 
 setup_module_ops(M):- mpred_op_each(mpred_op_unless(M)).
 
@@ -374,17 +353,13 @@ get_current_default_tbox(baseKB).
 % Sets Current Module.
 %
 set_defaultAssertMt(ABox):-
-  sanity(mtCanAssert(ABox)),
-  must(((
-    get_current_default_tbox(TBox),
-    asserta_new(TBox:mtHybrid(ABox)),
-    asserta_new(ABox:defaultTBoxMt(TBox)),
+  ignore(show_failure(mtCanAssert(ABox))),
+   ensure_abox(ABox),!,
     assert_setting(t_l:current_defaultAssertMt(ABox)),
-    ensure_abox(ABox),
-    %'$set_source_module'(ABox),
-    %'$set_typein_module'(ABox),
-    nop(inherit_into_module(ABox,TBox))))),
-  ain(baseKB:mtHybrid(ABox)).
+    '$set_typein_module'(ABox),
+    (source_location(_,_)-> ((get_fileAssertMt(ABoxWas),ABox==ABoxWas) -> true; set_fileAssertMt(ABox));true).
+
+
 
 % :- '$hide'(set_defaultAssertMt(_)).
 
@@ -392,24 +367,26 @@ set_defaultAssertMt(ABox):-
 %
 % Sets the File''s Module.
 %
-set_fileAssertMt(ABox):- '$current_source_module'(ABox),!.
+
+% set_fileAssertMt(ABox):- '$current_source_module'(ABox),!.
 set_fileAssertMt(ABox):-
  '$current_typein_module'(CM),
  '$current_source_module'(SM),
- sanity(mtCanAssert(ABox)),
+  sanity(mtCanAssert(ABox)),
  (((
-   fileAssertMt(Was),
+   % fileAssertMt(Was),
    % get_current_default_tbox(TBox),
-
-   set_defaultAssertMt(ABox),
    which_file(File),
    assert_setting(baseKB:file_to_module(File,ABox)),
    assert_setting(lmcache:mpred_directive_value(File,module,ABox)),
-   % MAYBE? '$set_typein_module'(TBox),
-   call_on_eof(set_defaultAssertMt(Was)),
+   asserta_until_eof(t_l:current_defaultAssertMt(ABox)),
+   % MAYBE? '$set_typein_module'(TBox), 
    call_on_eof('$set_source_module'(SM)),
-   call_on_eof('$set_typein_module'(CM))))).
+   call_on_eof('$set_typein_module'(CM))))),
+   '$set_source_module'(ABox),
+   !.
 
+% :- '$hide'(set_fileAssertMt(_)).
 
 
 make_module_name_local(A,B):- make_module_name_local0(A,B), \+ exists_file(B),!.
@@ -470,10 +447,7 @@ call_a:- arity(tCol,1),arity(arity,2).
 % Ensure Imports.
 %
 ensure_imports(baseKB):-!.
-ensure_imports(M):- ain(baseKB:genlMt(M,baseKB)).
-
-:-multifile(baseKB:genlMt/2).
-:-dynamic(baseKB:genlMt/2).
+ensure_imports(M):- ain(M:genlMt(M,baseKB)).
 
 :-multifile(lmcache:is_ensured_imports_tbox/2).
 :-dynamic(lmcache:is_ensured_imports_tbox/2).
@@ -489,13 +463,13 @@ skip_user(Mt):- add_import_module(Mt,system,start),ignore(delete_import_module(M
   forall((import_module(Mt,X),default_module(X,user)),skip_user(X)).
 
 inherit_into_module(Child,Parent):- ==(Child,Parent),!.
-inherit_into_module(Child,Parent):-ain(baseKB:genlMt(Child,Parent)).
+inherit_into_module(Child,Parent):- ain(Child:genlMt(Child,Parent)).
 
 %% ensure_imports_tbox( ?M, ?TBox) is semidet.
 %
 % Ensure Imports Tbox.
 %
-ensure_imports_tbox(M,TBox):-M==TBox,!.
+ensure_imports_tbox(M,TBox):- trace_or_throw(unexpected_ensure_imports_tbox(M,TBox)), M==TBox,!.
 ensure_imports_tbox(M,TBox):-
   lmcache:is_ensured_imports_tbox(M,TBox),!.
 ensure_imports_tbox(M,TBox):-
@@ -527,7 +501,7 @@ fixup_module(_,[user]).
 fixup_module(M,_L):- skip_user(M).
 
 
-fixup_modules:-
+fixup_modules:-  trace_or_throw(unexpected(fixup_modules)),
    doall((current_module(M),once((findall(I,import_module(M,I),L))),once(fixup_module(M,L)))).
 
 % :- autoload([verbose(false)]).
@@ -581,22 +555,12 @@ add_import_predicate(Mt,Goal,OtherMt):- fail,
    must(predicate_property(Mt:Goal,imported_from(OtherMt))),!.
 
 
-add_import_predicate(Mt,Goal,OtherMt):- catch(Mt:import(OtherMt:Goal),_,fail),!.
+add_import_predicate(Mt,Goal,OtherMt):- trace_or_throw(add_import_predicate(Mt,Goal,OtherMt)),
+   catch(Mt:import(OtherMt:Goal),_,fail),!.
 add_import_predicate(Mt,Goal,OtherMt):-
    functor(Goal,F,A),
    make_as_dynamic(imported_from(OtherMt),Mt,F,A),
    assert_if_new(( Mt:Goal :- OtherMt:Goal)).
-
-make_as_dynamic(Reason,Mt,F,A):-
- must((
-   multifile(Mt:F/A),
-   discontiguous(Mt:F/A),
-   dynamic(Mt:F/A),
-   module_transparent(Mt:F/A),
-   public(Mt:F/A),
-   on_f_throw( (Mt:F/A)\== (baseKB:loaded_external_kbs/1)),
-   functor(Goal,F,A),
-   assert_if_new(( Mt:Goal :- (fail,infoF(createdFor(Reason))))))).
 
 
 transitive_path(F,[Arg1,Arg2],Arg2):-
@@ -613,7 +577,7 @@ autoload_library_index(F,A,PredMt,File):- functor(P,F,A),'$autoload':library_ind
 
 :- multifile(baseKB:hybrid_support/2).
 :- dynamic(baseKB:hybrid_support/2).
-baseKB_hybrid_support(F,A):-baseKB:safe_wrap(F,A,_).
+baseKB_hybrid_support(F,A):-suggest_m(M),baseKB:safe_wrap(M,F,A,_).
 baseKB_hybrid_support(F,A):-clause_b(hybrid_support(F,A)).
 
 baseKB:hybrid_support(predicateConventionMt,2).
@@ -627,9 +591,10 @@ baseKB:hybrid_support(mtHybrid,1).
 baseKB:hybrid_support(mtCycLBroad,1).
 baseKB:hybrid_support(genlMt,2).
 
+dumpST_dbreak:- dumpST,break.
 
 % baseKBOnly mark_mark/3 must be findable from every module (dispite the fact that baseKB is not imported)
-:- dynamic baseKB:mpred_prop/3.
+:- dynamic baseKB:mpred_prop/4.
 
 % hybrid_support (like spft/3) must be defined directly in every module and then aggregated thru genlMts (thus to baseKB)
 
@@ -637,12 +602,8 @@ baseKB:hybrid_support(genlMt,2).
 
 :- create_prolog_flag(retry_undefined,default,[type(term),keep(true)]).
 
-istAbove(Mt,Query):- Mt \== baseKB, baseKB:genlMt(Mt,MtAbove),MtAbove:Query.
-
-
-% make sure we ignore calls to predicate_property/2  (or thus '$define_predicate'/1)
 uses_predicate(M:F/A,R):- !, '$current_source_module'(SM), uses_predicate(SM,M,F,A,R).
-uses_predicate(F/A,R):- '$current_source_module'(SM),'$current_typein_module'(M),uses_predicate(M,SM,F,A,R).
+uses_predicate(F/A,R):- '$current_source_module'(SM),'context_module'(M),uses_predicate(SM,M,F,A,R).
 
 
 
@@ -654,104 +615,82 @@ has_parent_goal(G):- prolog_current_frame(F),prolog_frame_attribute(F,parent, PF
 has_parent_goal(F,G):-prolog_frame_attribute(F,goal, G);(prolog_frame_attribute(F,parent, PF),has_parent_goal(PF,G)).
 
 
-uses_predicate(_,CallerMt,'$pldoc',4,retry):- multifile(CallerMt:'$pldoc'/4),discontiguous(CallerMt:'$pldoc'/4),dynamic(CallerMt:'$pldoc'/4),!.
 
-uses_predicate(_,M,F,A,R):-
-  prolog_current_frame(FR), functor(P,F,A),(prolog_frame_attribute(FR,parent_goal,predicate_property(M:P,_))),!,R=error.
+uses_predicate(_,CallerMt,'$pldoc',4,retry):- make_as_dynamic(uses_predicate,CallerMt,'$pldoc',4),!.
+uses_predicate(User, User, module, 2, error):-!.
+uses_predicate(_,_, (:-), _, error) :- !,dumpST_dbreak.
+uses_predicate(_,_, (/), _, error) :- !,dumpST_dbreak.
+uses_predicate(_,_, (//), _, error) :- !,dumpST_dbreak.
+uses_predicate(_,_, (:), _, error) :- !,dumpST_dbreak.
+uses_predicate(_,_, '[|]', _, error) :- !,dumpST_dbreak.
+% uses_predicate(_,_, '>>',  4, error) :- !,dumpST_dbreak.
+
+% makes sure we ignore calls to predicate_property/2  (or thus '$define_predicate'/1)
+% uses_predicate(_,M,F,A,R):- prolog_current_frame(FR), functor(P,F,A),(prolog_frame_attribute(FR,parent_goal,predicate_property(M:P,_))),!,R=error.
 uses_predicate(_,Module,Name,Arity,Action) :-
       current_prolog_flag(autoload, true),
 	'$autoload'(Module, Name, Arity), !,
 	Action = retry.
 
-uses_predicate(BaseKB,System, F,A,R):-  System\==BaseKB, call_u(mtHybrid(BaseKB)),\+ call_u(mtHybrid(System)),!,
-   must(uses_predicate(System,BaseKB,F,A,R)),!.
-
-uses_predicate(_,_, (:-), 1, error) :- !,dumpST,dbreak.
-
-uses_predicate(user,user, isa, 2, retry) :- call(call,assert((user:isa(I,C):-call_u(isa(I,C))))),!.
-uses_predicate(user,user, tRRP, 1, retry) :- call(call,assert((user:tRRP(I):-call_u(isa(I,tRRP))))),!.
-uses_predicate(user,user, F, A, retry) :- clause_b(arity(F,A)),functor(P,F,A),
-   call(call,assert((user:P :- call_u(P)))),
-   user:compile_predicates([F/A]),!.
-
-uses_predicate(_,_, (:-), _, error) :- !,dumpST,dbreak.
-uses_predicate(_,_, (/), _, error) :- !,dumpST,dbreak.
-uses_predicate(_,_, (//), _, error) :- !,dumpST,dbreak.
-uses_predicate(_,_, (:), _, error) :- !,dumpST,dbreak.
-uses_predicate(_,myMt,mtExact,1, retry):- myMt:import(baseKB:mtExact/1),!.
-% uses_predicate(SM,_, '>>',  4, error) :- !,dumpST,dbreak.
-uses_predicate(_,_, '[|]', _, error) :- !,dumpST,dbreak.
-uses_predicate(User, User, module, 2, error):-!.
-
 % make sure we ignore calls to predicate_property/2  (or thus '$define_predicate'/1)
-uses_predicate(_,_,_,_,error):-prolog_current_frame(F),
+uses_predicate(_,_,_,_,error):- 
+   prolog_current_frame(F),
   (is_parent_goal(F,'$define_predicate'(_));
-   is_parent_goal(F,'assert_u'(_));
+   (fail,is_parent_goal(F,'assert_u'(_)));
    has_parent_goal(F,'$syspreds':property_predicate(_,_))),!.
 
+uses_predicate(BaseKB,System, F,A,R):-  System\==BaseKB, call_u(mtHybrid(BaseKB)),\+ call_u(mtHybrid(System)),!,dumpST,
+   must(uses_predicate(System,BaseKB,F,A,R)),!.
 
+
+
+/*
 uses_predicate(CallerMt,CallerMt,predicateConventionMt,2,retry):-
-  create_predicate_istAbove(CallerMt,predicateConventionMt,2),!.
+  create_predicate_inheritance(CallerMt,predicateConventionMt,2),!.
 
 uses_predicate(_CallerMt,baseKB,predicateConventionMt,2,retry):-
-  create_predicate_istAbove(baseKB,predicateConventionMt,2).
+  create_predicate_inheritance(baseKB,predicateConventionMt,2).
 
 
-uses_predicate(BaseKB,System, F,A,R):-  System\==BaseKB, call_u(mtHybrid(BaseKB)),\+ call_u(mtHybrid(System)),
+uses_predicate(BaseKB,System, F,A,R):- trace,  System\==BaseKB, call_u(mtHybrid(BaseKB)),\+ call_u(mtHybrid(System)),
    loop_check_term(must(uses_predicate(System,BaseKB,F,A,R)),
                    term(uses_predicate(System,BaseKB,F,A,R)),fail),!.
 
 uses_predicate(_CallerMt, baseKB, F, A,retry):-
-  create_predicate_istAbove(baseKB,F,A),
+  create_predicate_inheritance(baseKB,F,A),
    nop(system:import(baseKB:F/A)),!.
 
-uses_predicate(System, BaseKB, F,A, retry):-  System\==BaseKB, call_u(mtHybrid(BaseKB)),\+ call_u(mtHybrid(System)),!,
-   create_predicate_istAbove(BaseKB,F,A),
+uses_predicate(System, BaseKB, F,A, retry):- 
+   System\==BaseKB, call_u(mtHybrid(BaseKB)),
+   \+ call_u(mtHybrid(System)),!,
+   create_predicate_inheritance(BaseKB,F,A),
     nop(system:import(BaseKB:F/A)),!.
 
+*/
 % keeps from calling this more than once
-uses_predicate(SM,M,F,A,error):-
-  lmcache:tried_to_retry_undefined(SM,M,F,A),!,
-  wdmsg(unused_predicate(SM,M,F,A)),backtrace(800),dbreak.
-
-uses_predicate(SM,CallerMt,F,A,_):-
-   wdmsg(uses_predicate(SM,CallerMt,F,A)),
-   assert(lmcache:tried_to_retry_undefined(SM,CallerMt,F,A)),fail.
-
-uses_predicate(_,Module, Name, Arity, Action) :- fail,
-	current_prolog_flag(autoload, true),
-	'$autoload'(Module, Name, Arity), !,
-	Action = retry.
+uses_predicate(SM,M,F,A,_Error):- 
+  (lmcache:tried_to_retry_undefined(SM,M,F,A)-> (wdmsg(re_used_predicate(SM,M,F,A)),fail) ;
+  (wdmsg(uses_predicate(SM,CallerMt,F,A)),assert(lmcache:tried_to_retry_undefined(SM,CallerMt,F,A)))),
+  fail.
 
 uses_predicate(_,System, _,_, error):- module_property(System,class(system)),!.
 uses_predicate(_,System, _,_, error):- module_property(System,class(library)),!.
 
-uses_predicate(SM,CallerMt,F,A,R):-
+uses_predicate(System, M, F,A, retry):- 
+   create_predicate_inheritance(M,F,A),
+    nop(System:import(M:F/A)),!.
+
+
+uses_predicate(SM,CallerMt,F,A,R):- trace_or_throw(uses_predicate(SM,CallerMt,F,A,R)), break,
     loop_check_term(retry_undefined(CallerMt,F,A),dump_break_loop_check_uses_predicate(SM,CallerMt,F,A,retry),dump_break),
     R=retry.
 
-%% create_predicate_istAbove(+ChildDefMt,+F,+A) is semidet.
-%
-% Ensure istAbove/2 stub is present in ChildDefMt.
-%
-create_predicate_istAbove(Nonvar,F,A):- sanity(ground(create_predicate_istAbove(Nonvar,F,A))),fail.
-% TODO unsuspect the next line (nothing needs to see above baseKB)
-
-
-create_predicate_istAbove(baseKB,F,A):- !,
-  make_as_dynamic(create_predicate_istAbove(baseKB,F,A),baseKB,F,A), 
-     ignore((( \+ (defaultAssertMt(CallerMt),CallerMt\==baseKB,create_predicate_istAbove(CallerMt,F,A) )))).
-create_predicate_istAbove(abox,F,A):-  must(defaultAssertMt(CallerMt)),sanity(CallerMt\=abox),!,create_predicate_istAbove(CallerMt,F,A).
-%create_predicate_istAbove(_, do_and_undo, 2):-dtrace.
-create_predicate_istAbove(CallerMt,F,A):- clause_b(mtProlog(CallerMt)), must(\+ clause_b(mtHybrid(CallerMt))) ,!,wdmsg(warn(create_predicate_istAbove_mtProlog(CallerMt,F,A))),dtrace.
-create_predicate_istAbove(CallerMt,F,A):-
-   % make_as_dynamic(create_predicate_istAbove(CallerMt,F,A),CallerMt,F,A),
-   functor(Goal,F,A),
-   assert_if_new(( CallerMt:Goal :- istAbove(CallerMt,Goal))).
 
 
 
-with_no_retry_undefined(Goal):- locally(flag_call(runtime_debug=false),Goal).
+:- meta_predicate with_no_retry_undefined(:).
+with_no_retry_undefined(Goal):- locally(set_prolog_flag(retry_undefined,false),
+                                     locally(flag_call(runtime_debug=false),Goal)).
 
 
 % Every module has it''s own
@@ -771,7 +710,7 @@ retry_undefined(Mt, F, A):-  clause_b(mtCycLBroad(Mt)), baseKB_hybrid_support(F,
 retry_undefined(CallerMt,F,A):- baseKB_hybrid_support(F,A),
    clause_b(mtGlobal(CallerMt)),
    % find_and_call(baseKB:mtGlobal(CallerMt)),
-   create_predicate_istAbove(CallerMt,F,A).
+   create_predicate_inheritance(CallerMt,F,A).
 
 % import built-ins ?
 retry_undefined(CallerMt,F,A):- current_predicate(system:F/A), current_module(M),M\=system,
@@ -784,7 +723,7 @@ retry_undefined(CallerMt,F,A):-
    use_module(CallerMt:File),!.
 
 % Autoloads importing the entire other module
-retry_undefined(CallerMt,F,A):- fail,
+retry_undefined(CallerMt,F,A):- fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,
        autoload_library_index(F,A,PredMt,File),
        asserta(lmcache:how_registered_pred(PredMt:use_module(CallerMt:File),CallerMt,F,A)),
        use_module(system:File),!.
@@ -804,7 +743,7 @@ retry_undefined(CallerMt,F,A):- fail,
        load_files(CallerMt:File,[if(true),imports([F/A]),register(false),silent(false)]),!.
 
 % Autoloads importing the entire other module
-retry_undefined(CallerMt,F,A):-
+retry_undefined(CallerMt,F,A):- fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,
        autoload_library_index(F,A,PredMt,File),
        asserta(lmcache:how_registered_pred(PredMt:use_module(CallerMt:File),CallerMt,F,A)),
        use_module(CallerMt:File),!.
@@ -817,21 +756,13 @@ retry_undefined(CallerMt,F,A):-
        (PredMt:ensure_loaded(PredMt:File),add_import_module(CallerMt,PredMt,start))),!.
 */
 
-retry_undefined(CallerMt,F,A):-functor(P,F,A),find_module(P,M),show_call(CallerMt:import(M:F/A)),!.
+retry_undefined(CallerMt,F,A):- fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,fail,
+   functor(P,F,A),find_module(P,M),show_call(CallerMt:import(M:F/A)),!.
 
 
 %retry_undefined(PredMt:must/1) % UNDO % :- add_import_module(PredMt,logicmoo_util_catch,start),!.
 %retry_undefined(PredMt:debugm/2) % UNDO % :- add_import_module(PredMt,logicmoo_util_dmsg,start),!.
 
-
-:- module_transparent(make_shared_multifile/3).
-:- export((make_shared_multifile)/3).
-
-
-
-
-%:- module_transparent((kb_shared)/1).
-%:- meta_predicate((kb_shared(+))).
 
 %=
 
@@ -839,11 +770,10 @@ retry_undefined(CallerMt,F,A):-functor(P,F,A),find_module(P,M),show_call(CallerM
 %
 % Shared Multifile.
 %
-/*
-kb_shared(PredMt:MPI):-
+make_shared_multifile(PredMt:MPI):-
    context_module_of_file(CallerMt),!,
    with_pfa_group(make_shared_multifile,CallerMt,PredMt, MPI),!.
-*/
+
 
 %% make_shared_multifile( ?CallerMt, ?PredMt, :TermPI) is semidet.
 %

@@ -449,7 +449,7 @@ mpred_list_triggers_1(What):-
    print_db_items_and_neg('Instances: ',isa(_,IWhat),IWhat),
    print_db_items_and_neg('Subclass Of',genls(IWhat,_),IWhat),
    print_db_items_and_neg('Subclasses: ',genls(_,IWhat),IWhat))),
-   print_db_items('PFC Watches', mpred_prop(_,_,_),What),
+   forall(suggest_m(M),print_db_items('PFC Watches', mpred_prop(M,_,_,_),What)),
    print_db_items('Triggers Negative', nt(_,_,_,_),What),
    print_db_items('Triggers Goal',bt(_,_,_),What),
    print_db_items('Triggers Positive',pt(_,_,_),What),
