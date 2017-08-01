@@ -21,9 +21,6 @@
 
 :- listing(a_01).
 
-:- break.
-
 :- repropagate(mtHybrid(_)).
 :- listing(header_sane:_).
 
-:- break.

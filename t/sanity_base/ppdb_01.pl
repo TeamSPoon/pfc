@@ -8,5 +8,6 @@
 %  was_module(sanity_attvar_05,[]).
 
 :- include(test_header).
+
 :- pp_DB.
 

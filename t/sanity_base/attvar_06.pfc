@@ -8,33 +8,33 @@
 %  was_module(sanity_attvar_06 ,[]).
 
 :- include(test_header).
+
+:- ensure_loaded(library(attvar_reader)).
+
+sk6_in(Ex)==>sk6_out(Ex).
+sk6a_in(Ex)==>sk6a_out(Ex).
+
 :- set_prolog_flag(assert_attvars,true).
-
-:- fileAssertMt(Mt),wdmsg(fileAssertMt(Mt)).
-
-:- debug_logicmoo(_).
-:- nodebug_logicmoo(http(_)).
-:- debug_logicmoo(logicmoo(_)).
- % :- mpred_trace_exec.
-
-:- begin_pfc.
-
-:- dynamic(sk_out/1).
-:- dynamic(sk_in/1).
-:- flag_call(runtime_debug=true).
-
-% :- process_this_script.
-
-sk_in(Ex)==>sk_out(Ex).
-%sk_in(foo).
-%:-ain(sk_in(bar):- wdmsg(writeq(9))).
-
 :- read_attvars(true).
 
-:- mpred_trace(sk_in/1).
- % :- mpred_trace_exec.
+sk6:attr_unify_hook(_,_).
 
-sk_in(avar([vn='ExIn',sk='SKF-666'])).
+% :- rtrace.
+:- ain((sk6a_in(avar([vn='ExIn',sk6='SKF-666'])))).
+sk6_in(avar([vn='ExIn',sk6='SKF-666'])).
 
-:- must((sk_out(FOUND),get_attr(FOUND,sk,What),What='SKF-666')),dmsg(fOUND=FOUND).
+/*
+:- tell('tmp_6a~').
+:- xlisting(sk6a_in).
+:- xlisting(sk6a_out).
+:- told.
+
+:- tell('tmp_6~').
+:- xlisting(sk6_in).
+:- xlisting(sk6_out).
+:- told.
+*/
+
+:- ((sk6a_out(FOUND),get_attr(FOUND,sk6,What), What == 'SKF-666')),dmsg(fOUND=FOUND).
+:- ((sk6_out(FOUND),get_attr(FOUND,sk6,What), What == 'SKF-666')),dmsg(fOUND=FOUND).
 

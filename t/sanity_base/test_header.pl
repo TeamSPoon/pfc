@@ -29,8 +29,10 @@ test_header_include.
 :- endif.
 
 :- multifile prolog:message//1, user:message_hook/3.
-user:message_hook(import_private(pfc_lib,_:_/_),warning,_):-!.
-user:message_hook(T,Type,Warn):- memberchk(Type,[error,warning]),once(maybe_message_hook(T,Type,Warn)),fail.
+% user:message_hook(import_private(pfc_lib,_:_/_),warning,_):- source_location(_,_),!.
+user:message_hook(io_warning(_,'Illegal UTF-8 start'),warning,_):- source_location(_,_),!.
+user:message_hook(T,Type,Warn):- source_location(_,_),
+  memberchk(Type,[error,warning]),once(maybe_message_hook(T,Type,Warn)),fail.
 
 
 :- if(is_pfc_file).

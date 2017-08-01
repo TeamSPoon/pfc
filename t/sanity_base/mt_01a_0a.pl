@@ -49,17 +49,21 @@ loves(sally,joe).
 
 baseKB:genlMt(myMt,socialMt).
 
+:- listing(myMt:_).
+
 :- mpred_test(clause_u(socialMt:loves(_,_))).
 
 :- set_prolog_flag(retry_undefined,true).
 
 :- listing(pfc_test_feature/2).
 
-:- trace,pfc_test_feature(localMt,myMt:loves(_,_)).
+:- pfc_test_feature(localMt,myMt:loves(_,_)).
+
+:- listing(myMt:_).
 
 :- mpred_test(clause(myMt:loves(_,_),_B,_R)).
 
-:- pfc_test_feature(mt,\+clause_u(myMt:loves(_,_))).
+:- mpred_test( \+ clause_u(myMt:loves(_,_))).
 
 :- mpred_test(myMt:loves(_,_)).
 

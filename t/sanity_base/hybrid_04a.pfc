@@ -1,6 +1,11 @@
 
-
 :- include(test_header).
+
+end_of_file.
+
+:- if(false).
+
+
 
 :- if(exists_source(library(logicmoo_user))).
 
@@ -21,6 +26,7 @@
 
 */
 
+
 wasHCMA(
  someFunnyRel(R1,R2,X,Y) <=>
    (all([ X,Y,Z ], (R1(X,Y) & R1(Y,Z) => R1(X,Z)))) 
@@ -40,11 +46,17 @@ asDefaulted(
    & ((Q(M,N)=>R2(M,N)) => (Q(L,G) => R1(L,G))))))).
 */
 
+;; SomeFunnyRel(R1,R2,x,y) = 
+(forall x y z . 
+   (R1(x,y) & R1(y,z) -> R1(x,z))) 
+& (forall p q . R2(p,q) -> R1(p,q)) & 
+  (forall Q . ((forall a b c . (Q(a,b) & Q(b,c) -> Q(a,c))) 
+      & (forall m n . R2(m,n) -> Q(m,n)) -> (forall l g . R1(l,g) -> Q(l,g))))
 
 asHolds3(
  someFunnyRel(R1,R2,X,Y) <=>
   ((holds(R1,X,Y) & holds(R1,Y,Z) => holds(R1,X,Z))
- & (holds(R1,P,Qa) => holds(R2,P,Qa))
+ & (holds(R2,P,Qa) => holds(R1,P,Qa))
  & (holds(Q,A,B) & holds(Q,B,C) => holds(Q,A,C))
  & ((holds(Q,M,N) => holds(R2,M,N)) => (holds(Q,L,G) => holds(R1,L,G))))).
 
@@ -53,4 +65,5 @@ asHolds3(
 :- asHolds3(FOL),kif_to_boxlog(FOL,Entailments),wdmsgl(Entailments).
 
 
+:- endif.
 :- endif.

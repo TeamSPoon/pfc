@@ -28,6 +28,7 @@ code1:a:- kb2:b.
 
 kb2:b.
 
+baseKB:genlMt(code1,baseKB).
 kb3: (a==>c).
 
 

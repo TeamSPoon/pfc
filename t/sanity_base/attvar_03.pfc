@@ -7,6 +7,8 @@
 
 %  was_module(sanity_attvar_03,[]).
 
+:- use_module(library(pfc)).
+
 :- include(test_header).
 :- use_module(library(attvar_reader)).
 % :- '$set_source_module'(ABox),'$set_typein_module'(ABox).

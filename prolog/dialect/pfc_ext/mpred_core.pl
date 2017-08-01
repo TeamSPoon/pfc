@@ -341,6 +341,7 @@ mpred_database_term(mpred_warnings,1,debug).
 mpred_database_term(mpred_prop,4,fact(_)).
 
 mpred_database_term(predicateConventionMt,2,fact(_)).
+% mpred_database_term(genlMt,2,fact(_)).
 %mpred_database_term(arity,2,fact(_)).
 %mpred_database_term(rtArgsVerbatum,1,fact(_)).
 
@@ -515,13 +516,20 @@ fix_mp0(Why, '~'(G0), M, '~'(CALL)):-nonvar(G0),!,fix_mp0(Why,G0,M,CALL).
 fix_mp0(Why,'?-'(G0),M, '?-'(CALL)):-nonvar(G0),!,fix_mp0(Why,G0,M,CALL).
 fix_mp0(Why,':-'(G0),M, ':-'(CALL)):-nonvar(G0),!,fix_mp0(Why,G0,M,CALL).
 fix_mp0(Why,(G :- B),M,( GO :- B)):- !, fix_mp0(Why,G,M,GO).
-fix_mp0(Why,_:(G :- B),M,( GO :- B)):- !, fix_mp0(Why,G,M,GO).
+fix_mp0(Why,CM:(G :- B),M,( GO :- B)):- !, CM:fix_mp0(Why,G,M,GO).
+
+fix_mp0(Why,M:P,MT,P):- to_real_mt(Why,M,MT)->M\==MT,!,fix_mp0(Why,MT:P,MT,P).
+
+% fix_mp0(Why,PQ,M,PPQQ):- meta_split(PQ,P,OP,Q),!,fix_mp(Why,P,M1,PP),fix_mp(Why,Q,M2,QQ),(M1\==M2 -> (QQ\==Q->M=M2;M=M1) ; M=M1),!,meta_split(PPQQ,PP,OP,QQ).
+
+fix_mp0(_Why,P,S,GO):- current_predicate(_,P),predicate_property(P,imported_from(S)),!,strip_module(P,_,GO).
+
+fix_mp0(Why,G,M,GO):- strip_module(G,WAZ,GO),get_consequent_functor(GO,F,A),loop_check(WAZ:convention_to_mt(Why,F,A,M),fail),!.
+
+
 fix_mp0(_Why,Mt:P,Mt,P):- clause_b(mtExact(Mt)),!.
 fix_mp0(_Why,Mt:P,Mt,P):- clause_b(mtHybrid(Mt)),!.
-% fix_mp0(Why,PQ,M,PPQQ):- meta_split(PQ,P,OP,Q),!,fix_mp(Why,P,M1,PP),fix_mp(Why,Q,M2,QQ),(M1\==M2 -> (QQ\==Q->M=M2;M=M1) ; M=M1),!,meta_split(PPQQ,PP,OP,QQ).
-fix_mp0(_Why,P,S,GO):- current_predicate(_,P),predicate_property(P,imported_from(S)),!,strip_module(P,_,GO).
-fix_mp0(Why,M:P,MT,P):- to_real_mt(Why,M,MT)->M\==MT,!,fix_mp0(Why,MT:P,MT,P).
-fix_mp0(Why,G,M,GO):- strip_module(G,_,GO),get_consequent_functor(GO,F,A),loop_check(convention_to_mt(Why,F,A,M),fail),!.
+
 fix_mp0(_Why,I,ABox,I):- defaultAssertMt(ABox),!.
 
 /*
@@ -690,7 +698,7 @@ clause_u(M:H,B,R):- !, clause_i(M:H,B,R),clause_property(R,module(M)).
 clause_u(MH,B,R):- Why = clause(clause,clause_u),
  ((mnotrace(fix_mp(Why,MH,M,H)),
   clause(M:H,B,R))*->true;
-           (fix_mp(Why,MH,M,CALL)->clause_i(M:CALL,B,R))).
+           (fix_mp(Why,MH,M,CALL)->clause_i(M:CALL,B,R))), B \= ihherit_above(M,_).
 % clause_u(H,B,Why):- has_cl(H),clause_u(H,CL,R),mpred_pbody(H,CL,R,B,Why).
 %clause_u(H,B,backward(R)):- R=(<-(H,B)),clause_u(R,true).
 %clause_u(H,B,equiv(R)):- R=(<==>(LS,RS)),clause_u(R,true),(((LS=H,RS=B));((LS=B,RS=H))).
@@ -1767,6 +1775,7 @@ mpred_remove_supports_quietly(_).
 % - or a random fact, printing out the trace, if relevant.
 %
 
+mpred_undo(P):- mpred_reduced_chain(mpred_undo,P),!.
 mpred_undo(X):- mpred_undo1(X),!.
 % maybe still un-forward chain?
 mpred_undo(Fact):-
@@ -1803,6 +1812,7 @@ mpred_undo1(nt(Head,Condition,Body)):-
     -> mpred_unfwc(nt(Head,Condition,Body))
      ; mpred_warn("Trigger not found to undo: ~p",[nt(Head,Condition,Body)])).
 
+mpred_undo1(P):- mpred_reduced_chain(mpred_undo1,P),!.
 mpred_undo1(Fact):-
   % undo a random fact, printing out the dtrace, if relevant.
   (retract_u(Fact)*->true; mpred_trace_msg(show_failure(mpred_undo1,retract_u(Fact)))),
@@ -1818,6 +1828,8 @@ mpred_undo1(Fact):-
 %  participates in and check the things that they support to see if they
 %  should stay in the database or should also be removed.
 %
+
+mpred_unfwc(P):- mpred_reduced_chain(mpred_unfwc,P),!.
 mpred_unfwc(F):-
   show_failure(mpred_retract_supported_relations(F)),
   mpred_unfwc1(F).
@@ -1900,24 +1912,29 @@ filter_buffer_get_n(_,[],_).
 filter_buffer_n_test(Name,N,Fact):- filter_buffer_get_n(Name,FactS,N),
    (memberchk(Fact,FactS)-> true ; (nb_setval(Name,[Fact|FactS]),fail)).
 
+mpred_reduced_chain(P1,(Fact:- (FWC, BODY))):- FWC==fwc,!,call(P1,{BODY}==>Fact).
+mpred_reduced_chain(P1,(Fact:- (BWC, BODY))):- BWC==bwc,!,call(P1,(Fact<-BODY)).
+mpred_reduced_chain(P1,(P:-attr_bind(L,R))):- !,must(attr_bind(L)),call(P1,(P:-R)).
+mpred_reduced_chain(P1,(P:-True)):- True==true,call(P1,P).
+
+mpred_reduced_chain(P1,==>(Fact),P1):- sanity(nonvar(Fact)),!,
+  must(full_transform(mpred_fwc1,==>(Fact),ExpandFact)),!,  
+  mpred_trace_msg((expanding_mpred_chain(P1,Fact) ==> ExpandFact)),
+  sanity(ExpandFact\== (==>(Fact))),
+  each_E(P1,ExpandFact,[]).
+
 
 %% mpred_fwc1(+P) is det.
 %
 % forward chains for a single fact.
 %  Avoids loop while calling mpred_fwc1(P)
 mpred_fwc1(clause_asserted_u(Fact)):-!,sanity(clause_asserted_u(Fact)).
-mpred_fwc1((Fact:- (FWC, BODY))):- FWC==fwc,!, mpred_fwc1({BODY}==>Fact).
-mpred_fwc1((Fact:- (BWC, BODY))):- BWC==bwc,!, mpred_fwc1((Fact<-BODY)).
+mpred_fwc1(P):- mpred_reduced_chain(mpred_fwc1,P),!.
 mpred_fwc1(support_hilog(_,_)):-!.
 % mpred_fwc1(singleValuedInArg(_, _)):-!.
 % this line filters sequential (and secondary) dupes
 % mpred_fwc1(Fact):- current_prolog_flag(unsafe_speedups , true) , ground(Fact),fwc1s_post1s(_One,Two),Six is Two * 3,filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact),!.
 
-mpred_fwc1(==>(Fact)):- sanity(nonvar(Fact)),!,
-  must(full_transform(mpred_fwc1,==>(Fact),ExpandFact)),!,  
-  mpred_trace_msg((expanding_mpred_fwc1(Fact) ==> ExpandFact)),
-  sanity(ExpandFact\== (==>(Fact))),
-  each_E(mpred_fwc1,ExpandFact,[]).
 
 mpred_fwc1(Fact):-
   '$current_source_module'(Sm),
@@ -3503,8 +3520,9 @@ bagof_nr(T,G,B):- no_repeats(B,(bagof(T,G,B))).
 bagof_or_nil(T,G,B):- (bagof_nr(T,G,B) *-> true; B=[]).
 
 
+:- meta_predicate(sanity_check(0,0)).
 sanity_check(When,Must):- When,Must,!.
-sanity_check(When,Must):- must((When,Must)),!.
+sanity_check(When,Must):- must((show_call(When),Must)),!.
 
 %
 %  predicates for manipulating support relationships
@@ -3606,12 +3624,19 @@ mpred_trigger_key(X,X).
 %
 % Pretty Print All.
 %
-pp_DB:-
- must_det_l((
+pp_DB:- defaultAssertMt(M),clause_b(mtHybrid(M)),!,pp_DB(M).
+pp_DB:- forall(clause_b(mtHybrid(M)),pp_DB(M)).
+ 
+
+pp_DB(M):-  
+ M:must_det_l((
   pp_db_facts,
   pp_db_rules,
   pp_db_triggers,
   pp_db_supports)).
+
+:- system:import(pp_DB/0).
+:- system:export(pp_DB/0).
 
 %  pp_db_facts ...
 

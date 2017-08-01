@@ -9,6 +9,8 @@
 
 :- include(test_header).
 
+:- ensure_loaded(library(attvar_reader)).
+
 :- debug_logicmoo(_).
 :- nodebug_logicmoo(http(_)).
 :- debug_logicmoo(logicmoo(_)).
