@@ -16,7 +16,6 @@
 
 :- mpred_reset.
 
-
 :- defaultAssertMt(M),dynamic((M:current_ooQ1/1,M:default_ooQ1/1,M:if_mooQ1/2)).
 :- mpred_trace.
 :- mpred_watch.

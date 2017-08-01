@@ -4,6 +4,9 @@
 % :- use_listing_vars.
 
 
+:- begin_pfc.
+
+
 % :- (( must((defaultAssertMt(M)->M==red_test01)))).
 
 % :- set_prolog_flag(umt_local,true).

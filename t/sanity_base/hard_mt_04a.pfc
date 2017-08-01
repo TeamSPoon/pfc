@@ -14,14 +14,19 @@
 
 baseKB:mtHybrid(socialOneMt).
 baseKB:mtHybrid(socialTwoMt).
+%baseKB:mtHybrid(mt1).
+%baseKB:mtHybrid(mt2).
+
 
 mt1:predicateConventionMt(loves,socialOneMt).
 
 mt2:predicateConventionMt(loves,socialTwoMt).
                                                              
-:- must(mt1:fix_mp(clause(_,_),loves(x,y),M,P)),must(M:P==socialOneMt:loves(x,y);M:P==socialTwoMt:loves(x,y)).
-:- must(fix_mp(clause(_,_),mt1:loves(x,y),M,P)),must(M:P==socialOneMt:loves(x,y);M:P==socialTwoMt:loves(x,y)).
-:- must(fix_mp(clause(_,_),loves(x,y),M,P)),must(M:P==socialOneMt:loves(x,y);M:P==socialTwoMt:loves(x,y)).
+:- sanity_check(mt1:fix_mp(clause(_,_),loves(x,y),M,P),(M:P==socialOneMt:loves(x,y);M:P==socialTwoMt:loves(x,y))).
+:- sanity_check(fix_mp(clause(_,_),loves(x,y),M,P),(M:P==socialOneMt:loves(x,y);M:P==socialTwoMt:loves(x,y))).
+
+
+:- sanity_check(fix_mp(clause(_,_),mt1:loves(x,y),M,P),(M:P==socialOneMt:loves(x,y);M:P==socialTwoMt:loves(x,y))).
 
 loves(sally,joe).
 

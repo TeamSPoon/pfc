@@ -11,11 +11,18 @@
 
 :- include(test_header).
 
+% :- rtrace.
 :- begin_pfc.
+
+:- must(is_pfc_file).
 
 :- set_fileAssertMt(cycKB1).
 
-:- listing(genlMt).
+:- listing(baseKB:mtProlog/1).
+:- listing(baseKB:mtHybrid/1).
+:- listing(baseKB:genlMt/2).
+:- listing(cycKB1:_).
+:- listing(genlMt/2).
 
 :- mpred_trace_exec.
 

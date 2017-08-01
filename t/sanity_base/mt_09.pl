@@ -50,7 +50,7 @@ genlMt(kb2,code1).
 
 
 % before test, to make sure a was not accdently defined in kb2
-:- sanity(\+ clause(kb2:a,_)).
+:- sanity( clause(kb2:a,_)).
 
 % before test, genlMt makes the rule available and should not corrupt the code1 module
 :- sanity(\+ clause(code1:b,_)).
@@ -65,7 +65,7 @@ kb2: (?- a).
 
 
 % to make sure a does not get accdently defined in kb2
-:- mpred_must(\+ clause(kb2:a,_)).
+:- mpred_must( clause(kb2:a,_)).
 
 % genlMt makes the rule available and should not corrupt the code1 module
 :- mpred_must(\+ clause(code1:b,_)).

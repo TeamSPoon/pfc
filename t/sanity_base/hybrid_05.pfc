@@ -1,6 +1,9 @@
 
 :- include(test_header).
 
+
+end_of_file.
+
 :- if(exists_source(library(logicmoo_user))).
 
 :- use_module(library(logicmoo_user)).

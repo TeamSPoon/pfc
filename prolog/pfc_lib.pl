@@ -6,6 +6,7 @@
 */
 :- if(('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'using_pfc'(M,CM,SM,pfc_lib)))).
 :- module(pfc_lib,[]).
+:- set_prolog_flag(gc,false).
 :- endif.
 
 :- use_module(library(each_call_cleanup)).
@@ -13,18 +14,28 @@
 :- user:use_module(library(file_scope)).
 :- set_prolog_flag_until_eof(access_level,system).
 
+kb_wankage(M:F/A):- 
+   M:multifile(M:F/A),
+   M:module_transparent(M:F/A),
+   M:dynamic(M:F/A),
+   M:export(M:F/A),
+   do_import(system,M,F,A),
+   do_import(user,M,F,A),
+   do_import(pfc_lib,M,F,A),
+   do_import(header_sane,M,F,A),
+   M:kb_global(M:F/A).
+
 :- user:use_module(library(virtualize_source)).
+
+:- kb_wankage(rdf_rewrite:arity/2).
+:- kb_wankage(baseKB:genlMt/2).
+:- kb_wankage(baseKB:mtHybrid/1).
+:- kb_wankage(baseKB:mtProlog/1).
+
+
 :- user:use_module(library(hook_hybrid)).
 :- user:use_module(library(logicmoo_util_strings)).
 
-:- module_transparent(rdf_rewrite:arity/2).
-:- multifile(rdf_rewrite:arity/2).
-:- dynamic(rdf_rewrite:arity/2).
-:- export(rdf_rewrite:arity/2).
-:- system:import(rdf_rewrite:arity/2).
-:- user:import(rdf_rewrite:arity/2).
-:- baseKB:import(rdf_rewrite:arity/2).
-:- kb_shared(rdf_rewrite:arity/2).
 
 %:- listing(arity/2).
 %:- listing(baseKB:_).
@@ -43,16 +54,15 @@ kb_local_base(FA):-kb_local(baseKB:FA).
 kb_global_base(M:FA):-!,kb_global(M:FA).
 kb_global_base(FA):- kb_local(baseKB:FA).
 
-:- kb_global_base(baseKB:mtHybrid/1).
-:- kb_global_base(baseKB:mtProlog/1).
 
-:- kb_shared_base(genlMt/2).
+
+% :- kb_global_base(baseKB:genlMt/2).
 
 :- kb_local(mpred_prop/4).
 
 :- forall(between(1,11,A),kb_local(t/A)).
 :- forall(between(5,7,A),kb_local(mpred_f/A)).
-
+/*
 :- kb_shared_base(argIsa/3).
 :- kb_shared_base(collectionConventionMt/2).
 :- kb_shared_base(comment/2).
@@ -88,7 +98,7 @@ kb_global_base(FA):- kb_local(baseKB:FA).
 :- kb_shared_base(startup_option/2).
 :- kb_shared_base(support_hilog/2).
 :- kb_shared_base(without_depth_limit/1).
-
+*/
 :- user:use_module(library(loop_check)).
 %:- user:use_module(library(logicmoo_utils)).
 :- use_module(library(attvar_serializer)).
@@ -138,13 +148,13 @@ input_from_file:- prolog_load_context(stream,Stream),current_input(Stream).
 intern_predicate(MFA):- '$current_typein_module'(To),intern_predicate(To,MFA).
 intern_predicate(To,From:F/A):-!,
   From:module_transparent(From:F/A),
-  From:export(From:F/A),To:import(From:F/A),To:export(From:F/A),
+  From:export(From:F/A),To:export(From:F/A),To:export(From:F/A),
   From:compile_predicates([F/A]),system:lock_predicate(From:F/A),
-  import(From:F/A),export(From:F/A),
-  pfc:import(From:F/A),pfc:export(From:F/A),
-  user:import(From:F/A),user:export(From:F/A),
-  baseKB:import(From:F/A),baseKB:export(From:F/A),
-  system:import(From:F/A),system:export(From:F/A),!.
+  export(From:F/A),export(From:F/A),
+  pfc:export(From:F/A),pfc:export(From:F/A),
+  user:export(From:F/A),user:export(From:F/A),
+  baseKB:export(From:F/A),baseKB:export(From:F/A),
+  system:export(From:F/A),system:export(From:F/A),!.
 intern_predicate(To,F/A):- '$current_source_module'(M),intern_predicate(To,M:F/A).
 
 scan_missed_source:-!.
@@ -174,13 +184,13 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg(visit_pfc_non_file_r
 :- system:export(system:'==>'/2).
 :- compile_predicates([system:'==>'/2]).
 :- lock_predicate(system:'==>'/2).
-:- import(system:'==>'/2).
 :- export(system:'==>'/2).
-:- pfc:import(system:'==>'/2).
+:- export(system:'==>'/2).
 :- pfc:export(system:'==>'/2).
-:- user:import(system:'==>'/2).
+:- pfc:export(system:'==>'/2).
 :- user:export(system:'==>'/2).
-:- baseKB:import(system:'==>'/2).
+:- user:export(system:'==>'/2).
+:- baseKB:export(system:'==>'/2).
 :- baseKB:export(system:'==>'/2).
 */
 '?='(ConsqIn):- fully_expand(ConsqIn,Consq),call_u(Consq),forall(mpred_why(Consq,Ante),wdmsg(Ante)).
@@ -361,9 +371,9 @@ baseKB:sanity_check:- doall((baseKB:mtProlog(M),
 :-dynamic(mpred_core:mpred_ain/1).
 :-dynamic(mpred_core:mpred_aina/1).
 :-dynamic(mpred_core:mpred_ainz/1).
-:-hook_database:import(mpred_core:mpred_ain/1).
-:-hook_database:import(mpred_core:mpred_aina/1).
-:-hook_database:import(mpred_core:mpred_ainz/1).
+:-hook_database:export(mpred_core:mpred_ain/1).
+:-hook_database:export(mpred_core:mpred_aina/1).
+:-hook_database:export(mpred_core:mpred_ainz/1).
 
 :-asserta_new((hook_database:ainz(G):- !, mpred_ainz(G))).
 :-asserta_new((hook_database:ain(M:G):- !, M:mpred_ain(M:G))).
@@ -468,10 +478,10 @@ is_pfc_file(M,Other):- prolog_load_context(source, File),Other\==File,!,is_pfc_f
 sub_atom(F,C):- sub_atom(F,_,_,_,C).
 
 only_expand(':-'(I), ':-'(M)):- !,in_dialect_pfc,fully_expand('==>'(I),M),!.
-only_expand(I,OO):- notrace(must_pfc(I,M)),  
+only_expand(I,OO):- fail, notrace(must_pfc(I,M)),  
   % current_why(S),!,
   S= mfl(Module, File, Line),source_location(File,Line),prolog_load_context(module,Module),
-  conjuncts_to_list(M,O),!, %  [I]\=@=O,
+  conjuncts_to_list(M,O), !, %  [I]\=@=O,
   make_load_list(O,S,OO).
 
 make_load_list([C|O],S,[baseKB:spft(C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):- clause_asserted(C),!, make_load_list(O,S,OO).
@@ -481,7 +491,7 @@ make_load_list(_,_,[]):-!.
 is_loadin(C):- strip_module(C,M,CC),is_loadin(M,CC).
 is_loadin(_,CC):- must_pfc_p(CC),!.
 is_loadin(_,_:-_):-!.
-is_loadin(M,CC):- functor(CC,F,A),localize_mpred(M,F,A).
+is_loadin(M,CC):- functor(CC,F,A),kb_local(M:F/A).
 
 
 must_pfc(IM,_):- is_never_pfc(IM),!,fail.
@@ -521,7 +531,14 @@ is_never_pfc(goal_expansion(_,_,_,_)).
 is_never_pfc(':-'(_)).
 is_never_pfc('-->'(_,_)):-!.
 is_never_pfc(attr_unify_hook(_,_)):-!.
-is_never_pfc(_:C):- !,is_never_pfc(C).
+
+% TODO Maybe find a better spot?  see t/sanity_base/hard_mt_04a.pfc
+is_never_pfc(M:C):- \+ is_never_pfc(C), \+ current_module(M),
+   is_pfc_file,
+   get_fileAssertMt(CMt),CMt:clause_b(mtHybrid(CMt)),
+   CMt:ensure_abox(M),
+   CMt:ain(genlMt(CMt,M)),!,fail.
+is_never_pfc(_:C):- is_never_pfc(C).
 is_never_pfc(':-'(C,_)):- !,is_never_pfc(C).
 
 
@@ -690,7 +707,7 @@ saveBaseKB:- tell(baseKB),listing(baseKB:_),told.
 :- multifile(system:clause_expansion/2).
 :- module_transparent(system:clause_expansion/2).
 :- module_transparent(pfc_clause_expansion/2).
-:- system:import(pfc_clause_expansion/2).
+:- system:export(pfc_clause_expansion/2).
 :- '$set_source_module'(system).
 system:clause_expansion(I,O):- pfc_clause_expansion(I,O).
 :- '$set_source_module'(pfc_lib).

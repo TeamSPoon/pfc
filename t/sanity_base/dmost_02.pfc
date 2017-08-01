@@ -63,7 +63,7 @@ c(1).
 % test breaks here
 :- listing(b/1).
 
-:- clause(b(1),_)->break;true.
+:- (b(1),clause(b(1),_))->break;true.
 
 :- mpred_test(\+ b(1)).
 :- mpred_test( b(2)).

@@ -30,20 +30,22 @@ code1: (a:- printAll('$current_source_module'(_M))).
 
 kb2: (b).
 
-genlMt(kb2,code1).
+baseKB:genlMt(kb2,code1).
+
+baseKB:genlMt(code1,baseKB).
 
 kb2: (:- a).
 
-genlMt(kb3,kb2).
+baseKB:genlMt(kb3,kb2).
 
 
-predicateConventionMt(c,code1).
+kb3:predicateConventionMt(c,code1).
 
 kb3: (a==>c).
 
 % to make sure a does not get accdently defined in kb2 or kb3
-:- mpred_must((clause(kb3:a,_,Ref), \+ clause_property(Ref,module(kb3)))).
-:- mpred_must((\+ clause(kb2:a,_))).
+:- mpred_must((clause(kb3:a,_,Ref), clause_property(Ref,module(kb3)))).
+:- mpred_must(( clause(kb2:a,_))).
 
 % c is forward chained back into 'code1' where it becomes asserted
 :- mpred_must(clause(code1:c,_)).

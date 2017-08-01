@@ -99,22 +99,25 @@
 %  Microtheory System
 % ===================================================================
 
+:- kb_global(mtHybrid/1).
+:- kb_global(mtProlog/1).
+:- kb_global(genlMt/2).
+
 %((ttTypeType(TT),abox:isa(T,TT))==>tSet(T)).
 %tSet(T)==>functorDeclares(T).
 :- kb_local(functorDeclares/1).
-:- kb_local(mtHybrid/1).
-:- kb_local(mtProlog/1).
 :- kb_local(mtNonAssertable/1).
 :- kb_local(prologBuiltin/1).
 :- kb_local(predicateConventionMt/2).
-:- kb_local(genlMt/2).
+% :- kb_local(genlMt/2).
 :- kb_local(do_import_modules/0).
 
-%(genlMt(C,P)/(is_ftNonvar(C),is_ftNonvar(P),P\==baseKB,(mtProlog(C);mtProlog(P))) ==> {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}).
 
 ((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C)}).
 
+% TODO make these undoable
 (genlMt(C,P)/(C\=baseKB)) ==> {doall(((predicate_m_f_a_decl(P,F,A,Type)),C:call(Type,C:F/A)))}.
+(genlMt(C,P)/(is_ftNonvar(C),is_ftNonvar(P),P\==baseKB,(mtProlog(C);mtProlog(P))) ==> {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}).
 
 %(do_import_modules,genlMt(C,P),mtHybrid(C),mtProlog(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}.
 %(do_import_modules,genlMt(C,P),mtProlog(C),mtHybrid(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}.
@@ -124,15 +127,14 @@
 %mtProlog(C) ==> {decl_assertable_module(C)}. % , \+ mtHybrid(C). 
 %(predicateConventionMt(F,MT),arity(F,A))==>{(MT==baseKB;mtProlog(MT))->kb_shared(MT:F/A);kb_local(MT:F/A)}.
 % :- break.
+% predicateConventionMt(predicateConventionMt,baseKB).
 predicateConventionMt(genlMt,baseKB).
-predicateConventionMt(predicateConventionMt,baseKB).
 predicateConventionMt(mtHybrid,baseKB).
 predicateConventionMt(mtProlog,baseKB).
-predicateConventionMt(mtNonAssertable,baseKB).
-(predicateConventionMt(F,MT),arity(F,A))==>{kb_local(MT:F/A)}.
+% predicateConventionMt(mtNonAssertable,baseKB).
+(predicateConventionMt(F,MT),arity(F,A))==>{kb_global(MT:F/A)}.
 
 
-ttRelationType(RT)==>predicateConventionMt(RT,baseKB).
 
 ttTypeType(ttTypeType).
 ttTypeType(ttRelationType).
@@ -144,8 +146,11 @@ typeGenls(ttModuleType,tMicrotheory).
 ==>ttModuleType(tSourceData,mudToCyc('iboPropositionalInformationThing'),comment("Source data files containing world state information")).
 
 ttRelationType(RT)==> { decl_rt(RT) },functorDeclares(RT).
+% ttRelationType(RT)==>predicateConventionMt(RT,baseKB).
 
-functorDeclares(RT)==>{kb_local(RT/1)},arity(RT,1),prologHybrid(RT),functorIsMacro(RT).
+functorDeclares(RT)==> % {kb_local(RT/1)},
+   arityMax(RT,1), % prologHybrid(RT),
+   functorIsMacro(RT).
 
 % ttRelationType(RT) ==> ( ~genlPreds(RT,tFunction) <==> genlPreds(RT,tPred)).
 
@@ -177,7 +182,6 @@ compilerDirective(isRuntime,comment("Only use rule/fact at runtime")).
                   prologOrdered,
 
                   prologEquality,
-
 
                   rtArgsVerbatum,
                   prologSideEffects,
@@ -228,7 +232,7 @@ functorIsMacro(functorIsMacro).
 
 
 
-:- ((ain((hybrid_support(F,A)/(F\==arity))==> {must(kb_local(F/A))}))).
+:- ((ain((hybrid_support(F,A)/(F\==arity,F\==genlMt))==> {must(kb_local(F/A))}))).
 
 
 

@@ -23,7 +23,7 @@
          (make_shared_multifile)/1,
          (make_shared_multifile)/3,
          (make_shared_multifile)/4,
-         % (kb_shared)/1,
+         % (kb_global)/1,
          add_import_predicate/3,
          autoload_library_index/4,
          ensure_abox/1,
@@ -117,13 +117,14 @@ add_abox_module(ABox):- must(atom(ABox)),
   must(mtCanAssert(ABox)),
   ABox:ain(baseKB:mtHybrid(ABox)).
 
+/*
 :- dynamic(baseKB:mtProlog/1).
-:- dynamic(baseKB:mtNoPrologCode/1).
-:- multifile(baseKB:mtProlog/1).
-:- dynamic(baseKB:mtProlog/1).
+*/
 
+:- kb_global(baseKB:mtNoPrologCode/1).
 baseKB:mtNoPrologCode(mpred_userkb).
 
+:- kb_global(baseKB:mtProlog/1).
 baseKB:mtProlog(Mt):- baseKB_mtProlog(Mt).
 
 baseKB_mtProlog(Mt):- \+ atom(Mt),!,var(Mt),!,current_module(Mt),baseKB:mtProlog(Mt).
@@ -285,6 +286,8 @@ guess_maybe_assertMt(ABox):- which_file(File)->make_module_name_local(File,ABox)
 
 makeConstant(_Mt).
 
+is_pfc_module_file(M):- is_pfc_module_file(M,F,TF),!, (F \== (-)), TF = true.
+
 is_pfc_module_file(M,F,TF):- (module_property(M,file(F)),is_pfc_file(F)) *-> TF=true ; 
   (module_property(M,file(F))*->TF=false ; (F= (-), TF=false)).
 
@@ -370,6 +373,7 @@ set_defaultAssertMt(ABox):-
 
 % set_fileAssertMt(ABox):- '$current_source_module'(ABox),!.
 set_fileAssertMt(ABox):-
+ (is_pfc_file -> ensure_abox(ABox) ; true),
  '$current_typein_module'(CM),
  '$current_source_module'(SM),
   sanity(mtCanAssert(ABox)),
@@ -447,7 +451,8 @@ call_a:- arity(tCol,1),arity(arity,2).
 % Ensure Imports.
 %
 ensure_imports(baseKB):-!.
-ensure_imports(M):- ain(M:genlMt(M,baseKB)).
+ensure_imports(M):- ain(genlMt(M,baseKB)).
+% ensure_imports(M):- ain(M:genlMt(M,baseKB)).
 
 :-multifile(lmcache:is_ensured_imports_tbox/2).
 :-dynamic(lmcache:is_ensured_imports_tbox/2).
@@ -463,7 +468,8 @@ skip_user(Mt):- add_import_module(Mt,system,start),ignore(delete_import_module(M
   forall((import_module(Mt,X),default_module(X,user)),skip_user(X)).
 
 inherit_into_module(Child,Parent):- ==(Child,Parent),!.
-inherit_into_module(Child,Parent):- ain(Child:genlMt(Child,Parent)).
+%TODO inherit_into_module(Child,Parent):- ain(Child:genlMt(Child,Parent)).
+inherit_into_module(Child,Parent):- ain(baseKB:genlMt(Child,Parent)).
 
 %% ensure_imports_tbox( ?M, ?TBox) is semidet.
 %
@@ -766,7 +772,7 @@ retry_undefined(CallerMt,F,A):- fail,fail,fail,fail,fail,fail,fail,fail,fail,fai
 
 %=
 
-%% kb_shared( +PI) is semidet.
+%% kb_global( +PI) is semidet.
 %
 % Shared Multifile.
 %
@@ -794,7 +800,7 @@ make_shared_multifile(CallerMt,PredMt,F,A):-
 make_shared_multifile(CallerMt,Home,F,A):- clause_b(mtProlog(Home)),!,
      wdmsg(mtSharedPrologCodeOnly_make_shared_multifile(CallerMt,Home:F/A)),!.
 
-make_shared_multifile(_CallerMt, baseKB,F,A):-  kb_shared(baseKB:F/A),!.
+make_shared_multifile(_CallerMt, baseKB,F,A):-  kb_global(baseKB:F/A),!.
 
 make_shared_multifile(_CallerMt,PredMt,F,A):-!,
  dmsg(make_shared_multifile(PredMt:F/A)),
