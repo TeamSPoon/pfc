@@ -239,8 +239,8 @@ push_current_choice/1,
 :- meta_predicate mpred_retract_i_or_warn_1(*).
 :- meta_predicate not_not_ignore_mnotrace(*).
 :- meta_predicate must_notrace_pfc(*).
-:- multifile(baseKB:safe_wrap/3).
-:- dynamic(baseKB:safe_wrap/3).
+:- multifile(baseKB:safe_wrap/4).
+:- dynamic(baseKB:safe_wrap/4).
 
 :- module_transparent lookup_u/1,lookup_u/2,mpred_unfwc_check_triggers0/1,mpred_unfwc1/1,mpred_why1/1,mpred_blast/1.
 
@@ -282,6 +282,7 @@ on_x_rtrace(G):-on_x_debug(G).
 
 :- nodebug(logicmoo(pfc)).
 
+:- multifile(mpred_database_term/3).
 :- dynamic(mpred_database_term/3).
 % mined from program database
 
@@ -698,7 +699,7 @@ clause_u(M:H,B,R):- !, clause_i(M:H,B,R),clause_property(R,module(M)).
 clause_u(MH,B,R):- Why = clause(clause,clause_u),
  ((mnotrace(fix_mp(Why,MH,M,H)),
   clause(M:H,B,R))*->true;
-           (fix_mp(Why,MH,M,CALL)->clause_i(M:CALL,B,R))), B \= ihherit_above(M,_).
+           (fix_mp(Why,MH,M,CALL)->clause_i(M:CALL,B,R))), B \= inherit_above(M,_).
 % clause_u(H,B,Why):- has_cl(H),clause_u(H,CL,R),mpred_pbody(H,CL,R,B,Why).
 %clause_u(H,B,backward(R)):- R=(<-(H,B)),clause_u(R,true).
 %clause_u(H,B,equiv(R)):- R=(<==>(LS,RS)),clause_u(R,true),(((LS=H,RS=B));((LS=B,RS=H))).
@@ -2787,19 +2788,20 @@ pos_2_neg(P,~(P)):- (var(P); P \= '~'(_)),!.
 % PFC Mark Converted To.
 %
 mpred_mark_as(_,P,_):- is_ftVar(P),!.
+mpred_mark_as(Sup,M:P,Type):- atom(M),mtHybrid(M),!,M:mpred_mark_as(Sup,P,Type).
+mpred_mark_as(Sup,_:P,Type):- !, mpred_mark_as(Sup,P,Type).
 mpred_mark_as(Sup,\+(P),Type):- !,mpred_mark_as(Sup,P,Type).
 mpred_mark_as(Sup,~(P),Type):- !,mpred_mark_as(Sup,P,Type).
 mpred_mark_as(Sup,-(P),Type):- !,mpred_mark_as(Sup,P,Type).
 mpred_mark_as(Sup,not(P),Type):- !,mpred_mark_as(Sup,P,Type).
 mpred_mark_as(Sup,[P|PL],Type):- is_list(PL), !,must_maplist(mpred_mark_as_ml(Sup,Type),[P|PL]).
 mpred_mark_as(Sup,( P / CC ),Type):- !, mpred_mark_as(Sup,P,Type),mpred_mark_as(Sup,( CC ),pfcCallCodeAnte).
+mpred_mark_as(Sup,( P :- _CC), Type):- !, mpred_mark_as(Sup,P, Type) /* , mpred_mark_as(Sup, ( CC ), pfcCallCodeBody) */ .
 mpred_mark_as(Sup,'{}'(  CC ), _Type):- mpred_mark_as(Sup,( CC ),pfcCallCodeBody).
 mpred_mark_as(Sup,( A , B), Type):- !, mpred_mark_as(Sup,A, Type),mpred_mark_as(Sup,B, Type).
 mpred_mark_as(Sup,( A ; B), Type):- !, mpred_mark_as(Sup,A, Type),mpred_mark_as(Sup,B, Type).
 mpred_mark_as(Sup,( A ==> B), Type):- !, mpred_mark_as(Sup,A, Type),mpred_mark_as(Sup,B, pfcRHS).
 mpred_mark_as(Sup,( B <- A), Type):- !, mpred_mark_as(Sup,A, Type),mpred_mark_as(Sup,B, pfcRHS).
-%mpred_mark_as(_Sup,( _ :- _ ),_Type):-!.
-mpred_mark_as(Sup,( P :- CC ),Type):- !, mpred_mark_as(Sup,P,Type),mpred_mark_as(Sup,( CC ),pfcCallCodeAnte).
 mpred_mark_as(Sup,P,Type):-get_functor(P,F,A),ignore(mpred_mark_fa_as(Sup,P,F,A,Type)),!.
 
 
@@ -2874,6 +2876,8 @@ mpred_compile_rhs_term_consquent(_Sup,!,{cut_c}):-!.
 mpred_compile_rhs_term_consquent(WS,'{}'(Test),'{}'(TestO)) :- !,build_code_test(WS,Test,TestO).
 mpred_compile_rhs_term_consquent(WS,rhs(Test),rhs(TestO)) :- !,mpred_compile_rhs_term_consquent(WS,Test,TestO).
 mpred_compile_rhs_term_consquent(WS,Test,TestO):- is_list(Test),must_maplist(mpred_compile_rhs_term_consquent(WS),Test,TestO).
+
+mpred_compile_rhs_term_consquent(_WS,(H:-B),(H:-B)):-!.
 
 mpred_compile_rhs_term_consquent(WS,Test,TestO):-
    code_sentence_op(Test),Test=..[F|TestL],

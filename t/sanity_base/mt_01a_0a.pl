@@ -53,7 +53,7 @@ baseKB:genlMt(myMt,socialMt).
 
 :- mpred_test(clause_u(socialMt:loves(_,_))).
 
-:- set_prolog_flag(retry_undefined,true).
+
 
 :- listing(pfc_test_feature/2).
 

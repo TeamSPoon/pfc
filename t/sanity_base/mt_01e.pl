@@ -15,7 +15,7 @@
 :- begin_pfc.
 
 %:- sanity(current_prolog_flag(retry_undefined,true)).
-%:- set_prolog_flag(retry_undefined,true).
+%
 
 :- pfc_test_feature(mt,\+ mtHybrid(header_sane)).
 :- mpred_test(\+ mtProlog(header_sane)).

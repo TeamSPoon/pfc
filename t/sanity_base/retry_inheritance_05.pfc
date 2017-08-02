@@ -15,7 +15,7 @@
 :- endif.
 
 
-:- set_prolog_flag(retry_undefined, true).
+
 
 :- \+ a_01.
 

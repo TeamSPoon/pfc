@@ -28,16 +28,11 @@
          autoload_library_index/4,
          ensure_abox/1,
          baseKB_hybrid_support/2,
-         uses_predicate/2,
-         uses_predicate/5,
          correct_module/3,
          correct_module/5,
          defaultAssertMt/1,
          ensure_imports/1,
-         is_parent_goal/1,
-         is_parent_goal/2,
-          has_parent_goal/1,
-          has_parent_goal/2,
+
          get_fileAssertMt/1,
          set_fileAssertMt/1,
           setup_module_ops/1,
@@ -48,7 +43,7 @@
          mtCanAssert/1,
          %registerCycPred/4,
          %registerCycPred/5,
-         retry_undefined/3,
+
          set_defaultAssertMt/1,
          set_fileAssertMt/1,
          transitive_path/3,
@@ -83,16 +78,10 @@
 
 :- module_transparent((
      baseKB_hybrid_support/2,
-         uses_predicate/2,
-         uses_predicate/5,
          correct_module/3,
          correct_module/5,
          defaultAssertMt/1,
          ensure_imports/1,
-                                is_parent_goal/1,
-                                is_parent_goal/2,
-                                has_parent_goal/1,
-                                has_parent_goal/2,
          fileAssertMt/1,
 
          in_mpred_kb_module/0)).
@@ -201,20 +190,6 @@ box_type(_,_,abox).
 %get_current_default_tbox(baseKB).
 
 
-%% defaultAssertMt(-Ctx) is det.
-%
-% ABox is an "assertion component" Prolog Module
-% within a knowledge base.
-%
-% not just user modules
-
-defaultAssertMt(ABox):- nonvar(ABox), defaultAssertMt(ABoxVar),!,ABox=@=ABoxVar.
-defaultAssertMt(ABox):- get_fallBackAssertMt(ABox),!.
-
-%defaultAssertMt(ABox):- loading_source_file(File),baseKB:file_to_module(File,ABox),!.
-%defaultAssertMt(ABox):- t_l:current_defaultAssertMt(ABox),!.
-%defaultAssertMt(ABox):- (t_l:current_defaultAssertMt(BBox);find_and_call(fileAssertMt(BBox)))->ABox=BBox.
-
 
 
 % :- '$hide'(defaultAssertMt(_)).
@@ -300,8 +275,9 @@ maybe_ensure_abox(M):- show_call(not_is_pfc_file,ensure_abox(M)).
 ensure_abox(M):- dynamic(M:defaultTBoxMt/1),must(ensure_abox_support(M,baseKB)),!.
 :- module_transparent((ensure_abox_support)/2).
 ensure_abox_support(M,TBox):- clause_b(M:defaultTBoxMt(TBox)),!.
-ensure_abox_support(M,TBox):- asserta_new(M:defaultTBoxMt(TBox)),
- must_det_l((
+ensure_abox_support(M,TBox):- asserta(M:defaultTBoxMt(TBox),WasRef),
+ (must_det_l((
+  % (M==baseKB -> (add_import_module(M,system,end),delete_import_module(M,user)) ; true),
   forall(mpred_database_term(F,A,Type),
     must(import_mpred_database_term(M,F,A,Type,TBox))),
    %nop(inherit_into_module(M,TBox)),
@@ -310,7 +286,7 @@ ensure_abox_support(M,TBox):- asserta_new(M:defaultTBoxMt(TBox)),
    setup_module_ops(M),
    set_prolog_flag(M:unknown,error),  
    M:ain(TBox:mtHybrid(M)),
-   nop(skip_user(M)))).
+   nop(skip_user(M))))->true ; erase(WasRef)).
    
 import_mpred_database_term(M,F,A,_,_):- kb_local(M:F/A),!.
 
@@ -597,6 +573,30 @@ baseKB:hybrid_support(mtHybrid,1).
 baseKB:hybrid_support(mtCycLBroad,1).
 baseKB:hybrid_support(genlMt,2).
 
+
+:- if(\+ exists_source(library(retry_undefined))).
+
+
+:- export((	uses_predicate/2,
+				uses_predicate/5,
+				retry_undefined/3,
+				is_parent_goal/1,
+				is_parent_goal/2,
+				has_parent_goal/1,
+				has_parent_goal/2)).
+
+:- module_transparent((	uses_predicate/2,
+				uses_predicate/5,
+				retry_undefined/3,
+				is_parent_goal/1,
+				is_parent_goal/2,
+				has_parent_goal/1,
+				has_parent_goal/2)).
+
+
+
+
+
 dumpST_dbreak:- dumpST,break.
 
 % baseKBOnly mark_mark/3 must be findable from every module (dispite the fact that baseKB is not imported)
@@ -769,6 +769,8 @@ retry_undefined(CallerMt,F,A):- fail,fail,fail,fail,fail,fail,fail,fail,fail,fai
 %retry_undefined(PredMt:must/1) % UNDO % :- add_import_module(PredMt,logicmoo_util_catch,start),!.
 %retry_undefined(PredMt:debugm/2) % UNDO % :- add_import_module(PredMt,logicmoo_util_dmsg,start),!.
 
+:- endif.
+
 
 %=
 
@@ -834,7 +836,6 @@ import_predicate(CM,M:F/A):- show_call(nop(CM:z333import(M:F/A))),CM:multifile(M
   on_xf_cont(CM:discontiguous(M:F/A)).
 
 
-:- fixup_exports.
 
 /*
 system:call_expansion(T,(mpred_at_box:defaultAssertMt(NewVar),NewT)):- current_predicate(_,get_lang(pfc)), compound(T),
@@ -843,3 +844,20 @@ system:call_expansion(T,(mpred_at_box:defaultAssertMt(NewVar),NewT)):- current_p
 system:body_expansion(T,(mpred_at_box:defaultAssertMt(NewVar),NewT)):- current_predicate(_,get_lang(pfc)), compound(T),
    subst(T,abox,NewVar,NewT),NewT\=@=T.
 */
+
+
+%% defaultAssertMt(-Ctx) is det.
+%
+% ABox is an "assertion component" Prolog Module
+% within a knowledge base.
+%
+% not just user modules
+
+defaultAssertMt(ABox):- nonvar(ABox), defaultAssertMt(ABoxVar),!,ABox=@=ABoxVar.
+defaultAssertMt(ABox):- get_fallBackAssertMt(ABox),!.
+
+%defaultAssertMt(ABox):- loading_source_file(File),baseKB:file_to_module(File,ABox),!.
+%defaultAssertMt(ABox):- t_l:current_defaultAssertMt(ABox),!.
+%defaultAssertMt(ABox):- (t_l:current_defaultAssertMt(BBox);find_and_call(fileAssertMt(BBox)))->ABox=BBox.
+:- fixup_exports.
+

@@ -85,6 +85,7 @@
 
 % :- forall(between(1,11,A),kb_shared(t/A)).
 
+/*
 :- meta_predicate t(*,?).
 :- meta_predicate t(*,?,?).
 :- meta_predicate t(*,?,?,?).
@@ -92,7 +93,7 @@
 :- meta_predicate t(*,?,?,?,?,?).
 :- meta_predicate t(*,?,?,?,?,?,?).
 :- meta_predicate t(*,?,?,?,?,?,?,?).
-
+*/
 
 
 % ===================================================================
@@ -113,10 +114,14 @@
 :- kb_local(do_import_modules/0).
 
 
-((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C)}).
+((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C),(C==user->mpred_warn(mtHybrid(C));true)}).
 
 % TODO make these undoable
+:- if(\+ exists_source(library(retry_undefined))).
 (genlMt(C,P)/(C\=baseKB)) ==> {doall(((predicate_m_f_a_decl(P,F,A,Type)),C:call(Type,C:F/A)))}.
+:- else.
+(genlMt(C,P)/(C\=baseKB)) ==> {doall(((pred_decl_kb_mfa_type(P,F,A,Type)),C:call(Type,C:F/A)))}.
+:- endif.
 (genlMt(C,P)/(is_ftNonvar(C),is_ftNonvar(P),P\==baseKB,(mtProlog(C);mtProlog(P))) ==> {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}).
 
 %(do_import_modules,genlMt(C,P),mtHybrid(C),mtProlog(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}.

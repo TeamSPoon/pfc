@@ -34,7 +34,7 @@
      wdmsg(baseKB:'lusing_pfc'(M,CM,SM,pfc_mod))),
    assert(baseKB:'using_pfc'(M,CM,SM,pfc_mod)).
 
-%:- set_prolog_flag(retry_undefined,true).
+:- set_prolog_flag(retry_undefined,true).
 
 
 

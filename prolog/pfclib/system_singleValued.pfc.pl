@@ -34,10 +34,11 @@ prologHybrid(singleValuedInArgDefault(prologSingleValued,ftInt,ftTerm)).
 
 (singleValuedInArgDefault(SingleValued,ArgN,S1)/ground(S1) ==> singleValuedInArg(SingleValued,ArgN)).
 
-(((singleValuedInArg(F, N)/must(atom(F)), arity(F,A), \+ singleValuedInArgDefault(F, N, Q_SLOT),
-   {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)})
+((singleValuedInArg(F, N)/must(atom(F))), arity(F,A), 
+  ( \+ singleValuedInArgDefault(F, N, Q_SLOT),
+   {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)}))
        ==> (( P ==> 
-          {dif:dif(Q_SLOT,P_SLOT), call_u(Q), ground(Q)}, \+Q, P)))).
+          {dif:dif(Q_SLOT,P_SLOT), call_u(Q), ground(Q)}, \+Q, P)).
 
 
 
