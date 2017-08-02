@@ -46,7 +46,7 @@ loves(sally,joe).
 
 :- mpred_test(clause_u(socialMt:loves(_,_))).
 
-:- set_prolog_flag(retry_undefined,true).
+
 
 :- pfc_test_feature(mt,\+clause_u(myMt:loves(_,_))).
 

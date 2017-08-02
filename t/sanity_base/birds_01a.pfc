@@ -15,7 +15,7 @@
 
 :- set_prolog_flag(gc,false).
 
-%:- set_prolog_flag(retry_undefined,true).
+%
 
 % birds fly by default_01a.
 ==> default_01a((bird(X) ==> fly(X))).

@@ -2151,9 +2151,9 @@ exact_args(Q):- exact_args0(Q),!.
 
 
 exact_args0(Q):- \+ compound(Q), !.
+exact_args0((A/B)):- (is_ftVar(A);(number(B);is_ftVar(B))),!.
 exact_args0(==>(_,_)):-!,fail.
 % exact_args0(Q):- Q=..[_,A],atomic(A),!.
-%exact_args0((A/B)):- (is_ftVar(A);is_ftVar(B)),!.
 exact_args0(Q):- functor(Q,F,A),A>0,!,exact_args_f(F),!.
 
 exact_args_f(-->).
