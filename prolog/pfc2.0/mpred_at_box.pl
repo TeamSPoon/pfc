@@ -349,13 +349,15 @@ set_defaultAssertMt(ABox):-
 
 % set_fileAssertMt(ABox):- '$current_source_module'(ABox),!.
 set_fileAssertMt(ABox):-
- (is_pfc_file -> ensure_abox(ABox) ; true),
+ (is_pfc_file -> ensure_abox(ABox) ;  ensure_abox(ABox)),
  '$current_typein_module'(CM),
  '$current_source_module'(SM),
   sanity(mtCanAssert(ABox)),
  (((
    % fileAssertMt(Was),
    % get_current_default_tbox(TBox),
+   '$set_source_module'(ABox),
+   ABox:import(baseKB:genlMt/2),
    which_file(File),
    assert_setting(baseKB:file_to_module(File,ABox)),
    assert_setting(lmcache:mpred_directive_value(File,module,ABox)),
