@@ -42,8 +42,8 @@ kb_wankage(M:F/A):-
 
 :- set_prolog_flag_until_eof(debug,true).
 
-:- if(\+ current_prolog_flag(lm_pfc_lean,true)).
-:- set_prolog_flag(lm_pfc_lean,false).
+:- if(\+ current_prolog_flag(lm_pfc_lean,_)).
+:- set_prolog_flag(lm_pfc_lean,true).
 :- endif.
 
 
@@ -167,12 +167,6 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg(visit_pfc_non_file_r
 :- nop(kb_shared( ('~') /1)).
 */
 
-:- if(exists_source(library(retry_undefined))).
-:- use_module(library(retry_undefined)).
-:- install_retry_undefined.
-:- endif.
-:- if(exists_source(library(retry_undefined))).
-:- endif.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DUMPST ON WARNINGS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -569,31 +563,6 @@ term_expansion_UNUSED(:-module(M,List),Pos,ExportList,Pos):- nonvar(Pos),
 %goal_expansion(I,P1,O,P2):- current_prolog_flag(mpred_te,true),mpred_te(goal,system,I,P1,O,P2).
 %term_expansion(I,P1,O,P2):- current_prolog_flag(mpred_te,true),mpred_te(term,system,I,P1,O,P2).
 
-:- if(\+ exists_source(library(retry_undefined))).
-
-:- create_prolog_flag(retry_undefined,default,[type(term),keep(true)]).
-:- set_prolog_flag(retry_undefined,false).
-
-uses_undefined_hook(CM):- clause_b(genlMt(CM,_));is_pfc_module(CM).
-
-:- multifile(user:exception/3).
-:- module_transparent(user:exception/3).
-:- dynamic(user:exception/3).
-
-user:exception(undefined_predicate, M:F/A, Action):- 
-  current_prolog_flag(retry_undefined,true),
-  strip_module(F/A,CM,F/A),
-  (uses_undefined_hook(CM);uses_undefined_hook(M)),!,
-  show_failure(pfc_define(mfa(CM)), must(CM:uses_predicate(M:F/A, Action))).
-
-user:exception(undefined_predicate, F/A, Action):- 
-  current_prolog_flag(retry_undefined,true),
-  strip_module(F/A,M,F/A),
-  uses_undefined_hook(M),!,
-  show_failure(pfc_define(M), must(M:uses_predicate(M:F/A, Action))).
-
-:- endif.
-
 pfc_clause_expansion(I,O):- nonvar(I),I\==end_of_file,base_clause_expansion(I,M),!,I\=@=M,
    ((
       maybe_should_rename(M,MO), 
@@ -674,17 +643,6 @@ system:clause_expansion(I,O):- pfc_clause_expansion(I,O).
 
 % :- dynamic(baseKB:spft/3).
 
-:- set_prolog_flag(subclause_expansion,true).
-:- set_prolog_flag(mpred_te,true).
-%:- baseKB:(ain(arity(functorDeclares, 1))).
-
-:- baseKB:ensure_loaded('pfclib/system_autoexec.pfc').
-
-:- set_prolog_flag(mpred_te,false).
-%:- set_prolog_flag(read_attvars,false).
-:- set_prolog_flag(pfc_booted,true).
-:- retractall(t_l:disable_px).
-
 :- multifile(system:goal_expansion/4).
 :- dynamic(system:goal_expansion/4).
 :- module_transparent(system:goal_expansion/4).
@@ -694,9 +652,25 @@ system:goal_expansion(I,P,O,PO):-
   % prolog_flag(mpred_te,true),
    pfc_goal_expansion(I,P,O,PO).
 
+:- if(exists_source(library(retry_undefined))).
+
+:- use_module(library(retry_undefined)).
+:- install_retry_undefined.
+
+:- else.
+
+:- endif.
+
+:- set_prolog_flag(subclause_expansion,true).
+:- set_prolog_flag(mpred_te,true).
+
+:- baseKB:ensure_loaded('pfclib/system_autoexec.pfc').
+
+:- set_prolog_flag(mpred_te,false).
+%:- set_prolog_flag(read_attvars,false).
+:- set_prolog_flag(pfc_booted,true).
+:- retractall(t_l:disable_px).
+
 :- set_prolog_flag(mpred_te,true).
 :- set_prolog_flag(retry_undefined,true).
-
-
-
 

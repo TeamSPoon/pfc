@@ -117,7 +117,7 @@
 ((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C),(C==user->mpred_warn(mtHybrid(C));true)}).
 
 % TODO make these undoable
-:- if(\+ exists_source(library(retry_undefined))).
+:- if(current_predicate(predicate_m_f_a_decl/4)).
 (genlMt(C,P)/(C\=baseKB)) ==> {doall(((predicate_m_f_a_decl(P,F,A,Type)),C:call(Type,C:F/A)))}.
 :- else.
 (genlMt(C,P)/(C\=baseKB)) ==> {doall(((pred_decl_kb_mfa_type(P,F,A,Type)),C:call(Type,C:F/A)))}.
