@@ -27,6 +27,7 @@ kb_wankage(M:F/A):-
 
 :- user:use_module(library(virtualize_source)).
 
+:- dynamic(rdf_rewrite:(~)/1).
 :- kb_wankage(rdf_rewrite:arity/2).
 :- kb_wankage(baseKB:genlMt/2).
 :- kb_wankage(baseKB:mtHybrid/1).
