@@ -65,7 +65,7 @@ kb_global_base(FA):- kb_local(baseKB:FA).
 
 :- user:use_module(library(loop_check)).
 :- use_module(library(attvar_serializer)).
-:- kb_shared_base(baseKB:admittedArgument/3).
+% :- kb_shared_base(baseKB:admittedArgument/3).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
 :- set_prolog_flag(runtime_speed, 1). % 1 = default
 :- set_prolog_flag(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
@@ -266,7 +266,7 @@ baseKB:mpred_skipped_module(eggdrop).
 :- system:reexport(library('pfc2.0/mpred_at_box.pl')).
 
 :- user:use_module(library('file_scope')).
-:- virtualize_source_file.
+% :- virtualize_source_file.
 :- module_transparent(baseKB:prologBuiltin/1).
 :- multifile baseKB:prologBuiltin/1.
 :- discontiguous baseKB:prologBuiltin/1.

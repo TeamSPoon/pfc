@@ -88,6 +88,8 @@
 
 :- mpred_ain(default_ooTt(defaultValueTt)).
 
+:- system:use_module(library(lists)).
+
 :- make,check,use_module(library(pfc)),make,check.
 
 :- wdmsg(warning(outdated_tests)).
@@ -139,5 +141,5 @@ end_of_file.
 % local_testing
 
 
-:- make,check,use_module(test_header),make,check.
+:- make,check. % ,use_module(test_header),make,check.
 

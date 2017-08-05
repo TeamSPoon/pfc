@@ -60,9 +60,23 @@ asHolds3(
  & (holds(Q,A,B) & holds(Q,B,C) => holds(Q,A,C))
  & ((holds(Q,M,N) => holds(R2,M,N)) => (holds(Q,L,G) => holds(R1,L,G))))).
 
-
-
 :- asHolds3(FOL),kif_to_boxlog(FOL,Entailments),wdmsgl(Entailments).
+
+
+/*
+createTC(R1,RPlus) <=>
+  exists(RPlus,
+      trans(R1,X,Y) => RPlus(X,Y)).
+
+trans(R,X,Z) <=> ( R(X,Z) v (R(X,Y) & R(Y,Z) => R(X,Z))).
+*/
+
+createTC(R1,RPlus) <=>
+  exists(RPlus,
+      trans(R1,X,Y) => holds(RPlus,X,Y)).
+
+trans(R,X,Z) <=> ( holds(R,X,Z) v (holds(R,X,Y) & holds(R,Y,Z) => holds(R,X,Z))).
+
 
 
 :- endif.

@@ -87,7 +87,9 @@
 
 :- mpred_ain(default_ooTt(defaultValueTt)).
 
-:- make,check,use_module(library(pfc)),make,check.
+% :- make,check,use_module(library(pfc)),make,check.
+
+:- make,check.
 
 :- wdmsg(warning(outdated_tests)).
 

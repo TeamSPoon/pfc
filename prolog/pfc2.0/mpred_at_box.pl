@@ -375,7 +375,7 @@ make_module_name_local(A,B):- make_module_name_local0(A,B), \+ exists_file(B),!.
 
 make_module_name_local0(Source,KB):- clause_b(mtProlog(Source)),t_l:current_defaultAssertMt(KB),!.
 make_module_name_local0(Source,KB):- clause_b(mtGlobal(Source)),t_l:current_defaultAssertMt(KB),!.
-make_module_name_local0(Source,SetName):- baseKB:file_to_module(Source,SetName),!.
+make_module_name_local0(Source,SetName):- clause_b(baseKB:file_to_module(Source,SetName)),!.
 make_module_name_local0(Source,Source):- lmcache:has_pfc_database_preds(Source).
 make_module_name_local0(Source,Source):- clause_b(mtHybrid(Source)),!.
 make_module_name_local0(user,KB):- t_l:current_defaultAssertMt(KB),!.
@@ -561,7 +561,7 @@ autoload_library_index(F,A,PredMt,File):- functor(P,F,A),'$autoload':library_ind
 
 :- multifile(baseKB:hybrid_support/2).
 :- dynamic(baseKB:hybrid_support/2).
-baseKB_hybrid_support(F,A):-suggest_m(M),baseKB:safe_wrap(M,F,A,_).
+baseKB_hybrid_support(F,A):-suggest_m(M),clause_b(baseKB:safe_wrap(M,F,A,_)).
 baseKB_hybrid_support(F,A):-clause_b(hybrid_support(F,A)).
 
 baseKB:hybrid_support(predicateConventionMt,2).

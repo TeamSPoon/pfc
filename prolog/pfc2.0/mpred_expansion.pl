@@ -1134,9 +1134,11 @@ renamed_atom(F,FO):-atom(F),if_defined(best_rename(F,FO),fail),!.
 %
 % Managed Predicate Expand.
 %
-mpred_expand_rule(PfcRule,Out):-is_ftCompound(PfcRule),functor(PfcRule,F,A),
-   mpred_database_term(F,A,_),
-   PfcRule=[F|Args],maplist(fully_expand_goal(assert),Args,ArgsO),!,Out=..[F|ArgsO].
+mpred_expand_rule(PfcRule,Out):- 
+   is_ftCompound(PfcRule),
+   functor(PfcRule,F,A),
+   clause_b(mpred_database_term(F,A,_)),
+   PfcRule=..[F|Args],maplist(fully_expand_goal(assert),Args,ArgsO),!,Out=..[F|ArgsO].
 
 is_parse_type(Var):- \+ compound(Var),!,fail.
 is_parse_type('kif'(NV)):-nonvar(NV).
@@ -1395,10 +1397,6 @@ db_expand_0(_Op,pddlPredicates(EL),O):- listToE(EL,E),expand_isEach_or_fail(==>p
 
 db_expand_0(_,prop_mpred(M,RT,F,A),mpred_prop(M,F,A,RT)).
 
-db_expand_0(_,Sent,mpred_prop(M,F,A,RT)):- Sent=..[RT,MFA],a(ttRelationType,RT),nonvar(MFA),get_mfa(MFA,M,F,A),atom(F),!.
-  
-
-
 db_expand_0(Op,DECL,OUT):- 
     is_ftCompound(DECL)->
     DECL=..[D,FA|Args0] ->
@@ -1407,6 +1405,7 @@ db_expand_0(Op,DECL,OUT):-
     maplist(nonvar,[FA|Args]) ->
     db_expand_set(Op,[DT,FA|Args],OUT).
 
+db_expand_0(_,Sent,mpred_prop(M,F,A,RT)):- Sent=..[RT,MFA],a(ttRelationType,RT),nonvar(MFA),get_mfa(MFA,M,F,A),atom(F),!.
 
 get_mfa(M:FA,M,F,A):- !, get_fa(FA,F,A).
 get_mfa(FA,M,F,A):- get_fa(FA,F,A),current_assertion_module(M).
@@ -2137,7 +2136,6 @@ to_predicate_isas(isa(I,C),V):-!,(atom(C)->V=..[C,I];(is_ftVar(C)->V=isa(I,C);ap
 to_predicate_isas(C,C):- exact_args(C),!.
 to_predicate_isas(C,CO):-C=..[F|CL],must_maplist(to_predicate_isas,CL,CLO),!,CO=..[F|CLO].
 
-:- source_location(F,_),asserta(absolute_source_location_pfc(F)).
 
 %% exact_args( +Q) is semidet.
 %
@@ -2200,18 +2198,13 @@ exact_args_f('$was_imported_kb_content$'):-dtrace.
 exact_args_f(F):-cheaply_u(rtArgsVerbatum(F)),!.
 exact_args_f(F):-cheaply_u(prologBuiltin(F)),!.
 
+:- source_location(F,_),asserta(absolute_source_location_pfc(F)).
 % exact_args((_:-_)).
 % exact_args((:-( _))).
 % exact_args(C):-source_file(C,I),absolute_source_location_pfc(I).
 
 
 :- module_transparent(is_stripped_module/1).
-
-% these do not get defined!?%= :- kb_shared user_db:assert_user/2, user_db:grant_openid_server/2, user_db:retractall_grant_openid_server/2, user_db:retractall_user/2, user_db:assert_grant_openid_server/2.
-
-:- export(mpred_expansion_file/0).
-mpred_expansion_file.
-
 
 
 %= 	 	 
@@ -2410,6 +2403,11 @@ into_functor_form(Dbase_t,_X,t,A,Call):-Call=..[Dbase_t|A].
 into_functor_form(Dbase_t,_X,F,A,Call):-Call=..[Dbase_t,F|A].
 
 
+% these do not get defined!?%= :- kb_shared user_db:assert_user/2, user_db:grant_openid_server/2, user_db:retractall_grant_openid_server/2, user_db:retractall_user/2, user_db:assert_grant_openid_server/2.
+
 
 :- fixup_exports.
+
+:- export(mpred_expansion_file/0).
+mpred_expansion_file.
 

@@ -100,9 +100,9 @@
 %  Microtheory System
 % ===================================================================
 
-:- kb_global(mtHybrid/1).
-:- kb_global(mtProlog/1).
-:- kb_global(genlMt/2).
+:- kb_global(baseKB:mtHybrid/1).
+:- kb_global(baseKB:mtProlog/1).
+:- kb_global(baseKB:genlMt/2).
 
 %((ttTypeType(TT),abox:isa(T,TT))==>tSet(T)).
 %tSet(T)==>functorDeclares(T).
@@ -221,7 +221,6 @@ do_and_undo(A,U):-cwc,atom(A),atom_concat('assert',Suffix,A),!,atom_concat('dele
 do_and_undo(A,U):-cwc,atom(A),atom_concat('def',_,A),atom_concat('un',A,U),current_predicate(U/_).
 do_and_undo(A,U):-cwc,strip_module(A,M,P),compound(P),P=..[F|ARGS],lookup_u(do_and_undo(F,UF)),UA=..[UF|ARGS], U = (M:UA).
 ll:- cwc,call(listing,[isa/2,mtHybrid/1,col_as_unary/1, tRRP2/1,tRR/1,tRRP/1]). % ttTypeType,
-
 
 
 
@@ -544,7 +543,8 @@ never_retract_u(A,test_sanity(A)):- cwc, never_retract_u(A).
 never_retract_u(X,is_ftVar(X)):- cwc, is_ftVar(X).
 % P/never_assert_u(P,Why) ==> conflict(never_assert_u(P,Why))
 
-prologHybrid(arity/2).
+%:- rtrace.
+% prologHybrid(arity/2).
 prologDynamic(term_expansion/2).
 prologBuiltin(var/1).
 
