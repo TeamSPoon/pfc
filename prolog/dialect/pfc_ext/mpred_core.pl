@@ -304,12 +304,12 @@ on_x_rtrace(G):-on_x_debug(G).
 :- dynamic(baseKB:mpred_is_tracing_exec/0).
 :- export(baseKB:mpred_is_tracing_exec/0).
 
-mpred_database_term_syntax(do_and_undo,2,rule).
+mpred_database_term_syntax(do_and_undo,2,rule(_)).
 
-mpred_database_term_syntax(('::::'),2,rule).
-mpred_database_term_syntax((<-),2,rule).
-mpred_database_term_syntax((<==>),2,rule).
-mpred_database_term_syntax((==>),2,rule).
+mpred_database_term_syntax(('::::'),2,rule(_)).
+mpred_database_term_syntax((<-),2,rule(_)).
+mpred_database_term_syntax((<==>),2,rule(_)).
+mpred_database_term_syntax((==>),2,rule(_)).
 
 mpred_database_term_syntax(mdefault,1,fact(_)).
 mpred_database_term_syntax((==>),1,fact(_)).
@@ -539,7 +539,7 @@ fix_mp0(_Why,Mt:P,Mt,P):- clause_b(mtHybrid(Mt)),!.
 fix_mp0(_Why,I,ABox,I):- defaultAssertMt(ABox),!.
 
 /*
-fix_mp(Why,Junct,ABox,Result):- fail, (mpred_db_type(Junct,rule);(functor(Junct,F,_),bad_head_pred(F))),!,
+fix_mp(Why,Junct,ABox,Result):- fail, (mpred_db_type(Junct,rule(_));(functor(Junct,F,_),bad_head_pred(F))),!,
    must((mpred_rule_hb(Junct,HC,BC),nonvar(HC))),
    Junct=..[F|List],
    must_maplist(fix_mp(call(hb(HC,BC,Op))),List,ListO),
@@ -1330,7 +1330,7 @@ assert_u_confirmed_was_missing(P):- P= ( :-(_,_) ),!, % or assumed zwc
 
 assert_u_confirmed_was_missing(P):-
  \+ \+ must(assert_to_mu(P)),!,
-  nop(sanity((( (\+ clause_asserted_u(P)) -> (rtrace(assert_to_mu(P)),break) ; true)))),!.
+  nop((sanity((( (\+ clause_asserted_u(P)) -> (rtrace(assert_to_mu(P)),break) ; true))))),!.
 
 assert_u_confirmed_was_missing(P):-
  copy_term_vn(P,PP),
@@ -1623,7 +1623,7 @@ mpred_retract_type(fact(_FT),X):-
   (retract_u(X)
    *-> mpred_unfwc(X) ; (mpred_unfwc(X),!,fail)).
 
-mpred_retract_type(rule,X):-
+mpred_retract_type(rule(_RT),X):-
   %  db  mpred_ain_db_to_head(X,X2),  retract_u(X2).
   (retract_u(X)
       *-> mpred_unfwc(X) ; (mpred_unfwc(X),!,fail)).
@@ -1649,7 +1649,7 @@ mpred_ain_object(X):-
 mpred_ain_by_type(fact(_FT),X):-
   mpred_unique_u(X),
   assert_u_confirmed_was_missing(X),!.
-mpred_ain_by_type(rule,X):-
+mpred_ain_by_type(rule(_RT),X):-
   mpred_unique_u(X),
   assert_u_confirmed_was_missing(X),!.
 mpred_ain_by_type(trigger,X):-
@@ -2451,7 +2451,7 @@ mpred_nf1(P,[P]):- is_ftVar(P), !.
 
 mpred_nf1(P/Cond,[(\+P)/Cond]):- mpred_negated_literal(P), !.
 
-mpred_nf1(P/Cond,[P/Cond]):- !, must( mpred_literal(P)), !.
+mpred_nf1(P/Cond,[P/Cond]):- must((mpred_db_type(P,trigger);mpred_literal(P))), !.
 
 %  handle a negated form
 
@@ -2610,9 +2610,13 @@ mpred_literal(X):- is_ftVar(X),!.
 mpred_literal(X):- mpred_negated_literal(X),!.
 mpred_literal(X):- mpred_positive_literal(X),!.
 
+mpred_is_trigger(X):-   mpred_db_type(X,trigger).
+
+mpred_positive_fact(X):-  mpred_positive_literal(X), mpred_db_type(X,fact(_FT)), \+ mpred_db_type(X,trigger).
+
 mpred_positive_literal(X):-
   is_ftNonvar(X),
-  \+ mpred_db_type(X,rule),
+  \+ mpred_db_type(X,rule(_RT)),
   get_functor(X,F,_),
   \+ mpred_neg_connective(F),
   !.
@@ -2657,6 +2661,34 @@ is_active_lhs((Lhs1;Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
 add_lhs_cond(Lhs1/Cond,Lhs2,Lhs1/(Cond,Lhs2)):-!.
 add_lhs_cond(Lhs1,Lhs2,Lhs1/Lhs2).
 
+
+%% constrain_meta(+Lhs, ?Guard) is semidet.
+%
+% Creates a somewhat sane Guard.
+%
+% To turn this feature off...
+% ?- set_prolog_flag(constrain_meta,false).  
+%
+%
+constrain_meta(_,_):- current_prolog_flag(constrain_meta,false),!,fail.
+% FACT
+constrain_meta(P,mpred_positive_fact(P)):- is_ftVar(P),!.
+% NEG chaining
+constrain_meta(~ P, CP):- !,  constrain_meta(P,CP).
+constrain_meta(\+ P, CP):- !,  constrain_meta(P,CP).
+% FWD chaining
+constrain_meta((_==>Q),nonvar(Q)):- !, is_ftVar(Q).
+% EQV chaining
+constrain_meta((P<==>Q),(nonvar(Q);nonvar(P))):- (is_ftVar(Q);is_ftVar(P)),!.
+% BWD chaining
+constrain_meta((Q <- _),mpred_literal(Q)):- is_ftVar(Q),!.
+constrain_meta((Q <- _),CQ):- !, constrain_meta(Q,CQ).
+% CWC chaining
+constrain_meta((Q :- _),mpred_literal(Q)):- is_ftVar(Q),!.
+constrain_meta((Q :- _),CQ):- !, constrain_meta(Q,CQ).
+
+
+
 %% process_rule(+Lhs, ?Rhs, ?Parent_rule) is semidet.
 %
 % Process Rule.
@@ -2673,9 +2705,13 @@ prologHybrid(F)/arity(F,A)==>{kb_shared(F/A)}.
 
 In order to reduce the number of postivie triggers (pt/2s)
 */
+
+process_rule(LhsIn,Rhs,Parent_rule):- constrain_meta(LhsIn,How),!,
+  process_rule0(LhsIn/How,Rhs,Parent_rule).
 process_rule(LhsIn,Rhs,Parent_rule):- is_simple_lhs(LhsIn),LhsIn = (Lhs1,Lhs2),
+  Lhs2\=(_,_),
   add_lhs_cond(Lhs1,Lhs2,LhsA),
-  add_lhs_cond(Lhs2,Lhs1,LhsB),!,
+  add_lhs_cond(Lhs2,Lhs1,LhsB),
   process_rule0(LhsA,Rhs,Parent_rule),
   process_rule0(LhsB,Rhs,Parent_rule).
 process_rule(Lhs,Rhs,Parent_rule):-process_rule0(Lhs,Rhs,Parent_rule).
@@ -2733,6 +2769,11 @@ build_trigger(WS,[T/Test|Triggers],Consequent,pt(T,X)):-
 %build_trigger(WS,[snip|Triggers],Consequent,snip(X)):-
 %  !,
 %  build_trigger(WS,Triggers,Consequent,X).
+
+
+build_trigger(WS,[T|Triggers],Consequent,Reslt):- 
+  constrain_meta(T,Test)->
+  build_trigger(WS,[T/Test|Triggers],Consequent,Reslt),!.
 
 build_trigger(WS,[T|Triggers],Consequent,pt(T,X)):-
   !,
@@ -2936,9 +2977,10 @@ head_to_functor_name(I,F):- is_ftCompound(I),get_functor(I,F).
 %
 mpred_db_type(Var,Type):- var(Var),!, Type=fact(_FT).
 mpred_db_type(~_,Type):- !, Type=fact(_FT).
-mpred_db_type(('==>'(_,_)),Type):- !, Type=rule.
-mpred_db_type(('<==>'(_,_)),Type):- !, Type=rule.
-mpred_db_type(('<-'(_,_)),Type):- !, Type=rule.
+mpred_db_type(('==>'(_,_)),Type):- !, Type=rule(fwd).
+mpred_db_type(('<==>'(_,_)),Type):- !, Type=rule(<==>).
+mpred_db_type(('<-'(_,_)),Type):- !, Type=rule(bwc).
+mpred_db_type((':-'(_,_)),Type):- !, Type=rule(cwc).
 mpred_db_type(pt(_,_,_),Type):- !, Type=trigger.
 mpred_db_type(pt(_,_),Type):- !, Type=trigger.
 mpred_db_type(nt(_,_,_),Type):- !,  Type=trigger.
@@ -3675,7 +3717,7 @@ pp_db_items(Var):-format("~N  ~p",[Var]).
 mpred_classifyFacts([],[],[],[]).
 
 mpred_classifyFacts([H|T],User,Pfc,[H|Rule]):-
-  mpred_db_type(H,rule),
+  mpred_db_type(H,rule(_)),
   !,
   mpred_classifyFacts(T,User,Pfc,Rule).
 

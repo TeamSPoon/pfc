@@ -28,7 +28,7 @@
 :- file_begin(pfc).
 
 (tType(COL)==>{kb_local(COL/2)},% functorDeclares(COL),
- (t(COL,ext,X)<==>iza(X,COL))).
+ (t(COL,ext,X)<==>instanceOf(X,COL))).
   
 tType(tFly).
 tType(tCanary).
@@ -38,10 +38,10 @@ tType(tBird).
 
 :- mpred_test(predicate_property(tBird(ext,_),dynamic)).
 
-genls(C1,C2)==> (iza(X,C1)==>iza(X,C2)).
+subClassOf(C1,C2)==> (instanceOf(X,C1)==>instanceOf(X,C2)).
 
-genls(tCanary,tBird).
-genls(tPenguin,tBird).
+subClassOf(tCanary,tBird).
+subClassOf(tPenguin,tBird).
 
 
 
@@ -63,11 +63,11 @@ mdefault(( tBird(ext,X) ==> tFly(ext,X) )).
 :- mpred_test((tFly(ext,iTweety))).
 
 :- dmsg("make sure chilly can fly").
-:- mpred_test((iza(I,tFly),I=iChilly)).
+:- mpred_test((instanceOf(I,tFly),I=iChilly)).
 
 :- mpred_test((tBird(ext,iTweety))).
 
-:- listing([tFly/2,tBird/2,iza/2]).
+:- listing([tFly/2,tBird/2,instanceOf/2]).
 
 
 :- dmsg("make sure tweety can fly (and again chilly)").
