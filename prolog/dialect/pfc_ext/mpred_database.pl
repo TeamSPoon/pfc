@@ -956,22 +956,26 @@ map_unless(Test,Pred,[H|T],S):-!, apply(Pred,[H|S]), map_unless(Test,Pred,T,S).
 map_unless(Test,Pred,H,S):-H=..List,!,map_unless(Test,Pred,List,S),!.
 
 
+:- meta_predicate(map_first_arg(:,+)).
 %% map_first_arg( +Pred, ?List) is semidet.
 %
 % PFC Maptree.
 %
-map_first_arg(Pred,List):-map_first_arg(Pred,List,[]).
+map_first_arg(CM:Pred,List):-map_first_arg(CM,Pred,List,[]).
 
+:- meta_predicate(map_first_arg(+,*,+,+)).
 %% map_first_arg( +Pred, :TermH, ?S) is semidet.
 %
 % PFC Maptree.
 %
-map_first_arg(Pred,H,S):-is_ftVar(H),!,apply(Pred,[H|S]).
-map_first_arg(_,[],_) :- !.
-map_first_arg(Pred,(H,T),S):-!, map_first_arg(Pred,H,S), map_first_arg(Pred,T,S).
-map_first_arg(Pred,(H;T),S):-!, map_first_arg(Pred,H,S) ; map_first_arg(Pred,T,S).
-map_first_arg(Pred,[H|T],S):-!, apply(Pred,[H|S]), map_first_arg(Pred,T,S).
-map_first_arg(Pred,H,S):-apply(Pred,[H|S]). 
+map_first_arg(CM,Pred,H,S):-is_ftVar(H),!,CM:apply(Pred,[H|S]).
+map_first_arg(_,_,[],_) :- !.
+map_first_arg(CM,Pred,(H,T),S):-!, map_first_arg(CM,Pred,H,S), map_first_arg(CM,Pred,T,S).
+map_first_arg(CM,Pred,(H;T),S):-!, map_first_arg(CM,Pred,H,S) ; map_first_arg(CM,Pred,T,S).
+map_first_arg(CM,Pred,[H|T],S):-!, CM:apply(Pred,[H|S]), map_first_arg(CM,Pred,T,S).
+map_first_arg(CM,Pred,H,S):- CM:apply(Pred,[H|S]). 
+
+:- fixup_exports.
 
 % % :- ensure_loaded(logicmoo(util/rec_lambda)).
 

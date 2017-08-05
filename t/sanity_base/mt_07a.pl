@@ -11,16 +11,14 @@
 
 :- include(test_header).
 
+:- begin_pfc.
 
 %:- add_import_module(mt_01,baseKB,end).
 
-:- set_defaultAssertMt(code1).
+% :- set_defaultAssertMt(code1).
 
 % mtProlog(code1).
-% mtHybrid(code1).
-
-:- begin_pfc.
-
+mtHybrid(code1).
 mtHybrid(kb2).
 mtHybrid(kb3).
 

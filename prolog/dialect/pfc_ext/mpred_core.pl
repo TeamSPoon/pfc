@@ -110,7 +110,7 @@
   mpred_assert_w_support/2,mpred_asserta_w_support/2,mpred_assertz_w_support/2,mpred_basis_list/2,mpred_bt_pt_combine/3,mpred_child/2,mpred_children/2,
   mpred_classifyFacts/4,mpred_collect_supports/1,mpred_unhandled_command/3,mpred_compile_rhs_term/3,mpred_conjoin/3,mpred_neg_connective/1,
   mpred_database_item/1,
-  mpred_database_term/3,
+  % mpred_database_term/3,
   mpred_db_type/2,mpred_set_default/2,mpred_define_bc_rule/3,mpred_descendant/2,
   mpred_descendants/2,mpred_enqueue/2,mpred_error/1,mpred_error/2,mpred_eval_lhs/2,mpred_eval_lhs_0/2,mpred_eval_rhs/2,mpred_fact/1,
   mpred_fact/2,mpred_facts/1,mpred_facts/2,mpred_facts/3,mpred_fwc/1,mpred_get_support/2,lookup_u/1,lookup_u/2,
@@ -242,6 +242,9 @@ push_current_choice/1,
 :- multifile(baseKB:safe_wrap/4).
 :- dynamic(baseKB:safe_wrap/4).
 
+
+:- system:use_module(library(lists)).
+
 :- module_transparent lookup_u/1,lookup_u/2,mpred_unfwc_check_triggers0/1,mpred_unfwc1/1,mpred_why1/1,mpred_blast/1.
 
 
@@ -282,8 +285,8 @@ on_x_rtrace(G):-on_x_debug(G).
 
 :- nodebug(logicmoo(pfc)).
 
-:- multifile(mpred_database_term/3).
-:- dynamic(mpred_database_term/3).
+:- kb_global(baseKB:mpred_database_term/3).
+
 % mined from program database
 
 /*
@@ -313,38 +316,39 @@ mpred_database_term_syntax((==>),1,fact(_)).
 mpred_database_term_syntax((~),1,fact(_)).
 
 
-mpred_database_term(F,A,syntaxic(T)):- mpred_database_term_syntax(F,A,T).
+baseKB:mpred_database_term(F,A,syntaxic(T)):- mpred_database_term_syntax(F,A,T).
+baseKB:mpred_database_term(F,A,T):- mpred_core_database_term(F,A,T).
 
 % forward,backward chaining database
-mpred_database_term(spft,3,support).
+mpred_core_database_term(spft,3,support).
 
-mpred_database_term(nt,3,trigger).
-mpred_database_term(pt,2,trigger).
-mpred_database_term(bt,2,trigger).
+mpred_core_database_term(nt,3,trigger).
+mpred_core_database_term(pt,2,trigger).
+mpred_core_database_term(bt,2,trigger).
 
 % transient state
-mpred_database_term(actn,1,state).
-mpred_database_term(que,2,state).
-mpred_database_term(hs,1,state).
+mpred_core_database_term(actn,1,state).
+mpred_core_database_term(que,2,state).
+mpred_core_database_term(hs,1,state).
 
 % forward,backward settings
-mpred_database_term(mpred_current_db,1,setting).
-mpred_database_term(mpred_select_hook,1,setting).
-mpred_database_term(tms,1,setting).
-mpred_database_term(pm,1,setting).
+mpred_core_database_term(mpred_current_db,1,setting).
+mpred_core_database_term(mpred_select_hook,1,setting).
+mpred_core_database_term(tms,1,setting).
+mpred_core_database_term(pm,1,setting).
 
 % debug settings
-mpred_database_term(mpred_is_tracing_exec,0,debug).
-mpred_database_term(mpred_is_spying_pred,2,debug).
-mpred_database_term(mpred_warnings,1,debug).
-% mpred_database_term(t_l:why_buffer,2,debug).
+mpred_core_database_term(mpred_is_tracing_exec,0,debug).
+mpred_core_database_term(mpred_is_spying_pred,2,debug).
+mpred_core_database_term(mpred_warnings,1,debug).
+% mpred_core_database_term(t_l:why_buffer,2,debug).
 
-mpred_database_term(mpred_prop,4,fact(_)).
+mpred_core_database_term(mpred_prop,4,fact(_)).
 
-mpred_database_term(predicateConventionMt,2,fact(_)).
-% mpred_database_term(genlMt,2,fact(_)).
-%mpred_database_term(arity,2,fact(_)).
-%mpred_database_term(rtArgsVerbatum,1,fact(_)).
+mpred_core_database_term(predicateConventionMt,2,fact(_)).
+% mpred_core_database_term(genlMt,2,fact(_)).
+%mpred_core_database_term(arity,2,fact(_)).
+%mpred_core_database_term(rtArgsVerbatum,1,fact(_)).
 
 
 get_head_term(Form,Form):-var(Form),!.
@@ -354,6 +358,7 @@ get_head_term(Form0,Form):- get_consequent(Form0,Form).
 :- thread_local(t_l:why_buffer/2).
 % :- dynamic(baseKB:que/2).
 
+show_mpred_success(Type,G):- G*->mpred_trace(success(Type,G)) ; fail.
 
 % :- ensure_loaded(library(logicmoo_utils)).
 
@@ -1395,7 +1400,7 @@ set_fc_mode(Mode):- asserta(t_l:mpred_fc_mode(Mode)).
 
 mpred_enqueue(P):- mpred_enqueue(P,_S).
 
-mpred_enqueue(P,_):- show_success(lookup_u(que(P,_))),!.
+mpred_enqueue(P,_):- show_mpred_success(que,lookup_u(que(P,_))),!.
 %mpred_enqueue(P,_):- clause_asserted(t_l:current_local_why(_,P)),!,trace_or_throw(why(P)).
 mpred_enqueue(P,_):- t_l:busy(P),!,nop(dmsg(t_l:busy(P))).
 mpred_enqueue(P,S):- locally(t_l:busy(P),mpred_enqueue0(P,S)).
@@ -1794,7 +1799,7 @@ mpred_undo1(pt(Key,Head,Body)):-
   % undo a positive trigger 3.
   %
   !,
-  (show_success(mpred_undo1_pt_unfwc_3,retract_u(pt(Key,Head,Body)))
+  (show_mpred_success(mpred_undo1_pt_unfwc_3,retract_u(pt(Key,Head,Body)))
     -> mpred_unfwc(pt(Head,Body))
      ; mpred_warn("Trigger not found to undo: ~p",[pt(Head,Body)])).
 
@@ -1802,14 +1807,14 @@ mpred_undo1(pt(Head,Body)):-
   % undo a positive trigger.
   %
   !,
-  (show_success(mpred_undo1_pt_unfwc,retract_u(pt(Head,Body)))
+  (show_mpred_success(mpred_undo1_pt_unfwc,retract_u(pt(Head,Body)))
     -> mpred_unfwc(pt(Head,Body))
      ; mpred_warn("Trigger not found to undo: ~p",[pt(Head,Body)])).
 
 mpred_undo1(nt(Head,Condition,Body)):-
   % undo a negative trigger.
   !,
-  (show_success(mpred_undo1_nt_unfwc,retract_u(nt(Head,Condition,Body)))
+  (show_mpred_success(mpred_undo1_nt_unfwc,retract_u(nt(Head,Condition,Body)))
     -> mpred_unfwc(nt(Head,Condition,Body))
      ; mpred_warn("Trigger not found to undo: ~p",[nt(Head,Condition,Body)])).
 
@@ -1891,7 +1896,7 @@ mpred_fwc(Ps):- each_E(mpred_fwc0,Ps,[]).
 mpred_fwc0(Fact):- mnotrace(ground(Fact)),
    \+ t_l:is_repropagating(_),
    maybe_notrace((fwc1s_post1s(_One,Two),Six is Two * 1)), 
-   show_success((filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact))),!.
+   show_mpred_success(filter_buffer_n_test,(filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact))),!.
 mpred_fwc0(Fact):- maybe_notrace(copy_term_vn(Fact,FactC)),
       loop_check(mpred_fwc1(FactC),true).
 
@@ -1989,10 +1994,10 @@ lookup_spft(A,B,C):- var(B),!,lookup_spft_t(A,B,C).
 lookup_spft(A,B,C):- lookup_spft_f(A,B,C).
 
 lookup_spft_p(A,B,C):- lookup_u(spft(A,B,C)).
-% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_p(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,show_success(baseKB:spft(AA,B,C)).
+% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_p(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,show_mpred_success(baseKB:spft(AA,B,C)).
 
 lookup_spft_f(A,B,C):- lookup_u(spft(A,B,C)).
-% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_f(A,B,C):- full_transform(lookup,B,BB),!,B\=@=BB,!,show_success(baseKB:spft(A,BB,C)).
+% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_f(A,B,C):- full_transform(lookup,B,BB),!,B\=@=BB,!,show_mpred_success(baseKB:spft(A,BB,C)).
 
 lookup_spft_t(A,B,C):- lookup_u(spft(A,B,C)).
 

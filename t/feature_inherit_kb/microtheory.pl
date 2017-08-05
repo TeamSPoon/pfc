@@ -1,4 +1,4 @@
-:- consult('/var/lib/myfrdcsa/codebases/minor/free-life-planner/lib/util/util.pl').
+:- consult(pack('free-life-planner/lib/util/util.pl')).
 
 :- op(1200,xfx,'::').
 

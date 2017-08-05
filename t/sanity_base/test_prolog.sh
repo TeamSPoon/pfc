@@ -19,7 +19,7 @@ fi
 #// For test_prolog fc_08.pfc
 if [ -f "$1" ] ; then 
    echo -e "\\n\\nRunning Single Test: " swipl -g "\"set_prolog_flag(runtime_testing,${runtime_testing})\"" -g "\"['""$1""']\"" "${@:2}" -g "\"test_completed\"" "\\n\\n"
-   exec swipl -g "set_prolog_flag(runtime_testing,${runtime_testing})" -g "['""$1""']" "${@:2}" -g "test_completed"
+   exec swipl -f .swipl -g "set_prolog_flag(runtime_testing,${runtime_testing})" -g "['""$1""']" "${@:2}" -g "test_completed"
 fi
 
 
