@@ -189,7 +189,9 @@ skip_warning(statistics).
 skip_warning(compiler_warnings).
 
 
-skip_warning(T):-compound(T),functor(T,F,_),skip_warning(F).
+skip_warning(T):- \+ compound(T),!,fail.
+skip_warning(_:T):- !, compound(T),functor_safe(T,F,_),skip_warning(F).
+skip_warning(T):-compound(T),functor_safe(T,F,_),skip_warning(F).
 base_message(T1,T2,_):- skip_warning(T1);skip_warning(T2);(thread_self(M),M\==main).
 base_message(_,_,_):- \+ current_predicate(dumpST/0),!.
 base_message(T,Type,Warn):- dmsg(message_hook(T,Type,Warn)),dumpST,dmsg(message_hook(T,Type,Warn)),!,fail.
@@ -440,7 +442,7 @@ make_load_list(_,_,[]):-!.
 is_loadin(C):- strip_module(C,M,CC),is_loadin(M,CC).
 is_loadin(_,CC):- must_pfc_p(CC),!.
 is_loadin(_,_:-_):-!.
-is_loadin(M,CC):- functor(CC,F,A),kb_local(M:F/A).
+is_loadin(M,CC):- functor_safe(CC,F,A),show_call(kb_local(M:F/A)).
 
 
 must_pfc(IM,_):- is_never_pfc(IM),!,fail.
@@ -463,8 +465,8 @@ must_pfc_p('<--'(_,_)).
 must_pfc_p('->'(_,_)).
 must_pfc_p('~'(_)).
 must_pfc_p('--->'(_,_)).
-must_pfc_p(_:P):- must_pfc_p(P),!.
-must_pfc_p(FAB):-functor(FAB,F,A),must_pfc_fa(F,A),!.
+must_pfc_p(_:P):- !, must_pfc_p(P),!.
+must_pfc_p(FAB):-functor_safe(FAB,F,A),must_pfc_fa(F,A),!.
 
 must_pfc_fa(prologHybrid,_).
 must_pfc_fa(F,A):- mpred_database_term(F,A,_),!.
@@ -587,7 +589,7 @@ same_expandsion(I, (:-mpred_ain(MO))):-!,same_expandsion(I,MO).
 same_expandsion(I,O):-I==O.
 
 % prolog:message(ignored_weak_import(Into, From:PI))--> { nonvar(Into),Into \== system,dtrace(dmsg(ignored_weak_import(Into, From:PI))),fail}.
-% prolog:message(Into)--> { nonvar(Into),functor(Into,_F,A),A>1,arg(1,Into,N),\+ number(N),dtrace(wdmsg(Into)),fail}.
+% prolog:message(Into)--> { nonvar(Into),functor_safe(Into,_F,A),A>1,arg(1,Into,N),\+ number(N),dtrace(wdmsg(Into)),fail}.
 
 /*
 :- multifile(user:clause_expansion/2).

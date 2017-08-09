@@ -495,7 +495,7 @@ is_holds_true(Prop):- quietly((atom(Prop),is_holds_true0(Prop))),!.
 
 
 is_holds_functor(F):- atom(F),is_holds_functor0(F),!, \+ isBodyConnective(F).
-is_holds_functor0(F):- atom_concat('prove_',_,F).
+is_holds_functor0(F):- atom_concat('proven_',_,F).
 is_holds_functor0(F):- atom_concat('ex_',_,F).
 is_holds_functor0(F):- atom_concat(_,'_t',F).
 is_holds_functor0(F):- is_2nd_order_holds(F).

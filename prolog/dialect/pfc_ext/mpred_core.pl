@@ -2237,6 +2237,7 @@ call_u_mp(M,( \+ P1)):-!, \+ call_u_mp(M,P1).
 call_u_mp(M,must(P1)):-!, must( call_u_mp(M,P1)).
 call_u_mp(M, 't'(P1)):-!, call_u_mp(M,P1).
 call_u_mp(M,'{}'(P1)):-!, call_u_mp(M,P1).
+call_u_mp(_,ttExpressionType(P)):-!,clause_b(ttExpressionType(P)).
 call_u_mp(_,mtHybrid(P)):-!,clause_b(mtHybrid(P)).
 %call_u_mp(_,is_string(P)):- !, logicmoo_util_bugger:is_string(P).
 
