@@ -1711,7 +1711,7 @@ mpred_unfwc1(F):-
 
 mpred_unfwc_check_triggers(F):- 
  loop_check(mpred_unfwc_check_triggers0(F), 
-    (mpred_warn(looped_mpred_unfwc_check_triggers0(F)),break, mpred_run)).
+    (mpred_warn(looped_mpred_unfwc_check_triggers0(F)), mpred_run)).
 
 mpred_unfwc_check_triggers0(F):-
   mpred_db_type(F,fact(_FT)),

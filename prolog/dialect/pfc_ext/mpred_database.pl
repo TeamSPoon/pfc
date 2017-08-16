@@ -18,6 +18,7 @@
 
 :- include('mpred_header.pi').
 
+
 :- user:use_module(library(clpfd),['#='/2]).
 %% get_arity( :TermTerm, ?F, ?A) is semidet.
 %
