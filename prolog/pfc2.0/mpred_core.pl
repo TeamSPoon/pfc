@@ -358,6 +358,7 @@ get_head_term(Form0,Form):- get_consequent(Form0,Form).
 :- thread_local(t_l:why_buffer/2).
 % :- dynamic(baseKB:que/2).
 
+:- meta_predicate show_mpred_success(*,*).
 show_mpred_success(Type,G):- G*->mpred_trace(success(Type,G)) ; fail.
 
 % :- ensure_loaded(library(logicmoo_utils)).
@@ -1848,7 +1849,7 @@ mpred_unfwc1(F):-
 
 mpred_unfwc_check_triggers(F):- 
  loop_check(mpred_unfwc_check_triggers0(F), 
-    (mpred_warn(looped_mpred_unfwc_check_triggers0(F)),break, mpred_run)).
+    (mpred_warn(looped_mpred_unfwc_check_triggers0(F)), mpred_run)).
 
 mpred_unfwc_check_triggers0(F):-
   mpred_db_type(F,fact(_FT)),
@@ -1918,6 +1919,8 @@ filter_buffer_get_n(_,[],_).
 filter_buffer_n_test(Name,N,Fact):- filter_buffer_get_n(Name,FactS,N),
    (memberchk(Fact,FactS)-> true ; (nb_setval(Name,[Fact|FactS]),fail)).
 
+% :- meta_predicate mpred_reduced_chain(1,*).
+% :- meta_predicate(mpred_reduced_chain(*,*)).
 mpred_reduced_chain(P1,(Fact:- (FWC, BODY))):- FWC==fwc,!,call(P1,{BODY}==>Fact).
 mpred_reduced_chain(P1,(Fact:- (BWC, BODY))):- BWC==bwc,!,call(P1,(Fact<-BODY)).
 mpred_reduced_chain(P1,(P:-attr_bind(L,R))):- !,must(attr_bind(L)),call(P1,(P:-R)).

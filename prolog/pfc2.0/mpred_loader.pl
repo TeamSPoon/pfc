@@ -2309,7 +2309,10 @@ maybe_message_hook(compiler_warnings(_,[always(true,var,_),always(false,integer,
    always(false,integer,_),always(true,var,_),always(false,integer,_),always(false,integer,_)]),warning,[]):- !.
 
 maybe_message_hook(import_private(_,_),_,_).
+maybe_message_hook(check(undefined(_, _)),_,_).
 maybe_message_hook(ignored_weak_import(header_sane,_),_,_).
+
+maybe_message_hook(_,warning,_).
 maybe_message_hook(T,Type,Warn):-
   nl,dmsg(message_hook(T,Type,Warn)),nl,
   assertz(system:test_results(T,Type,Warn)),dumpST,nl,dmsg(message_hook(T,Type,Warn)),nl,!.
