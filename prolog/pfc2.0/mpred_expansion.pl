@@ -500,6 +500,7 @@ is_holds_functor0(F):- atom_concat('ex_',_,F).
 is_holds_functor0(F):- atom_concat(_,'_t',F).
 is_holds_functor0(F):- is_2nd_order_holds(F).
 
+must_be_unqualified(_):-!.
 must_be_unqualified(Var):- \+ compound(Var),!.
 must_be_unqualified(Var):-strip_module(Var,_,O),Var\==O,!,dumpST,break.
 must_be_unqualified(Var):-forall(arg(_,Var,E),must_be_unqualified(E)).
