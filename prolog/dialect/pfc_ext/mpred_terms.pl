@@ -66,7 +66,7 @@ is_ftText(Arg):- text_to_string_safe(Arg,_),!.
 is_ftText(Arg):- functor(Arg,S,_), ereq(resultIsa(S,ftText)).
 
 :- kb_global(baseKB:ftText/1).
-baseKB:ftText(A):- !, if_defined(term_is_ft(A, ftText),is_ftText(A)),!.
+:-ain(baseKB:(ftText(A):- !, if_defined(term_is_ft(A, ftText),is_ftText(A)),!)).
 
 % =======================================================
 % term utils
