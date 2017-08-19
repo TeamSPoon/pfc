@@ -1919,8 +1919,8 @@ filter_buffer_get_n(_,[],_).
 filter_buffer_n_test(Name,N,Fact):- filter_buffer_get_n(Name,FactS,N),
    (memberchk(Fact,FactS)-> true ; (nb_setval(Name,[Fact|FactS]),fail)).
 
-% :- meta_predicate mpred_reduced_chain(1,*).
-% :- meta_predicate(mpred_reduced_chain(*,*)).
+:- meta_predicate(mpred_reduced_chain(1,*)).
+:- meta_predicate(mpred_reduced_chain(*,*)).
 mpred_reduced_chain(P1,(Fact:- (FWC, BODY))):- FWC==fwc,!,call(P1,{BODY}==>Fact).
 mpred_reduced_chain(P1,(Fact:- (BWC, BODY))):- BWC==bwc,!,call(P1,(Fact<-BODY)).
 mpred_reduced_chain(P1,(P:-attr_bind(L,R))):- !,must(attr_bind(L)),call(P1,(P:-R)).
