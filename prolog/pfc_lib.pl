@@ -190,8 +190,8 @@ skip_warning(compiler_warnings).
 
 
 skip_warning(T):- \+ compound(T),!,fail.
-skip_warning(_:T):- !, compound(T),functor_safe(T,F,_),skip_warning(F).
-skip_warning(T):-compound(T),functor_safe(T,F,_),skip_warning(F).
+skip_warning(_:T):- !, compound(T),functor(T,F,_),skip_warning(F).
+skip_warning(T):-compound(T),functor(T,F,_),skip_warning(F).
 base_message(T1,T2,_):- skip_warning(T1);skip_warning(T2);(thread_self(M),M\==main).
 base_message(_,_,_):- \+ current_predicate(dumpST/0),!.
 base_message(T,Type,Warn):- dmsg(message_hook(T,Type,Warn)),dumpST,dmsg(message_hook(T,Type,Warn)),!,fail.
@@ -387,7 +387,7 @@ maybe_should_rename(O,O).
 baseKB:ignore_file_mpreds(File):- atom(File),check_ignore_file_mpreds(File).
 
 check_ignore_file_mpreds(File):- baseKB:expect_file_mpreds(File),!,fail.
-check_ignore_file_mpreds(File):- ( atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File)),!,asserta(baseKB:expect_file_mpreds(File)),fail.
+check_ignore_file_mpreds(File):- ( atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.clif',File);atom_concat(_,'.pfc',File)),!,asserta(baseKB:expect_file_mpreds(File)),fail.
 check_ignore_file_mpreds(File):- baseKB:expect_file_mpreds(Stem),atom_concat(Stem,_,File),!,asserta(baseKB:expect_file_mpreds(File)),!,fail.
 check_ignore_file_mpreds(File):- baseKB:ignore_file_mpreds(Stem),atom_concat(Stem,_,File),!,asserta(baseKB:ignore_file_mpreds(File)).
 %check_ignore_file_mpreds(File):- module_property(M,file(File)),module_property(M,class(library)),asserta(baseKB:ignore_file_mpreds(File)),!.
@@ -411,14 +411,14 @@ must_not_be_pfc_file:- !.
 is_pfc_file:- current_prolog_flag(never_pfc,true),!,must_not_be_pfc_file,!,fail.
 is_pfc_file:- notrace(is_pfc_file0),!.
 
-is_pfc_file0:- source_location(File,_W),!,is_pfc_file(File).
+is_pfc_file0:- source_location(File,_W),!,is_pfc_file(File),!.
 is_pfc_file0:- prolog_load_context(module, M),is_pfc_module(M),!,clause_b(mtHybrid(M)).
 %is_pfc_file0:- source_context_module(M),is_pfc_module(M).
 
 :- meta_predicate is_pfc_file(:).
 is_pfc_file(M:File):- is_pfc_file(M,File).
-is_pfc_file(_,File):- atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File),!.
-is_pfc_file(_,File):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,Lang==pfc.
+is_pfc_file(_,File):- atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File),!.
+is_pfc_file(_,File):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
 is_pfc_file(_,File):- baseKB:ignore_file_mpreds(File),!,fail.
 is_pfc_file(_,File):- baseKB:expect_file_mpreds(File),!.
 is_pfc_file(M,Other):- prolog_load_context(source, File),Other\==File,!,is_pfc_file(M,File).
@@ -441,8 +441,8 @@ make_load_list(_,_,[]):-!.
 
 is_loadin(C):- strip_module(C,M,CC),is_loadin(M,CC).
 is_loadin(_,CC):- must_pfc_p(CC),!.
-is_loadin(_,_:-_):-!.
-is_loadin(M,CC):- functor_safe(CC,F,A),show_call(kb_local(M:F/A)).
+is_loadin(_,(_:-_)):-!.
+is_loadin(M,CC):- functor(CC,F,A),show_call(kb_local(M:F/A)),break.
 
 
 must_pfc(IM,_):- is_never_pfc(IM),!,fail.
@@ -466,7 +466,7 @@ must_pfc_p('->'(_,_)).
 must_pfc_p('~'(_)).
 must_pfc_p('--->'(_,_)).
 must_pfc_p(_:P):- !, must_pfc_p(P),!.
-must_pfc_p(FAB):-functor_safe(FAB,F,A),must_pfc_fa(F,A),!.
+must_pfc_p(FAB):-functor(FAB,F,A),must_pfc_fa(F,A),!.
 
 must_pfc_fa(prologHybrid,_).
 must_pfc_fa(F,A):- mpred_database_term(F,A,_),!.

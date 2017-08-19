@@ -83,7 +83,7 @@
             demodulize/3,
             remodulize/3,
             replaced_module/3,
-            fully_expand_clause_now/3,
+            fully_expand_into_cache/3,
             do_expand_args/3,
             do_expand_args_l/3,
             do_expand_args_pa/4,
@@ -107,9 +107,9 @@
             fully_expand_clause/3,
             fully_expand_goal/3,
             fully_expand_head/3,
-            fully_expand_clause_now/3,
+            fully_expand_into_cache/3,
             fully_expand_real/3,
-            fully_expand_clause_now/3,
+            fully_expand_into_cache/3,
             %full_transform_warn_if_changed_UNUSED/3,
             functor_declares_collectiontype/2,
             functor_declares_instance/2,
@@ -799,13 +799,13 @@ fully_expand_real(Op,Sent,SentO):-!,
    gripe_time(0.2,
     must_det(locally(t_l:disable_px,
        (locally(t_l:no_kif_var_coroutines(true),
-       (must_det(fully_expand_clause_now(Op,Sent,SentO)))))))).
+       (must_det(fully_expand_into_cache(Op,Sent,SentO)))))))).
 
 fully_expand_real(Op,Sent,SentO):-
    gripe_time(0.2,
     must_det(locally(t_l:disable_px,
        (locally(t_l:no_kif_var_coroutines(true),
-       (must_det(fully_expand_clause_now(Op,Sent,SentIO)),
+       (must_det(fully_expand_into_cache(Op,Sent,SentIO)),
                    must_det(quietly(maybe_deserialize_attvars(SentIO,SentO))))))))),!.
 
 maybe_deserialize_attvars(X,X):-!.
@@ -818,7 +818,7 @@ fully_expand_real(Op,Sent,SentO):-
     (quietly(maybe_deserialize_attvars(Sent,SentI)),
      locally(t_l:disable_px,
        locally(t_l:no_kif_var_coroutines(true),
-       fully_expand_clause_now(Op,SentI,SentO))))),!.
+       fully_expand_into_cache(Op,SentI,SentO))))),!.
 */    
 
 %% is_stripped_module( +Op) is semidet.
@@ -870,16 +870,16 @@ expand_kif_string(I,O):- any_to_string(I,S), string(S),
 
 :- dynamic(lmcache:completely_expanded/2).
 
-%% fully_expand_clause_now( ++Op, ^Sent, --SentO) is det.
+%% fully_expand_into_cache( ++Op, ^Sent, --SentO) is det.
 %
 % Fully Expand Now.
-fully_expand_clause_now(Op,Sent,SentO):- \+ ground(Sent),!,fully_expand_clause_catch_each(Op,Sent,SentO),!.
-fully_expand_clause_now(_,Sent,SentO):- lmcache:completely_expanded(_,Sent),!,SentO=Sent.
-fully_expand_clause_now(_,Sent,SentO):- lmcache:completely_expanded(Sent,SentO),!.
-fully_expand_clause_now(Op,Sent,SentO):- 
+fully_expand_into_cache(Op,Sent,SentO):- \+ ground(Sent),!,fully_expand_clause_catch_each(Op,Sent,SentO),!.
+fully_expand_into_cache(_,Sent,SentO):- lmcache:completely_expanded(_,Sent),!,SentO=Sent.
+fully_expand_into_cache(_,Sent,SentO):- lmcache:completely_expanded(Sent,SentO),!.
+fully_expand_into_cache(Op,Sent,SentO):- 
  fully_expand_clause_catch_each(Op,Sent,SentO),!,
          asserta(lmcache:completely_expanded(Sent,SentO)),!.
-fully_expand_clause_now(Op,Sent,SentO):- 
+fully_expand_into_cache(Op,Sent,SentO):- 
  trace,break,
   (fully_expand_clause_catch_each(Op,Sent,SentO)),
          asserta(lmcache:completely_expanded(Sent,SentO)),!.
@@ -887,12 +887,13 @@ fully_expand_clause_now(Op,Sent,SentO):-
 
 
 fully_expand_clause_catch_each(Op,Sent,SentO):-
-  catch(fully_expand_clause(Op,Sent,SentO),hasEach,
-    (must(expand_isEach_or_fail_conj(Sent,SentM)),
-       must(fully_expand_real(Op,SentM,SentO)))).
+  catch(fully_expand_clause(Op,Sent,SentO),
+       hasEach,
+      (must(expand_isEach_or_fail_conj(Sent,SentM)),
+       must(fully_expand_real(Op,SentM,SentO)))),!.
 /*
 
-fully_expand_clause_now(Op,Sent,SentO):- term_variables(Sent,SentV),copy_term(Sent-SentV,SentI-SentIV),
+fully_expand_into_cache(Op,Sent,SentO):- term_variables(Sent,SentV),copy_term(Sent-SentV,SentI-SentIV),
                              numbervars(SentI,311,_),fully_expand_clause_now1a(Op,SentI,SentV-SentIV,Sent,SentO),!.
 
 :- dynamic(completely_expanded_v/3).
@@ -903,12 +904,12 @@ fully_expand_clause_now1a(_Op,SentI,_,Sent,SentO):- completely_expanded_v(_,Sent
 
 %  p(A,B).  p(1,2).   ==>  q(2,1).   q(B,A)      SentV-SentIV,   [1,2],[A,B]  % substAll(p(1,2),[1,2],[A,B],O).
 fully_expand_clause_now1a(Op,SentI,SentV-SentIV,_Sent,SentO):- lmcache:completely_expanded(SentI,SentOM),!,subst_All(SentOM,SentIV,SentV,SentO).
-fully_expand_clause_now1a(Op,SentI,_,_Sent,SentO):- fully_expand_clause_now(Op,SentI,SentO),
+fully_expand_clause_now1a(Op,SentI,_,_Sent,SentO):- fully_expand_into_cache(Op,SentI,SentO),
          asserta(lmcache:completely_expanded(SentI,SentO)).
 
-% fully_expand_clause_now(Op,Sent,SentO):- expand_isEach_or_fail(Sent,SentM)->SentM\=@=Sent,!,must(fully_expand_clause(Op,SentM,SentO)).
-% fully_expand_clause_now(Op,Sent,SentO):- fully_expand_clause(Op,Sent,SentO),!.
-fully_expand_clause_now(Op,Sent,SentO):- memoize_on_local(fully_expand_clause,Sent->SentO,(fully_expand_clause(Op,Sent,SentM),
+% fully_expand_into_cache(Op,Sent,SentO):- expand_isEach_or_fail(Sent,SentM)->SentM\=@=Sent,!,must(fully_expand_clause(Op,SentM,SentO)).
+% fully_expand_into_cache(Op,Sent,SentO):- fully_expand_clause(Op,Sent,SentO),!.
+fully_expand_into_cache(Op,Sent,SentO):- memoize_on_local(fully_expand_clause,Sent->SentO,(fully_expand_clause(Op,Sent,SentM),
   % post_expansion(Op,SentM,SentO)
   SentM=SentO
   )),!.
@@ -957,6 +958,7 @@ fully_expand_clause(Op, HB, OUT):-
 %
 % Fully Expand Goal.
 %
+fully_expand_goal(change(assert,_),Sent,SentO):- var(Sent),!,SentO=call_u(Sent).
 fully_expand_goal(Op,Sent,SentO):- 
  must((
   locally(t_l:into_form_code,fully_expand_head(Op,Sent,SentM)),

@@ -201,6 +201,7 @@ box_type(_,_,abox).
 %
 get_file_type_local(File,Type):-var(File),!,quietly_must(loading_source_file(File)),get_file_type_local(File,Type),!.
 get_file_type_local(File,pfc):-file_name_extension(_,'.pfc.pl',File),!.
+get_file_type_local(File,pfc):-file_name_extension(_,'.clif',File),!.
 get_file_type_local(File,Type):-file_name_extension(_,Type,File),!.
 get_file_type_local(File,Type):-clause_b(lmcache:mpred_directive_value(File,language,Type)).
 
