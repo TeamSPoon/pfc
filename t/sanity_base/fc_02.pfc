@@ -10,11 +10,11 @@
 :- include(test_header).
 /*
 :- rtrace.
-:- set_prolog_flag(retry_undefined,false).
+:- set_prolog_flag(retry_undefined, none).
 :- set_prolog_flag(gc,true),garbage_collect.
 
 % :- make.
-:- set_prolog_flag(retry_undefined,true).
+:- set_prolog_flag(retry_undefined, kb_shared).
 */
 
 :- must(context_module(header_sane)).

@@ -1356,13 +1356,17 @@ neg_in_code(G):-nonvar(G),loop_check(neg_in_code0(G)).
 :- meta_predicate neg_in_code0(*).
 :- export(neg_in_code0/1).
 neg_in_code0(G):- var(G),!,lookup_u(~ G).
-neg_in_code0(call_u(G)):- !,call_u(~G).
+neg_in_code0(G):- proven_neg(G).
+% neg_in_code0(call_u(G)):- !,call_u(~G).
+neg_in_code0(call_u(G)):- !,neg_in_code0(G).
 neg_in_code0(G):- clause(~G,Call)*-> call(Call) ,! .
 neg_in_code0(G):-  is_ftNonvar(G), a(prologSingleValued,G),
       must((if_missing_mask(G,R,Test),nonvar(R),nonvar(Test))),call_u(R),!,call_u(Test).
 neg_in_code0(G):-   neg_may_naf(G), \+ call_u(G),!.
 neg_in_code0(~(G)):- nonvar(G),!,  \+ call_u(~G) ,!.
 neg_in_code0(_:G):-!,baseKB:neg_in_code0(G).
+
+:- kb_shared(baseKB:proven_neg/1).
 
 :- meta_predicate neg_may_naf(*).
 :- module_transparent(neg_may_naf/1).
@@ -1399,7 +1403,9 @@ mpred_call_only_facts(Clause) :-  strip_module(Clause,_,ClauseF), on_x_debug(no_
 
 mpred_call_ru(functorDeclares(H)):- !, get_var_or_functor(H,F),clause_b(functorDeclares(F)).
 mpred_call_ru(singleValuedInArg(H,A)):- !, get_var_or_functor(H,F),clause_b(singleValuedInArg(F,A)).
+mpred_call_ru(ttRelationType(C)):- !, clause_b(ttRelationType(C)).
 mpred_call_ru(M:G):- !,call(M:G).
+
 mpred_call_ru(G):- defaultAssertMt(M),call(M:G).
 
 get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.

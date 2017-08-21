@@ -28,11 +28,6 @@ test_header_include.
 :- prolog_load_context(source,File),(atom_contains(File,'.pfc')-> sanity(is_pfc_file) ; must_not_be_pfc_file).
 :- endif.
 
-:- multifile prolog:message//1, user:message_hook/3.
-% user:message_hook(import_private(pfc_lib,_:_/_),warning,_):- source_location(_,_),!.
-user:message_hook(io_warning(_,'Illegal UTF-8 start'),warning,_):- source_location(_,_),!.
-user:message_hook(T,Type,Warn):- source_location(_,_),
-  memberchk(Type,[error,warning]),once(maybe_message_hook(T,Type,Warn)),fail.
 
 
 :- if(is_pfc_file).
@@ -50,7 +45,7 @@ user:message_hook(T,Type,Warn):- source_location(_,_),
 
 
 :- set_prolog_flag(debug, true).
-:- set_prolog_flag(retry_undefined,true).
+:- set_prolog_flag(retry_undefined, kb_shared).
 :- set_prolog_flag(gc, false).
 
 :- sanity((defaultAssertMt(Mt1),fileAssertMt(Mt2),source_module(Mt3),Mt1==Mt2,Mt1==Mt3)).

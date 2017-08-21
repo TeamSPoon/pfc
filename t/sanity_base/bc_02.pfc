@@ -13,7 +13,7 @@
 :- include(test_header).
 
 :- flag_call(runtime_debug=true).
-:- set_prolog_flag(retry_undefined,true).
+:- set_prolog_flag(retry_undefined, kb_shared).
 :- flag_call(runtime_debug=true).
 :- begin_pfc.
 
