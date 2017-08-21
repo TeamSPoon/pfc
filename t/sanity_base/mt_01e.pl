@@ -14,7 +14,7 @@
 :- mpred_trace_exec.
 :- begin_pfc.
 
-%:- sanity(current_prolog_flag(retry_undefined,true)).
+%:- sanity(current_prolog_flag(retry_undefined, kb_shared)).
 %
 
 :- pfc_test_feature(mt,\+ mtHybrid(header_sane)).

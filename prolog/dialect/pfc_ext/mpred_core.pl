@@ -117,7 +117,7 @@
   mpred_literal/1,mpred_load/1,mpred_make_supports/1,mpred_ain_object/1,mpred_aina/2,mpred_ainz/2,mpred_aina/1,mpred_ainz/1,
   mpred_negated_literal/1,mpred_unnegate/2,mpred_nf/2,mpred_nf1_negation/2,mpred_nf_negation/2,mpred_nf_negations/2,mpred_notrace/0,mpred_nowatch/0,
   mpred_nospy/0,mpred_nospy/1,mpred_nospy/3,mpred_positive_literal/1,mpred_post/2,pp_qu/0,mpred_undo_action/1,
-  mpred_rem_support/2,mpred_remove_old_version/1,mpred_remove_supports/1,mpred_remove_supports_quietly/1,mpred_reset/0,mpred_retract/1,mpred_retract_i_or_warn/1,mpred_retract_supported_relations/1,
+  mpred_rem_support/2,mpred_remove_old_version/1,mpred_remove_supports/1,mpred_remove_supports_quietly/1,mpred_reset_kb/0,mpred_retract/1,mpred_retract_i_or_warn/1,mpred_retract_supported_relations/1,
   mpred_retract_type/2,mpred_select_justification_node/3,mpred_set_warnings/1,mpred_pp_db_justifications/2,
   mpred_spy/1,mpred_spy/2,mpred_spy/3,mpred_step/0,mpred_support_relation/1,mpred_supported/1,mpred_supported/2,
   mpred_trace/0,mpred_trace/1,mpred_trace/2,mpred_trace_maybe_print/3,mpred_trace_maybe_break/3,mpred_trace_exec/0,mpred_trace_op/3,
@@ -667,10 +667,11 @@ asserta_u(MH):- fix_mp(change(assert,asserta_u),MH,MHA),attvar_op_fully(db_op_ca
 assertz_u(MH):- fix_mp(change(assert,assertz_u),MH,MHA),attvar_op_fully(db_op_call(asserta,assertz_i),MHA).
 
 retract_u((H:-B)):- !, show_failure(retract((H:-B))).
-retract_u(H):- retract_u0(H) *-> true; attvar_op_fully(db_op_call(retract,retract_u0),H).
+retract_u(H):- retract_u0(H) *-> true; ((fail,attvar_op_fully(db_op_call(retract,retract_u0),H))).
 
 retract_u0(H0):- strip_module(H0,_,H),(H = ( \+ _ )),!,trace_or_throw(mpred_warn(retract_u(H0))),expire_tabled_list(H).
 retract_u0(M:(H:-B)):- atom(M),!, M:clause_u(H,B,R),erase(R),expire_tabled_list(H).
+retract_u0(M:(H)):- atom(M),!, M:clause_u(H,true,R),erase(R),expire_tabled_list(H).
 retract_u0((H:-B)):-!,clause_u(H,B,R),erase(R),expire_tabled_list(H).
 retract_u0(H):- clause_u(H,true,R),erase(R),expire_tabled_list(H).
 
@@ -1677,7 +1678,7 @@ mpred_withdraw(P,S):-
 
 mpred_withdraw1(P,S):-
    sanity(is_ftNonvar(P)),
-   (mpred_withdraw1_maybe(P,S)*->true;
+   ((mpred_withdraw1_maybe(P,S))*->true;
          (mpred_trace_msg("FAILURE: mpred_withdraw1/2 Could not find support ~p to remove from fact ~p",
                 [S,P]))).
    
@@ -1711,11 +1712,12 @@ mpred_withdraw1_maybe_user2(P,S):-
 mpred_withdraw1_maybe_any(P,S):- S = (F,T),  
   (lookup_spft(P,F,T)*->true;true),
   mpred_trace_msg('~N~n\tRemoving (withdraw1)~n\t\tterm: ~p~n\t\tsupport (was): ~p~n',[P,S]),
-  must((
+  (var(T)->true;
+  (must((
    mpred_rem_support(P,S)
      *-> with_current_why(S,must(remove_if_unsupported(P)))
       ; mpred_trace_msg("mpred_withdraw1_maybe_any/2 Could not find support ~p to remove from fact ~p",
-                [S,P]))).
+                [S,P]))))).
 
 
 %%  mpred_remove(+P) is det.
@@ -2132,7 +2134,7 @@ mpred_eval_rhs1( P,Support):-
   !,
   mpred_withdraw(PN).
 
-% if negated litteral
+% if negated litteral \+ P
 mpred_eval_rhs1( P,Support):-
  % predicate to remove.
   \+ \+ mpred_negated_literal( P),
@@ -2213,7 +2215,7 @@ lookup_m_g(To,_M,G):- clause(To:G,true).
 
 
 
-call_u(G):- \+  current_prolog_flag(retry_undefined,true),!,
+call_u(G):- \+  current_prolog_flag(retry_undefined, kb_shared),!,
    strip_module(G,M,P), no_repeats(gripe_time(5.3,on_x_rtrace(call_u_mp(M,P)))).
 
 call_u(G):- !, mpred_call_ru(G).
@@ -3094,21 +3096,39 @@ mpred_conjoin(C1,C2,(C1,C2)).
 %   Purpose: predicates to manipulate a Pfc database (e.ax. save,
 % 	restore, reset, etc.)
 
-%% mpred_reset() is det.
+%% mpred_reset_kb() is det.
 %
 % removes all forward chaining rules and justifications from db.
 %
-mpred_reset:- context_module(Module),mpred_reset(Module).
-mpred_reset(Module):-
-  Module:lookup_spft(P,ZF,ZTrigger),current_predicate(_,Module:P),
-  (retract_u(P)->true;mpred_warn("Couldn't retract ~p: ~p.~n",[Module,P])),
-  mpred_retract_i_or_warn(spft(P,ZF,ZTrigger)),
+mpred_reset_kb:- context_module(Module),mpred_reset_kb(Module).
+
+mpred_reset_kb_facts(Module):- nop(Module).
+
+mpred_reset_kb(Module):- mpred_reset_kb_facts(Module),fail.
+mpred_reset_kb(Module):-
+  Module:lookup_spft(P,ZF,ZTrigger),
+  clause(Module:spft(P,ZF,ZTrigger),_,Ref),
+  clause_property(Ref,module(Module)),
+     must(mpred_reset_mp(Module,P)), 
+  ( \+ clause(Module:spft(P,ZF,ZTrigger),_,Ref) -> true;
+     (must((clause(_SPFT,_SB,Ref),erase(Ref))))),
+%     must((mpred_retract_i_or_warn_1(P);(fail,mpred_retract_i_or_warn(SPFT)))),
   fail.
-mpred_reset(Module):-
+mpred_reset_kb(Module):-
   mpred_database_item(Module,T),!,
-  mpred_warn("Couldn't full mpred_reset: ~p ~p.~n",[T,Module]), must(pp_DB),!,
-  mpred_error("Pfc database not empty after mpred_reset, e.ax., ~p.~n",[T]),!.
-mpred_reset(Module):- mpred_trace_msg("Reset DB complete for ~p",[Module]).
+  mpred_warn("Couldn't full mpred_reset_kb: ~p ~p.~n",[T,Module]), must(pp_DB),!,
+  mpred_error("Pfc database not empty after mpred_reset_kb, e.ax., ~p.~n",[T]),!.
+mpred_reset_kb(Module):- mpred_trace_msg("Reset DB complete for ~p",[Module]).
+
+mpred_reset_mp(Module,P):-
+     doall((
+     expand_to_hb(P,H,B),
+     clause_asserted(Module:H,B,PRef1),
+     clause_property(PRef1,module(Module)),
+     show_failure((((lookup_u(Module:P,PRef2),PRef2==PRef1)))),     
+  (must(mpred_retract(Module:P))->true;mpred_warn("Couldn't retract ~p: ~p.~n",[Module,P])),
+  sanity(\+ clause_asserted(_H0,_B0,PRef1)))).
+
 
 % true if there is some Pfc crud still in the database.
 mpred_database_item(Module,P):-
@@ -3124,15 +3144,15 @@ mpred_database_item(Module,P):-
   ((B== true)-> P=H; P=(H:B)).
 
 
-mpred_retract_i_or_warn(X):- mpred_retract_i_or_warn_1(X) *-> true; mpred_retract_i_or_warn_2(X).
+mpred_retract_i_or_warn(X):- must((mpred_retract_i_or_warn_1(X) *-> true; mpred_retract_i_or_warn_2(X))).
 
 mpred_retract_i_or_warn_1(X):- sanity(is_ftNonvar(X)), 
   ((((X=spft(_,_,_), call_u(X), retract_u(X))) *-> true ; retract_u(X))),
-  mpred_trace_msg('~NSUCCESS: ~p~n',[retract_u(X)]).
+  nop((mpred_trace_msg('~NSUCCESS: ~p~n',[retract_u(X)]))).
 
 % mpred_retract_i_or_warn_2(SPFT):- \+ \+ SPFT = spft(_,a,a),!,fail.
 % mpred_retract_i_or_warn_2(X):- fail,mpred_warn("Couldn't retract_u ~p.~n",[X]),(debugging_logicmoo(logicmoo(pfc))->rtrace(retract_u(X));true),!.
-mpred_retract_i_or_warn_2(X):- mpred_trace_msg("Couldn't retract_i: ~p.~n",[X]),!.
+mpred_retract_i_or_warn_2(X):- dumpST,mpred_trace_msg("Couldn't retract_i: ~p.~n",[X]),fail.
 %mpred_retract_i_or_warn_2(X):- mpred_warn("Couldn't retract_i: ~p.~n",[X]),!.
 
 
@@ -3995,7 +4015,7 @@ end_of_file.
 
 
 
-:- must(mpred_reset).
+:- must(mpred_reset_kb).
 
 :- defaultAssertMt(M),dynamic((M:current_ooZz/1,M:default_ooZz/1,M:if_mooZz/2)).
 
@@ -4040,5 +4060,5 @@ end_of_file.
 
 :- mpred_test(current_ooZz(booZz)).
 
-:- mpred_reset.
+:- mpred_reset_kb.
 

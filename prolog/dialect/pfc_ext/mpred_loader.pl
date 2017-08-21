@@ -2303,6 +2303,43 @@ pfc_test_feature(Feature,Test):- pfc_feature(Feature)*-> mpred_test(Test) ; true
 :- baseKB:export(pfc_test_feature/2).
 
 
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:- dmsg("DUMPST ON WARNINGS").
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+skip_warning(informational).
+skip_warning(information).
+skip_warning(debug).
+
+skip_warning(discontiguous).
+skip_warning(query).
+skip_warning(banner).
+skip_warning(silent).
+skip_warning(debug_no_topic).
+skip_warning(break).
+skip_warning(io_warning).
+skip_warning(interrupt).
+skip_warning(statistics).
+% skip_warning(check).
+skip_warning(compiler_warnings).
+
+
+skip_warning(T):- \+ compound(T),!,fail.
+skip_warning(_:T):- !, compound(T),functor(T,F,_),skip_warning(F).
+skip_warning(T):-compound(T),functor(T,F,_),skip_warning(F).
+base_message(T1,T2,_):- skip_warning(T1);skip_warning(T2);(thread_self(M),M\==main).
+base_message(_,_,_):- \+ current_predicate(dumpST/0),!.
+base_message(T,Type,Warn):- dmsg(message_hook(T,Type,Warn)),dumpST,dmsg(message_hook(T,Type,Warn)),!,fail.
+
+:- multifile prolog:message//1, user:message_hook/3.
+user:message_hook(T,Type,Warn):- fail, ( \+ current_prolog_flag(runtime_debug,0)),
+   catch(once(base_message(T,Type,Warn)),_,fail),fail.
+
+
 :- dynamic(system:test_results/3).
 
 maybe_message_hook(compiler_warnings(_,[always(true,var,_),always(false,integer,_),
@@ -2333,8 +2370,11 @@ set_file_abox_module(User):- '$set_typein_module'(User), '$set_source_module'(Us
 set_file_abox_module_wa(User):- '$set_typein_module'(User), '$set_source_module'(User), set_fileAssertMt(User),set_defaultAssertMt(User).
 
 
-
-
+:- multifile prolog:message//1, user:message_hook/3.
+% user:message_hook(import_private(pfc_lib,_:_/_),warning,_):- source_location(_,_),!.
+user:message_hook(io_warning(_,'Illegal UTF-8 start'),warning,_):- source_location(_,_),!.
+user:message_hook(T,Type,Warn):- source_location(_,_),
+  memberchk(Type,[error,warning]),once(maybe_message_hook(T,Type,Warn)),fail.
 
 
 :- fixup_exports.

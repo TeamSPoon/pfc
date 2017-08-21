@@ -59,7 +59,7 @@ kb_global_base(FA):- kb_local(baseKB:FA).
 
 % :- kb_global_base(baseKB:genlMt/2).
 
-:- kb_global(baseKB:mpred_prop/4).
+:- kb_shared(baseKB:mpred_prop/4).
 
 :- baseKB:forall(between(1,11,A),kb_local(t/A)).
 :- baseKB:forall(between(5,7,A),kb_local(mpred_f/A)).
@@ -168,37 +168,6 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg(visit_pfc_non_file_r
 :- nop(kb_shared( ('~') /1)).
 */
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% DUMPST ON WARNINGS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-skip_warning(informational).
-skip_warning(information).
-skip_warning(debug).
-
-skip_warning(discontiguous).
-skip_warning(query).
-skip_warning(banner).
-skip_warning(silent).
-skip_warning(debug_no_topic).
-skip_warning(break).
-skip_warning(io_warning).
-skip_warning(interrupt).
-skip_warning(statistics).
-% skip_warning(check).
-skip_warning(compiler_warnings).
-
-
-skip_warning(T):- \+ compound(T),!,fail.
-skip_warning(_:T):- !, compound(T),functor(T,F,_),skip_warning(F).
-skip_warning(T):-compound(T),functor(T,F,_),skip_warning(F).
-base_message(T1,T2,_):- skip_warning(T1);skip_warning(T2);(thread_self(M),M\==main).
-base_message(_,_,_):- \+ current_predicate(dumpST/0),!.
-base_message(T,Type,Warn):- dmsg(message_hook(T,Type,Warn)),dumpST,dmsg(message_hook(T,Type,Warn)),!,fail.
-
-:- multifile prolog:message//1, user:message_hook/3.
-user:message_hook(T,Type,Warn):- fail, ( \+ current_prolog_flag(runtime_debug,0)),
-   catch(once(base_message(T,Type,Warn)),_,fail),fail.
 
 % :- use_module(library(logicmoo_utils)).
 :- if( \+ current_predicate(each_call_cleanup/3)).
@@ -675,5 +644,5 @@ system:goal_expansion(I,P,O,PO):-
 :- retractall(t_l:disable_px).
 
 :- set_prolog_flag(mpred_te,true).
-:- set_prolog_flag(retry_undefined,true).
+:- set_prolog_flag(retry_undefined, kb_shared).
 
