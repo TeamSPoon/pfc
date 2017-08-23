@@ -890,7 +890,7 @@ show_interesting_cl(Dir,P):- loading_source_file(File),get_file_type(File,Type),
 %
 % Clause Assert.
 %
-cl_assert(kif(Dir),P):- show_if_debug(must_det_l(( show_interesting_cl(kif(Dir),P),kif_process(P)))),!.
+cl_assert(kif(Dir),P):- show_if_debug(must_det_l(( show_interesting_cl(kif(Dir),P),call(call,kif_process,P)))),!.
 cl_assert(Dir,P):- show_interesting_cl(Dir,P),ain(P),!.
 cl_assert(pl,P):-  !, show_if_debug(must_det_l((source_location(F,_L), '$compile_aux_clauses'(P,F)))).
 cl_assert(_Code,P):- !, show_if_debug(ain(P)).
