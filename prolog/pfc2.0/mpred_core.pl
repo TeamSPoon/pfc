@@ -3144,7 +3144,7 @@ mpred_database_item(Module,P):-
   ((B== true)-> P=H; P=(H:B)).
 
 
-mpred_retract_i_or_warn(X):- must((mpred_retract_i_or_warn_1(X) *-> true; mpred_retract_i_or_warn_2(X))).
+mpred_retract_i_or_warn(X):- ignore(show_failure((mpred_retract_i_or_warn_1(X) *-> true; mpred_retract_i_or_warn_2(X)))).
 
 mpred_retract_i_or_warn_1(X):- sanity(is_ftNonvar(X)), 
   ((((X=spft(_,_,_), call_u(X), retract_u(X))) *-> true ; retract_u(X))),
@@ -3152,7 +3152,7 @@ mpred_retract_i_or_warn_1(X):- sanity(is_ftNonvar(X)),
 
 % mpred_retract_i_or_warn_2(SPFT):- \+ \+ SPFT = spft(_,a,a),!,fail.
 % mpred_retract_i_or_warn_2(X):- fail,mpred_warn("Couldn't retract_u ~p.~n",[X]),(debugging_logicmoo(logicmoo(pfc))->rtrace(retract_u(X));true),!.
-mpred_retract_i_or_warn_2(X):- dumpST,mpred_trace_msg("Couldn't retract_i: ~p.~n",[X]),fail.
+mpred_retract_i_or_warn_2(X):- mpred_trace_msg("Couldn't retract_i: ~p.~n",[X]),fail.
 %mpred_retract_i_or_warn_2(X):- mpred_warn("Couldn't retract_i: ~p.~n",[X]),!.
 
 
