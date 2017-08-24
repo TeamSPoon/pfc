@@ -1536,6 +1536,8 @@ mpred_bc_only(G):- no_repeats(loop_check(mpred_bc_only0(G))).
 %
 mpred_bc_only0(G):- mpred_unnegate(G,Pos),!, show_call(why,\+ mpred_bc_only(Pos)).
 mpred_bc_only0(G):- pfcBC_NoFacts(G).
+%mpred_bc_only0(G):- pfcBC_NoFacts_TRY(G).
+
 % mpred_bc_only0(G):- mpred_call_only_facts(G).
 
 %%
@@ -1586,13 +1588,15 @@ ruleBackward0(F,Condition):- call_u((  '<-'(F,Condition),\+ (is_true(Condition);
 
 pfcBC_NoFacts_TRY(F) :- no_repeats(ruleBackward(F,Condition,Support)),
   % neck(F),
-  no_repeats(F,call_u(Condition)),
-  maybe_support_bt(F,Condition,Support).
+  copy_term((Condition,Support),(CCondition,SupportC)),
+  no_repeats(F,call_u(Condition)),  
+  maybe_support_bt(F,CCondition,SupportC).
 
+maybe_support_bt(P,_,_):-mpred_ignored(P),!.
 maybe_support_bt(F,Condition,Support):-  
-  no_repeats(Why,call_u(bt(F,pt(A,Why)))) *-> maybeSupport(F,(A,Why)) ;
-  no_repeats(Why,call_u(bt(F,Why))) *-> maybeSupport(F,(bt(F,Why),Support)) ;
-   maybeSupport(F,(Condition,Support)).
+  doall((no_repeats(Why,call_u(bt(F,pt(A,Why)))) *-> mpred_add_support_fast(F,(A,Why)))),
+  doall((no_repeats(Why,call_u(bt(F,Why))) *-> mpred_add_support_fast(F,(bt(F,Why),Support)))),
+  ignore((maybeSupport(F,(Condition,Support)))).
 
 :- meta_predicate mpred_why_all(*).
 mpred_why_all(Call):- !,
@@ -2193,7 +2197,7 @@ ruleBackward(R,Condition,Support):- ruleBackward0(R,Condition,Support),
 %
 % Rule Backward Primary Helper.
 %
-ruleBackward0(F,Condition,'<-'(F,Condition)):- call_u('<-'(F,Condition)).
+ruleBackward0(F,Condition,Support):- call_u('<-'(FF,Condition)),copy_term('<-'(FF,Condition),Support),FF=F.
 %ruleBackward0(F,Condition,(F :- Condition)):- clause_u(F,Condition),\+ (is_true(Condition);mpred_is_info(Condition)).
 
 
