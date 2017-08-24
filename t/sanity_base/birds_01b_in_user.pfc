@@ -87,7 +87,9 @@ never_retract_u(tBird(ext,iChilly)).
 
 
 :- dmsg("penguins do not tFly.").
-tPenguin(ext,X) ==>  ~tFly(ext,X). 
+:- mpred_info(tFly(ext, iChilly)).
+:- break.
+:- mpred_ain(tPenguin(ext,X) ==>  ~tFly(ext,X)). 
 
 :- dmsg("confirm chilly now cant fly").
 :- mpred_test((\+ tFly(ext,iChilly))).

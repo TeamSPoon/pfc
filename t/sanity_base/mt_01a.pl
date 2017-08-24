@@ -40,6 +40,13 @@ baseKB:arity(loves,2).
 :- must((fix_mp(clause(_,_),loves(x,y),M,P),
    M:P==socialMt:loves(x,y))).
 
+:- must((fix_mp(clause(_,_),foo:loves(x,y),M,P),
+   M:P==socialMt:loves(x,y))).
+
+:- must((fix_mp(clause(_,_),header_sane:loves(x,y),M,P),
+   M:P==socialMt:loves(x,y))).
+
+
 loves(sally,joe).
 
 % baseKB:genlMt(myMt,socialMt).
