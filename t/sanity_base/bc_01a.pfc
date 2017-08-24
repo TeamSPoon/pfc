@@ -5,13 +5,14 @@
 % Dec 13, 2035
 % Douglas Miles
 
-% Tests if Finin Backchaining memo idea is working
+% Tests Retraction undoes Backchaining memo idea is working
 
 
-%  was_module(bc_01,[]).
+%  was_module(bc_01a,[]).
 
 :- include(test_header).
 
+:- listing(message_hook/3).
 
 :- dynamic(bc_q/1).
 :- dynamic(bc_p/1).
@@ -23,18 +24,31 @@ bc_p(a).
 bc_p(b).
 :- listing(bc_p/1).
 
+
 :- mpred_test(call_u(bc_p(b))).
 
-%= nothing cached ?
+%= nothing cached
 :- listing(bc_q/1).
-
 :- mpred_test(\+ clause(bc_q(_),true)).
 
-:- mpred_test((call_u(bc_q(b)))).
+
+:- mpred_test(((bc_q(b)))).
 
 %= something cached
+
 :- listing(bc_q/1).
+
 :- mpred_test( clause(bc_q(_),true)).
+
+
+% Are we cleaning up backchains?
+
+:- break.
+:- mpred_test(((mpred_retract(((bc_q(N) <- bc_p(N))))),\+ clause(bc_q(_),true))).
+
+:- mpred_why(bc_q(_)).
+
+:- mpred_test(\+ clause(bc_q(_),true)).
 
 
 end_of_file.

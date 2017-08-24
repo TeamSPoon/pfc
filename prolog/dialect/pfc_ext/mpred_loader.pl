@@ -2336,6 +2336,7 @@ base_message(_,_,_):- \+ current_predicate(dumpST/0),!.
 base_message(T,Type,Warn):- dmsg(message_hook(T,Type,Warn)),dumpST,dmsg(message_hook(T,Type,Warn)),!,fail.
 
 :- multifile prolog:message//1, user:message_hook/3.
+:- discontiguous(user:message_hook/3).
 user:message_hook(T,Type,Warn):- fail, ( \+ current_prolog_flag(runtime_debug,0)),
    catch(once(base_message(T,Type,Warn)),_,fail),fail.
 
@@ -2348,11 +2349,14 @@ maybe_message_hook(compiler_warnings(_,[always(true,var,_),always(false,integer,
 maybe_message_hook(import_private(_,_),_,_).
 maybe_message_hook(check(undefined(_, _)),_,_).
 maybe_message_hook(ignored_weak_import(header_sane,_),_,_).
-
-maybe_message_hook(_,warning,_).
+% maybe_message_hook(_,warning,_).
 maybe_message_hook(T,Type,Warn):-
-  nl,dmsg(message_hook(T,Type,Warn)),nl,
-  assertz(system:test_results(T,Type,Warn)),dumpST,nl,dmsg(message_hook(T,Type,Warn)),nl,!.
+  once((nl,dmsg(message_hook(T,Type,Warn)),nl,
+  assertz(system:test_results(T,Type,Warn)),dumpST,nl,dmsg(message_hook(T,Type,Warn)),nl)),
+  fail.
+
+maybe_message_hook(_,error,_):- current_prolog_flag(runtime_debug, N),N>2,break.
+maybe_message_hook(_,warning,_):- current_prolog_flag(runtime_debug, N),N>2,break.
 
 system:test_completed:- listing(system:test_results/3),test_completed_exit_maybe(4).
 system:test_retake:- listing(system:test_results/3),test_completed_exit_maybe(7).
@@ -2373,7 +2377,8 @@ set_file_abox_module_wa(User):- '$set_typein_module'(User), '$set_source_module'
 :- multifile prolog:message//1, user:message_hook/3.
 % user:message_hook(import_private(pfc_lib,_:_/_),warning,_):- source_location(_,_),!.
 user:message_hook(io_warning(_,'Illegal UTF-8 start'),warning,_):- source_location(_,_),!.
-user:message_hook(T,Type,Warn):- source_location(_,_),
+user:message_hook(T,Type,Warn):- 
+  ((current_prolog_flag(runtime_debug, N),N>2) -> true ; source_location(_,_)),
   memberchk(Type,[error,warning]),once(maybe_message_hook(T,Type,Warn)),fail.
 
 
