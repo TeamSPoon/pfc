@@ -230,21 +230,11 @@ naf(Goal):- (\+ call_u(Goal)).
 %
 is_callable(C):-current_predicate(_,C),!.
 
-:- module_transparent( (consequent_arg)/3).
-consequent_arg(N,P,E):-get_consequent(P,PP),!,arg(N,PP,E).
-
-:- module_transparent( (get_consequent)/2).
-get_consequent((_:P),PP):-compound(P),!,get_consequent(P,PP).
-get_consequent((P:-_),PP):-compound(P),!,get_consequent(P,PP).
-get_consequent(~ P,PP):-compound(P),!,get_consequent(P,PP).
-get_consequent(\+ P,PP):-compound(P),!,get_consequent(P,PP).
-get_consequent(P,P).
-
 
 :- style_check(+singleton).
 
 % TODO READD
-%:- foreach(consequent_arg(_,isEach(prologMultiValued,prologOrdered,prologNegByFailure,prologPTTP,prologKIF,pfcControlled,ttRelationType,
+%:- foreach(arg(_,isEach(prologMultiValued,prologOrdered,prologNegByFailure,prologPTTP,prologKIF,pfcControlled,ttRelationType,
 %     prologHybrid,predCanHaveSingletons,prologDynamic,prologBuiltin,functorIsMacro,prologListValued,prologSingleValued),P),.. )
 
 
@@ -688,12 +678,12 @@ all_different_head_vals(HB):-
   
 
 all_different_head_vals_2(_H,[]):-!.
-all_different_head_vals_2(H,[A,R|EST]):-consequent_arg(_,H,E1),E1 ==A,dif(A,E2),consequent_arg(_,H,E2),\+ contains_var(A,E2),all_different_vals(dif_matrix,[A,E2,R|EST]),!.
+all_different_head_vals_2(H,[A,R|EST]):-get_assertion_head_arg(_,H,E1),E1 ==A,dif(A,E2),get_assertion_head_arg(_,H,E2),\+ contains_var(A,E2),all_different_vals(dif_matrix,[A,E2,R|EST]),!.
 all_different_head_vals_2(_H,[A,B|C]):-all_different_vals(dif_matrix,[A,B|C]),!.
 all_different_head_vals_2(HB,_):- \+ compound(HB),!.
-all_different_head_vals_2(H,[A]):-consequent_arg(_,H,E1),E1 ==A, H=..[_|ARGS], all_different_vals(dif_matrix,ARGS),!.
-all_different_head_vals_2(H,[A]):-consequent_arg(_,H,E1),E1 ==A,  consequent_arg(_,H,E2), A\==E2, \+ contains_var(A,E2), dif(A,E2),!.
-all_different_head_vals_2(H,[A]):-consequent_arg(_,H,E1),E1\==A, compound(E1), contains_var(A,E1), all_different_head_vals_2(E1,[A]),!.
+all_different_head_vals_2(H,[A]):-get_assertion_head_arg(_,H,E1),E1 ==A, H=..[_|ARGS], all_different_vals(dif_matrix,ARGS),!.
+all_different_head_vals_2(H,[A]):-get_assertion_head_arg(_,H,E1),E1 ==A,  get_assertion_head_arg(_,H,E2), A\==E2, \+ contains_var(A,E2), dif(A,E2),!.
+all_different_head_vals_2(H,[A]):-get_assertion_head_arg(_,H,E1),E1\==A, compound(E1), contains_var(A,E1), all_different_head_vals_2(E1,[A]),!.
 all_different_head_vals_2(_,_).
    	 
 
@@ -789,6 +779,7 @@ ain_minfo_2(How,G):-ain_minfo(How,G).
 %
 mpred_is_info(mpred_bc_only(C)):-is_ftNonvar(C),!.
 mpred_is_info(infoF(C)):-is_ftNonvar(C),!.
+mpred_is_info(inherit_above(_,_)).
 mpred_is_info((Fail,_)):-Fail==fail.
 
 
@@ -855,16 +846,18 @@ is_action_body(P):- has_body_atom(wac,P).
 % Has Body Atom.
 %
 has_body_atom(WAC,P):- call(
-   WAC==P -> true ; (is_ftCompound(P),consequent_arg(1,P,E),has_body_atom(WAC,E))),!.
+   WAC==P -> true ; (is_ftCompound(P),get_assertion_head_arg(1,P,E),has_body_atom(WAC,E))),!.
 
 /*
 has_body_atom(WAC,P,Rest):- call(WAC==P -> Rest = true ; (is_ftCompound(P),functor(P,F,A),is_atom_body_pfa(WAC,P,F,A,Rest))).
-is_atom_body_pfa(WAC,P,F,2,Rest):-consequent_arg(1,P,E),E==WAC,consequent_arg(2,P,Rest),!.
-is_atom_body_pfa(WAC,P,F,2,Rest):-consequent_arg(2,P,E),E==WAC,consequent_arg(1,P,Rest),!.
+is_atom_body_pfa(WAC,P,F,2,Rest):-get_assertion_head_arg(1,P,E),E==WAC,get_assertion_head_arg(2,P,Rest),!.
+is_atom_body_pfa(WAC,P,F,2,Rest):-get_assertion_head_arg(2,P,E),E==WAC,get_assertion_head_arg(1,P,Rest),!.
 */
 
+:- module_transparent( (get_assertion_head_arg)/3).
+get_assertion_head_arg(N,P,E):-get_assertion_head_unnegated(P,PP),!,arg(N,PP,E).
 
-same_functors(Head1,Head2):-must_det(get_consequent_functor(Head1,F1,A1)),must_det(get_consequent_functor(Head2,F2,A2)),!,F1=F2,A1=A2.
+same_functors(Head1,Head2):-must_det(get_unnegated_functor(Head1,F1,A1)),must_det(get_unnegated_functor(Head2,F2,A2)),!,F1=F2,A1=A2.
 
 
 %% mpred_update_literal( +P, ?N, ?Q, ?R) is semidet.
@@ -872,7 +865,7 @@ same_functors(Head1,Head2):-must_det(get_consequent_functor(Head1,F1,A1)),must_d
 % PFC Update Literal.
 %
 mpred_update_literal(P,N,Q,R):-
-    consequent_arg(N,P,UPDATE),call(replace_arg(P,N,Q_SLOT,Q)),
+    get_assertion_head_arg(N,P,UPDATE),call(replace_arg(P,N,Q_SLOT,Q)),
     must(call_u(Q)),update_value(Q_SLOT,UPDATE,NEW), 
     replace_arg(Q,N,NEW,R).
 
@@ -891,7 +884,7 @@ update_single_valued_arg(world,P,N):- !, update_single_valued_arg(baseKB,P,N).
 update_single_valued_arg(M,P,N):- \+ clause_b(mtHybrid(M)), clause_b(mtHybrid(M2)),!,update_single_valued_arg(M2,P,N).
 
 update_single_valued_arg(M,P,N):- 
-  consequent_arg(N,P,UPDATE),
+  get_assertion_head_arg(N,P,UPDATE),
   is_relative(UPDATE),!,
   dtrace,
   replace_arg(P,N,OLD,Q),
@@ -905,7 +898,7 @@ update_single_valued_arg(M,P,N):-
   call_u(mtHybrid(M)),
   mpred_type_args \= M,
   mpred_kb_ops \= M,
-  consequent_arg(N,P,UPDATE),
+  get_assertion_head_arg(N,P,UPDATE),
   replace_arg(P,N,Q_SLOT,Q),
   var(Q_SLOT),
   same_functors(P,Q),
@@ -1076,8 +1069,8 @@ if_missing_mask(ISA, ~ ISA, \+ ISA).
 % If Missing Mask.
 %
 if_missing_n_mask(Q,N,R,Test):-
-  consequent_arg(N,Q,Was),
-  (nonvar(R)-> (which_missing_argnum(R,RN),consequent_arg(RN,R,NEW));replace_arg(Q,N,NEW,R)),!,
+  get_assertion_head_arg(N,Q,Was),
+  (nonvar(R)-> (which_missing_argnum(R,RN),get_assertion_head_arg(RN,R,NEW));replace_arg(Q,N,NEW,R)),!,
    Test=dif:dif(Was,NEW).
 
 /*
@@ -1085,9 +1078,9 @@ Old version
 if_missing_mask(Q,N,R,dif:dif(Was,NEW)):- 
  must((is_ftNonvar(Q),acyclic_term(Q),acyclic_term(R),functor(Q,F,A),functor(R,F,A))),
   (singleValuedInArg(F,N) -> 
-    (consequent_arg(N,Q,Was),replace_arg(Q,N,NEW,R));
-    ((consequent_arg(N,Q,Was),is_ftNonvar(Was)) -> replace_arg(Q,N,NEW,R);
-        (N=A,consequent_arg(N,Q,Was),replace_arg(Q,N,NEW,R)))).
+    (get_assertion_head_arg(N,Q,Was),replace_arg(Q,N,NEW,R));
+    ((get_assertion_head_arg(N,Q,Was),is_ftNonvar(Was)) -> replace_arg(Q,N,NEW,R);
+        (N=A,get_assertion_head_arg(N,Q,Was),replace_arg(Q,N,NEW,R)))).
 */
 
 
@@ -1099,7 +1092,7 @@ which_missing_argnum(Q,N):-
  must((acyclic_term(Q),is_ftCompound(Q),get_functor(Q,F,A))),
  F\=t,
   (call_u(singleValuedInArg(F,N)) -> true;
-    ((consequent_arg(N,Q,Was),is_ftNonvar(Was)) -> true; ( A>1 -> N=A ; fail))).
+    ((get_assertion_head_arg(N,Q,Was),is_ftNonvar(Was)) -> true; ( A>1 -> N=A ; fail))).
 
 mpred_run_pause:- asserta(t_l:mpred_run_paused).
 mpred_run_resume:- retractall(t_l:mpred_run_paused).
@@ -1406,7 +1399,7 @@ mpred_call_ru(singleValuedInArg(H,A)):- !, get_var_or_functor(H,F),clause_b(sing
 mpred_call_ru(ttRelationType(C)):- !, clause_b(ttRelationType(C)).
 mpred_call_ru(M:G):- !,call(M:G).
 
-mpred_call_ru(G):- defaultAssertMt(M),call(M:G).
+mpred_call_ru(G):- quietly(defaultAssertMt(M)),call(M:G).
 
 get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.
 
@@ -1918,7 +1911,7 @@ is_resolved(C):- Why= is_resolved, mpred_call_only_facts(Why,~(C)),\+mpred_call_
 %
 % PFC Prove Negated.
 %
-mpred_prove_neg(G):-nop(dtrace), \+ mpred_bc_only(G), \+ mpred_fact(G).
+mpred_prove_neg(G):-  (dtrace), \+ mpred_bc_only(G), \+ mpred_fact(G).
 
 
 %% pred_head( :PRED1Type, ?P) is semidet.
@@ -2148,7 +2141,7 @@ fwd_ok(if_missing1(_,_)).
 fwd_ok(idForTest(_,_)).
 fwd_ok(clif(_)).
 fwd_ok(pfclog(_)).
-fwd_ok(X):-compound(X),consequent_arg(_,X,E),compound(E),functor(E,(:-),_),!.
+fwd_ok(X):-compound(X),get_assertion_head_arg(_,X,E),compound(E),functor(E,(:-),_),!.
 % fwd_ok(P):-must(ground(P)),!.
 
 
@@ -2166,7 +2159,7 @@ mpred_facts_only(P):- (is_ftVar(P)->(pred_head_all(P),\+ meta_wrapper_rule(P));t
 :- style_check(+singleton).
 
 % TODO READD
-%:- foreach(consequent_arg(_,isEach(prologMultiValued,prologOrdered,prologNegByFailure,prologPTTP,prologKIF,pfcControlled,ttRelationType,
+%:- foreach(arg(_,isEach(prologMultiValued,prologOrdered,prologNegByFailure,prologPTTP,prologKIF,pfcControlled,ttRelationType,
 %     prologHybrid,predCanHaveSingletons,prologDynamic,prologBuiltin,functorIsMacro,prologListValued,prologSingleValued),P),)
 
 %% get
@@ -2199,7 +2192,7 @@ ruleBackward0(F,Condition):- call_u((  '<-'(F,Condition),\+ (is_true(Condition);
 % Assert For User Code.
 %
 
-assert_mu(MH):- fix_mp(clause(assert,assert_u),MH,M,H),get_consequent_functor(H,F,A),assert_mu(M,H,F,A).
+assert_mu(MH):- fix_mp(clause(assert,assert_u),MH,M,H),get_unnegated_functor(H,F,A),assert_mu(M,H,F,A).
 asserta_mu(MH):- fix_mp(clause(assert,asserta_u),MH,M,H),asserta_mu(M,H).
 assertz_mu(MH):- fix_mp(clause(assert,assertz_u),MH,M,H),assertz_mu(M,H).
 
@@ -2249,8 +2242,8 @@ assertz_mu(M,X):- strip_module(X,_,P), %sanity(check_never_assert(M:P)),
 % asserta_mu(_,X):- must(defaultAssertMt(M)),!,must((expire_tabled_list(M:X),show_failure(attvar_op(db_op_call(assertz,assertz_i),M:X)))).
 
 asserta_mu(M,X):- strip_module(X,_,P),!, %sanity(check_never_assert(M:P)), 
-    must((expire_tabled_list(M:P),show_failure(attvar_op(db_op_call(assertz,assertz_i),M:P)))).
-   %(clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(db_op_call(assertz,assertz_i),M:P))))).
+    must((expire_tabled_list(M:P),show_failure(attvar_op(db_op_call(asserta,asserta_i),M:P)))).
+   %(clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(db_op_call(asserta,asserta_i),M:P))))).
 
 
 %% retract_mu( :TermX) is semidet.

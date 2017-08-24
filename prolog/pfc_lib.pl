@@ -478,10 +478,10 @@ base_clause_expansion(IN, ':-'(ain(ASSERT))):- must_pfc(IN,ASSERT).
 base_kb_dynamic(F,A):- ain(mpred_prop(M,F,A,prologHybrid)),kb_shared(F/A).
 
 base_clause_expansion('==>'(I),  ':-'(ain('==>'(O)))):- !, sanity(nonvar(I)),must( fully_expand('==>'(I),O)),
-   mpred_core:get_consequent_functor(O,F,A),kb_shared_base(F/A),ain(mpred_prop(M,F,A,prologHybrid)).
-base_clause_expansion('<-'(I,M),':-'(ain('<-'(I,M)))):- !,mpred_core:get_consequent_functor(I,F,A),base_kb_dynamic(F,A).
-base_clause_expansion(':-'(I,(Cwc,O)),':-'(ain(':-'(I,(Cwc,O))))):- Cwc == cwc,!,mpred_core:get_consequent_functor(I,F,A),base_kb_dynamic(F,A).
-base_clause_expansion(I, O):- mpred_core:get_consequent_functor(I,F,A)->base_clause_expansion_fa(I,O,F,A),!. % @TODO NOT NEEDED REALY UNLESS DO mpred_core:reexport(library('pfc2.0/mpred_core.pl')),
+   mpred_core:get_unnegated_functor(O,F,A),kb_shared_base (F/A),ain(mpred_prop(M,F,A,prologHybrid)).
+base_clause_expansion('<-'(I,M),':-'(ain('<-'(I,M)))):- !,mpred_core:get_unnegated_functor(I,F,A),base_kb_dynamic(F,A).
+base_clause_expansion(':-'(I,(Cwc,O)),':-'(ain(':-'(I,(Cwc,O))))):- Cwc == cwc,!,mpred_core:get_unnegated_functor(I,F,A),base_kb_dynamic(F,A).
+base_clause_expansion(I, O):- mpred_core:get_unnegated_functor(I,F,A)->base_clause_expansion_fa(I,O,F,A),!. % @TODO NOT NEEDED REALY UNLESS DO mpred_core:reexport(library('pfc2.0/mpred_core.pl')),
 
 % Checks if **should** be doing base_expansion or not      
 :- module_transparent(base_clause_expansion_fa/4).
@@ -497,7 +497,7 @@ needs_pfc(F,A):- clause_b(mpred_prop(M,F,_,prologHybrid)), \+ clause_b(mpred_pro
 
 maybe_builtin(M : _ :-_):- atom(M),!.
 maybe_builtin(M : _ ):- atom(M),!.
-maybe_builtin(I) :- nonvar(I),get_consequent_functor(I,F,A),
+maybe_builtin(I) :- nonvar(I),get_unnegated_functor(I,F,A),
    \+ (clause_b(functorIsMacro(F));clause_b(functorDeclares(F));clause_b(mpred_prop(M,F,A,prologHybrid))),
    ain(prologBui sltin(F/A)).
 
