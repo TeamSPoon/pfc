@@ -1527,6 +1527,15 @@ mpred_call_with_no_triggers_uncaugth(Clause) :-  strip_module(Clause,_,F),
 %mpred_bc_only(M:G):- !, loop_check(with_umt(M,mpred_bc_only0(G))).
 mpred_bc_only(G):- no_repeats(loop_check(mpred_bc_only0(G))).
 
+%% mpred_bc_only( +M) is semidet.
+%
+% PFC Backchaining + FACTS + Inheritance.
+%
+mpred_bc_and_with_pfc(G):- no_repeats(loop_check(mpred_bc_only0(G))).
+mpred_bc_and_with_pfc(G):- strip_module(G,M,P),inherit_above(M,P).
+
+
+
 
 % % :- '$set_source_module'(mpred_kb_ops).
 
@@ -1535,8 +1544,8 @@ mpred_bc_only(G):- no_repeats(loop_check(mpred_bc_only0(G))).
 % PFC Backchaining Only Primary Helper.
 %
 mpred_bc_only0(G):- mpred_unnegate(G,Pos),!, show_call(why,\+ mpred_bc_only(Pos)).
-mpred_bc_only0(G):- pfcBC_NoFacts(G).
-%mpred_bc_only0(G):- pfcBC_NoFacts_TRY(G).
+% mpred_bc_only0(G):- pfcBC_NoFacts(G).
+mpred_bc_only0(G):- mpred_BC_w_cache(G,G).
 
 % mpred_bc_only0(G):- mpred_call_only_facts(G).
 

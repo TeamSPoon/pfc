@@ -60,6 +60,9 @@
 :- kb_shared(never_retract_u/1).
 :- kb_shared(never_retract_u/2).
 :- kb_shared(predicateConventionMt/2).
+:- kb_shared(predicateOnlyConventionMt/2).
+:- kb_shared(predicateLocalConvention/1).
+
 :- kb_shared(startup_option/2).
 :- kb_shared(tooSlow/0).
 :- kb_shared(ttRelationType/1).
@@ -114,7 +117,7 @@
 :- kb_shared(do_import_modules/0).
 
 
-((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C),(C==user->mpred_warn(mtHybrid(C));true)}).
+((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C),(C==user->dmsg(mtHybrid(C));true)}).
 
 % TODO make these undoable
 :- if((current_predicate(predicate_m_f_a_decl/4))).
@@ -133,11 +136,18 @@
 %(predicateConventionMt(F,MT),arity(F,A))==>{(MT==baseKB;mtProlog(MT))->kb_shared(MT:F/A);kb_shared(MT:F/A)}.
 % :- break.
 % predicateConventionMt(predicateConventionMt,baseKB).
-predicateConventionMt(genlMt,baseKB).
-predicateConventionMt(mtHybrid,baseKB).
-predicateConventionMt(mtProlog,baseKB).
+predicateConventionOnlyMt(genlMt,baseKB).
+predicateConventionOnlyMt(mtHybrid,baseKB).
+predicateConventionOnlyMt(mtProlog,baseKB).
 % predicateConventionMt(mtNonAssertable,baseKB).
+
+%((predicateConventionMt(F,MT)/(MT==baseKB)),arity(F,A))==>{kb_global(MT:F/A)}.
+%((predicateConventionMt(F,MT)/(MT\==baseKB)),arity(F,A))==>{kb_shared(MT:F/A)}.
+
+(predicateOnlyConventionMt(F,MT),arity(F,A))==>{kb_global(MT:F/A)}.
 (predicateConventionMt(F,MT),arity(F,A))==>{kb_global(MT:F/A)}.
+%(predicateConventionMt(F,MT),arity(F,A))==>{kb_shared(MT:F/A)}.
+(predicateLocalConvention(F),arity(F,A))==>{kb_local(F/A)}.
 
 
 
