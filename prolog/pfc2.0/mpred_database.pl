@@ -1582,15 +1582,17 @@ ruleBackward0(F,Condition):- call_u((  '<-'(F,Condition),\+ (is_true(Condition);
 %
 % Prolog Forward Chaining Backtackable Class No Facts Try.
 %
-pfcBC_NoFacts_TRY(F) :- no_repeats(ruleBackward(F,Condition)),
+
+
+pfcBC_NoFacts_TRY(F) :- no_repeats(ruleBackward(F,Condition,Support)),
   % neck(F),
   no_repeats(F,call_u(Condition)),
-  maybe_support_bt(F,Condition).
+  maybe_support_bt(F,Condition,Support).
 
-maybe_support_bt(F,Condition):- 
+maybe_support_bt(F,Condition,Support):-  
   no_repeats(Why,call_u(bt(F,pt(A,Why)))) *-> maybeSupport(F,(A,Why)) ;
-  no_repeats(Why,call_u(bt(F,Why))) *-> maybeSupport(F,(bt(F,Why),g)) ;
-   maybeSupport(F,(Condition,g)).
+  no_repeats(Why,call_u(bt(F,Why))) *-> maybeSupport(F,(bt(F,Why),Support)) ;
+   maybeSupport(F,(Condition,Support)).
 
 :- meta_predicate mpred_why_all(*).
 mpred_why_all(Call):- !,
@@ -1623,8 +1625,20 @@ pfcBC_Cache(F) :- mpred_call_only_facts(pfcBC_Cache,F),
 % Maybe Support.
 %
 maybeSupport(P,_):-mpred_ignored(P),!.
-maybeSupport(P,S):-( \+ ground(P)-> true;
+maybeSupport(P,S):- fail, ( \+ ground(P)-> true;
   (predicate_property(P,dynamic)->mpred_post(P,S);true)).
+
+maybeSupport(P,S):- 
+   mpred_add_support_fast(P,S),
+   maybeMaybeAdd(P,S).
+ 
+maybeMaybeAdd(P,_):- \+ predicate_property(P,dynamic),!.
+maybeMaybeAdd(P,_):- \+ \+ clause_u(P,true),!.
+maybeMaybeAdd(P,S):- 
+ locally(t_l:assert_to(a),
+    assert_u_confirmed_was_missing(P)),
+   mpred_trace_op(add,P,S),
+   mpred_enqueue(P,S).
 
 
 %% mpred_ignored( :TermC) is semidet.
@@ -2172,14 +2186,15 @@ mpred_facts_only(P):- (is_ftVar(P)->(pred_head_all(P),\+ meta_wrapper_rule(P));t
 %
 % Rule Backward.
 %
-ruleBackward(R,Condition):- call_u(( ruleBackward0(R,Condition),functor(Condition,F,_),\+ consequent_arg(_,v(call_u,mpred_bc_only),F))).
-%ruleBackward0(F,Condition):-clause_u(F,Condition),\+ (is_true(Condition);mpred_is_info(Condition)).
+ruleBackward(R,Condition,Support):- ruleBackward0(R,Condition,Support),
+  functor(Condition,F,_),\+ arg(_,v(call_u,mpred_bc_only,inherit_above),F).
 
 %% ruleBackward0(+F, ?Condition) is semidet.
 %
 % Rule Backward Primary Helper.
 %
-ruleBackward0(F,Condition):- call_u((  '<-'(F,Condition),\+ (is_true(Condition);mpred_is_info(Condition)) )).
+ruleBackward0(F,Condition,'<-'(F,Condition)):- call_u('<-'(F,Condition)).
+%ruleBackward0(F,Condition,(F :- Condition)):- clause_u(F,Condition),\+ (is_true(Condition);mpred_is_info(Condition)).
 
 
 % ======================= 
