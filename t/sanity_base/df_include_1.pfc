@@ -6,7 +6,7 @@
 % Douglas Miles
 %  cls ; kill -9 %1 ; fg ; swipl -g "ensure_loaded(pack(logicmoo_base/t/examples/base/'sanity_abc.pfc'))."
 
-%  was_module(df_include_1,[]).
+%  was_module(header_sane,[]).
 
 :- include(test_header).
 
@@ -23,7 +23,7 @@ a(X) ==> c(X).
 most(c(X) ==> b(X)) .
 a(1).
 
-:- listing(df_include_1:[a/1,b/1,c/1,df_include_1:(==>)/2,most/1,df_include_1:pt/2,df_include_1:nt,df_include_1:bt]).
+:- listing(header_sane:[a/1,b/1,c/1,header_sane:(==>)/2,most/1,header_sane:pt/2,header_sane:nt,header_sane:bt]).
 
 :- mpred_test(b(1)).
 

@@ -39,7 +39,7 @@ tType(tPenguin).
 tType(tBird).
 
 
-:- mpred_test(predicate_property(tBird(ext,_),dynamic)).
+:- mpred_test(predicate_property(tBird(_,_),dynamic)).
 
 genls(C1,C2)==> (iza(X,C1)==>iza(X,C2)).
 
@@ -83,16 +83,26 @@ mdefault(( tBird(ext,X) ==> tFly(ext,X) )).
 :- mpred_test((tFly(ext,iChilly))).
 
 
-never_retract_u(tBird(ext,iChilly)).
+==> never_retract_u(tBird(ext,iChilly)).
 
 
 :- dmsg("penguins do not tFly.").
-:- mpred_info(tFly(ext, iChilly)).
-:- break.
+% :- mpred_info(tFly(ext, iChilly)).
+
+:- dmsg("Make sure were the reason he was a bird and not just inheritence.").
+:- mpred_test(mpred_axiom(tBird(ext,iChilly))).
+
 :- mpred_ain(tPenguin(ext,X) ==>  ~tFly(ext,X)). 
 
 :- dmsg("confirm chilly now cant fly").
-:- mpred_test((\+ tFly(ext,iChilly))).
+
+
+% :- rtrace,trace, mpred_test( \+ tFly(ext,iChilly)).
+
+:- listing(mpred_test/1).
+
+% :- break.
+
 :- mpred_test(( ~ tFly(ext,iChilly))).
 
 %= repropigate that chilly was a bird again (actualy this asserts)
@@ -136,11 +146,12 @@ tFly(ext,iChilly).
 
 :- mpred_test(tBird(ext,iChilly)).
 
-never_retract_u(tBird(ext,iChilly)).
+==> never_retract_u(tBird(ext,iChilly)).
 
 
 \+ tPenguin(ext,iChilly).                              
 
+:- listing(tBird/2).
 
 :- mpred_test((tBird(ext,iChilly))).
 

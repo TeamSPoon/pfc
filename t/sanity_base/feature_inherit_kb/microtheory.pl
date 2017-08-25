@@ -2,7 +2,7 @@
 
 :- op(1200,xfx,'::').
 
-genlMt(microtheoryAboutFn(meredithMcGhan),everythingPSC).
+genlMt(microtheoryAboutFn(mMG),everythingPSC).
 
 :- consult('contents1').
 :- consult('contents2').
@@ -25,7 +25,7 @@ printMt(Mt) :-
 %% microtheory in the file.
 
 test :-
-	printMt(microtheoryAboutFn(meredithMcGhan)),
+	printMt(microtheoryAboutFn(mMG)),
 	printMt(everythingPSC).
 
 %% assertIntoMicrotheory().

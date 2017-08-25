@@ -1,1 +1,1 @@
-microtheoryAboutFn(meredithMcGhan)::loves(meredithMcGhan,andrewDougherty).
+microtheoryAboutFn(mMG)::loves(mMG,aD).
