@@ -538,20 +538,28 @@ rtNotForUnboundPredicates(member/2).
 %  Never Assert / Retraction checks
 % ===================================================================
 
+:- kb_shared(never_assert_u/2).
+never_assert_u(~(X),is_ftVar(~X)):- cwc, is_ftVar(X).
+never_assert_u(X,is_ftVar(X)):- cwc, is_ftVar(X).
 never_assert_u(prologSingleValued(BAD),var_prologSingleValued(BAD)):-is_ftVar(BAD).
-
 never_assert_u(baseKB:mtProlog(baseKB),must(mtHybrid(baseKB))).
+never_assert_u(A,never_assert_u(A)):- never_assert_u(A).
+% P/never_assert_u(P,Why) ==> conflict(never_assert_u(P,Why))
+:- kb_shared(never_assert_u/1).
+never_assert_u(X):- cwc, loop_check(never_assert_u(X,_)).
 
-never_assert_u(A,test_sanity(A)):- never_assert_u(A).
 
 
+:- kb_shared(never_retract_u/2).
+never_retract_u(~(X),is_ftVar(~X)):- cwc, is_ftVar(X).
+never_retract_u(X,is_ftVar(X)):- cwc, is_ftVar(X).
+never_retract_u(X,never_retract_u(X)):- cwc, never_retract_u(X).
 
 :- kb_shared(never_retract_u/1).
-:- kb_shared(never_retract_u/2).
-never_retract_u(~(X),is_ftVar(X)):- cwc, is_ftVar(X).
-never_retract_u(A,test_sanity(A)):- cwc, never_retract_u(A).
-never_retract_u(X,is_ftVar(X)):- cwc, is_ftVar(X).
-% P/never_assert_u(P,Why) ==> conflict(never_assert_u(P,Why))
+never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
+
+
+
 
 %:- rtrace.
 % prologHybrid(arity/2).
