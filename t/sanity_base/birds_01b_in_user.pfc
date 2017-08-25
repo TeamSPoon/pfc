@@ -90,7 +90,7 @@ mdefault(( tBird(ext,X) ==> tFly(ext,X) )).
 % :- mpred_info(tFly(ext, iChilly)).
 
 :- dmsg("Make sure were the reason he was a bird and not just inheritence.").
-:- mpred_test(mpred_axiom(tBird(ext,iChilly))).
+:- mpred_test(\+ mpred_axiom(tBird(ext,iChilly))).
 
 :- mpred_ain(tPenguin(ext,X) ==>  ~tFly(ext,X)). 
 
@@ -108,6 +108,8 @@ mdefault(( tBird(ext,X) ==> tFly(ext,X) )).
 %= repropigate that chilly was a bird again (actualy this asserts)
 
 tBird(ext,iChilly).
+
+:- mpred_test(mpred_axiom(tBird(ext,iChilly))).
 
 :- listing(tBird/2).
 
@@ -145,14 +147,21 @@ tFly(ext,iChilly).
 :- debug_logicmoo(logicmoo(_)).
 
 :- mpred_test(tBird(ext,iChilly)).
+:- mpred_test(mpred_axiom(tBird(ext,iChilly))).
 
 ==> never_retract_u(tBird(ext,iChilly)).
+==> never_retract_u(tBird(ext,iChilly), ==> never_retract_u(tBird(ext,iChilly))).
 
 
-\+ tPenguin(ext,iChilly).                              
+:- mpred_test(mpred_axiom(tPenguin(ext,iChilly))).
+
+\+ tPenguin(ext,iChilly).   
+
+:- mpred_test(\+ mpred_axiom(tPenguin(ext,iChilly))).
 
 :- listing(tBird/2).
 
+:- mpred_test(mpred_axiom(tBird(ext,iChilly))).
 :- mpred_test((tBird(ext,iChilly))).
 
 :- mpred_test(( \+ tPenguin(ext,iChilly))).
