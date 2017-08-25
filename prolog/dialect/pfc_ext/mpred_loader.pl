@@ -2308,7 +2308,7 @@ pfc_test_feature(Feature,Test):- pfc_feature(Feature)*-> mpred_test(Test) ; true
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-:- dmsg("DUMPST ON WARNINGS").
+% DUMPST ON WARNINGS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 skip_warning(informational).
@@ -2351,8 +2351,9 @@ maybe_message_hook(check(undefined(_, _)),_,_).
 maybe_message_hook(ignored_weak_import(header_sane,_),_,_).
 % maybe_message_hook(_,warning,_).
 maybe_message_hook(T,Type,Warn):-
+  ignore(source_location(File,Line)),
   once((nl,dmsg(message_hook(T,Type,Warn)),nl,
-  assertz(system:test_results(T,Type,Warn)),dumpST,nl,dmsg(message_hook(T,Type,Warn)),nl)),
+  assertz(system:test_results(File:Line/T,Type,Warn)),dumpST,nl,dmsg(message_hook(File:Line:T,Type,Warn)),nl)),
   fail.
 
 maybe_message_hook(_,error,_):- current_prolog_flag(runtime_debug, N),N>2,break.
@@ -2370,8 +2371,9 @@ test_completed_exit_maybe(_):- system:test_results(_,warning,_),test_completed_e
 test_completed_exit_maybe(_):- system:test_results(_,warn,_),test_completed_exit(3).
 test_completed_exit_maybe(N):- test_completed_exit(N).
 
-set_file_abox_module(User):- '$set_typein_module'(User), '$set_source_module'(User). 
-set_file_abox_module_wa(User):- '$set_typein_module'(User), '$set_source_module'(User), set_fileAssertMt(User),set_defaultAssertMt(User).
+set_file_abox_module(User):- '$set_typein_module'(User), '$set_source_module'(User),set_fileAssertMt(User).
+
+set_file_abox_module_wa(User):- set_file_abox_module(User),set_defaultAssertMt(User).
 
 
 :- multifile prolog:message//1, user:message_hook/3.

@@ -1,2 +1,2 @@
 
-everythingPSC::residesIn(andrewDougherty,townhomeOfEleanorAndAndrewAndMeredith).
+everythingPSC::residesIn(aD,townhomeOfEAM).

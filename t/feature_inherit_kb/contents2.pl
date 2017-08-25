@@ -1,12 +1,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FLUX State Exporter
-:- module('microtheoryAboutFn(meredithMcGhan)',[fluents_for_mt/1]).
+:- module('microtheoryAboutFn(mMG)',[fluents_for_mt/1]).
 
 :- include(pack('free-life-planner/data-git/systems/planning/state-exporter')).
 %% :- flp_include('/var/lib/myfrdcsa/codebases/minor/free-life-planner/data-git/systems/planning/state-exporter').
 
 fluents_for_mt(AllAssertedKnowledge) :-
-	pred_for_m('microtheoryAboutFn(meredithMcGhan)',AllAssertedKnowledge).
+	pred_for_m('microtheoryAboutFn(mMG)',AllAssertedKnowledge).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-loves(andrewDougherty,meredithMcGhan).
+loves(aD,mMG).

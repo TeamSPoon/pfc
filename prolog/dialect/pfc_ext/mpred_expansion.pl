@@ -789,6 +789,11 @@ memoize_on_local(_Why,_,Goal):- call(Goal),!.
 
 has_skolem_attrvars(Sent):- notrace((term_attvars(Sent,Attvars),member(Var,Attvars),get_attr(Var,skk,_))),!.
 
+
+% for trace testing
+fully_expand_real(X,Y):- must((fully_expand_real(clause(unknown,cuz),X,Y))).
+
+
 fully_expand_real(Op,Sent,SentO):- has_skolem_attrvars(Sent),!,
    gripe_time(0.2,
     (must_det(quietly(serialize_attvars(Sent,SentI))),
@@ -1170,6 +1175,7 @@ string_to_mws([String,A|B],OUT):- (string(String);string(A)),!,must((string_to_m
 
 db_expand_final(_ ,NC,NC):-  is_ftVar(NC),!.
 db_expand_final(Op,t(EL),O):- !, db_expand_final(Op,EL,O).
+db_expand_final(change(assert,_),props(_Obj,List),true):-  List==[],dumpST,!.
 db_expand_final(_,props(Obj,List),{nonvar(Obj)}):- (List==[] ; List==true).
 db_expand_final(_ ,sumo_rule(NC),sumo_rule(NC)):- !.
 
@@ -1747,7 +1753,8 @@ expand_props(_Prefix,_,Sent,OUT):- t_l:no_db_expand_props, (not_ftCompound(Sent)
 %expand_props(Prefix,Op,Term,OUT):- stack_check,(is_ftVar(OpeR);is_ftVar(Term)),!,trace_or_throw(var_expand_units(OpeR,Term,OUT)).
 expand_props(Prefix,Op,Sent,OUT):-  Sent=..[And|C12],is_sentence_functor(And),!,maplist(expand_props(Prefix,Op),C12,O12),OUT=..[And|O12].
 expand_props(_Prefix,_ ,props(Obj,Open),props(Obj,Open)):- is_ftVar(Open),!. % ,trace_or_throw(expand_props(Prefix,Op,props(Obj,Open))->OUT).
-expand_props(_Prefix,_ ,props(Obj,List),{nonvar(Obj)}):- List==[],!.
+expand_props(_Prefix,change(assert,_),props(_Obj,List),true):- List==[],!.
+expand_props(_Prefix,_,props(Obj,List),{nonvar(Obj)}):- List==[],!.
 % expand_props(_Prefix,_ ,props(_Obj,List),true):- List==[],!.
 expand_props(Prefix,Op,props(Obj,[P|List]),OUT):- List==[],expand_props(Prefix,Op,props(Obj,P),OUT),!.
 % expand_props(Prefix,Op,props(Obj,[P]),OUT):- is_ftNonvar(P),!,expand_props(Prefix,Op,props(Obj,P),OUT).
