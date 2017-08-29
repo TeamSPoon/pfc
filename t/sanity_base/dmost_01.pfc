@@ -61,7 +61,7 @@ dmost(b(1)).
 
 :- mpred_why( b(2)).
 
-\+ b(2).
+~ b(2).
 
 :- listing(b/1).
 

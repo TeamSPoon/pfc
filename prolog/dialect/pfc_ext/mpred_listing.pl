@@ -65,7 +65,7 @@
 :- dynamic
   	user:portray/1.
 
-% :- dynamic(why_buffer/2).
+% :- dynamic(whybuffer/2).
 
 
 

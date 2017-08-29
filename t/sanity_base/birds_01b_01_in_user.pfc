@@ -76,7 +76,8 @@ mdefault(( tBird(ext,X) ==> tFly(ext,X) )).
 :- mpred_ain(mdefault(tPenguin(ext,X) ==>  ~tFly(ext,X))). 
 
 :- mpred_test((tBird(ext,iChilly))).
-:- mpred_why( (( tFly(ext,iChilly)))).
-:- with_no_mpred_breaks( mpred_test(( tFly(ext,iChilly)))).
+
+%:- mpred_why( (( tFly(ext,iChilly)))).
+%:- with_no_breaks( mpred_test(( tFly(ext,iChilly)))).
 
 

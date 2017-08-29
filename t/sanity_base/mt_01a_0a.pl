@@ -36,11 +36,11 @@ baseKB:mtHybrid(socialMt).
 
 baseKB:arity(loves,2).
 
-:- ((ain(baseKB:predicateOnlyConventionMt(loves,socialMt)))).
+:- ((ain(baseKB:predicateConventionMt(loves,socialMt)))).
 
 :- user:listing(socialMt:loves/2).
 
-% :- header_sane:listing(predicateConventionMt/2).
+:- listing(predicateConventionMt/2).
 
 :- must((fix_mp(clause(_,_),loves(x,y),M,P),
    M:P==socialMt:loves(x,y))).

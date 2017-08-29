@@ -117,7 +117,7 @@ tPenguin(X) ==>  ~tFly(X).
 ==> never_retract_u(tBird(iChilly)).
 
 
-==> \+ tPenguin(iChilly).                              
+==> ~ tPenguin(iChilly).                              
 
 
 :- mpred_test((tBird(iChilly))).

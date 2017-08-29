@@ -8,11 +8,9 @@
 % Tests Retraction undoes Backchaining memo idea is working
 
 
-%  was_module(bc_01a,[]).
+%  was_module(bc_01d,[]).
 
 :- include(test_header).
-
-:- listing(message_hook/3).
 
 :- dynamic(bc_q/1).
 :- dynamic(bc_p/1).

@@ -57,7 +57,7 @@ ensure_arity(F,A):- one_must(arity_no_bc(F,A),one_must((current_predicate(F/A),
 % Assert Arity.
 %
 
-assert_arity(F,A):- sanity(\+ ((bad_arity(F,A), trace_or_throw(assert_arity(F,A))))), arity_no_bc(F,A),!.
+assert_arity(F,A):- sanity(\+ ((bad_arity(F,A), trace_or_throw_ex(assert_arity(F,A))))), arity_no_bc(F,A),!.
 assert_arity(F,A):- arity_no_bc(F,AA), A\=AA,dmsg(assert_additional_arity(F,AA->A)),!,ain_fast(arity(F,A)).
 assert_arity(F,A):- ain_fast(arity(F,A)),!.
 
@@ -197,7 +197,7 @@ oncely(Call):-once(Call).
 /*
 query(t, call_u, G):- call_u(G).
 query(_, _, Op, G):- dtrace(call_u(call(Op,G))).
-once(A,B,C,D):-trace_or_throw(once(A,B,C,D)).
+once(A,B,C,D):-trace_or_throw_ex(once(A,B,C,D)).
 */
 
 
@@ -646,7 +646,7 @@ mpred_pbody_f(H,CL,R,B,WHY):- CL=(B==>HH),sub_term_eq(H,HH),!,get_why(H,CL,R,WHY
 mpred_pbody_f(H,CL,R,B,WHY):- CL=(HH<-B),sub_term_eq(H,HH),!,get_why(H,CL,R,WHY).
 mpred_pbody_f(H,CL,R,B,WHY):- CL=(HH<==>B),sub_term_eq(H,HH),get_why(H,CL,R,WHY).
 mpred_pbody_f(H,CL,R,B,WHY):- CL=(B<==>HH),sub_term_eq(H,HH),!,get_why(H,CL,R,WHY).
-mpred_pbody_f(H,CL,R,fail,infoF(CL)):- trace_or_throw(mpred_pbody_f(H,CL,R)).
+mpred_pbody_f(H,CL,R,fail,infoF(CL)):- trace_or_throw_ex(mpred_pbody_f(H,CL,R)).
 
 
 %% sub_term_eq( +H, ?HH) is semidet.
@@ -1110,7 +1110,7 @@ mpred_remove_file_support(File):-
 %
 % Remove If Unsupported.
 %
-remove_if_unsupported(Why,P) :- is_ftVar(P),!,trace_or_throw(warn(var_remove_if_unsupported(Why,P))).
+remove_if_unsupported(Why,P) :- is_ftVar(P),!,trace_or_throw_ex(warn(var_remove_if_unsupported(Why,P))).
 remove_if_unsupported(Why,P) :- ((\+ ground(P), P \= (_:-_) , P \= ~(_) ) -> mpred_trace_msg(warn(nonground_remove_if_unsupported(Why,P))) ;true),
    (((mpred_tms_supported(local,P,How),How\=unknown(_)) -> mpred_trace_msg(still_supported(How,Why,local,P)) ; (  mpred_undo(Why,P)))),!.
    % mpred_run.
@@ -1445,7 +1445,7 @@ mpred_call_0((H)):- is_static_predicate(H),!,show_pred_info(H),dtrace(mpred_call
 
 %mpred_call_0(HB):-quietly((full_transform_warn_if_changed(mpred_call_0,HB,HHBB))),!,mpred_call_0(HHBB).
 mpred_call_0(H):- !, locally(t_l:infAssertedOnly(H),call_u(H)).
-%mpred_call_0(argIsa(mpred_isa,2,mpred_isa/2)):-  trace_or_throw(mpred_call_0(argIsa(mpred_isa,2,mpred_isa/2))),!,fail.
+%mpred_call_0(argIsa(mpred_isa,2,mpred_isa/2)):-  trace_or_throw_ex(mpred_call_0(argIsa(mpred_isa,2,mpred_isa/2))),!,fail.
 % TODO: test removal
 % mpred_call_0(isa(H,B)):-!,isa_asserted(H,B).
 
@@ -1716,7 +1716,7 @@ mpred_cleanup_0(M,P):- findall(P-B-Ref,M:clause(P,B,Ref),L),
   M:forall(member(P-B-Ref,L),erase_w_attvars(clause(P,B,Ref),Ref)),forall(member(P-B-Ref,L),M:attvar_op(db_op_call(assertz,assertz_if_new),((P:-B)))).
 
 % :-debug.
-%isInstFn(A):-!,trace_or_throw(isInstFn(A)).
+%isInstFn(A):-!,trace_or_throw_ex(isInstFn(A)).
 
 %= mpred_unnegate(N,P) is true if N is a negated term and P is the term
 %= with the negation operator stripped.

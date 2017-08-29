@@ -24,7 +24,15 @@
 :- set_prolog_flag(debug_on_error,true).
 :- set_prolog_flag(report_error,true).
 :- set_prolog_flag(access_level,system).
-:- reexport(pfc_lib).     
+:- if(current_prolog_flag(pfc_version,2.2)).
+:- reexport(pfc_lib_2_2).
+:- else.
+:- if(current_prolog_flag(pfc_version,1.2)).
+:- reexport(pfc_lib_1_2).
+:- else.
+:- reexport(pfc_lib).
+:- endif.
+:- endif.
 :- set_prolog_flag(mpred_te,true).
 :- set_prolog_flag(verbose_load,true).
 
@@ -35,6 +43,7 @@
    assert(baseKB:'using_pfc'(M,CM,SM,pfc_mod)).
 
 :- set_prolog_flag(retry_undefined, kb_shared).
+:- set_prolog_flag(pfc_ready, true).
 
 
 

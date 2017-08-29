@@ -50,6 +50,6 @@ kb3: (a==>c).
 :- mpred_must(( clause(kb2:a,_))).
 
 % c is forward chained back into 'code1' where it becomes asserted
-:- mpred_must(clause(code1:c,_)).
+% :- mpred_must(clause(code1:c,_)).
 
 
