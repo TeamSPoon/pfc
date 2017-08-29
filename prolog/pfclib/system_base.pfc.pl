@@ -60,9 +60,6 @@
 :- kb_shared(never_retract_u/1).
 :- kb_shared(never_retract_u/2).
 :- kb_shared(predicateConventionMt/2).
-:- kb_shared(predicateOnlyConventionMt/2).
-:- kb_shared(predicateLocalConvention/1).
-
 :- kb_shared(startup_option/2).
 :- kb_shared(tooSlow/0).
 :- kb_shared(ttRelationType/1).
@@ -136,18 +133,11 @@
 %(predicateConventionMt(F,MT),arity(F,A))==>{(MT==baseKB;mtProlog(MT))->kb_shared(MT:F/A);kb_shared(MT:F/A)}.
 % :- break.
 % predicateConventionMt(predicateConventionMt,baseKB).
-predicateConventionOnlyMt(genlMt,baseKB).
-predicateConventionOnlyMt(mtHybrid,baseKB).
-predicateConventionOnlyMt(mtProlog,baseKB).
+predicateConventionMt(genlMt,baseKB).
+predicateConventionMt(mtHybrid,baseKB).
+predicateConventionMt(mtProlog,baseKB).
 % predicateConventionMt(mtNonAssertable,baseKB).
-
-%((predicateConventionMt(F,MT)/(MT==baseKB)),arity(F,A))==>{kb_global(MT:F/A)}.
-%((predicateConventionMt(F,MT)/(MT\==baseKB)),arity(F,A))==>{kb_shared(MT:F/A)}.
-
-(predicateOnlyConventionMt(F,MT),arity(F,A))==>{kb_global(MT:F/A)}.
 (predicateConventionMt(F,MT),arity(F,A))==>{kb_global(MT:F/A)}.
-%(predicateConventionMt(F,MT),arity(F,A))==>{kb_shared(MT:F/A)}.
-(predicateLocalConvention(F),arity(F,A))==>{kb_local(F/A)}.
 
 
 
@@ -272,7 +262,7 @@ rtNotForUnboundPredicates(call).
 pfc_checking ==> (mpred_prop(M,F,A,pfcPosTrigger)==>{M:warn_if_static(F,A)}).
 pfc_checking ==> (mpred_prop(M,F,A,pfcNegTrigger)==>{M:warn_if_static(F,A)}).
 pfc_checking ==> (mpred_prop(M,F,A,pfcBcTrigger)==>{M:warn_if_static(F,A)}).
-mpred_prop(M,F,A,What)/(\+ ground(F/A))==>{trace_or_throw(mpred_prop(M,F,A,What))}.
+mpred_prop(M,F,A,What)/(\+ ground(F/A))==>{trace_or_throw_ex(mpred_prop(M,F,A,What))}.
 
 
 prop_mpred(M,pfcCreates,F,A)==> 
@@ -334,7 +324,7 @@ t(CALL):- cwc, call(into_plist_arities(3,10,CALL,[P|LIST])),mpred_plist_t(P,LIST
 %
 % True Structure.
 %
-% t(C,I):- cwc,  trace_or_throw(t(C,I)),t(C,I). % ,fail,loop_check_term(isa_backchaing(I,C),t(C,I),fail).
+% t(C,I):- cwc,  trace_or_throw_ex(t(C,I)),t(C,I). % ,fail,loop_check_term(isa_backchaing(I,C),t(C,I),fail).
 % t(P,A1):- vwc, isa(A1,P).
 t(A,B):- atom(A),!,ABC=..[A,B],call_u(ABC).
 %t(A,B):- (atom(A)->true;(no_repeats(arity(A,1)),atom(A))),ABC=..[A,B],loop_check(call_u(ABC)).

@@ -6,19 +6,27 @@
 % Douglas Miles
 
 % Tests Retraction undoes Backchaining memo idea is working
-
-
 %  was_module(bc_01a,[]).
 
 :- include(test_header).
-
-:- listing(message_hook/3).
+% :- baseKB:ensure_loaded(library('pfclib/system_autoexec.pfc')).
+:- set_prolog_flag(retry_undefined, kb_shared).
 
 :- dynamic(bc_q/1).
 :- dynamic(bc_p/1).
 
-:- ain((bc_q(N) <- bc_p(N))).
+:- (ain((bc_q(N) <- bc_p(N)))).
+
+bc_q(N) <- bc_p(N).
+
+:- listing(bt/2).
+
 :- listing(bc_q/1).
+
+:- printAll((
+      clause(bc_q(_),NT),ignore(compound(NT)))).
+
+
 
 bc_p(a).
 bc_p(b).

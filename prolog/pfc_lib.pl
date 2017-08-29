@@ -1,7 +1,13 @@
 /*   
-  LogicMOO Base FOL/PFC Setup
+%  LogicMOO Base FOL/PFC Setup
 % Dec 13, 2035
 % Douglas Miles
+%
+%   File   : pfccompile.pl
+%   Author : Tim Finin, finin@prc.unisys.com
+%   Updated: 10/11/87, ...
+%   Purpose: compile system file for Pfc
+
 
 */
 :- if(('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'using_pfc'(M,CM,SM,pfc_lib)))).
@@ -143,8 +149,8 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg(visit_pfc_non_file_r
 
 :- intern_predicate(system,intern_predicate/2).
 
-'?='(ConsqIn):- fully_expand(ConsqIn,Consq),call_u(Consq),forall(mpred_why(Consq,Ante),wdmsg(Ante)).
-'?=>'(AnteIn):- fully_expand(AnteIn,Ante),call_u(Ante),forall(mpred_why(Consq,Ante),wdmsg(Consq)).
+'?='(ConsqIn):- fully_expand(ConsqIn,Consq),call_u(Consq),forall(mpred_why_2(Consq,Ante),wdmsg(Ante)).
+'?=>'(AnteIn):- fully_expand(AnteIn,Ante),call_u(Ante),forall(mpred_why_2(Consq,Ante),wdmsg(Consq)).
 
 :- lock_predicate(pfc:'?='/1).
 :- lock_predicate(pfc:'?=>'/1).
@@ -598,7 +604,7 @@ pfc_goal_expansion(I,P,O,PO):-
 saveBaseKB:- tell(baseKB),listing(baseKB:_),told.
 
 %baseKB:'==>'(Consq) :- sanity( \+ input_from_file), ain('==>'(Consq)),!.
-%baseKB:'==>'(Ante,Consq):- sanity( \+ input_from_file), mpred_why(Consq,Ante).
+%baseKB:'==>'(Ante,Consq):- sanity( \+ input_from_file), mpred_why_2(Consq,Ante).
 
 :- set_prolog_flag(subclause_expansion,false).
 

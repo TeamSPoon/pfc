@@ -24,11 +24,14 @@
 %# Tests Finin original defeasabilty system is working over 2nd order
 
 :- include(test_header).
-
+:- set_file_abox_module(user).
 :- file_begin(pfc).
 
-(tType(COL)==>{kb_local(COL/2)},% functorDeclares(COL),
- (t(COL,ext,X)<==>instanceOf(X,COL))).
+% :- rtrace(ain(((tType(COL)==>{kb_local(COL/2)},(t(COL,ext,X)<==>iza(X,COL)))))).
+
+(tType(COL)==>
+ ({kb_local(COL/2)},
+ (t(COL,ext,X)<==>iza(X,COL)))).
   
 tType(tFly).
 tType(tCanary).
@@ -36,14 +39,14 @@ tType(tPenguin).
 tType(tBird).
 
 
-:- mpred_test(predicate_property(tBird(ext,_),dynamic)).
+:- mpred_test(predicate_property(tBird(_,_),dynamic)).
 
-subClassOf(C1,C2)==> (instanceOf(X,C1)==>instanceOf(X,C2)).
+genls(C1,C2)==> (iza(X,C1)==>iza(X,C2)).
 
-subClassOf(tCanary,tBird).
-subClassOf(tPenguin,tBird).
+genls(tCanary,tBird).
+genls(tPenguin,tBird).
 
-
+:- mpred_trace_exec.
 
 :- dmsg("chilly is a penguin.").
 tPenguin(ext,iChilly).
@@ -54,48 +57,94 @@ tPenguin(ext,iChilly).
 :- dmsg("tweety is a canary.").
 tCanary(ext,iTweety).
 
+:- dmsg("make sure tweety is a bird").
 :- mpred_test((tBird(ext,iTweety))).
 
 :- dmsg("birds fly by default.").
 mdefault(( tBird(ext,X) ==> tFly(ext,X) )).
 
+:- dmsg("make sure tweety is a bird").
 :- mpred_test((tBird(ext,iTweety))).
+
+:- dmsg("make sure tweety can fly").
 :- mpred_test((tFly(ext,iTweety))).
 
 :- dmsg("make sure chilly can fly").
-:- mpred_test((instanceOf(I,tFly),I=iChilly)).
+:- mpred_test((iza(I,tFly),I=iChilly)).
 
+:- dmsg("make sure tweety is a bird").
 :- mpred_test((tBird(ext,iTweety))).
-
-:- listing([tFly/2,tBird/2,instanceOf/2]).
+:- listing([tFly/2,tBird/2,iza/2]).
 
 
 :- dmsg("make sure tweety can fly (and again chilly)").
 :- mpred_test((tFly(ext,iTweety))).
 :- mpred_test((tFly(ext,iChilly))).
 
+:- dmsg("Tell us why chilly flys").
+:- mpred_info(tFly(ext, iChilly)).
 
-never_retract_u(tBird(ext,iChilly)).
+:- dmsg("Make sure chilly is a bird from only inheritence NOW.").
+:- mpred_test(\+ mpred_axiom(tBird(ext,iChilly))).
 
+:- dmsg("Signal Error if chilly stops being a bird").
+==> never_retract_u(tBird(ext,iChilly)).
 
 :- dmsg("penguins do not tFly.").
-tPenguin(ext,X) ==>  ~tFly(ext,X). 
+:- mpred_ain(tPenguin(ext,X) ==>  ~tFly(ext,X)). 
+
+:- dmsg("make sure chilly is a bird").
+:- mpred_test((tBird(ext,iChilly))).
+
+:- dmsg("confirm chilly now doesn't fly").
+:- mpred_test( \+ tFly(ext,iChilly)).
 
 :- dmsg("confirm chilly now cant fly").
-:- mpred_test((\+ tFly(ext,iChilly))).
 :- mpred_test(( ~ tFly(ext,iChilly))).
 
-%= repropigate that chilly was a bird again (actualy this asserts)
-
+:- dmsg("User asserts chilly is a bird.").
+:- dmsg("%= repropigate ? that chilly was a bird again (actualy this asserts)").
 tBird(ext,iChilly).
 
-:- listing(tBird/2).
+:- dmsg("Make sure were the reason he was a bird and not just inheritence NOW.").
+:- mpred_test((tBird(ext,iChilly))).
 
-%= the dmsg explains the difference between \+ and ~
+:- dmsg("Make sure were the reason he was a bird and not just inheritence NOW.").
+:- mpred_test(mpred_axiom(tBird(ext,iChilly))).
+
+
+:- mpred_info(tBird(ext,iChilly)).
+:- mpred_why(tBird(ext,iChilly)).
+
+%:- break.
+
 :- dmsg("confirm chilly still does not fly").
 :- mpred_test(( \+ tFly(ext,iChilly))).
+
+%= the dmsg explains the difference between \+ and ~
+
 :- dmsg("confirm chilly still cant fly").
 :- mpred_test(( ~  tFly(ext,iChilly))).
+
+:- mpred_why(tBird(ext,iChilly)).
+
+:- dmsg("chilly is no longer a penguin (hopefly the assertion above about him being a bird wont be removed)").
+\+ tPenguin(ext,iChilly). 
+~ tPenguin(ext,iChilly). 
+
+:- dmsg("Test that chilly is not a penguin").
+:- mpred_test(( \+ tPenguin(ext,iChilly))).
+
+:- dmsg("Test that chilly no longer forced into flightlessness").
+:- mpred_test(( \+ ~tFly(ext,iChilly))).
+
+:- dmsg("chilly is still a bird").
+:- mpred_test((tBird(ext,iChilly))).
+
+:- dmsg("confirm chilly is flying bird").
+:- mpred_test(( tFly(ext,iChilly))).
+
+
 
 /*
 
@@ -115,41 +164,10 @@ tFly(ext,iChilly).
 % fails rightly
 :- mpred_test(( tPenguin(ext,iChilly))).
 
-*/
-
-:- dmsg("chilly is no longer a penguin (hopefly the assertion above about him being a bird wont be removed)").
-
-
-:- debug_logicmoo(_).
-:- mpred_trace_exec.
-:- debug_logicmoo(logicmoo(_)).
-
-:- mpred_test(tBird(ext,iChilly)).
-
-never_retract_u(tBird(ext,iChilly)).
-
-
-~ tPenguin(ext,iChilly).                              
-
-
-:- mpred_test((tBird(ext,iChilly))).
-
-:- mpred_test(( \+ tPenguin(ext,iChilly))).
-
-
-
-:- dmsg("chilly is still a bird").
-:- mpred_test((tBird(ext,iChilly))).
-
-:- dmsg("confirm chilly is flying bird").
-:- mpred_test(( tFly(ext,iChilly))).
-
 :- repropagate(tBird(ext,iChilly)).   
 
 :- dmsg("confirm chilly is flying bird").
 :- mpred_test(( tFly(ext,iChilly))).
-:- mpred_test(( \+ tPenguin(ext,iChilly))).
-:- mpred_test(( \+ ~tFly(ext,iChilly))).
 
-
+*/
 
