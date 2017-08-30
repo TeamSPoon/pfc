@@ -194,6 +194,8 @@
 :- dynamic(baseKB:col_as_isa/1).
 :- dynamic(baseKB:col_as_unary/1).
 
+:- kb_shared(wid/3).
+
 :- style_check(+singleton).
 
 %% default_te( ?IF, ?VAR, ?VAL) is semidet.

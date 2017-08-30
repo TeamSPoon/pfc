@@ -90,7 +90,18 @@
 
 :- system:use_module(library(lists)).
 
-:- make,check,use_module(library(pfc)),make,check.
+
+:- make.
+:- listing(check).
+:- check.
+
+:- autoload.
+
+:- make.
+:- listing(check).
+:- check.
+
+% use_module(library(pfc)),make,check.
 
 :- wdmsg(warning(outdated_tests)).
 

@@ -96,6 +96,11 @@
 */
 
 
+
+P ==> \+ ~P.
+~P ==> \+ P.
+(\+ P, P) => conflict(P).
+
 % ===================================================================
 %  Microtheory System
 % ===================================================================
@@ -271,7 +276,7 @@ prop_mpred(M,pfcCreates,F,A)==>
   {M:warn_if_static(F,A)}.
 prop_mpred(M,pfcControlled,F,A)==> {kb_shared(M:F/A)}.
 prop_mpred(M,pfcWatches,F,A)==> {kb_shared(M:F/A)}.
-
+                                                                                     
 
 mpred_prop(M,F,A,pfcPosTrigger)==>prop_mpred(M,pfcWatches,F,A).
 mpred_prop(M,F,A,pfcNegTrigger)==>prop_mpred(M,pfcWatches,F,A).
@@ -287,6 +292,9 @@ mpred_prop(M,F,A,pfcCallCode)/predicate_is_undefined_fa(F,A)
 mpred_prop(M,F,A,pfcCallCodeAnte)/predicate_is_undefined_fa(F,A)
     ==> prop_mpred(M,pfcWatches,F,A).
 */
+
+:- if(\+ current_prolog_flag(retry_undefined,_)).
+:- endif.
 
 genlPreds(pfcRHS,pfcControlled).
 
@@ -537,7 +545,6 @@ never_assert_u(A,never_assert_u(A)):- never_assert_u(A).
 % P/never_assert_u(P,Why) ==> conflict(never_assert_u(P,Why))
 :- kb_shared(never_assert_u/1).
 never_assert_u(X):- cwc, loop_check(never_assert_u(X,_)).
-
 
 
 :- kb_shared(never_retract_u/2).
