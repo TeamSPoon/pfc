@@ -10,7 +10,7 @@
 arity(mpred_sv,2).
 mpred_sv(Pred,Arity)==> arity(Pred,Arity),hybrid_support(Pred,Arity),singleValuedInArg(Pred,Arity).
 
-:- dynamic(mpred_sv_shared/1).
+:- dynamic(mpred_sv_shared/2).
 mpred_sv_shared(Pred,Arity)==>{kb_local(Pred/Arity)},mpred_sv(Pred,Arity).
 mpred_sv_shared(mpred_sv,2).
 mpred_sv_shared(singleValuedInArg,2).

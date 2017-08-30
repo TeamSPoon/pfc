@@ -15,5 +15,5 @@ requires(s_expression).
 requires(each_call_cleanup).
 requires(with_thread_local).
 requires(logicmoo_utils).
-autoload(true).
+autoload(false).
 

@@ -19,6 +19,7 @@
 :- user:use_module(library(must_trace)).
 :- user:use_module(library(file_scope)).
 :- set_prolog_flag_until_eof(access_level,system).
+:- user:use_module(library(virtualize_source)).
 
 kb_wankage(M:F/A):- 
    M:multifile(M:F/A),
@@ -31,17 +32,35 @@ kb_wankage(M:F/A):-
    do_import(header_sane,M,F,A),
    M:kb_global(M:F/A).
 
-:- user:use_module(library(virtualize_source)).
-
 :- dynamic(rdf_rewrite:(~)/1).
 :- kb_wankage(rdf_rewrite:arity/2).
 :- kb_wankage(baseKB:genlMt/2).
+:- kb_wankage(baseKB:mpred_prop/4).
 :- kb_wankage(baseKB:mtHybrid/1).
 :- kb_wankage(baseKB:mtProlog/1).
+:- kb_wankage(baseKB:tCol/1).
 
 
 :- user:use_module(library(hook_hybrid)).
 :- user:use_module(library(logicmoo_util_strings)).
+
+:- kb_shared(baseKB:never_assert_u/1).
+:- kb_shared(baseKB:never_assert_u/2).
+:- kb_shared(baseKB:never_retract_u/1).
+:- kb_shared(baseKB:never_retract_u/2).
+:- kb_shared(baseKB:mpred_prop/4).
+:- kb_shared(baseKB:do_and_undo/2).
+:- kb_shared(baseKB:spft/3).
+:- kb_shared(baseKB:bt/2).
+:- kb_shared(baseKB:hs/1).
+:- kb_shared(baseKB:nt/3).
+:- kb_shared(baseKB:pk/3).
+:- kb_shared(baseKB:pt/2).
+:- kb_shared(baseKB:que/2).
+:- kb_shared(baseKB:pm/1).
+:- kb_shared(baseKB:spft/3).
+:- kb_shared(baseKB:tms/1).
+
 
 
 %:- listing(arity/2).

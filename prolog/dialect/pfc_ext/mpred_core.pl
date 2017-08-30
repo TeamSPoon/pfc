@@ -961,6 +961,7 @@ mpred_aina(G,S):- locally(t_l:assert_to(a),mpred_ain(G,S)).
 %  database and have forward reasoning done.
 %
 mpred_ain(_:P):- P==end_of_file,!.
+mpred_ain(_:props(_,EL)):- EL==[],!.
 mpred_ain(M:P):- M:get_source_ref(UU),M:mpred_ain(M:P,UU).
 
 mpred_add(P):-mpred_ain(P).
@@ -2397,6 +2398,7 @@ mpred_BC_CACHE0(_,P):-
 
 % I''d like to remove this soon
 call_u_no_bc(P0):- strip_module(P0,_,P), sanity(stack_check),var(P),!, mpred_fact(P).
+call_u_no_bc(G):- !, call(G).
 call_u_no_bc(_:true):-!.
 call_u_no_bc(P):- no_repeats(call_u(P)).
 % call_u_no_bc(P):- no_repeats(loop_check(mpred_METACALL(call_u, P))).
@@ -2957,9 +2959,13 @@ really_mpred_mark(Sup,Type,F,A):-
   current_assertion_module(M),
   MARK = mpred_prop(M,F,A,Type),
   check_never_assert(MARK),
-  with_no_mpred_trace_exec(with_fc_mode(direct,mpred_post1(MARK,(why_marked(Sup),ax)))).
+  why_marked(M,Sup,WM),
+  with_no_mpred_trace_exec(with_fc_mode(direct,mpred_post1(MARK,(WM,ax)))).
+  %with_no_mpred_trace_exec(with_fc_mode(direct,mpred_post1(MARK,(why_marked(Sup),ax)))).
   % with_no_mpred_trace_exec(with_fc_mode(direct,mpred_fwc1(MARK,(why_marked(Sup),ax)))),!.
 
+why_marked(M,_Sup,mfl(M,F,L)):- source_location(F,L),!.
+why_marked(_,Sup,Sup).
 
 %% fa_to_p(+F, ?A, ?P) is semidet.
 %
@@ -3880,7 +3886,15 @@ pp_db_items([H|T]):- !,
   % numbervars(H,0,_),
   format("~N  ~p",[H]),
   nonvar(T),pp_db_items(T).
-pp_db_items(Var):-format("~N  ~p",[Var]).
+
+pp_db_items((P >= FT)):- is_hidden_pft(P,FT),!.
+  
+pp_db_items(Var):-
+  format("~N  ~p",[Var]).
+
+
+is_hidden_pft(_,(mfl(baseKB,_,_),ax)).
+is_hidden_pft(_,(why_marked(_),ax)).
 
 mpred_classifyFacts([],[],[],[]).
 
@@ -4023,7 +4037,7 @@ pfcWhyCommand0(X,_,_) :-
  fail.
   
 pfcShowJustifications(P,Js) :-
-  format("~nJustifications for ~w:",[P]),
+  format("~nJustifications for ~p:",[P]),
   pfcShowJustification1(Js,1).
 
 pfcShowJustification1([],_).
@@ -4040,7 +4054,7 @@ pfcShowJustifications2([],_,_).
 pfcShowJustifications2([C|Rest],JustNo,StepNo) :- 
   copy_term(C,CCopy),
   numbervars(CCopy,0,_),
-  format("~n    ~w.~w ~w",[JustNo,StepNo,CCopy]),
+  format("~N    ~w.~w ~p",[JustNo,StepNo,CCopy]),
   StepNext is 1+StepNo,
   pfcShowJustifications2(Rest,JustNo,StepNext).
 

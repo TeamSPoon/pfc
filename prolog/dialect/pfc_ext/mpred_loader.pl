@@ -2375,11 +2375,12 @@ set_file_abox_module(User):- '$set_typein_module'(User), '$set_source_module'(Us
 
 set_file_abox_module_wa(User):- set_file_abox_module(User),set_defaultAssertMt(User).
 
-
 :- multifile prolog:message//1, user:message_hook/3.
-% user:message_hook(import_private(pfc_lib,_:_/_),warning,_):- source_location(_,_),!.
-user:message_hook(io_warning(_,'Illegal UTF-8 start'),warning,_):- source_location(_,_),!.
-user:message_hook(T,Type,Warn):- 
+% my_message_hook(import_private(pfc_lib,_:_/_),warning,_):- source_location(_,_),!.
+my_message_hook(io_warning(_,'Illegal UTF-8 start'),warning,_):- source_location(_,_),!.
+my_message_hook(undefined_export(jpl, _), error, _):- source_location(_,_),!.
+my_message_hook(_, error, _):- source_location(File,4235),atom_concat(_,'/jpl.pl',File),!.
+my_message_hook(T,Type,Warn):- 
   ((current_prolog_flag(runtime_debug, N),N>2) -> true ; source_location(_,_)),
   memberchk(Type,[error,warning]),once(maybe_message_hook(T,Type,Warn)),fail.
 
@@ -2389,5 +2390,6 @@ user:message_hook(T,Type,Warn):-
 mpred_loader_file.
 %system:term_expansion(end_of_file,_):-must(check_clause_counts),fail.
 %system:term_expansion(EOF,_):-end_of_file==EOF,must(check_clause_counts),fail.
+user:message_hook(T,Type,Warn):- once(my_message_hook(T,Type,Warn)).
 
 
