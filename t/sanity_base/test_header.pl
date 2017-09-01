@@ -19,6 +19,7 @@ test_header_include.
 :- set_prolog_flag(runtime_debug, 3). % 2 = important but dont sacrifice other features for it
 :- set_prolog_flag(runtime_safety, 3).  % 3 = very important
 :- set_prolog_flag(unsafe_speedups, false).
+:- set_prolog_flag(logicmoo_message_hook,true).
 
 :- endif.
 
@@ -40,13 +41,14 @@ test_header_include.
 
 :- endif.
 
+
+%:- set_prolog_flag(debug, true).
+%:- set_prolog_flag(gc, false).
+
 :- '$current_source_module'(W), '$set_typein_module'(W).
-
-
-
-:- set_prolog_flag(debug, true).
-:- set_prolog_flag(retry_undefined, kb_shared).
-:- set_prolog_flag(gc, false).
-
 :- sanity((defaultAssertMt(Mt1),fileAssertMt(Mt2),source_module(Mt3),Mt1==Mt2,Mt1==Mt3)).
+
+
+
+
 

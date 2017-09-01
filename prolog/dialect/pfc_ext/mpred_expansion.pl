@@ -2203,11 +2203,12 @@ exact_args_f(call).
 exact_args_f(assertz_if_new).
 exact_args_f(asserts_eq_quitely).
 exact_args_f(asserted).
+exact_args_f(wid).
 exact_args_f(rtArgsVerbatum).
 exact_args_f((=..)).
 exact_args_f((=)).
 exact_args_f('$was_imported_kb_content$'):-dtrace.
-exact_args_f(F):-cheaply_u(rtArgsVerbatum(F)),!.
+exact_args_f(F):-clause_b(rtArgsVerbatum(F)),!.
 exact_args_f(F):-cheaply_u(prologBuiltin(F)),!.
 
 :- source_location(F,_),asserta(absolute_source_location_pfc(F)).

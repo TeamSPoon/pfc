@@ -1399,7 +1399,7 @@ mpred_call_ru(singleValuedInArg(H,A)):- !, get_var_or_functor(H,F),clause_b(sing
 mpred_call_ru(ttRelationType(C)):- !, clause_b(ttRelationType(C)).
 mpred_call_ru(M:G):- !,call(M:G).
 
-mpred_call_ru(G):- quietly(defaultAssertMt(M)),call(M:G).
+mpred_call_ru(G):- must(notrace((defaultAssertMt(M))))->call(M:G).
 
 get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.
 
