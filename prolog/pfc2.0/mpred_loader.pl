@@ -2349,6 +2349,7 @@ maybe_message_hook(compiler_warnings(_,[always(true,var,_),always(false,integer,
 maybe_message_hook(import_private(_,_),_,_).
 maybe_message_hook(check(undefined(_, _)),_,_).
 maybe_message_hook(ignored_weak_import(header_sane,_),_,_).
+maybe_message_hook(error(existence_error(procedure,'$toplevel':_),_),error,_).
 % maybe_message_hook(_,warning,_).
 maybe_message_hook(T,Type,Warn):-
   ignore(source_location(File,Line)),
@@ -2380,6 +2381,15 @@ set_file_abox_module_wa(User):- set_file_abox_module(User),set_defaultAssertMt(U
 my_message_hook(io_warning(_,'Illegal UTF-8 start'),warning,_):- source_location(_,_),!.
 my_message_hook(undefined_export(jpl, _), error, _):- source_location(_,_),!.
 my_message_hook(_, error, _):- source_location(File,4235),atom_concat(_,'/jpl.pl',File),!.
+my_message_hook(message_lines(_),error,['~w'-[_]]). 
+
+my_message_hook(error(resource_error(portray_nesting),_),
+   error, ['Not enough resources: ~w'-[portray_nesting], nl,
+      'In:', nl, '~|~t[~D]~6+ '-[9], '~q'-[_], nl, '~|~t[~D]~6+ '-[7], 
+        _-[], nl, nl, 'Note: some frames are missing due to last-call optimization.'-[], nl, 
+        'Re-run your program in debug mode (:- debug.) to get more detail.'-[]]).
+
+
 my_message_hook(T,Type,Warn):- 
   ((current_prolog_flag(runtime_debug, N),N>2) -> true ; source_location(_,_)),
   memberchk(Type,[error,warning]),once(maybe_message_hook(T,Type,Warn)),fail.
@@ -2390,6 +2400,6 @@ my_message_hook(T,Type,Warn):-
 mpred_loader_file.
 %system:term_expansion(end_of_file,_):-must(check_clause_counts),fail.
 %system:term_expansion(EOF,_):-end_of_file==EOF,must(check_clause_counts),fail.
-user:message_hook(T,Type,Warn):- once(my_message_hook(T,Type,Warn)).
+user:message_hook(T,Type,Warn):- current_prolog_flag(logicmoo_message_hook,true),once(my_message_hook(T,Type,Warn)).
 
 

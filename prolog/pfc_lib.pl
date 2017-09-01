@@ -652,7 +652,7 @@ system:goal_expansion(I,P,O,PO):-
 :- if(exists_source(library(retry_undefined))).
 
 :- use_module(library(retry_undefined)).
-:- install_retry_undefined.
+:- install_retry_undefined(baseKB,kb_shared).
 
 :- else.
 
