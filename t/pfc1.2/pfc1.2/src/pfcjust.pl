@@ -6,10 +6,8 @@
 %   Status: more or less working.
 %   Bugs:
 
-%= *** predicates for exploring supports of a fact *****
+%% *** predicates for exploring supports of a fact *****
 
-:- module(pfcjust, []).
-:- use_module(library(pfc_pack_xform)).
 
 :- use_module(library(lists)).
 
@@ -41,20 +39,9 @@ bases([X|Rest],L) :-
   bases(Rest,Br),
   pfcUnion(Bx,Br,L).
 	
-%- axiom(F) :- 
-%-  pfcGetSupport(F,(user,user)); 
-%-  pfcGetSupport(F,(god,god)).
-
 axiom(F) :- 
- umt(((pfcGetSupport(F,UU),
-   \+ \+ is_axiom_support(UU)))).
-
-pfcCurrentUserSupport(UU):- get_source_ref(UU).
-%pfcCurrentUserSupport((user,user)).
-
-%is_axiom_support(UU):- pfcCurrentUserSupport(UU).
-is_axiom_support((_,AX)):- atomic(AX).
-
+  pfcGetSupport(F,(user,user)); 
+  pfcGetSupport(F,(god,god)).
 
 %% an assumption is a failed goal, i.e. were assuming that our failure to 
 %% prove P is a proof of not(P)
@@ -84,10 +71,8 @@ assumptions1([X|Rest],L) :-
 %%          [J11, J12,... J1n]      a list of proof trees.
 
 
-%% pfcChild0(+P,?Q) is nondet.
-%
 % pfcChild(P,Q) is true iff P is an immediate justifier for Q.
-%
+% mode: pfcChild(+,?)
 
 pfcChild(P,Q) :-
   pfcGetSupport(Q,(P,_)).

@@ -3,7 +3,6 @@
 %   Updated: 10/11/87, ...
 %   Purpose: compile system file for Pfc
 
-
 :- compile(pfcsyntax).
 :- compile(pfccore).
 :- compile(pfcdb).

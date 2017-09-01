@@ -3,42 +3,24 @@
 %   Updated:
 %   Purpose: predicates for interactively exploring Pfc justifications.
 
-end_of_file.
-
-:- module(pfcwhy, []).
-:- use_module(library(pfc_pack_xform)).
-
 % ***** predicates for brousing justifications *****
 
 :- use_module(library(lists)).
 
-:- thread_local(t_l:whybuffer/2).
-
 pfcWhy :- 
- umt((
-  t_l:whybuffer(P,_),
-  pfcWhy0(P))).
-% see pfc_why
-pfcWhy(X):- source_file(_,_), % non-interactive
-  color_line(green,2),
-  forall(no_repeats(P-Js,justifications(P,Js)),
-    (color_line(yellow,1),pfcShowJustifications(X,Js))),
-  color_line(green,2),!.
-  
+  whymemory(P,_),
+  pfcWhy(P).
 
-pfcWhy(X):-
-  umt((pfcWhy0(X))).
-
-pfcWhy0(N) :-
+pfcWhy(N) :-
   number(N),
   !,
-  t_l:whybuffer(P,Js),
-  pfcWhyCommand0(N,P,Js).
+  whymemory(P,Js),
+  pfcWhyCommand(N,P,Js).
 
-pfcWhy0(P) :-
+pfcWhy(P) :-
   justifications(P,Js),
-  retractall(t_l:whybuffer(_,_)),
-  assert(t_l:whybuffer(P,Js)),
+  retractall(whymemory(_,_)),
+  assert(whymemory(P,Js)),
   pfcWhyBrouse(P,Js).
 
 pfcWhy1(P) :-
@@ -47,16 +29,11 @@ pfcWhy1(P) :-
 
 pfcWhyBrouse(P,Js) :-
   pfcShowJustifications(P,Js),
-  ttyflush,
-  read_pending_chars(current_input,_,[]),!,
-  ttyflush,
-  % pfcAsk(' >> ',Answer),
-  % read_pending_chars(current_input,[Answer|_],[]),!,  
-  format('~N',[]),write('proof [q/h/u/?.?]: '),get_char(Answer),
-  pfcWhyCommand0(Answer,P,Js).
+  pfcAsk(' >> ',Answer),
+  pfcWhyCommand(Answer,P,Js).
 
-pfcWhyCommand0(q,_,_) :- !.
-pfcWhyCommand0(h,_,_) :- 
+pfcWhyCommand(q,_,_) :- !.
+pfcWhyCommand(h,_,_) :- 
   !,
   format("~n
 Justification Brouser Commands:
@@ -66,23 +43,23 @@ Justification Brouser Commands:
  u   up a level
 ",[]).
 
-pfcWhyCommand0(N,_P,Js) :-
+pfcWhyCommand(N,_P,Js) :-
   float(N),
   !,
   pfcSelectJustificationNode(Js,N,Node),
   pfcWhy1(Node).
 
-pfcWhyCommand0(u,_,_) :-
+pfcWhyCommand(u,_,_) :-
   % u=up
   !.
 
-pfcWhyCommand0(N,_,_) :-
+pfcCommand(N,_,_) :-
   integer(N),
   !,
   format("~n~w is a yet unimplemented command.",[N]),
   fail.
 
-pfcWhyCommand0(X,_,_) :-
+pfcCommand(X,_,_) :-
  format("~n~w is an unrecognized command, enter h. for help.",[X]),
  fail.
   
@@ -114,10 +91,9 @@ pfcAsk(Msg,Ans) :-
 
 pfcSelectJustificationNode(Js,Index,Step) :-
   JustNo is integer(Index),
-  nth1(JustNo,Js,Justification),
+  nth(JustNo,Js,Justification),
   StepNo is 1+ integer(Index*10 - JustNo*10),
-  nth1(StepNo,Justification,Step).
+  nth(StepNo,Justification,Step).
  
-
 
 

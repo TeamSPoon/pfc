@@ -2,13 +2,44 @@
 %%
 %% predicates for manipulating support relationships
 %%
+:- module(pfcsupport,[ifNotDMiles/1,ifNotDMiles/2]).
+
+
+:- use_module(library(pfc_pack_xform)).
+
+:- if(false).
+% NON-DMILES
+:- dynamic support1/3.
+:- dynamic support2/3.
+:- dynamic support3/3.
+ifNotDMiles(G):- G.
+ifNotDMiles(G,_):- G.
+
+:- else.
+
+% DMILES
+:- dynamic spft/3.
+support1(P,Fact,Trigger):-umt(spft(P,Fact,Trigger)).
+support2(Fact,Trigger,P):-umt(spft(P,Fact,Trigger)).
+support3(Trigger,P,Fact):-umt(spft(P,Fact,Trigger)).
+
+ifNotDMiles(_).
+ifNotDMiles(_,G):- G.
+
+:- endif.
+
 
 %% pfcAddSupport(+Fact,+Support)
 
+pfcAddSupport(P,(Fact,Trigger)) :- umt(clause_asserted(spft(P,Fact,Trigger))),!,dmsg(tWICE_pfcAddSupport(P,(Fact,Trigger))),!.
 pfcAddSupport(P,(Fact,Trigger)) :-
-  assert(support1(P,Fact,Trigger)),
-  assert(support2(Fact,Trigger,P)),
-  assert(support3(Trigger,P,Fact)).
+  show_call(assert_u(spft(P,Fact,Trigger))),!,
+  nop(ifNotDMiles(assert(support2(Fact,Trigger,P)))),
+  nop(ifNotDMiles(assert(support3(Trigger,P,Fact)))),!.
+
+pfcGetSupport(P,(F,T)):- !, umt((spft(P,F,T))).
+
+pfcGetSupport(P,FT):- umt((pfcGetSupport0(P,FT))).
 
 pfcGetSupport(P,(Fact,Trigger)) :-
    nonvar(P)         -> support1(P,Fact,Trigger) 
@@ -23,22 +54,22 @@ pfcGetSupport(P,(Fact,Trigger)) :-
 pfcRemSupport(P,(Fact,Trigger)) :-
   nonvar(P),
   !,
-  pfcRetractOrWarn(support1(P,Fact,Trigger)),
-  pfcRetractOrWarn(support2(Fact,Trigger,P)),
-  pfcRetractOrWarn(support3(Trigger,P,Fact)).
+  pfcRetractOrWarn(spft(P,Fact,Trigger)),
+  ifNotDMiles(pfcRetractOrWarn(support2(Fact,Trigger,P))),
+  ifNotDMiles(pfcRetractOrWarn(support3(Trigger,P,Fact))).
 
 
 pfcRemSupport(P,(Fact,Trigger)) :-
   nonvar(Fact),
   !,
-  pfcRetractOrWarn(support2(Fact,Trigger,P)),
-  pfcRetractOrWarn(support1(P,Fact,Trigger)),
-  pfcRetractOrWarn(support3(Trigger,P,Fact)).
+  ifNotDMiles(pfcRetractOrWarn(support2(Fact,Trigger,P)),support2(Fact,Trigger,P)),
+  pfcRetractOrWarn(spft(P,Fact,Trigger)),
+  ifNotDMiles(pfcRetractOrWarn(support3(Trigger,P,Fact))).
 
 pfcRemSupport(P,(Fact,Trigger)) :-
-  pfcRetractOrWarn(support3(Trigger,P,Fact)),
-  pfcRetractOrWarn(support1(P,Fact,Trigger)),
-  pfcRetractOrWarn(support2(Fact,Trigger,P)).
+  ifNotDMiles(pfcRetractOrWarn(support3(Trigger,P,Fact)),support3(Trigger,P,Fact)),
+  pfcRetractOrWarn(spft(P,Fact,Trigger)),
+  ifNotDMiles(pfcRetractOrWarn(support2(Fact,Trigger,P))).
 
 
 pfc_collect_supports(Tripples) :-
@@ -47,10 +78,10 @@ pfc_collect_supports(Tripples) :-
 pfc_collect_supports([]).
 
 pfc_support_relation((P,F,T)) :-
-  support1(P,F,T).
+  umt((support1(P,F,T))).
 
 pfc_make_supports((P,S1,S2)) :- 
-  pfcAddSupport(P,(S1,S2),_),
+  pfcAddSupport(P,(S1,S2)),
   (pfcAdd(P); true),
   !.
 
@@ -59,7 +90,7 @@ pfc_make_supports((P,S1,S2)) :-
 %% Arg1 is a trigger.  Key is the best term to index it on.
 
 pfcTriggerKey(pt(Key,_),Key).
-pfcTriggerKey(pt(Key,_,_),Key).
+% unused? pfcTriggerKey(pt(Key,_,_),Key).
 pfcTriggerKey(nt(Key,_,_),Key).
 pfcTriggerKey(Key,Key).
 
@@ -75,3 +106,4 @@ pfc_trigger_key(chart(stem([Char1|_Rest]),_L),Char1) :- !.
 pfc_trigger_key(chart(Concept,_L),Concept) :- !.
 pfc_trigger_key(X,X).
 
+:- fixup_exports.

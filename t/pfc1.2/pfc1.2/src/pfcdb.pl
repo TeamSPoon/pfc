@@ -6,31 +6,25 @@
 %   Purpose: predicates to manipulate a pfc database (e.g. save,
 %%	restore, reset, etc.0
 
-:- module(pfcdb, []).
-:- use_module(library(pfc_pack_xform)).
-
 % pfcDatabaseTerm(P/A) is true iff P/A is something that pfc adds to
 % the database and should not be present in an empty pfc database
 
-pfcDatabaseTerm(support1/3):- ifNotDMiles(true,fail).
-pfcDatabaseTerm(support2/3):- ifNotDMiles(true,fail).
-pfcDatabaseTerm(support3/3):- ifNotDMiles(true,fail).
-pfcDatabaseTerm(spft/3):- ifNotDMiles(fail,true).
-
-pfcDatabaseTerm(pt/2).
-pfcDatabaseTerm(bt/2).
-pfcDatabaseTerm(nt/3).
+pfcDatabaseTerm(support1/3).
+pfcDatabaseTerm(support2/3).
+pfcDatabaseTerm(support3/3).
+pfcDatabaseTerm(pt/3).
+pfcDatabaseTerm(bt/3).
+pfcDatabaseTerm(nt/4).
 pfcDatabaseTerm('=>'/2).
 pfcDatabaseTerm('<=>'/2).
 pfcDatabaseTerm('<='/2).
-pfcDatabaseTerm(pfcQueue/2).
+pfcDatabaseTerm(pfcQueue/1).
 
 % removes all forward chaining rules and justifications from db.
 
 pfcReset :-
-  pfcGetSupport(P,(F,Trigger)),
-  pfcAddDbToHead(P,PDb),
-  pfcRetractOrWarn(PDb),
+  clause(support1(P,F,Trigger),true),
+  pfcRetractOrWarn(P),
   pfcRetractOrWarn(support1(P,F,Trigger)),
   pfcRetractOrWarn(support2(F,Trigger,P)),
   pfcRetractOrWarn(support3(Trigger,P,F)),
@@ -51,4 +45,3 @@ pfcRetractOrWarn(X) :-
   pfcWarn("Couldn't retract ~p.",[X]).
 
 
-:- fixup_exports.
