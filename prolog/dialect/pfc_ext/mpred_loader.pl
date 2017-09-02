@@ -1203,8 +1203,7 @@ begin_pfc:-
    mpred_ops,
    op_lang(pfc),
    set_file_lang(pfc),
-   get_fileAssertMt(Mt),
-   ensure_abox(Mt),
+   fileAssertMt(Mt),
    set_fileAssertMt(Mt),
    enable_mpred_expansion)),!,
    sanity(get_lang(pfc)).

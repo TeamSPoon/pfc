@@ -33,7 +33,6 @@
          defaultAssertMt/1,
          ensure_imports/1,
 
-         get_fileAssertMt/1,
          set_fileAssertMt/1,
           setup_module_ops/1,
 
@@ -185,9 +184,6 @@ box_type(_,_,abox).
 :- dynamic(baseKB:file_to_module/2).
 
 
-%:- multifile(get_current_default_tbox/1).
-%:- dynamic(get_current_default_tbox/1).
-%get_current_default_tbox(baseKB).
 
 
 
@@ -219,13 +215,6 @@ mtCanAssert(_).
 is_user_pfc:- clause_b(mtHybrid(user)).
 
 
-% :- ensure_loaded(mpred_loader).
-
-%% get_fileAssertMt(-ABox) is det.
-%
-get_fileAssertMt(MT):- fileAssertMt(MT).
-
-% :- ensure_loaded(mpred_loader).
 
 %% fileAssertMt(-ABox) is det.
 %
@@ -233,25 +222,103 @@ get_fileAssertMt(MT):- fileAssertMt(MT).
 % within a knowledge base.
 %
 % not just user modules
-fileAssertMt(ABox):- nonvar(ABox), fileAssertMt(ABoxVar),!,ABox=@=ABoxVar.
-fileAssertMt(ABox):- loading_source_file(File),clause_b(baseKB:file_to_module(File,ABox)).
-fileAssertMt(ABox):- loading_source_file(File),clause_b(lmcache:mpred_directive_value(File,module,ABox)).
-fileAssertMt(ABox):- '$current_source_module'(ABox),!.
-fileAssertMt(ABox):- get_fallBackAssertMt(ABox),!.
 
-get_fallBackAssertMt(ABox):- t_l:current_defaultAssertMt(ABox),!.
-get_fallBackAssertMt(ABox):- loading_source_file(File),clause_b(baseKB:file_to_module(File,ABox)).
-get_fallBackAssertMt(ABox):- loading_source_file(File),clause_b(lmcache:mpred_directive_value(File,module,ABox)).
-get_fallBackAssertMt(ABox):- guess_maybe_assertMt(ABox),clause_b(mtHybrid(ABox)),!.
-get_fallBackAssertMt(ABox):- guess_maybe_assertMt(ABox),mtCanAssert(ABox),!.
-get_fallBackAssertMt(ABox):- guess_maybe_assertMt(ABox).
+fileAssertMt(M):- nonvar(M), fileAssertMt(ABoxVar),!,M=@=ABoxVar.
+fileAssertMt(M):- loading_source_file(File),clause_b(baseKB:file_to_module(File,M)),!.
+fileAssertMt(M):- loading_source_file(File),clause_b(lmcache:mpred_directive_value(File,module,M)),!.
+fileAssertMt(M):- fileAssertMt0(M), (source_location(_,_)->show_call(set_fileAssertMt(M));true).
 
-guess_maybe_assertMt(ABox):- '$current_source_module'(ABox).
-guess_maybe_assertMt(ABox):- context_module(ABox).
-guess_maybe_assertMt(ABox):-  which_file(File)->current_module(ABox),module_property(ABox,file(File)),File\==ABox.
-guess_maybe_assertMt(Module):- (loading_source_file(File),get_file_type_local(File,pfc)),prolog_load_context(module,Module).
-guess_maybe_assertMt(ABox):- '$current_typein_module'(ABox).
-guess_maybe_assertMt(ABox):- which_file(File)->make_module_name_local(File,ABox),current_module(ABox),File\==ABox.   
+fileAssertMt0(M):- prolog_load_context(module,M),mtCanAssert(M),!.
+fileAssertMt0(M):- '$current_typein_module'(M),mtCanAssert(M),!.
+fileAssertMt0(M):- 'strip_module'(module,M,module),mtCanAssert(M),!.
+fileAssertMt0(M):- must(get_fallBackAssertMt(M)),!.
+
+
+%% set_fileAssertMt( ABox) is semidet.
+%
+% Sets the File''s Module.
+%
+
+% set_fileAssertMt(M):- '$current_source_module'(M),!.
+set_fileAssertMt(M):-
+ ensure_abox(M),
+  sanity(mtCanAssert(M)),
+  must(which_file(File)),
+  assert_setting(baseKB:file_to_module(File,M)),
+  assert_setting(lmcache:mpred_directive_value(File,module,M)),
+  asserta_until_eof(t_l:current_defaultAssertMt(M)),!,
+  (is_pfc_file -> set_current_modules(M) ; true).
+
+% :- '$hide'(set_fileAssertMt(_)).
+
+
+set_current_modules(M):- 
+ '$current_typein_module'(CM),'$set_typein_module'(M),call_on_eof('$set_typein_module'(CM)),
+ '$current_source_module'(SM),'$set_source_module'(M),call_on_eof('$set_source_module'(SM)).
+
+
+%% set_defaultAssertMt( ?M) is semidet.
+%
+% Sets Current Module.
+%
+set_defaultAssertMt(M):-
+  ignore(show_failure(mtCanAssert(M))),
+   ensure_abox(M),!,
+   assert_setting(t_l:current_defaultAssertMt(M)),
+  (source_location(_,_)-> ((fileAssertMt(M) -> true; set_fileAssertMt(M)))  ;true).
+
+% :- '$hide'(set_defaultAssertMt(_)).
+
+
+
+%% defaultAssertMt(-Ctx) is det.
+%
+% M is an "assertion component" Prolog Module
+% within a knowledge base.
+%
+% not just user modules
+
+defaultAssertMt(M):- nonvar(M), defaultAssertMt(ABoxVar),!,M=@=ABoxVar.
+defaultAssertMt(M):- t_l:current_defaultAssertMt(M),!.
+defaultAssertMt(M):- get_fallBackAssertMt(M),!.
+
+%defaultAssertMt(M):- loading_source_file(File),baseKB:file_to_module(File,M),!.
+%defaultAssertMt(M):- t_l:current_defaultAssertMt(M),!.
+
+get_fallBackAssertMt(M):- loading_source_file(File),clause_b(baseKB:file_to_module(File,M)).
+get_fallBackAssertMt(M):- loading_source_file(File),clause_b(lmcache:mpred_directive_value(File,module,M)).
+get_fallBackAssertMt(M):- guess_maybe_assertMt(M),clause_b(mtHybrid(M)),!.
+get_fallBackAssertMt(M):- guess_maybe_assertMt(M),mtCanAssert(M),!.
+get_fallBackAssertMt(M):- guess_maybe_assertMt(M).
+
+guess_maybe_assertMt(M):- '$current_source_module'(M).
+guess_maybe_assertMt(M):- context_module(M).
+guess_maybe_assertMt(M):- loading_source_file(File),clause_b(baseKB:file_to_module(File,M)).
+guess_maybe_assertMt(M):- loading_source_file(File),clause_b(lmcache:mpred_directive_value(File,module,M)).
+guess_maybe_assertMt(M):-  which_file(File)->current_module(M),module_property(M,file(File)),File\==M.
+guess_maybe_assertMt(M):- '$current_typein_module'(M).
+guess_maybe_assertMt(M):- nb_current(defaultQueryMt,M),!.
+guess_maybe_assertMt(M):- which_file(File)->make_module_name_local(File,M),current_module(M),File\==M.   
+guess_maybe_assertMt(M):- (loading_source_file(File),get_file_type_local(File,pfc)),prolog_load_context(module,M).
+
+
+
+
+
+defaultQueryMt(M):- nonvar(M), defaultQueryMt(ABoxVar),!,M=@=ABoxVar.
+defaultQueryMt(M):- nb_current(defaultQueryMt,M)->true;(defaultQueryMt0(M)->nb_setval(defaultQueryMt,M)),!.
+
+
+defaultQueryMt0(M):- 'strip_module'(module,M,module),clause_b(mtHybrid(M)),!.
+defaultQueryMt0(M):- prolog_load_context(module,M),clause_b(mtHybrid(M)),!.
+defaultQueryMt0(M):- '$current_typein_module'(M),clause_b(mtHybrid(M)),!.
+defaultQueryMt0(M):- guess_maybe_assertMt(M),clause_b(mtHybrid(M)),!.
+defaultQueryMt0(M):- guess_maybe_assertMt(M),mtCanAssert(M),!.
+defaultQueryMt0(M):- guess_maybe_assertMt(M).
+
+
+
+
 
 
 
@@ -276,20 +343,16 @@ maybe_ensure_abox(M):- show_call(not_is_pfc_file,ensure_abox(M)).
 ensure_abox(M):- dynamic(M:defaultTBoxMt/1),must(ensure_abox_support(M,baseKB)),!.
 :- module_transparent((ensure_abox_support)/2).
 ensure_abox_support(M,TBox):- clause_b(M:defaultTBoxMt(TBox)),!.
-ensure_abox_support(M,TBox):- asserta(M:defaultTBoxMt(TBox),WasRef),
- (must_det_l((
-  % (M==baseKB -> (add_import_module(M,system,end),delete_import_module(M,user)) ; true),
-  forall(mpred_database_term(F,A,Type),
-    must(import_mpred_database_term(M,F,A,Type,TBox))),
-   %nop(inherit_into_module(M,TBox)),
-   %retractall(TBox:mtProlog(M)),
-   %assert_if_new(TBox:mtHybrid(M)),   
-   setup_module_ops(M),
+ensure_abox_support(M,TBox):- asserta(M:defaultTBoxMt(TBox)),
    set_prolog_flag(M:unknown,error),  
-   M:ain(TBox:mtHybrid(M)),
-   nop(skip_user(M))))->true ; erase(WasRef)).
+  must(setup_module_ops(M)), 
+  must(forall(mpred_database_term(F,A,_Type),
+           kb_shared(M:F/A))),
+  must(M:ain(TBox:mtHybrid(M))),!.
+ensure_abox_support(M,TBox):- retractall(M:defaultTBoxMt(TBox)),throw(failed_ensure_abox_support(M,TBox)).
+
+
    
-import_mpred_database_term(M,F,A,_,_):- kb_local(M:F/A),!.
 
 setup_module_ops(M):- mpred_op_each(mpred_op_unless(M)).
 
@@ -316,10 +379,11 @@ mpred_op_each(OpEach):-
 
 
 
-%:- (system:dtrace, rtrace, dtrace,cls ).
-%:- (dbreak,quietly,nortrace).
 
 
+%:- multifile(get_current_default_tbox/1).
+%:- dynamic(get_current_default_tbox/1).
+%get_current_default_tbox(baseKB).
 :- if(current_predicate(get_current_default_tbox/1)).
 :- redefine_system_predicate(get_current_default_tbox/1).
 :- endif.
@@ -328,48 +392,8 @@ get_current_default_tbox(TBox):- defaultAssertMt(ABox)->current_module(ABox)->cl
 get_current_default_tbox(baseKB).
 :- sexport(get_current_default_tbox/1).
 
-%% set_defaultAssertMt( ?ABox) is semidet.
-%
-% Sets Current Module.
-%
-set_defaultAssertMt(ABox):-
-  ignore(show_failure(mtCanAssert(ABox))),
-   ensure_abox(ABox),!,
-    assert_setting(t_l:current_defaultAssertMt(ABox)),
-    '$set_typein_module'(ABox),
-    (source_location(_,_)-> ((get_fileAssertMt(ABoxWas),ABox==ABoxWas) -> true; set_fileAssertMt(ABox));true).
 
 
-
-% :- '$hide'(set_defaultAssertMt(_)).
-
-%% set_fileAssertMt( ABox) is semidet.
-%
-% Sets the File''s Module.
-%
-
-% set_fileAssertMt(ABox):- '$current_source_module'(ABox),!.
-set_fileAssertMt(ABox):-
- (is_pfc_file -> ensure_abox(ABox) ;  ensure_abox(ABox)),
- '$current_typein_module'(CM),
- '$current_source_module'(SM),
-  sanity(mtCanAssert(ABox)),
- (((
-   % fileAssertMt(Was),
-   % get_current_default_tbox(TBox),
-   '$set_source_module'(ABox),
-   ABox:import(baseKB:genlMt/2),
-   which_file(File),
-   assert_setting(baseKB:file_to_module(File,ABox)),
-   assert_setting(lmcache:mpred_directive_value(File,module,ABox)),
-   asserta_until_eof(t_l:current_defaultAssertMt(ABox)),
-   % MAYBE? '$set_typein_module'(TBox), 
-   call_on_eof('$set_source_module'(SM)),
-   call_on_eof('$set_typein_module'(CM))))),
-   '$set_source_module'(ABox),
-   !.
-
-% :- '$hide'(set_fileAssertMt(_)).
 
 
 make_module_name_local(A,B):- make_module_name_local0(A,B), \+ exists_file(B),!.
@@ -657,18 +681,5 @@ system:body_expansion(T,(mpred_at_box:defaultAssertMt(NewVar),NewT)):- current_p
 */
 
 
-%% defaultAssertMt(-Ctx) is det.
-%
-% ABox is an "assertion component" Prolog Module
-% within a knowledge base.
-%
-% not just user modules
-
-defaultAssertMt(ABox):- nonvar(ABox), defaultAssertMt(ABoxVar),!,ABox=@=ABoxVar.
-defaultAssertMt(ABox):- get_fallBackAssertMt(ABox),!.
-
-%defaultAssertMt(ABox):- loading_source_file(File),baseKB:file_to_module(File,ABox),!.
-%defaultAssertMt(ABox):- t_l:current_defaultAssertMt(ABox),!.
-%defaultAssertMt(ABox):- (t_l:current_defaultAssertMt(BBox);find_and_call(fileAssertMt(BBox)))->ABox=BBox.
 :- fixup_exports.
 

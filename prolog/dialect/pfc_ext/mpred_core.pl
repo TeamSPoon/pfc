@@ -2009,18 +2009,30 @@ mpred_fwc1(Fact):-
   '$current_source_module'(Sm),
   mpred_trace_msg(Sm:mpred_fwc1(Fact)),
   %ignore((mpred_non_neg_literal(Fact),remove_negative_version(Fact))),
-  mpred_do_rule(Fact),!.
+  \+ \+ ignore(mpred_do_rule(Fact)),
+  ignore(mpred_do_fact(Fact)),!.
+
+
+
+
+% mpred_do_rule((H:-attr_bind(B,_))):- get_functor(H,F,A),lookup_u(mpred_prop(M,F,A,pfcLHS)), sanity(nonvar(B)), repropagate(H),!.
+
+% prolog_clause mpred_do_rule
+mpred_do_rule((H:-B)):- var(H),trace,sanity(nonvar(B)),forall(call_u(B),mpred_ain(H)),!.
+
+% prolog_clause
+mpred_do_rule((H:-B)):- get_functor(H,F,A),must(suggest_m(M)),
+  lookup_u(mpred_prop(M,F,A,pfcLHS)), 
+  sanity(nonvar(B)),
+    forall(call_u(B),mpred_fwc(H)),!.
+
+% prolog_clause
+% mpred_do_rule((H:-B)):- !,ignore((call_u(B),mpred_fwc1(H),fail)).
 
 
 %% mpred_do_rule(P)
 % does some special, built in forward chaining if P is
 %  a rule.
-
-% mpred_do_rule((H:-attr_bind(B,_))):- get_functor(H,F,A),lookup_u(mpred_prop(M,F,A,pfcLHS)), sanity(nonvar(B)), repropagate(H),!.
-mpred_do_rule((H:-B)):- var(H),sanity(nonvar(B)),forall(call_u(B),mpred_ain(H)),!.
-mpred_do_rule((H:-B)):- get_functor(H,F,A),suggest_m(M),lookup_u(mpred_prop(M,F,A,pfcLHS)), sanity(nonvar(B)),forall(call_u(B),mpred_fwc(H)),!.
-
-% mpred_do_rule((H:-B)):- !,ignore((call_u(B),mpred_fwc1(H),fail)).
 
 mpred_do_rule((P==>Q)):-
   !,
@@ -2045,7 +2057,22 @@ mpred_do_rule(('<=='(P,Q))):-
   !,
   mpred_define_bc_rule(P,Q,('<-'(P,Q))).
 
-mpred_do_rule(Fact):-
+% prolog_clause mpred_do_fact
+% mpred_do_fact((H:-B)):- nonvar(H),mpred_do_fact({clause(H,B)}),fail.
+
+% prolog_clause mpred_do_fact
+mpred_do_fact(Fact):-
+  Fact = (_:-_),
+  copy_term_vn(Fact,(H:-B)),
+  % F = {clause(H,B)},
+  F = (H :- B),
+  % check positive triggers
+  loop_check(mpred_do_fcpt(Fact,F),true), % dmsg(trace_or_throw_ex(mpred_do_rule(Fact)))),
+  % check negative triggers
+  mpred_do_fcnt(Fact,F).
+
+
+mpred_do_fact(Fact):-
   copy_term_vn(Fact,F),
   % check positive triggers
   loop_check(mpred_do_fcpt(Fact,F),true), % dmsg(trace_or_throw_ex(mpred_do_rule(Fact)))),
@@ -2226,8 +2253,8 @@ fc_eval_action(CALL,Support):-
   mpred_METACALL(fc_eval_action_rev(Support),CALL).
 
 fc_eval_action_rev(Support,Action):-
-  show_failure(call_u_no_bc(Action)),
-  (show_success(action_is_undoable(Action))
+  call_u_no_bc(Action),
+  (action_is_undoable(Action)
      -> mpred_ain_actiontrace(Action,Support)
       ; true).
 
@@ -2276,7 +2303,14 @@ lookup_m_g(To,_M,G):- clause(To:G,true).
 call_u(G):- \+  current_prolog_flag(retry_undefined, kb_shared),!,
    strip_module(G,M,P), no_repeats(gripe_time(5.3,on_x_rtrace(call_u_mp(M,P)))).
 
-call_u(G):- !, mpred_call_ru(G).
+call_u(functorDeclares(H)):- !, get_var_or_functor(H,F),clause_b(functorDeclares(F)).
+call_u(singleValuedInArg(H,A)):- !, get_var_or_functor(H,F),clause_b(singleValuedInArg(F,A)).
+call_u(ttRelationType(C)):- !, clause_b(ttRelationType(C)).
+
+call_u(M:G):- !,module_sanity_check(M),call_u_mp(M,G).
+call_u(G):- must(notrace((defaultAssertMt(M))))->call_u_mp(M,G).
+
+get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.
 
 %call_u(G):- strip_module(G,M,P), no_repeats(gripe_time(5.3,on_x_rtrace(call_u_mp(M,P)))).
 % call_u(G):- strip_module(G,M,P), call_u_mp(G,M,P).
@@ -2284,11 +2318,9 @@ call_u(G):- !, mpred_call_ru(G).
 
 %call_u_mp(user, P1 ):- !,  call_u_mp(baseKB,P1).
 
-
-call_u_mp(M, _ ):- module_sanity_check(M),fail.
 call_u_mp(mpred_core, P1 ):- break_ex,'$current_source_module'(SM),SM\==mpred_core,!,  call_u_mp(SM,P1).
 call_u_mp(user, P1 ):- '$current_source_module'(SM),SM\==user,!,  call_u_mp(SM,P1).
-call_u_mp(M,P):- var(P),!,call((clause_b(mtExact(M))->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
+call_u_mp(M,P):- var(P),!,call((baseKB:mtExact(M)->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
 call_u_mp(_, M:P1):-!,call_u_mp(M,P1).
 call_u_mp(M, (P1,P2)):-!,call_u_mp(M,P1),call_u_mp(M,P2).
 call_u_mp(M, (P1*->P2;P3)):-!,(call_u_mp(M,P1)*->call_u_mp(M,P2);call_u_mp(M,P3)).
@@ -2300,16 +2332,34 @@ call_u_mp(M,( \+ P1)):-!, \+ call_u_mp(M,P1).
 call_u_mp(M,must(P1)):-!, must( call_u_mp(M,P1)).
 call_u_mp(M, 't'(P1)):-!, call_u_mp(M,P1).
 call_u_mp(M,'{}'(P1)):-!, call_u_mp(M,P1).
-call_u_mp(_,ttExpressionType(P)):-!,clause_b(ttExpressionType(P)).
-call_u_mp(_,mtHybrid(P)):-!,clause_b(mtHybrid(P)).
+call_u_mp(M,ttExpressionType(P)):-!,clause_b(M:ttExpressionType(P)).
+call_u_mp(M,mtHybrid(P)):-!,clause_b(M:mtHybrid(P)).
 %call_u_mp(_,is_string(P)):- !, logicmoo_util_bugger:is_string(P).
 
 
 call_u_mp(M,call(O,P1)):- !,append_term(O,P1,P),call_u_mp(M,P).
 call_u_mp(M,call(P1)):- !, call_u_mp(M,P1).
 
+/*
+call_u_mp(M,call_u(X)):- !, call_u_mp(M,X).
+call_u_mp(M,clause(H,B,Ref)):-!,M:clause_u(H,B,Ref).
+call_u_mp(M,clause(H,B)):-!,M:clause_u(H,B).
+call_u_mp(M,clause(HB)):- expand_to_hb(HB,H,B),!, M:clause_u(H,B).
+call_u_mp(M,asserta(X)):- !, M:mpred_aina(X).
+call_u_mp(M,assertz(X)):- !, M:mpred_ainz(X).
+call_u_mp(M,assert(X)):- !, M:mpred_ain(X).
+call_u_mp(M,retract(X)):- !, M:mpred_prolog_retract(X).
+call_u_mp(M,retractall(X)):- !, M:mpred_prolog_retractall(X).
+*/
+
+
+call_u_mp(M, (H:-B)):- B=@=call(BA),!,B=call(BA),!, (M:clause(H,BA);M:clause(H,B)).
+call_u_mp(M, (H:-B)):- !,call_u_mp(M,clause(H,B)).
+
 % call_u_mp(M,P1):- predicate_property(M:P1,foreign),!,M:call(P1).
-call_u_mp(M,P1):- predicate_property(M:P1,static),!,M:call(P1).
+% call_u_mp(M,P1):- predicate_property(M:P1,static),!,M:call(P1).
+
+call_u_mp(M,P1):- !,M:call(P1).
 
 
 %call_u_mp(M,P1):- predicate_property(M:P1,built_in),!, M:call(P1).
@@ -2337,9 +2387,9 @@ call_u_mp_fa(M,P,F,A):- loop_check(call_u_mp_lc(M,P,F,A)).
 
 %call_u_mp_lc(mpred_core,P,F,A):-!, call_u_mp_lc(baseKB,P,F,A).
 %call_u_mp_lc(M,P,F,A):- current_predicate(M:F/A),!,throw(current_predicate(M:F/A)),catch(M:P,E,(wdmsg(call_u_mp(M,P)),wdmsg(E),dtrace)).
-% call_u_mp_lc(baseKB,P,F,A):- kb_shared(F/A),dmsg(kb_shared(F/A)),!, call(P).
+% call_u_mp_lc(baseKB,P,F,A):- kb_shared(F/A),dmsg(kb_shared(F/A)),!, baseKB:call(P).
 
-call_u_mp_lc(M,P,_,_):- !, M:mpred_call_0(P).
+call_u_mp_lc(M,P,_,_):- !, M:call_u_mp(M,P).
 call_u_mp_lc(M,P,_,_):- !, M:call(P).
 
 
@@ -2354,9 +2404,9 @@ call_u_mp_lc(M,P,F,A):- wdmsg(dynamic(M:P)),must_det_l((dynamic(M:F/A),make_visi
 Next
 call_u_mp(_G,M,P):- var(P),!,call((baseKB:mtExact(M)->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
 % call_u_mp(mtHybrid(P),_,mtHybrid(P)):-!,baseKB:mtHybrid(P).
-call_u_mp((P),M,(P)):-!,catch(call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
+call_u_mp((P),M,(P)):-!,catch(baseKB:call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
 % call_u_mp(P,M,P):- !,catch(M:call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
-call_u_mp(_G,M,P):- call((baseKB:mtExact(M)->M:call(P);call(P))).
+call_u_mp(_G,M,P):- call((baseKB:mtExact(M)->call(P);baseKB:call(P))).
 */
 
 mpred_BC_w_cache(W,P):- must(mpred_BC_CACHE(W,P)),!,clause(P,true).
@@ -2384,10 +2434,10 @@ mpred_BC_CACHE0(_,P):-
 
 
 % I''d like to remove this soon
-call_u_no_bc(P0):- strip_module(P0,_,P), sanity(stack_check),var(P),!, mpred_fact(P).
-call_u_no_bc(G):- !, call(G).
-call_u_no_bc(_:true):-!.
-call_u_no_bc(P):- no_repeats(call_u(P)).
+%call_u_no_bc(P0):- strip_module(P0,M,P), sanity(stack_check),var(P),!, M:mpred_fact(P).
+%call_u_no_bc(_:true):-!.
+call_u_no_bc(P):- !, call_u(P).
+%call_u_no_bc(G):- !, call(G).
 % call_u_no_bc(P):- no_repeats(loop_check(mpred_METACALL(call_u, P))).
 
 % mpred_call_no_bc0(P):- lookup_u(P).
@@ -2513,8 +2563,9 @@ mpred_nf1(P,[P]):- is_ftVar(P), !.
 % these next two rules are here for upward compatibility and will go
 % away eventually when the P/Condition form is no longer used anywhere.
 
-mpred_nf1(P/Cond,[(\+P)/Cond]):- mpred_negated_literal(P), !.
+mpred_nf1(P/Cond,[(\+P)/Cond]):- mpred_negated_literal(P), !, dmsg(warn(mpred_nf1(P/Cond,[(\+P)/Cond]))).
 
+mpred_nf1(P/Cond,[P/Cond]):- var(P),!.
 mpred_nf1(P/Cond,[P/Cond]):- must((mpred_db_type(P,trigger);mpred_literal(P))), !.
 
 %  handle a negated form
@@ -2546,13 +2597,31 @@ mpred_nf1([P|Q],NF):-
   append(NF1,NF2,NF).
 
 
+% prolog_clause mpred_nf1
+mpred_nf1((H :- B)  , [(H :- B)]):-  
+  mpred_positive_literal(H),!.
+
+/*
+% prolog_clause
+mpred_nf1((H :- B)  ,[P]):-   
+  mpred_positive_literal(H),
+  P={clause(H , B)},
+  dmsg(warn(mpred_nf1((H :- B)  ,[P]))),!.
+
+% prolog_clause
+mpred_nf1((H :- B)  ,[P]):-   
+  mpred_positive_literal(H),
+  P={clause(H , B)},
+  dmsg(warn(mpred_nf1((H :- B)  ,[P]))),!.
+*/
+
 %  handle a random literal.
 
 mpred_nf1(P,[P]):-
   mpred_literal(P),
   !.
 
-% mpred_nf1(Term,[Term]):- mpred_warn("mpred_nf Accepting ~p",[Term]),!.
+mpred_nf1(Term,[Term]):- mpred_trace_msg("mpred_nf Accepting ~p",[Term]),!.
 
 
 %=% shouldn''t we have something to catch the rest as errors?

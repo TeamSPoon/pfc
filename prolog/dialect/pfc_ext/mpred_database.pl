@@ -1394,15 +1394,6 @@ mpred_call_only_facts(_Why,Clause):- mpred_call_only_facts(Clause).
 mpred_call_only_facts(Clause) :-  strip_module(Clause,_,ClauseF), on_x_debug(no_repeats(loop_check(mpred_call_0(ClauseF),fail))). 
 
 
-mpred_call_ru(functorDeclares(H)):- !, get_var_or_functor(H,F),clause_b(functorDeclares(F)).
-mpred_call_ru(singleValuedInArg(H,A)):- !, get_var_or_functor(H,F),clause_b(singleValuedInArg(F,A)).
-mpred_call_ru(ttRelationType(C)):- !, clause_b(ttRelationType(C)).
-mpred_call_ru(M:G):- !,call(M:G).
-
-mpred_call_ru(G):- must(notrace((defaultAssertMt(M))))->call(M:G).
-
-get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.
-
 %% mpred_call_0( +Var) is semidet.
 %
 % PFC call  Primary Helper.
