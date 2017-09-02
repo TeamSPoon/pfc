@@ -96,10 +96,11 @@
 */
 
 
-
 P ==> \+ ~P.
 ~P ==> \+ P.
-(\+ P, P) => conflict(P).
+( \+ P, P) ==> {dmsg(warn(weak_conflict(P)))}.
+( ~ P, P) ==> ({dmsg(warn(conflict(P)))}).
+% (\+ P, P) => conflict(P).
 
 % ===================================================================
 %  Microtheory System
@@ -119,7 +120,7 @@ P ==> \+ ~P.
 :- kb_shared(do_import_modules/0).
 
 
-((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C),(C==user->dmsg(mtHybrid(C));true)}).
+((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C),(C==user->dmsg(warn(mtHybrid(C)));true)}).
 
 % TODO make these undoable
 :- if((current_predicate(predicate_m_f_a_decl/4))).

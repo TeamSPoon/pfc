@@ -20,7 +20,7 @@ sk6a_in(Ex)==>sk6a_out(Ex).
 sk6:attr_unify_hook(_,_).
 
 % :- rtrace.
-:- ain((sk6a_in(avar([vn='ExIn',sk6='SKF-666'])))).
+:- must(ain((sk6a_in(avar([vn='ExIn',sk6='SKF-666']))))).
 sk6_in(avar([vn='ExIn',sk6='SKF-666'])).
 
 /*
