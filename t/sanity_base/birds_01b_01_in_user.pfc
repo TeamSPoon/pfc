@@ -12,7 +12,12 @@
 (tType(COL)==>
  ({kb_local(COL/2)},
  (t(COL,ext,X)<==>iza(X,COL)))).
-  
+
+
+P ==> \+ ~P.
+~P ==> \+ P.
+
+
 tType(tFly).
 tType(tCanary).
 tType(tPenguin).

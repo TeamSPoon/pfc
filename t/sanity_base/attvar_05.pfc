@@ -29,7 +29,7 @@ sk5_in(Ex)==>sk5_out(Ex).
 
 :- listing(pt).
 
-:- ain(sk5_in(avar([vn='ExIn',sk5='SKF-666']))).
+:- must(ain(sk5_in(avar([vn='ExIn',sk5='SKF-666'])))).
 
 :- must(lookup_u(sk5_in(avar([vn='ZEx',sk5='SKF-666'])))).
 

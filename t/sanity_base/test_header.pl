@@ -33,7 +33,7 @@ test_header_include.
 
 :- if(is_pfc_file).
 
-:- mpred_trace_exec.
+% :- mpred_trace_exec.
 
 :- else.
 

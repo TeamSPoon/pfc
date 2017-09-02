@@ -32,12 +32,12 @@ subFromSum(X) :-
   format('~n I can''t find a sum to subtract ~w from.',[X]).
 
 
-
 % FACTS
 
 value(1).
 value(2).
 value(3).
+
 
 % TEST RESULTS
 :- mpred_test(sum(6)).
@@ -49,5 +49,4 @@ value(3).
 % TEST REMOVAL MISS
 \+ value(2).
 :- mpred_test(sum(4)).
-
 
