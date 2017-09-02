@@ -303,8 +303,8 @@ on_x_rtrace(G):-on_x_debug(G).
 
 /*
 */
-:- dynamic(baseKB:mpred_is_tracing_exec/0).
-:- export(baseKB:mpred_is_tracing_exec/0).
+%:- dynamic(baseKB:mpred_is_tracing_exec/0).
+%:- export(baseKB:mpred_is_tracing_exec/0).
 
 mpred_database_term_syntax(do_and_undo,2,rule(_)).
 
@@ -886,20 +886,6 @@ each_E(P,H,S) :- apply(P,[H|S]).
 
 
 
-%:- dynamic(mpred_te/0).
-:- multifile(user:term_expansion/2).
-:- dynamic(user:term_expansion/2).
-% user:term_expansion(I,O):-mpred_te->mpred_te(I,O).
-
-/*
-mpred_te((P==>Q),(:- mpred_ain((P==>Q)))).
-%mpred_te((P==>Q),(:- mpred_ain(('<-'(Q,P))))).  % speed-up attempt
-mpred_te(('<-'(P,Q)),(:- mpred_ain(('<-'(P,Q))))).
-mpred_te((P<==>Q),(:- mpred_ain((P<==>Q)))).
-mpred_te((RuleName :::: Rule),(:- mpred_ain((RuleName :::: Rule)))).
-mpred_te((==>P),(:- mpred_ain(P))).
-*/
-
 %  predicates to examine the state of mpred_
 
 
@@ -1214,9 +1200,10 @@ mpred_post12( ~ P,   S):- fail, (must_be(nonvar,P)), sanity((ignore(show_failure
 
 mpred_post12(P,S):- quietly_ex((maybe_updated_value(P,RP,OLD))),!,subst(S,P,RP,RS),mpred_post13(RP,RS),ignore(mpred_retract(OLD)).
 
-mpred_post12(P,S):- mpred_post13(P,S).
+%  TODO MAYBE 
+% mpred_post12(actn(P),S):- !, with_current_why(S,call(P)), mpred_post13(actn(P),S).
 
-%  TODO MAYBE mpred_post12(actn(P),S):- !, with_current_why(S,call(P)).
+mpred_post12(P,S):- mpred_post13(P,S).
 
 % Two versions exists of this function one expects for a clean database (fresh_mode) and adds new information.
 % tries to assert a fact or set of fact to the database.
@@ -1680,7 +1667,7 @@ mpred_bt_pt_combine(_,_,_):- !.
 %
 
 mpred_ain_actiontrace(Action,Support):-
-  % adds an action dtrace and it''s support.
+  % adds an action trace and it''s support.
   mpred_add_support(actn(Action),Support).
 
 mpred_undo_action(actn(Did)):-
@@ -2239,8 +2226,8 @@ fc_eval_action(CALL,Support):-
   mpred_METACALL(fc_eval_action_rev(Support),CALL).
 
 fc_eval_action_rev(Support,Action):-
-  call_u_no_bc(Action),
-  (action_is_undoable(Action)
+  show_failure(call_u_no_bc(Action)),
+  (show_success(action_is_undoable(Action))
      -> mpred_ain_actiontrace(Action,Support)
       ; true).
 
@@ -2301,7 +2288,7 @@ call_u(G):- !, mpred_call_ru(G).
 call_u_mp(M, _ ):- module_sanity_check(M),fail.
 call_u_mp(mpred_core, P1 ):- break_ex,'$current_source_module'(SM),SM\==mpred_core,!,  call_u_mp(SM,P1).
 call_u_mp(user, P1 ):- '$current_source_module'(SM),SM\==user,!,  call_u_mp(SM,P1).
-call_u_mp(M,P):- var(P),!,call((baseKB:mtExact(M)->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
+call_u_mp(M,P):- var(P),!,call((clause_b(mtExact(M))->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
 call_u_mp(_, M:P1):-!,call_u_mp(M,P1).
 call_u_mp(M, (P1,P2)):-!,call_u_mp(M,P1),call_u_mp(M,P2).
 call_u_mp(M, (P1*->P2;P3)):-!,(call_u_mp(M,P1)*->call_u_mp(M,P2);call_u_mp(M,P3)).
@@ -2350,7 +2337,7 @@ call_u_mp_fa(M,P,F,A):- loop_check(call_u_mp_lc(M,P,F,A)).
 
 %call_u_mp_lc(mpred_core,P,F,A):-!, call_u_mp_lc(baseKB,P,F,A).
 %call_u_mp_lc(M,P,F,A):- current_predicate(M:F/A),!,throw(current_predicate(M:F/A)),catch(M:P,E,(wdmsg(call_u_mp(M,P)),wdmsg(E),dtrace)).
-% call_u_mp_lc(baseKB,P,F,A):- kb_shared(F/A),dmsg(kb_shared(F/A)),!, baseKB:call(P).
+% call_u_mp_lc(baseKB,P,F,A):- kb_shared(F/A),dmsg(kb_shared(F/A)),!, call(P).
 
 call_u_mp_lc(M,P,_,_):- !, M:mpred_call_0(P).
 call_u_mp_lc(M,P,_,_):- !, M:call(P).
@@ -2367,9 +2354,9 @@ call_u_mp_lc(M,P,F,A):- wdmsg(dynamic(M:P)),must_det_l((dynamic(M:F/A),make_visi
 Next
 call_u_mp(_G,M,P):- var(P),!,call((baseKB:mtExact(M)->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
 % call_u_mp(mtHybrid(P),_,mtHybrid(P)):-!,baseKB:mtHybrid(P).
-call_u_mp((P),M,(P)):-!,catch(baseKB:call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
+call_u_mp((P),M,(P)):-!,catch(call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
 % call_u_mp(P,M,P):- !,catch(M:call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
-call_u_mp(_G,M,P):- call((baseKB:mtExact(M)->call(P);baseKB:call(P))).
+call_u_mp(_G,M,P):- call((baseKB:mtExact(M)->M:call(P);call(P))).
 */
 
 mpred_BC_w_cache(W,P):- must(mpred_BC_CACHE(W,P)),!,clause(P,true).
@@ -2411,14 +2398,14 @@ call_u_no_bc(P):- no_repeats(call_u(P)).
 % TODO .. mpred_call_no_bc0(P):-  defaultAssertMt(Mt), clause_b(genlMt(Mt,SuperMt)), call_umt(SuperMt,P).
 %mpred_call_no_bc0(P):- mpred_call_with_no_triggers(P).
 % mpred_call_no_bc0(P):- nonvar(P),predicate_property(P,defined),!, P.
-mpred_call_no_bc0(P):- current_prolog_flag(unsafe_speedups , true) ,!,baseKB:call(P).
+mpred_call_no_bc0(P):- current_prolog_flag(unsafe_speedups , true) ,!,call(P).
 mpred_call_no_bc0(P):- loop_check(mpred_METACALL(ereq, P)).
 
 pred_check(A):- var(A),!.
 % catch module prefix issues
 pred_check(A):- nonvar(A),must(atom(A)).
 
-mpred_METACALL(How,P):- current_prolog_flag(unsafe_speedups , true) ,!,baseKB:call(How,P).
+%mpred_METACALL(How,P):- current_prolog_flag(unsafe_speedups , true) ,!,call(How,P).
 mpred_METACALL(How,P):- mpred_METACALL(How, Cut, P), (var(Cut)->true;(Cut=cut(CutCall)->(!,CutCall);call_u_no_bc(Cut))).
 
 mpred_METACALL(How, Cut, Var):- var(Var),!,trace_or_throw_ex(var_mpred_METACALL_MI(How,Cut,Var)).
@@ -2474,7 +2461,7 @@ mpred_METACALL(_How, _Cut, M:(H:-B)):- !, clause_u((M:H :- B)).
 
 % TODO: mpred_METACALL(_How, _Cut, M:HB):- current_prolog_flag(unsafe_speedups , true) ,!, call(M:HB).
 
-mpred_METACALL(_How, _SCut, P):- predicate_property(P,built_in),!, call(P).
+%mpred_METACALL(_How, _SCut, P):- fail, predicate_property(P,built_in),!, call(P).
 %mpred_METACALL(How, Cut, (H)):- is_static_pred(H),!,show_pred_info(H),dtrace(mpred_METACALL(How, Cut, (H))).
 mpred_METACALL( How,   Cut, P) :- fail, predicate_property(P,number_of_clauses(_)),!,
      clause_u(P,Condition),
@@ -2516,7 +2503,7 @@ mpred_nf(LHS,List):-
 
 %%  mpred_nf1(+In,-Out)
 %
-% maps the LHR of a Pfc rule In to one normal form
+% maps the LHS of a Pfc rule In to one normal form
 %  Out.  Backtracking into this predicate will produce additional clauses.
 
 % handle a variable.
