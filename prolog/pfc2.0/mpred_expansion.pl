@@ -890,7 +890,7 @@ fully_expand_into_cache(Op,Sent,SentO):-
  trace,break,
   (fully_expand_clause_catch_each(Op,Sent,SentO)),
          asserta(lmcache:completely_expanded(Sent,SentO)),!.
-% fully_expand_clause_catch_each(change(assert, ain), arity(functorDeclares, 1), _32410
+% fully_expand_clause_catch_each(change(assert, ain), arity(functorDeclares, 1), _32410)
 
 
 fully_expand_clause_catch_each(Op,Sent,SentO):-
@@ -950,6 +950,9 @@ fully_expand_clause(Op,aExpansionFn(Sent),SentO):- fully_expand_clause(Op,Sent,S
 fully_expand_clause(Op,M:Sent,SentO):- is_stripped_module(M),!,fully_expand_clause(Op,Sent,SentO).
 
 fully_expand_clause(Op,(B/H),Out):- !,fully_expand_head(Op,H,HH),fully_expand_goal(Op,B,BB),!,must(Out=(BB/HH)).
+
+% prolog_clause fully_expand_clause
+fully_expand_clause(Op, H :- B, HH :- B):- is_ftVar(B),!,fully_expand_head(Op,H,HH).
 
 %covered fully_expand_clause(Op ,NC,NCO):- db_expand_final(Op,NC,NCO),!.
 fully_expand_clause(Op, HB, OUT):- 
@@ -1306,6 +1309,7 @@ try_expand_head(Op,Sent,SentO):- db_expand_0(Op,Sent,M)->( M==Sent->SentO=M;db_e
 
 :- meta_predicate temp_comp(*,*,2,?).
 
+% prolog_clause fully_expand_clause
 temp_comp(H,B,PRED,OUT):- nonvar(H),term_variables(B,Vs1),Vs1\==[], term_attvars(B,AVs1), AVs1==[],   
    quietly((asserta(('$temp_comp123'(H,B):- B),Ref),clause('$temp_comp123'(H,_),BO,Ref),erase(Ref))),
    B\=@=BO,!,
@@ -1364,7 +1368,12 @@ db_expand_0(_Op,P,PO):- fail,
 
 %:- kb_shared(is_svo_functor/1).
 
-db_expand_0(Op,(H:-B),OUT):- temp_comp(H,B,db_expand_0(Op),OUT),!.
+% prolog_clause db_expand_0
+% db_expand_0(_Op,(H:-B),(H:-B)):- !.
+db_expand_0(Op,(H:-B),OUT):- fully_expand_clause(Op,(H:-B),OUT),!,  
+                         (((H:-B)=@=OUT)->true;dmsg(warn(db_expand_0(Op,(H:-B),OUT)))).
+% prolog_clause db_expand_0
+% db_expand_0(Op,(H:-B),OUT):- temp_comp(H,B,db_expand_0(Op),OUT),!.
 db_expand_0(Op,(:-(CALL)),(:-(CALLO))):-with_assert_op_override(Op,db_expand_0(Op,CALL,CALLO)).
 db_expand_0(Op,isa(I,O),INot):-Not==not,!,INot =.. [Not,I],!,db_expand_0(Op,INot,O).
 db_expand_0(Op,isa(I,O),INot):-Not== ( \+ ) ,!,INot =.. [Not,I],!,db_expand_0(Op,INot,O).
@@ -1419,7 +1428,7 @@ db_expand_0(Op,DECL,OUT):-
 db_expand_0(_,Sent,mpred_prop(M,F,A,RT)):- Sent=..[RT,MFA],a(ttRelationType,RT),nonvar(MFA),get_mfa(MFA,M,F,A),atom(F),!.
 
 get_mfa(M:FA,M,F,A):- !, get_fa(FA,F,A).
-get_mfa(FA,M,F,A):- get_fa(FA,F,A),current_assertion_module(M).
+get_mfa(FA,M,F,A):- get_fa(FA,F,A),must(current_assertion_module(M)).
 
 
 flat_list([Args],Args):-is_list(Args),!.
