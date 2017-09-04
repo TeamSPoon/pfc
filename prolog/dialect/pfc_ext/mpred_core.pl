@@ -1201,7 +1201,7 @@ mpred_post12( ~ P,   S):- fail, (must_be(nonvar,P)), sanity((ignore(show_failure
 mpred_post12(P,S):- quietly_ex((maybe_updated_value(P,RP,OLD))),!,subst(S,P,RP,RS),mpred_post13(RP,RS),ignore(mpred_retract(OLD)).
 
 %  TODO MAYBE 
-% mpred_post12(actn(P),S):- !, with_current_why(S,call(P)), mpred_post13(actn(P),S).
+mpred_post12(actn(P),S):- !, with_current_why(S,call(P)), mpred_post13(actn(P),S).
 
 mpred_post12(P,S):- mpred_post13(P,S).
 
@@ -2014,6 +2014,10 @@ mpred_fwc1(Fact):-
 
 
 
+%% mpred_do_rule(P) is det.
+% does some special, built in forward chaining if P is
+%  a rule.
+
 
 % mpred_do_rule((H:-attr_bind(B,_))):- get_functor(H,F,A),lookup_u(mpred_prop(M,F,A,pfcLHS)), sanity(nonvar(B)), repropagate(H),!.
 
@@ -2025,14 +2029,10 @@ mpred_do_rule((H:-B)):- get_functor(H,F,A),must(suggest_m(M)),
   lookup_u(mpred_prop(M,F,A,pfcLHS)), 
   sanity(nonvar(B)),
     forall(call_u(B),mpred_fwc(H)),!.
-
+                     
 % prolog_clause
 % mpred_do_rule((H:-B)):- !,ignore((call_u(B),mpred_fwc1(H),fail)).
 
-
-%% mpred_do_rule(P)
-% does some special, built in forward chaining if P is
-%  a rule.
 
 mpred_do_rule((P==>Q)):-
   !,
@@ -2253,8 +2253,8 @@ fc_eval_action(CALL,Support):-
   mpred_METACALL(fc_eval_action_rev(Support),CALL).
 
 fc_eval_action_rev(Support,Action):-
-  call_u_no_bc(Action),
-  (action_is_undoable(Action)
+  (call_u_no_bc(Action)),
+  (show_success(action_is_undoable(Action))
      -> mpred_ain_actiontrace(Action,Support)
       ; true).
 
@@ -2320,7 +2320,7 @@ get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.
 
 call_u_mp(mpred_core, P1 ):- break_ex,'$current_source_module'(SM),SM\==mpred_core,!,  call_u_mp(SM,P1).
 call_u_mp(user, P1 ):- '$current_source_module'(SM),SM\==user,!,  call_u_mp(SM,P1).
-call_u_mp(M,P):- var(P),!,call((baseKB:mtExact(M)->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
+call_u_mp(M,P):- var(P),!,call((clause_b(mtExact(M))->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
 call_u_mp(_, M:P1):-!,call_u_mp(M,P1).
 call_u_mp(M, (P1,P2)):-!,call_u_mp(M,P1),call_u_mp(M,P2).
 call_u_mp(M, (P1*->P2;P3)):-!,(call_u_mp(M,P1)*->call_u_mp(M,P2);call_u_mp(M,P3)).
@@ -2387,7 +2387,7 @@ call_u_mp_fa(M,P,F,A):- loop_check(call_u_mp_lc(M,P,F,A)).
 
 %call_u_mp_lc(mpred_core,P,F,A):-!, call_u_mp_lc(baseKB,P,F,A).
 %call_u_mp_lc(M,P,F,A):- current_predicate(M:F/A),!,throw(current_predicate(M:F/A)),catch(M:P,E,(wdmsg(call_u_mp(M,P)),wdmsg(E),dtrace)).
-% call_u_mp_lc(baseKB,P,F,A):- kb_shared(F/A),dmsg(kb_shared(F/A)),!, baseKB:call(P).
+% call_u_mp_lc(baseKB,P,F,A):- kb_shared(F/A),dmsg(kb_shared(F/A)),!, call(P).
 
 call_u_mp_lc(M,P,_,_):- !, M:call_u_mp(M,P).
 call_u_mp_lc(M,P,_,_):- !, M:call(P).
@@ -2404,9 +2404,9 @@ call_u_mp_lc(M,P,F,A):- wdmsg(dynamic(M:P)),must_det_l((dynamic(M:F/A),make_visi
 Next
 call_u_mp(_G,M,P):- var(P),!,call((baseKB:mtExact(M)->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
 % call_u_mp(mtHybrid(P),_,mtHybrid(P)):-!,baseKB:mtHybrid(P).
-call_u_mp((P),M,(P)):-!,catch(baseKB:call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
+call_u_mp((P),M,(P)):-!,catch(call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
 % call_u_mp(P,M,P):- !,catch(M:call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
-call_u_mp(_G,M,P):- call((baseKB:mtExact(M)->call(P);baseKB:call(P))).
+call_u_mp(_G,M,P):- call((baseKB:mtExact(M)->M:call(P);call(P))).
 */
 
 mpred_BC_w_cache(W,P):- must(mpred_BC_CACHE(W,P)),!,clause(P,true).
@@ -2436,7 +2436,8 @@ mpred_BC_CACHE0(_,P):-
 % I''d like to remove this soon
 %call_u_no_bc(P0):- strip_module(P0,M,P), sanity(stack_check),var(P),!, M:mpred_fact(P).
 %call_u_no_bc(_:true):-!.
-call_u_no_bc(P):- !, call_u(P).
+call_u_no_bc(P):- no_repeats(call_u(P)).
+% call_u_no_bc(P):- !, call_u(P).
 %call_u_no_bc(G):- !, call(G).
 % call_u_no_bc(P):- no_repeats(loop_check(mpred_METACALL(call_u, P))).
 

@@ -123,14 +123,16 @@ functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_d
 %:- use_module(mpred_type_isa).
 :- use_module(library(listing_vars)).
 
+/*
 :- module_transparent retract_mu/1,
-               assert_mu/4,
-               assert_mu/1,
-               asserta_mu/2,
-               asserta_mu/1,
-               assertz_mu/2,
-               assertz_mu/1,
-               attempt_side_effect/1.
+         assert_mu/4,
+         asserta_mu/2,
+         assertz_mu/2,
+         assert_u/1,
+         asserta_u/1,
+         assertz_u/1,
+         attempt_side_effect/1.
+*/
 :- module_transparent(attvar_op/2).
 
 
@@ -160,7 +162,7 @@ functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_d
       assert_mu(+),
       assert_mu(+,+,+,+),
       ain_minfo_2(1,*),
-      ain_minfo(1,*),
+      ain_minfo(1,*),                                    
 %      whenAnd(0,0),
       mpred_call_0(*),
       mpred_bc_only(*),
@@ -1346,10 +1348,12 @@ mpred_retry(G):- fail; quietly(G).
 :- export(neg_in_code/1).
 neg_in_code(G):-nonvar(G),loop_check(neg_in_code0(G)).
 
+:- kb_shared(baseKB:proven_neg/1).
+
 :- meta_predicate neg_in_code0(*).
 :- export(neg_in_code0/1).
 neg_in_code0(G):- var(G),!,lookup_u(~ G).
-neg_in_code0(G):- proven_neg(G).
+neg_in_code0(G):- cwc, umt(proven_neg(G)).
 % neg_in_code0(call_u(G)):- !,call_u(~G).
 neg_in_code0(call_u(G)):- !,neg_in_code0(G).
 neg_in_code0(G):- clause(~G,Call)*-> call(Call) ,! .
@@ -1359,7 +1363,6 @@ neg_in_code0(G):-   neg_may_naf(G), \+ call_u(G),!.
 neg_in_code0(~(G)):- nonvar(G),!,  \+ call_u(~G) ,!.
 neg_in_code0(_:G):-!,baseKB:neg_in_code0(G).
 
-:- kb_shared(baseKB:proven_neg/1).
 
 :- meta_predicate neg_may_naf(*).
 :- module_transparent(neg_may_naf/1).

@@ -2310,6 +2310,13 @@ pfc_test_feature(Feature,Test):- pfc_feature(Feature)*-> mpred_test(Test) ; true
 % DUMPST ON WARNINGS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% none = dont act as installed
+% ignore = ignore warnings but dumpst+break on errors
+% dumpst = dumpst on warnings +break on errors
+% break = break on warnings and errors
+:- create_prolog_flag(logicmoo_message_hook,none,[keep(true),type(term)]).
+
+
 skip_warning(informational).
 skip_warning(information).
 skip_warning(debug).
@@ -2325,46 +2332,46 @@ skip_warning(interrupt).
 skip_warning(statistics).
 % skip_warning(check).
 skip_warning(compiler_warnings).
-
-
 skip_warning(T):- \+ compound(T),!,fail.
 skip_warning(_:T):- !, compound(T),functor(T,F,_),skip_warning(F).
 skip_warning(T):-compound(T),functor(T,F,_),skip_warning(F).
-base_message(T1,T2,_):- skip_warning(T1);skip_warning(T2);(thread_self(M),M\==main).
-base_message(_,_,_):- \+ current_predicate(dumpST/0),!.
-base_message(T,Type,Warn):- dmsg(message_hook(T,Type,Warn)),dumpST,dmsg(message_hook(T,Type,Warn)),!,fail.
-
-:- multifile prolog:message//1, user:message_hook/3.
-:- discontiguous(user:message_hook/3).
-user:message_hook(T,Type,Warn):- fail, ( \+ current_prolog_flag(runtime_debug,0)),
-   catch(once(base_message(T,Type,Warn)),_,fail),fail.
 
 
-:- dynamic(system:test_results/3).
 
-maybe_message_hook(compiler_warnings(_,[always(true,var,_),always(false,integer,_),
+inform_message_hook(T1,T2,_):- skip_warning(T1);skip_warning(T2);(thread_self(M),M\==main).
+inform_message_hook(_,_,_):- \+ current_predicate(dumpST/0),!.
+inform_message_hook(compiler_warnings(_,[always(true,var,_),always(false,integer,_),
    always(false,integer,_),always(true,var,_),always(false,integer,_),always(false,integer,_)]),warning,[]):- !.
 
-maybe_message_hook(import_private(_,_),_,_).
-maybe_message_hook(check(undefined(_, _)),_,_).
-maybe_message_hook(ignored_weak_import(header_sane,_),_,_).
-maybe_message_hook(error(existence_error(procedure,'$toplevel':_),_),error,_).
-% maybe_message_hook(_,warning,_).
-maybe_message_hook(T,Type,Warn):-
+inform_message_hook(import_private(_,_),_,_).
+inform_message_hook(check(undefined(_, _)),_,_).
+inform_message_hook(ignored_weak_import(header_sane,_),_,_).
+inform_message_hook(error(existence_error(procedure,'$toplevel':_),_),error,_).
+% inform_message_hook(_,warning,_).
+inform_message_hook(T,Type,Warn):-
   ignore(source_location(File,Line)),
   once((nl,dmsg(message_hook(T,Type,Warn)),nl,
   assertz(system:test_results(File:Line/T,Type,Warn)),dumpST,nl,dmsg(message_hook(File:Line:T,Type,Warn)),nl)),
   fail.
 
-maybe_message_hook(_,error,_):- current_prolog_flag(runtime_debug, N),N>2,break.
-maybe_message_hook(_,warning,_):- current_prolog_flag(runtime_debug, N),N>2,break.
+inform_message_hook(T,Type,Warn):- dmsg(message_hook(T,Type,Warn)),dumpST,dmsg(message_hook(T,Type,Warn)),!,fail.
+inform_message_hook(_,error,_):- current_prolog_flag(runtime_debug, N),N>2,break.
+inform_message_hook(_,warning,_):- current_prolog_flag(runtime_debug, N),N>2,break.
 
+
+:- multifile prolog:message//1, user:message_hook/3.
+
+:- dynamic(system:test_results/3).
+
+system:test_repl:-  assertz(system:test_results(need_retake,warn,need_retake)).
 system:test_completed:- listing(system:test_results/3),test_completed_exit_maybe(4).
 system:test_retake:- listing(system:test_results/3),test_completed_exit_maybe(7).
 
+test_completed_exit(7):- debugging,!,dmsg(halt(7)).
 test_completed_exit(4):- halt(4).
 test_completed_exit(5):- halt(5).
 test_completed_exit(N):- (debugging-> break ; true), halt(N).
+test_completed_exit(N):- (debugging-> true ; halt(N)).
 
 test_completed_exit_maybe(_):- system:test_results(_,error,_),test_completed_exit(9).
 test_completed_exit_maybe(_):- system:test_results(_,warning,_),test_completed_exit(3).
@@ -2376,29 +2383,25 @@ set_file_abox_module(User):- '$set_typein_module'(User), '$set_source_module'(Us
 set_file_abox_module_wa(User):- set_file_abox_module(User),set_defaultAssertMt(User).
 
 :- multifile prolog:message//1, user:message_hook/3.
-% my_message_hook(import_private(pfc_lib,_:_/_),warning,_):- source_location(_,_),!.
-my_message_hook(io_warning(_,'Illegal UTF-8 start'),warning,_):- source_location(_,_),!.
-my_message_hook(undefined_export(jpl, _), error, _):- source_location(_,_),!.
-my_message_hook(_, error, _):- source_location(File,4235),atom_concat(_,'/jpl.pl',File),!.
-my_message_hook(message_lines(_),error,['~w'-[_]]). 
-
-my_message_hook(error(resource_error(portray_nesting),_),
+% message_hook_handle(import_private(pfc_lib,_:_/_),warning,_):- source_location(_,_),!.
+message_hook_handle(io_warning(_,'Illegal UTF-8 start'),warning,_):- source_location(_,_),!.
+message_hook_handle(undefined_export(jpl, _), error, _):- source_location(_,_),!.
+message_hook_handle(_, error, _):- source_location(File,4235),atom_concat(_,'/jpl.pl',File),!.
+message_hook_handle(message_lines(_),error,['~w'-[_]]). 
+message_hook_handle(error(resource_error(portray_nesting),_),
    error, ['Not enough resources: ~w'-[portray_nesting], nl,
       'In:', nl, '~|~t[~D]~6+ '-[9], '~q'-[_], nl, '~|~t[~D]~6+ '-[7], 
         _-[], nl, nl, 'Note: some frames are missing due to last-call optimization.'-[], nl, 
         'Re-run your program in debug mode (:- debug.) to get more detail.'-[]]).
-
-
-my_message_hook(T,Type,Warn):- 
+message_hook_handle(T,Type,Warn):- 
   ((current_prolog_flag(runtime_debug, N),N>2) -> true ; source_location(_,_)),
-  memberchk(Type,[error,warning]),once(maybe_message_hook(T,Type,Warn)),fail.
-
+  memberchk(Type,[error,warning]),once(inform_message_hook(T,Type,Warn)),fail.
 
 :- fixup_exports.
 
 mpred_loader_file.
 %system:term_expansion(end_of_file,_):-must(check_clause_counts),fail.
 %system:term_expansion(EOF,_):-end_of_file==EOF,must(check_clause_counts),fail.
-user:message_hook(T,Type,Warn):- current_prolog_flag(logicmoo_message_hook,true),once(my_message_hook(T,Type,Warn)).
+user:message_hook(T,Type,Warn):- current_prolog_flag(logicmoo_message_hook,Was),Was\==none,once(message_hook_handle(T,Type,Warn)).
 
 
