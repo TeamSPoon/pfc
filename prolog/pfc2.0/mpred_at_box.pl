@@ -265,7 +265,7 @@ set_defaultAssertMt(M):-
   ignore(show_failure(mtCanAssert(M))),
    ensure_abox(M),!,
    assert_setting(t_l:current_defaultAssertMt(M)),
-  (source_location(_,_)-> ((fileAssertMt(M) -> true; set_fileAssertMt(M)))  ;true).
+  (source_location(_,_)-> ((fileAssertMt(M) -> true; set_fileAssertMt(M)))  ;set_current_modules(M)).
 
 % :- '$hide'(set_defaultAssertMt(_)).
 
