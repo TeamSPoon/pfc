@@ -22,9 +22,9 @@
 
 :- throw(module(pfcumt,[umt/1])).
 
-%:- use_module(library('pfc2.3/pfcsyntax')).
+%:- use_module(library('pfc2.2/pfcsyntax')).
 
-begin_pfc :- use_module(library(pfc_lib)).
+begin_pfc :- use_module(library(pfc_lib_2_2)).
 
 
 :- 

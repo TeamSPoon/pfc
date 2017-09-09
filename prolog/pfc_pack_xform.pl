@@ -21,6 +21,10 @@
     pfcapi_to_mpred/2,
     mp2pfc/2]).
 
+
+:- throw(module(pfcxform,[pfcapi_to_mpred/2])).
+
+
 :- use_module(pfc_pack_umt).
 
 show_if_changed(Type,MPRED,PFC):- ignore((MPRED\==PFC, dmsg(changed(Type,MPRED)-->PFC))).
