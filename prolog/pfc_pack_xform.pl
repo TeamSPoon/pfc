@@ -28,6 +28,7 @@ show_if_changed(Type,MPRED,PFC):- ignore((MPRED\==PFC, dmsg(changed(Type,MPRED)-
 :- multifile(pfcumt:pfcDatabaseTerm_DYN/1).
 :- dynamic(pfcumt:pfcDatabaseTerm_DYN/1).
 
+:- throw(module(pfcumt,[umt/1])).
 
 :- meta_predicate(pfcapi_to_mpred(*,*)).
 pfcapi_to_mpred(I,I):-  I == end_of_file,fixup_exports,!.

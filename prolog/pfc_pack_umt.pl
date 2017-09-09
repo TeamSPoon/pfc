@@ -1,6 +1,7 @@
 
 :- module(pfcumt,[umt/1]).
 
+:- throw(module(pfcumt,[umt/1])).
 :- 
     op(1050,xfx,('==>')),
     op(1050,xfx,'<==>'),
@@ -177,7 +178,7 @@ t_l:whybuffer/2,
      pfcSearch/1]))).
 
 
-red_line:- notrace((
+red_line:- quietly((
   format('~N',[]),
   quietly_ex((doall((between(1,3,_),
   ansifmt(red,"%%%%%%%%%%%%%%%%%%%%%%%%%%% find log_failure in srcs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"),
@@ -507,7 +508,7 @@ attvar_op(Op,MData):-
    strip_module(Op,_,OpA), sanity( \+ atom(OpA)),
    fix_mp(clause(Op,OpA),MData,M,Data),
    add_side_effect(OpA,M:Data),
-   notrace(current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0))),!,
+   quietly(current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0))),!,
    attempt_side_effect_mpa(M,OpA,Data0).
 
 

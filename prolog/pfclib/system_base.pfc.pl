@@ -74,7 +74,7 @@
 :- kb_shared(alwaysGaf/1).
 
 :- kb_shared(rtReformulatorDirectivePredicate/1).
-:- kb_shared(rtArgsVerbatum/1).
+:- kb_global(rtArgsVerbatum/1).
 :- kb_shared(rtAvoidForwardChain/1).
 
 :- kb_shared(pfcControlled/1).
@@ -272,7 +272,7 @@ mpred_prop(M,F,A,What)/(\+ ground(F/A))==>{trace_or_throw_ex(mpred_prop(M,F,A,Wh
 
 
 prop_mpred(M,pfcCreates,F,A)==> 
- % {functor(P,F,A),notrace(make_dynamic(P)),kb_shared(F/A),create_predicate_inheritance(abox,F,A)},
+ % {functor(P,F,A),quietly(make_dynamic(P)),kb_shared(F/A),create_predicate_inheritance(abox,F,A)},
   {kb_shared(M:F/A)},
   {M:warn_if_static(F,A)}.
 prop_mpred(M,pfcControlled,F,A)==> {kb_shared(M:F/A)}.

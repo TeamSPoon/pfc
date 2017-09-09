@@ -448,7 +448,7 @@ attvar_op(Op,MData):-
    strip_module(Op,_,OpA), sanity( \+ atom(OpA)),
    fix_mp(clause(assert,OpA),MData,M,Data),
    add_side_effect(OpA,M:Data),
-   notrace(current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0))),!,
+   quietly(current_prolog_flag(assert_attvars,true)->deserialize_attvars(Data,Data0);Data=Data0))),!,
    attempt_side_effect_mpa(M,OpA,Data0).
 
 
@@ -1346,22 +1346,21 @@ mpred_retry(G):- fail; quietly(G).
 %
 :- meta_predicate neg_in_code(*).
 :- export(neg_in_code/1).
-neg_in_code(G):-nonvar(G),loop_check(neg_in_code0(G)).
+neg_in_code(G):- no_repeats(loop_check(neg_in_code0(G))).
 
 :- kb_shared(baseKB:proven_neg/1).
 
 :- meta_predicate neg_in_code0(*).
 :- export(neg_in_code0/1).
-neg_in_code0(G):- var(G),!,lookup_u(~ G).
-neg_in_code0(G):- cwc, umt(proven_neg(G)).
-% neg_in_code0(call_u(G)):- !,call_u(~G).
+neg_in_code0(G):- cwc, call_u(proven_neg(G)).
+neg_in_code0(G):- cwc, var(G),!,lookup_u(~ G).
 neg_in_code0(call_u(G)):- !,neg_in_code0(G).
-neg_in_code0(G):- clause(~G,Call)*-> call(Call) ,! .
+neg_in_code0(~(G)):- nonvar(G),!,  \+ call_u(~G) ,!.
 neg_in_code0(G):-  is_ftNonvar(G), a(prologSingleValued,G),
       must((if_missing_mask(G,R,Test),nonvar(R),nonvar(Test))),call_u(R),!,call_u(Test).
+neg_in_code0(G):- cwc, clause(~G,Call)*-> call_u(Call).
 neg_in_code0(G):-   neg_may_naf(G), \+ call_u(G),!.
-neg_in_code0(~(G)):- nonvar(G),!,  \+ call_u(~G) ,!.
-neg_in_code0(_:G):-!,baseKB:neg_in_code0(G).
+% neg_in_code0(_:G):-!,baseKB:neg_in_code0(G).
 
 
 :- meta_predicate neg_may_naf(*).

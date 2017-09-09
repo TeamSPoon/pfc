@@ -264,7 +264,8 @@ set_current_modules(M):-
 set_defaultAssertMt(M):-
   ignore(show_failure(mtCanAssert(M))),
    ensure_abox(M),!,
-   assert_setting(t_l:current_defaultAssertMt(M)),
+   % assert_setting(t_l:current_defaultAssertMt(M)),
+   asserta_until_eof(t_l:current_defaultAssertMt(M)),
   (source_location(_,_)-> ((fileAssertMt(M) -> true; set_fileAssertMt(M)))  ;set_current_modules(M)).
 
 % :- '$hide'(set_defaultAssertMt(_)).
@@ -279,11 +280,10 @@ set_defaultAssertMt(M):-
 % not just user modules
 
 defaultAssertMt(M):- nonvar(M), defaultAssertMt(ABoxVar),!,M=@=ABoxVar.
-defaultAssertMt(M):- t_l:current_defaultAssertMt(M),!.
-defaultAssertMt(M):- get_fallBackAssertMt(M),!.
+defaultAssertMt(M):- notrace(defaultAssertMt0(M)),!.
 
-%defaultAssertMt(M):- loading_source_file(File),baseKB:file_to_module(File,M),!.
-%defaultAssertMt(M):- t_l:current_defaultAssertMt(M),!.
+defaultAssertMt0(M):- t_l:current_defaultAssertMt(M).
+defaultAssertMt0(M):- get_fallBackAssertMt(M),!.
 
 get_fallBackAssertMt(M):- loading_source_file(File),clause_b(baseKB:file_to_module(File,M)).
 get_fallBackAssertMt(M):- loading_source_file(File),clause_b(lmcache:mpred_directive_value(File,module,M)).

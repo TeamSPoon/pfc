@@ -366,7 +366,7 @@ must_not_be_pfc_file:- is_pfc_file0, rtrace(is_pfc_file0),trace,!,fail.
 must_not_be_pfc_file:- !.
 
 is_pfc_file:- current_prolog_flag(never_pfc,true),!,must_not_be_pfc_file,!,fail.
-is_pfc_file:- notrace(is_pfc_file0),!.
+is_pfc_file:- quietly(is_pfc_file0),!.
 
 is_pfc_file0:- source_location(File,_W),!,is_pfc_file(File),!.
 is_pfc_file0:- prolog_load_context(module, M),is_pfc_module(M),!,clause_b(mtHybrid(M)).
@@ -394,7 +394,7 @@ is_pfc_file(M,Other):- prolog_load_context(source, File),Other\==File,!,is_pfc_f
 sub_atom(F,C):- sub_atom(F,_,_,_,C).
 
 only_expand(':-'(I), ':-'(M)):- !,in_dialect_pfc,fully_expand('==>'(I),M),!.
-only_expand(I,OO):- fail, notrace(must_pfc(I,M)),  
+only_expand(I,OO):- fail, quietly(must_pfc(I,M)),  
   % current_why(S),!,
   S= mfl(Module, File, Line),source_location(File,Line),prolog_load_context(module,Module),
   conjuncts_to_list(M,O), !, %  [I]\=@=O,
@@ -546,7 +546,7 @@ module_uses_pfc(SM):- current_predicate(SM:'$uses_pfc_toplevel'/0).
 :- dynamic(pfc_goal_expansion/4).
 :- module_transparent(pfc_goal_expansion/4).
 pfc_goal_expansion(I,P,O,PO):- 
- notrace(( \+ source_location(_,_),
+ quietly(( \+ source_location(_,_),
      callable(I),          
      var(P), % Not a file goal     
      \+ current_prolog_flag(xref,true), 
@@ -556,7 +556,7 @@ pfc_goal_expansion(I,P,O,PO):-
      ((SM \== CM) -> module_uses_pfc(SM); module_uses_pfc(CM)), 
      (I \= (CM : call_u(_))), (I \= call_u(_)))),
      fully_expand(I,M),
-     % notrace
+     % quietly
      ((
      O=CM:call_u(M),
      PO=P)).

@@ -20,6 +20,8 @@
           mpred_test/1
           ]).
 
+:- throw(module(pfcumt,[umt/1])).
+
 %:- use_module(library('pfc2.3/pfcsyntax')).
 
 begin_pfc :- use_module(library(pfc_lib)).
