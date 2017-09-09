@@ -26,6 +26,7 @@ test_header_include.
 
 :- if(( \+ current_module(pfc_lib) )).
 :- use_module(library(pfc)).
+:- use_module(library(pfc_test)).
 :- prolog_load_context(source,File),(atom_contains(File,'.pfc')-> sanity(is_pfc_file) ; must_not_be_pfc_file).
 :- endif.
 

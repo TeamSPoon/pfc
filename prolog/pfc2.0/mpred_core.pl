@@ -133,7 +133,8 @@
   mpred_post1/2,get_mpred_assertion_status/3,mpred_post_update4/4,get_mpred_support_status/5,same_file_facts/2,clause_asserted_u/1,
 
 
-  mpred_run/0,mpred_test/1,mpred_test_fok/1,
+  mpred_run/0,
+  
   fa_to_p/3,
   call_u_no_bc/1,
   with_umt/2,
@@ -225,8 +226,7 @@ push_current_choice/1,
       mpred_get_support(*,-), % 1,+
       mpred_METACALL(*,+),
       mpred_METACALL(*,-,+), % 1,-,+
-      mpred_test(+),
-      mpred_test_fok(+),
+      
       % pfcl_do(*), % not all arg1s are callable
       retract_u0(+),
       with_no_breaks(*),
@@ -1983,7 +1983,7 @@ filter_buffer_n_test(Name,N,Fact):- filter_buffer_get_n(Name,FactS,N),
 :- meta_predicate(mpred_reduced_chain(*,*)).
 mpred_reduced_chain(P1,(Fact:- (FWC, BODY))):- FWC==fwc,!,call(P1,{BODY}==>Fact).
 mpred_reduced_chain(P1,(Fact:- (BWC, BODY))):- BWC==bwc,!,call(P1,(Fact<-BODY)).
-mpred_reduced_chain(P1,(P:-attr_bind(L,R))):- !,must(attr_bind(L)),call(P1,(P:-R)).
+mpred_reduced_chain(P1,(P:-AB)):- compound(AB),AB=attr_bind(L,R),!,must(attr_bind(L)),call(P1,(P:-R)).
 mpred_reduced_chain(P1,(P:-True)):- True==true,call(P1,P).
 
 mpred_reduced_chain(P1,==>(Fact),P1):- sanity(nonvar(Fact)),!,
@@ -2572,7 +2572,7 @@ mpred_nf1(P,[P]):- is_ftVar(P), !.
 mpred_nf1(P/Cond,[(\+P)/Cond]):- mpred_negated_literal(P), !, dmsg(warn(mpred_nf1(P/Cond,[(\+P)/Cond]))).
 
 mpred_nf1(P/Cond,[P/Cond]):- var(P),!.
-mpred_nf1(P/Cond,[P/Cond]):- must((mpred_db_type(P,trigger);mpred_literal(P))), !.
+mpred_nf1(P/Cond,[P/Cond]):- ((mpred_db_type(P,trigger);mpred_literal(P))), !.
 
 %  handle a negated form
 
@@ -3538,28 +3538,7 @@ mpred_is_silient :- t_l:hide_mpred_trace_exec,!, \+ tracing.
 mpred_is_silient :- quietly_ex(( \+ t_l:mpred_debug_local, \+ lookup_u(mpred_is_tracing_exec), \+ lookup_u(mpred_is_spying_pred(_,_)),
   current_prolog_flag(debug,false), is_release)) ,!.
 
-
-%% mpred_test(+P) is semidet.
-%
-% PFC Test.
-%
-mpred_test(_):- quietly_ex((compiling; current_prolog_flag(xref,true))),!.
-mpred_test(G):- quietly_ex(mpred_is_silient),!, with_no_mpred_trace_exec(must(mpred_test_fok(G))),!.
-mpred_test(G):- current_prolog_flag(runtime_debug,D),D<1,!,with_no_mpred_trace_exec(must((G))),!.
-mpred_test(G):- with_no_breaks(with_mpred_trace_exec(must(mpred_test_fok(G)))),!.
-
 oinfo(O):- xlisting((O, - spft, - ( ==> ), - pt , - nt , - bt , - mdefault, - lmcache)).
-
-why_was_true(P):- mpred_why(P),!.
-why_was_true(P):- dmsg(justfied_true(P)),!.
-
-mpred_test_fok(G):- source_file(_,_),!,mpred_test_fok0(G),!.
-mpred_test_fok(G):- mpred_test_fok0(G),!.
-
-mpred_test_fok0(\+ G):-!, ( \+ call_u(G) -> wdmsg(passed_mpred_test(\+ G)) ; (log_failure(failed_mpred_test(\+ G)),!,ignore(why_was_true(G)),!,fail)).
-% mpred_test_fok(G):- (call_u(G) -> ignore(sanity(why_was_true(G))) ; (log_failure(failed_mpred_test(G))),!,fail).
-mpred_test_fok0(G):- (call_u(G) *-> ignore(must(why_was_true(G))) ; (log_failure(failed_mpred_test(G))),!,fail).
-
 
 mpred_must(\+ G):-!, ( \+ call_u(G) -> true ; (log_failure(failed_mpred_test(\+ G)),!,ignore(why_was_true(G)),!,break_ex)).
 mpred_must(G):- (call_u(G) -> true ; (ignore(sanity(why_was_true(\+ G))),(log_failure(failed_mpred_test(G))),!,break_ex)).
@@ -3568,23 +3547,6 @@ mpred_must(G):- (call_u(G) -> true ; (ignore(sanity(why_was_true(\+ G))),(log_fa
 mpred_load_term(:- module(_,L)):-!, call_u_no_bc(maplist(export,L)).
 mpred_load_term(:- TermO):- call_u_no_bc(TermO).
 mpred_load_term(TermO):-mpred_ain_object(TermO).
-
-
-mpred_load(In):- is_stream(In),!,
-   repeat,
-   line_count(In,_Lineno),
-   % double_quotes(_DQBool)
-   Options = [variables(_Vars),variable_names(VarNames),singletons(_Singletons),comment(_Comment)],
-   catchv((read_term(In,Term,[syntax_errors(error)|Options])),E,(dmsg(E),fail)),
-   set_varname_list(VarNames),expand_term(Term,TermO),mpred_load_term(TermO),
-   Term==end_of_file,
-   close(In).
-
-mpred_load(PLNAME):- % unload_file(PLNAME),
-   open(PLNAME, read, In, []),
-   mpred_load(In).
-
-mpred_reload(PLNAME):- mpred_unload_file(PLNAME),mpred_load(PLNAME).
 
 
 %
