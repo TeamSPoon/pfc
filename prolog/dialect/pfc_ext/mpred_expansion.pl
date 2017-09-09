@@ -194,7 +194,7 @@
 :- dynamic(baseKB:col_as_isa/1).
 :- dynamic(baseKB:col_as_unary/1).
 
-:- kb_shared(wid/3).
+:- kb_shared(baseKB:wid/3).
 
 :- style_check(+singleton).
 
@@ -763,7 +763,7 @@ fully_expand(X,Y):- must((fully_expand(clause(unknown,cuz),X,Y))).
 
 %fully_expand(_,Var,Var):- \+ compound(Var),!.
 %fully_expand(Op,Sent,SentO):- functor(Sent,F,A),should_fully_expand(F,A),!,must(fully_expand_real(Op,Sent,SentO)),!.
-fully_expand(Op,Sent,SentO):- notrace(fully_expand_real(Op,==>Sent,SentO)),!.
+fully_expand(Op,Sent,SentO):- quietly(fully_expand_real(Op,==>Sent,SentO)),!.
 % fully_expand(Op,Sent,Sent):- sanity((ignore((fully_expand_real(Op,Sent,SentO)->sanity((Sent=@=SentO)))))).
 
 /*
@@ -789,7 +789,7 @@ should_fully_expand(F,_):-clause_b(functorDeclares(F)).
 memoize_on_local(_Why,_,Goal):- call(Goal),!.
 % memoize_on_local(_Why,Sent->SentO,Goal):- memoize_on(fully_expand_real,Sent->SentO,Goal).
 
-has_skolem_attrvars(Sent):- notrace((term_attvars(Sent,Attvars),member(Var,Attvars),get_attr(Var,skk,_))),!.
+has_skolem_attrvars(Sent):- quietly((term_attvars(Sent,Attvars),member(Var,Attvars),get_attr(Var,skk,_))),!.
 
 
 % for trace testing
@@ -1104,7 +1104,7 @@ additiveOp((/)).
 %
 % If Is A Unit.
 %
-is_unit(A):-notrace(is_unit_like(A)).
+is_unit(A):-quietly(is_unit_like(A)).
 
 is_unit_like(A):- atomic(A),!.
 is_unit_like(C):-is_unit_like0(C).
@@ -1541,7 +1541,7 @@ db_expand_0(Op,props(A,F),OO):-expand_props(_Prefix,Op,props(A,F),OO),!.
 
 % covered db_expand_0(_,arity(F,A),arity(F,A)):-atom(F),!.
 db_expand_0(Op,IN,OUT):- 
-   compound_name_args_safe(IN,F,Args),
+   cnas(IN,F,Args),
    % wdmsg(db_expand_0(Op,IN)),
    sanity(F \== isa),
    must_maplist(db_expand_0(Op),Args,ArgsO),
@@ -1833,10 +1833,10 @@ into_mpred_form(t(P,A),O):-atom(P),!,O=..[P,A].
 into_mpred_form(t(P,A,B),O):-atom(P),!,O=..[P,A,B].
 into_mpred_form(t(P,A,B,C),O):-atom(P),!,O=..[P,A,B,C].
 into_mpred_form(IN,OUT):- 
-   compound_name_args_safe(IN,F,Args),
+   cnas(IN,F,Args),
    must_maplist(into_mpred_form,Args,ArgsO),!,
    map_f(F,FO),
-   compound_name_args_safe(OUT,FO,ArgsO).
+   cnas(OUT,FO,ArgsO).
 
 
 % into_mpred_form(I,O):- /*quietly*/(loop_check(into_mpred_form_ilc(I,O),O=I)). % trace_or_throw_ex(into_mpred_form(I,O).
@@ -2121,10 +2121,10 @@ fix_negations(C,CO):-C=..[F|CL],must_maplist(fix_negations,CL,CLO),!,CO=..[F|CLO
 %
 % Reduce Clause Converted From Forward Repropigated.
 %
-reduce_clause_from_fwd(_Op,H,H):- notrace(\+is_ftCompound(H)),!.
+reduce_clause_from_fwd(_Op,H,H):- quietly(\+is_ftCompound(H)),!.
 reduce_clause_from_fwd(Op,(H:-B),HH):-B==true,reduce_clause_from_fwd(Op,H,HH).
 reduce_clause_from_fwd(Op,(B==>H),HH):-B==true,reduce_clause_from_fwd(Op,H,HH).
-reduce_clause_from_fwd(Op,I,O):- notrace(fixed_negations(I,M)),!,reduce_clause_from_fwd(Op,M,O).
+reduce_clause_from_fwd(Op,I,O):- quietly(fixed_negations(I,M)),!,reduce_clause_from_fwd(Op,M,O).
 reduce_clause_from_fwd(Op,(==>H),HH):-!,reduce_clause_from_fwd(Op,H,HH).
 reduce_clause_from_fwd(Op,(H<- B),HH):-B==true,reduce_clause_from_fwd(Op,H,HH).
 reduce_clause_from_fwd(Op,(B<==> H),HH):-B==true,reduce_clause_from_fwd(Op,'==>'(H),HH).

@@ -2021,16 +2021,15 @@ mpred_fwc1(Fact):-
 
 % mpred_do_rule((H:-attr_bind(B,_))):- get_functor(H,F,A),lookup_u(mpred_prop(M,F,A,pfcLHS)), sanity(nonvar(B)), repropagate(H),!.
 
-% prolog_clause mpred_do_rule
+% prolog_clause mpred_do_rule VAR_H
 mpred_do_rule((H:-B)):- var(H),trace,sanity(nonvar(B)),forall(call_u(B),mpred_ain(H)),!.
 
-% prolog_clause
+% prolog_clause mpred_do_rule pfcLHS
 mpred_do_rule((H:-B)):- get_functor(H,F,A),must(suggest_m(M)),
   lookup_u(mpred_prop(M,F,A,pfcLHS)), 
   sanity(nonvar(B)),
     forall(call_u(B),mpred_fwc(H)),!.
                      
-% prolog_clause
 % mpred_do_rule((H:-B)):- !,ignore((call_u(B),mpred_fwc1(H),fail)).
 
 
@@ -2057,12 +2056,12 @@ mpred_do_rule(('<=='(P,Q))):-
   !,
   mpred_define_bc_rule(P,Q,('<-'(P,Q))).
 
-% prolog_clause mpred_do_fact
+% prolog_clause mpred_do_fact COMMENTED
 % mpred_do_fact((H:-B)):- nonvar(H),mpred_do_fact({clause(H,B)}),fail.
 
-% prolog_clause mpred_do_fact
+% prolog_clause mpred_do_fact (_ :- _)
 mpred_do_fact(Fact):-
-  Fact = (_:-_),
+  Fact = (_:-_), 
   copy_term_vn(Fact,(H:-B)),
   % F = {clause(H,B)},
   F = (H :- B),
@@ -2307,13 +2306,18 @@ call_u(functorDeclares(H)):- !, get_var_or_functor(H,F),clause_b(functorDeclares
 call_u(singleValuedInArg(H,A)):- !, get_var_or_functor(H,F),clause_b(singleValuedInArg(F,A)).
 call_u(ttRelationType(C)):- !, clause_b(ttRelationType(C)).
 
-call_u(M:G):- !,module_sanity_check(M),call_u_mp(M,G).
-call_u(G):- must(notrace((defaultAssertMt(M))))->call_u_mp(M,G).
+% call_u(M:G):- !,module_sanity_check(M),call_u_mp(M,G).
+
+call_u(M:G):- !, M:call(G).
+
+% prolog_clause call_u ?
+call_u(G):- G \= (_:-_), !, notrace(defaultAssertMt(M)),!,call_u_mp(M,G).
+call_u(G):- strip_module(G,M,P), !, call_u_mp(M,P).
 
 get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.
 
 %call_u(G):- strip_module(G,M,P), no_repeats(gripe_time(5.3,on_x_rtrace(call_u_mp(M,P)))).
-% call_u(G):- strip_module(G,M,P), call_u_mp(G,M,P).
+
 
 
 %call_u_mp(user, P1 ):- !,  call_u_mp(baseKB,P1).
@@ -2353,6 +2357,7 @@ call_u_mp(M,retractall(X)):- !, M:mpred_prolog_retractall(X).
 */
 
 
+% prolog_clause call_u
 call_u_mp(M, (H:-B)):- B=@=call(BA),!,B=call(BA),!, (M:clause(H,BA);M:clause(H,B)).
 call_u_mp(M, (H:-B)):- !,call_u_mp(M,clause(H,B)).
 
@@ -2603,13 +2608,13 @@ mpred_nf1((H :- B)  , [(H :- B)]):-
   mpred_positive_literal(H),!.
 
 /*
-% prolog_clause
+% prolog_clause mpred_nf1 COMMENTED
 mpred_nf1((H :- B)  ,[P]):-   
   mpred_positive_literal(H),
   P={clause(H , B)},
   dmsg(warn(mpred_nf1((H :- B)  ,[P]))),!.
 
-% prolog_clause
+% prolog_clause mpred_nf1 COMMENTED
 mpred_nf1((H :- B)  ,[P]):-   
   mpred_positive_literal(H),
   P={clause(H , B)},
@@ -3438,14 +3443,14 @@ mpred_untrace:- mpred_untrace(_).
 mpred_untrace(Form0):- get_head_term(Form0,Form), retractall_u(mpred_is_spying_pred(Form,print)).
 
 
-% not_not_ignore_quietly_ex(G):- ignore(notrace(\+ \+ G)).
+% not_not_ignore_quietly_ex(G):- ignore(quietly(\+ \+ G)).
 not_not_ignore_quietly_ex(G):- ignore(quietly_ex(\+ \+ G)).
 
 % needed:  mpred_trace_rule(Name)  ...
 
 log_failure(ALL):- quietly_ex((log_failure_red,maybe_mpred_break(ALL),log_failure_red)).
 
-log_failure_red:- notrace(doall((between(1,3,_),
+log_failure_red:- quietly(doall((between(1,3,_),
   ansifmt(red,"%%%%%%%%%%%%%%%%%%%%%%%%%%% find log_failure_red in srcs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"),
   ansifmt(yellow,"%%%%%%%%%%%%%%%%%%%%%%%%%%% find log_failure_red in srcs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")))).
 
@@ -3456,7 +3461,7 @@ log_failure_red:- notrace(doall((between(1,3,_),
 :- thread_local(t_l:no_breaks/0).
 with_no_breaks(G):- locally(t_l:no_breaks,G). 
 
-break_ex:- notrace((log_failure_red,dumpST,log_failure_red)),
+break_ex:- quietly((log_failure_red,dumpST,log_failure_red)),
   (t_l:no_breaks -> ansifmt(red,"NO__________________DUMP_BREAK/0") ;dbreak).
 
 maybe_mpred_break(Info):- (t_l:no_breaks->true;(debugging(logicmoo(pfc))->dtrace(dmsg(Info));(dmsg(Info)))),break_ex.
@@ -3635,7 +3640,7 @@ mpred_info(O):-
  ((dmsg("======================================================================="),
   listing(O),
   dmsg("======================================================================="),
-  notrace(call_with_inference_limit(ignore(on_xf_cont(deterministically_must(mpred_why(O)))),4000,_)),
+  quietly(call_with_inference_limit(ignore(on_xf_cont(deterministically_must(mpred_why(O)))),4000,_)),
   dmsg("======================================================================="),
   maplist(mp_printAll(O),
   [   mpred_db_type(O,v),  
@@ -4387,4 +4392,5 @@ end_of_file.
 :- mpred_test(current_ooZz(booZz)).
 
 :- mpred_reset_kb.
+
 
