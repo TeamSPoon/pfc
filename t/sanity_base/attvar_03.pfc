@@ -8,6 +8,7 @@
 %  was_module(sanity_attvar_03,[]).
 
 :- use_module(library(pfc)).
+:- use_module(library(pfc_test)).
 
 :- include(test_header).
 :- use_module(library(attvar_reader)).

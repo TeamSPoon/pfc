@@ -8,9 +8,25 @@
 % :- set_prolog_flag(lm_pfc_lean,true).
 % :- use_module(library(pfc)).
 
-:- kb_local(aa/2).
 
-( aa(N):- _B ) ==> early_aa_H(N). 
+% never_assert_u(early_aa_H(Var),var):- cwc, is_ftVar(Var).
+
+:- kb_local(aa/1).
+:- kb_local(zz/1).
+:- kb_local(early_aa_H/1).
+:- kb_local(early_aa_HB/2).
+:- kb_local(early_aa/1).
+:- kb_local(late_aa_HB/2).
+:- kb_local(late_aa/1).
+
+:- kb_local(late_zz_H/1).
+:- kb_local(zz/1).
+
+:- kb_local(early_yy_H/1).
+:- kb_local(yy/1).
+
+
+( aa(N):- _B )==> early_aa_H(N). 
 ( aa(N):- B ) ==> early_aa_HB(N,B). 
 ( aa(N) ) ==> early_aa(N). 
 
@@ -22,6 +38,15 @@ aa(N):- member(N,[4,5]).
 ( aa(N):- _B ) ==> late_aa_H(N). 
 ( aa(N):- B ) ==> late_aa_HB(N,B). 
 ( aa(N) ) ==> late_aa(N). 
+
+zz(1):- foo.
+( zz(N):- _B ) ==> late_zz_H(N). 
+:- mpred_test(\+ clause_asserted(late_zz_H(_))).
+
+
+( yy(N):- _B ) ==> early_yy_H(N). 
+yy(1):- foo.
+:- mpred_test(\+ clause_asserted(early_yy_H(_))).
 
 
 :- mpred_test(early_aa(1)).
@@ -43,29 +68,35 @@ aa(N):- member(N,[4,5]).
 
 
 :- mpred_test(early_aa_HB(A, member(A, [4, 5]))).
-:- warn_fail_TODO(early_aa_HB(3, true)).
-:- warn_fail_TODO(early_aa_HB(2, true)).
+:- mpred_test(early_aa_HB(3, true)).
+:- mpred_test(early_aa_HB(2, true)).
 :- mpred_test(early_aa_HB(1, writeln(1+1))).
 
 
 
-:- warn_fail_TODO(late_aa_H(1)).
-:- warn_fail_TODO(late_aa_H(2)).
-:- warn_fail_TODO(late_aa_H(3)).
-:- warn_fail_TODO(late_aa_H(_)).
+:- mpred_test(late_aa_H(1)).
+:- mpred_test(late_aa_H(2)).
+:- mpred_test(late_aa_H(3)).
+:- mpred_test(late_aa_H(_)).
 :- mpred_test(clause_asserted(late_aa_H(_))).
-:- warn_fail_TODO(\+ clause_asserted(late_aa_H(4))).
-:- warn_fail_TODO(\+ clause_asserted(late_aa_H(5))).
 
 
-:- warn_fail_TODO(early_aa_H(1)).
-:- warn_fail_TODO(early_aa_H(2)).
-:- warn_fail_TODO(early_aa_H(3)).
-:- warn_fail_TODO(early_aa_H(_)).
+:- mpred_test(early_aa_H(1)).
+:- mpred_test(early_aa_H(2)).
+:- mpred_test(early_aa_H(3)).
+:- mpred_test(early_aa_H(_)).
 :- mpred_test(clause_asserted(early_aa_H(_))).
-:- warn_fail_TODO(\+ clause_asserted(early_aa_H(4))).
-:- warn_fail_TODO(\+ clause_asserted(early_aa_H(5))).
 
+
+/*
+
+:- mpred_test(\+ clause_asserted(late_aa_H(4))).
+:- mpred_test(\+ clause_asserted(late_aa_H(5))).
+:- mpred_test(\+ clause_asserted(early_aa_H(4))).
+:- mpred_test(\+ clause_asserted(early_aa_H(5))).
+
+
+*/
 
 
 :- listing([early_aa/1,late_aa/1]).
@@ -74,5 +105,6 @@ aa(N):- member(N,[4,5]).
 
 :- listing([early_aa_H/1,late_aa_H/1]).
 
+:- listing(late_zz_H/1).
+:- listing(early_yy_H/1).
 
-                     

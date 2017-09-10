@@ -8,8 +8,6 @@
 % :- set_prolog_flag(lm_pfc_lean,true).
 % :- use_module(library(pfc)).
 
-warn_fail_TODO(G):- dmsg(:-warn_fail_TODO(G)).
-
 :- kb_local(aa/2).
 
 ( aa(N):- _B ) ==> early_aa_H(N). 

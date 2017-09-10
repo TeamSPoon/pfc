@@ -335,10 +335,10 @@ t(CALL):- cwc, call(into_plist_arities(3,10,CALL,[P|LIST])),mpred_plist_t(P,LIST
 %
 % t(C,I):- cwc,  trace_or_throw_ex(t(C,I)),t(C,I). % ,fail,loop_check_term(isa_backchaing(I,C),t(C,I),fail).
 % t(P,A1):- vwc, isa(A1,P).
-t(A,B):- atom(A),!,ABC=..[A,B],call_u(ABC).
+t(A,B):- cwc, atom(A),!,ABC=..[A,B],call_u(ABC).
 %t(A,B):- (atom(A)->true;(no_repeats(arity(A,1)),atom(A))),ABC=..[A,B],loop_check(call_u(ABC)).
 %t(A,B):- call_u(call(A,B)).
-t(P,A1):-  mpred_fa_call(P,1,call(P,A1)).
+t(P,A1):- cwc, mpred_fa_call(P,1,call(P,A1)).
 
 
 %% t( ?P, ?A1, ?A2) is semidet.
@@ -431,7 +431,7 @@ rtArgsVerbatum('loop_check_term_key').
 rtArgsVerbatum('xQuoteFn').
 rtArgsVerbatum('$VAR').
 rtArgsVerbatum('NART').
-rtArgsVerbatum(X):-atom(X),atom_concat(_,'Fn',X).
+rtArgsVerbatum(X):- cwc, atom(X),atom_concat(_,'Fn',X).
 
 rtArgsVerbatum(ain).
 rtArgsVerbatum(ruleRewrite).
@@ -489,7 +489,7 @@ do_and_undo(mpred_post_exactly,mpred_remove_exactly).
 
 
 :- meta_predicate(without_depth_limit(0)).
-without_depth_limit(G):- call_with_depth_limit(G,72057594037927935,Result),sanity(Result\==depth_limit_exceeded).
+without_depth_limit(G):- cwc, call_with_depth_limit(G,72057594037927935,Result),sanity(Result\==depth_limit_exceeded).
 :- scan_missed_source.
 
 
@@ -525,7 +525,7 @@ conflict(C) ==> {must(with_mpred_trace_exec((resolveConflict(C),\+conflict(C))))
 
 % meta rules to schedule inferencing.
 % resolve conflicts asap
-mpred_select_hook(conflict(X)) :- que(conflict(X),_Why).
+mpred_select_hook(conflict(X)) :- cwc, que(conflict(X),_Why).
 
 
 %tPred(t,prologDynamic).
@@ -540,9 +540,9 @@ rtNotForUnboundPredicates(member/2).
 :- kb_shared(never_assert_u/2).
 never_assert_u(~(X),is_ftVar(~X)):- cwc, is_ftVar(X).
 never_assert_u(X,is_ftVar(X)):- cwc, is_ftVar(X).
-never_assert_u(prologSingleValued(BAD),var_prologSingleValued(BAD)):-is_ftVar(BAD).
+never_assert_u(prologSingleValued(BAD),var_prologSingleValued(BAD)):-cwc, is_ftVar(BAD).
 never_assert_u(baseKB:mtProlog(baseKB),must(mtHybrid(baseKB))).
-never_assert_u(A,never_assert_u(A)):- never_assert_u(A).
+never_assert_u(A,never_assert_u(A)):- cwc, never_assert_u(A).
 % P/never_assert_u(P,Why) ==> conflict(never_assert_u(P,Why))
 :- kb_shared(never_assert_u/1).
 never_assert_u(X):- cwc, loop_check(never_assert_u(X,_)).

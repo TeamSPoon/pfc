@@ -144,7 +144,7 @@ never_retract_u(tBird(ext,iChilly)).
 :- dmsg("confirm chilly is flying bird").
 :- mpred_test(( tFly(ext,iChilly))).
 
-:- repropagate(tBird(ext,iChilly)).   
+:- repropagate(tBird(ext,iChilly)).
 
 :- dmsg("confirm chilly is flying bird").
 :- mpred_test(( tFly(ext,iChilly))).

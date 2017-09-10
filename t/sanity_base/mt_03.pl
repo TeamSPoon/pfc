@@ -31,13 +31,13 @@ kb2: (b).
 genlMt(kb2,code1).
 
 % before test, to make sure a was not accdently defined in kb2
-:- sanity( clause(kb2:a,_)).
+:- sanity( clause_u(kb2:a,_)).
 
 % before test, genlMt makes the rule available and should not corrupt the code1 module
-:- sanity(\+ clause(code1:b,_)).
+:- sanity(clause_u(code1:b,_)).
 
 % make sure genlMt didnt unassert 
-:- sanity(clause(kb2:b,_)).
+:- sanity(clause_u(kb2:b,_)).
 
 
 
@@ -46,11 +46,11 @@ kb2: (:- a).
 
 
 % to make sure a does not get accdently defined in kb2
-:- mpred_must( clause(kb2:a,_)).
+:- mpred_must( clause_u(kb2:a,_)).
 
 % genlMt makes the rule available and should not corrupt the code1 module
-:- mpred_must(\+ clause(code1:b,_)).
+:- mpred_must(clause(code1:b,_)).
 
 % genlMt 
 
-:- mpred_must(\+ clause(code1:b,_)).
+:- mpred_must( clause_u(code1:b,_)).

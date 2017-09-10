@@ -15,16 +15,25 @@
 :- dynamic(bc_q/1).
 :- dynamic(bc_p/1).
 
+:- if(false).
+==> never_assert_u(bc_q(a),too_early).
+
+% dont assert the "general" backchain rule as a forward chain!
+==> never_assert_u((pt(bc_p(A), rhs([bc_q(A)]))),too_early).
+:- endif.
+
 :- (ain((bc_q(N) <- bc_p(N)))).
 
 bc_q(N) <- bc_p(N).
 
+
 :- listing(bt/2).
+:- listing(pt/2).
 
 :- listing(bc_q/1).
 
 :- printAll((
-      clause(bc_q(_),NT),ignore(compound(NT)))).
+      clause_u(bc_q(_),NT),ignore(compound(NT)))).
 
 
 
@@ -33,10 +42,16 @@ bc_p(b).
 :- listing(bc_p/1).
 
 
+:- if(false).
+\+ never_assert_u(bc_q(a),too_early).
+\+ never_assert_u((pt(bc_p(A), rhs([bc_q(A)]))),too_early).
+:- endif.
+
 :- mpred_test(call_u(bc_p(b))).
 
 %= nothing cached
 :- listing(bc_q/1).
+
 :- mpred_test(\+ clause(bc_q(_),true)).
 
 
@@ -46,15 +61,22 @@ bc_p(b).
 
 :- listing(bc_q/1).
 
-:- mpred_test( clause(bc_q(_),true)).
+:- mpred_test( clause_u(bc_q(_),true)).
 
 
 % Are we cleaning up backchains?
 :- xlisting(bc_q/1).
 
-:- mpred_test(((mpred_withdraw(((bc_q(N) <- bc_p(N))))),\+ clause(bc_q(_),true))).
+:- mpred_test(((mpred_withdraw(((bc_q(N) <- bc_p(N))))))).
+:- mpred_test(((mpred_withdraw(((bc_q(N) <- bc_p(N))))))).
 
-:- mpred_test(\+ clause(bc_q(_),true)).
+%= nothing cached
+:- listing(bc_q/1).
+
+:- mpred_test(((mpred_withdraw(((bc_q(N) <- bc_p(N))))),
+   show_failure((\+ clause_u(bc_q(_),true))))).
+
+:- mpred_test(\+ clause_u(bc_q(_),true)).
 
 :- xlisting(bc_q/1).
 
