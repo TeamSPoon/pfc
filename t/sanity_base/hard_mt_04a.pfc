@@ -32,11 +32,11 @@ loves(sally,joe).
 
 :- xlisting(loves/2).
 
-:- mpred_test(clause_u(socialOneMt:loves(_,_));clause_u(socialTwoMt:loves(_,_))).
+:- warn_fail_TODO(clause(socialOneMt:loves(_,_));clause(socialTwoMt:loves(_,_))).
 
 accessable_love:- \+ clause_u(myMt:loves(_,_),_),!.
 accessable_love:- clause_u(myMt:loves(_,_),_,Ref), \+ clause_property(Ref,module(myMt)),!.
-:- mpred_test(myMt:accessable_love).
+:- warn_fail_TODO(myMt:accessable_love).
 
 
 

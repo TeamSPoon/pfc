@@ -739,7 +739,10 @@ retract_u0(H):- clause_u(H,true,R),erase(R),expire_tabled_list(H).
 
 :- lmcache:import(retract_u0/1).
 
+retractall_u(X):- check_never_retract(X),fail.
 retractall_u(H):- attvar_op_fully(db_op_call(retractall,retractall_u0),H).
+
+retractall_u0(X):- check_never_retract(X),fail.
 retractall_u0(H):- forall(clause_u(H,_,R),erase(R)),expire_tabled_list(H).
 
 
@@ -1163,7 +1166,7 @@ is_ftOpenSentence(P):- compound(P), functor(P,F,N), \+ leave_some_vars_at_el(F),
    (arg(N,P,A);(N\==1,arg(1,P,A))),is_ftOpen(A).
 is_ftOpenSentence(P):- is_ftOpen(P).
 
-mpred_post12a(~P,S):- mpred_post13(~P,S).
+mpred_post12a_neg(~P,S):- mpred_post13(~P,S).
 
 
 mpred_post12(P, _):- (must_be(nonvar,P)),P==true,!.
@@ -1174,8 +1177,8 @@ mpred_post12( \+ P,   S):- is_user_reason(S), show_call(mpred_withdraw(P)), \+ m
 mpred_post12( \+ P,   S):- is_user_reason(S),!, (mpred_withdraw_fail_if_supported(P,S) -> true ;  show_call(mpred_remove2(P,S))).
 mpred_post12( \+ P,   S):- ignore(show_call(mpred_withdraw_fail_if_supported(P,S))),!.
 
-mpred_post12( ~ P,   S):- mpred_withdraw_fail_if_supported(P,S), show_call( mpred_post12a(~P,S)),!.
-mpred_post12( ~ P,   S):- mpred_remove2(P,S), show_call( \+ mpred_supported(P)),!,show_call( mpred_post12a(~P,S)),!.
+mpred_post12( ~ P,   S):- mpred_withdraw_fail_if_supported(P,S), show_call( mpred_post12a_neg(~P,S)),!.
+mpred_post12( ~ P,   S):- mpred_remove2(P,S), show_call( \+ mpred_supported(P)),!,show_call( mpred_post12a_neg(~P,S)),!.
 mpred_post12( ~ P,   S) :- mpred_get_support(P,S2), 
     color_line(magenta,2),
     dmsg((mpred_post12( ~ P,   S) :- get_support(P,S2))),
@@ -1253,7 +1256,12 @@ mpred_post13_unused(P,S):-  fail,!,
         !)).
 */
 
-
+/*
+mpred_post13((H:-B),S):- 
+  with_current_why(S,
+    show_call(mpred_do_hb_catchup_now_maybe(H,B))),
+  fail.
+*/
 
 % this for complete repropagation
 mpred_post13(P,S):- t_l:is_repropagating(_),!,
@@ -1294,25 +1302,48 @@ mpred_post13(P,S):- !,
   gripe_time(0.1, must(get_mpred_support_status(P,S,PP,SS,Was))),!,
   mpred_post123(P,S,PP,Was).
 
+
+:- thread_local(t_l:exact_assertions/0).
+
+with_exact_assertions(Goal):-
+  locally(t_l:exact_assertions,Goal).
+ 
+
 % The cyclic_break is when we have regressions arouind ~ ~ ~ ~ ~
+
+get_mpred_support_status(_P,_S, PP,(F,T),Was):- 
+  t_l:exact_assertions,!,
+  (clause_asserted_u(spft(PP,F,T)) -> Was = exact ; Was = none).
+
+get_mpred_support_status(_P,_S, PP,(F,T),Was):- 
+  % t_l:exact_assertions,
+  !,
+  (clause_asserted_u(spft(PP,F,T)) -> Was = exact ; Was = none).
+
 get_mpred_support_status(P,_S, PP,(FF,TT),Was):-
   Simular=simular(none),
-  ((((lookup_spft_p(PP,F,T),variant_u(P,PP))) *->
+  copy_term(PP,PPP),
+  ((((lookup_spft_p(PPP,F,T),variant_u(P,PP))) *->
      ((variant_u(TT,T),same_file_facts0(F,FF)) -> (Was = exact , ! ) ; 
       (nb_setarg(1,Simular,(F,T)),!,fail))
-    ; Was = none) -> true ; ignore(Was=Simular)).
+    ; Was = none) -> true ; ignore(Was=Simular)),!.
 
-mpred_post123(_P,_S,_PP,exact):- current_prolog_flag(pfc_cheats,true), !.
+% mpred_post123(_P,_S,_PP,exact):- current_prolog_flag(pfc_cheats,true), !.
+
 mpred_post123(P,S,PP,Was):-
- %  if we''ve asserted what we''ve compiled
+ % cyclic_break((P,S,PP,Was)),
+ %  if we''ve asserted what we''ve compiled  
   gripe_time(0.1, must(get_mpred_assertion_status(P,PP,AStatus))),!,
   gripe_time(0.4, must(mpred_post_update4(AStatus,P,S,Was))),!.
 
-
+get_mpred_assertion_status(P,_PP,Was):-
+ t_l:exact_assertions, !,
+  maybe_notrace(((clause_asserted_u(P)-> Was=identical; Was= unique))).
+ 
 get_mpred_assertion_status(P,PP,Was):-
   maybe_notrace(((clause_asserted_u(P)-> Was=identical;
-      (clause_u(PP)-> Was= partial(PP);
-          Was= unique)))).
+    (
+      (((locally(set_prolog_flag(occurs_check,true),clause_u(PP)),cyclic_break((PPP)))-> (Was= partial(PPP));Was= unique)))))).
 
 
 same_file_facts(S1,S2):-reduce_to_mfl(S1,MFL1),reduce_to_mfl(S2,MFL2),!,same_file_facts0(MFL1,MFL2).
@@ -1455,8 +1486,10 @@ mpred_ain_db_to_head(P,NewP):-
 %
 % is true if there is no assertion P in the prolog db.
 %
-mpred_unique_u((Head:-Tail)):- !, \+ clause_u(Head,Tail).
-mpred_unique_u(P):- !, \+ clause_u(P,true).
+mpred_unique_u(P):- t_l:exact_assertions,!, \+ clause_asserted_u(P).
+%mpred_unique_u((Head:-Tail)):- !, \+ clause_u(Head,Tail).
+%mpred_unique_u(P):- !, \+ clause_u(P,true).
+mpred_unique_u(P):- \+ clause_asserted_u(P).
 
 
 %% get_fc_mode(+P,+S,-Mode) is semidet.
@@ -1501,6 +1534,8 @@ mpred_enqueue_w_mode(S,Mode,P):-
 	Mode=depth   -> mpred_asserta_w_support(que(P,S),S) ;
         Mode=paused   -> mpred_asserta_w_support(que(P,S),S) ;
 	Mode=breadth -> mpred_assertz_w_support(que(P,S),S) ;
+        Mode=next   -> mpred_asserta_w_support(que(P,S),S) ;
+        Mode=last -> mpred_assertz_w_support(que(P,S),S) ;
 	true         -> mpred_error("Unrecognized pm mode: ~p", Mode).
      
 
@@ -2018,21 +2053,6 @@ mpred_fwc1(Fact):-
 % does some special, built in forward chaining if P is
 %  a rule.
 
-
-% mpred_do_rule((H:-attr_bind(B,_))):- get_functor(H,F,A),lookup_u(mpred_prop(M,F,A,pfcLHS)), sanity(nonvar(B)), repropagate(H),!.
-
-% prolog_clause mpred_do_rule VAR_H
-mpred_do_rule((H:-B)):- var(H),trace,sanity(nonvar(B)),forall(call_u(B),mpred_ain(H)),!.
-
-% prolog_clause mpred_do_rule pfcLHS
-mpred_do_rule((H:-B)):- get_functor(H,F,A),must(suggest_m(M)),
-  lookup_u(mpred_prop(M,F,A,pfcLHS)), 
-  sanity(nonvar(B)),
-    forall(call_u(B),mpred_fwc(H)),!.
-                     
-% mpred_do_rule((H:-B)):- !,ignore((call_u(B),mpred_fwc1(H),fail)).
-
-
 mpred_do_rule((P==>Q)):-
   !,
   process_rule(P,Q,(P==>Q)).
@@ -2056,27 +2076,77 @@ mpred_do_rule(('<=='(P,Q))):-
   !,
   mpred_define_bc_rule(P,Q,('<-'(P,Q))).
 
-% prolog_clause mpred_do_fact COMMENTED
-% mpred_do_fact((H:-B)):- nonvar(H),mpred_do_fact({clause(H,B)}),fail.
+mpred_do_rule((H:-B)):- fail, 
+  !,
+  mpred_do_hb_catchup(H,B).
+
+
+is_head_LHS(H):- nonvar(H),get_functor(H,F,A),must(suggest_m(M)),lookup_u(mpred_prop(M,F,A,pfcLHS)).
+body_clause(SK,Cont):-nonvar(SK),SK=Cont.
+
+mpred_do_hb_catchup(_H, B):- \+ \+ (B=true),!.
+mpred_do_hb_catchup(_H, B):- compound(B), \+ \+ reserved_body_helper(B),!. 
+
+% prolog_clause mpred_do_rule VAR_H
+mpred_do_hb_catchup(H,B):- sanity(nonvar(B)),
+  var(H),!,dmsg(warn(is_VAR_H((H:-B)))),
+  trace,   % THe body needs to sanify (bind) the Head
+  forall(call_u(B),
+     (sanity(nonvar(H)),mpred_ain(H))),!.
+
+mpred_do_hb_catchup(H,Body):- is_head_LHS(H),
+   body_clause(Body,attr_bind(AG,B)),
+% Should we repropagate(H) ?
+   attr_bind(AG),!,
+   mpred_do_hb_catchup_now(H,B).
+
+
+% prolog_clause mpred_do_rule pfcLHS
+mpred_do_hb_catchup(H,B):- %is_head_LHS(H),  
+% Should we repropagate(H) if body failed?
+   mpred_do_hb_catchup_now(H,B).
+                     
+% mpred_do_hb_catchup(H,B):- !,mpred_do_hb_catchup_now(H,B).
+
+mpred_do_hb_catchup_now_maybe(H,B):- B\=(cwc,_),with_exact_assertions((mpred_do_hb_catchup_now(H,B))).
+
+mpred_do_hb_catchup_now(H,B):- B\=(cwc,_),nonvar(B),with_exact_assertions(catch( (forall(call_u(B),mpred_fwc(H));true),_,true)),!.
+
+
+% prolog_clause mpred_do_clause COMMENTED
+% mpred_do_clause(Fact,H,B):- nonvar(H),mpred_do_fact({clause(H,B)}),fail.
+
+% prolog_clause mpred_do_clause (_ :- _)
+
+mpred_do_clause(H,B):-
+ with_exact_assertions(mpred_do_clause0(H,B)).
+
+mpred_do_clause0(H,B):-
+  % F = {clause(H,B)},
+  F = (H :- B),  B\=(cwc,_),!,
+  copy_term(F,Fact),
+  % check positive triggers
+  loop_check(mpred_do_fcpt(Fact,F),true), % dmsg(trace_or_throw_ex(mpred_do_clause(Fact)))),
+  % check negative triggers
+  mpred_do_fcnt(Fact,F),
+  mpred_do_hb_catchup(H,B).
+
+
 
 % prolog_clause mpred_do_fact (_ :- _)
 mpred_do_fact(Fact):-
   Fact = (_:-_), 
   copy_term_vn(Fact,(H:-B)),
-  % F = {clause(H,B)},
-  F = (H :- B),
-  % check positive triggers
-  loop_check(mpred_do_fcpt(Fact,F),true), % dmsg(trace_or_throw_ex(mpred_do_rule(Fact)))),
-  % check negative triggers
-  mpred_do_fcnt(Fact,F).
-
+  B\=(cwc,_),!,
+  mpred_do_clause(H,B),!.
 
 mpred_do_fact(Fact):-
   copy_term_vn(Fact,F),
   % check positive triggers
   loop_check(mpred_do_fcpt(Fact,F),true), % dmsg(trace_or_throw_ex(mpred_do_rule(Fact)))),
   % check negative triggers
-  mpred_do_fcnt(Fact,F).
+  mpred_do_fcnt(Fact,F),
+  mpred_do_clause(F,true).  
 
 lookup_spft(A,B,C):- nonvar(A),!,lookup_spft_p(A,B,C).
 lookup_spft(A,B,C):- var(B),!,lookup_spft_t(A,B,C).
@@ -2358,8 +2428,8 @@ call_u_mp(M,retractall(X)):- !, M:mpred_prolog_retractall(X).
 
 
 % prolog_clause call_u
-call_u_mp(M, (H:-B)):- B=@=call(BA),!,B=call(BA),!, (M:clause(H,BA);M:clause(H,B)).
-call_u_mp(M, (H:-B)):- !,call_u_mp(M,clause(H,B)).
+% call_u_mp(M, (H:-B)):- B=@=call(BA),!,B=call(BA),!, (M:clause_u(H,BA);M:clause_u(H,B)),sanity(\+ reserved_body(B)).
+call_u_mp(M, (H:-B)):- !,call_u_mp(M,clause_u(H,B)),sanity(\+ reserved_body(B)).
 
 % call_u_mp(M,P1):- predicate_property(M:P1,foreign),!,M:call(P1).
 % call_u_mp(M,P1):- predicate_property(M:P1,static),!,M:call(P1).
@@ -2383,6 +2453,14 @@ make_visible(TM,M,F,A):-
    must((TM:import(M:F/A),TM:export(TM:F/A))),
    must((TM:module_transparent(M:F/A))). % in case this has clauses th
 
+reserved_body(B):-var(B),!,fail.
+reserved_body(attr_bind(_)).
+reserved_body(attr_bind(_,_)).
+reserved_body(B):-reserved_body_helper(B).
+
+reserved_body_helper((AWC,_)):- awc == AWC.
+reserved_body_helper(inherit_above(_,_)).
+reserved_body_helper((!,mpred_bc_and_with_pfc(_))).
 
 call_u_mp_fa(M,P,F,A):- !,loop_check(call_u_mp_lc(M,P,F,A)).
 

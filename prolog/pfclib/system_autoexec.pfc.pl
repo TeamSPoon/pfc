@@ -122,7 +122,7 @@ first_std_provider/3)).
 %:- set_fileAssertMt(baseKB).
 
 
-assert_if_newt(G):- cwc,clause_asserted_i(G)->true;call(assert,G).
+assert_if_newt(G):- (cwc,(clause_asserted_i(G)->true;call(assert,G))).
 :-if(exists_file(bkb_neever)).
 
 :- [bkb].
