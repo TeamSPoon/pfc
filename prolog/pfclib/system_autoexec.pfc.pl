@@ -129,10 +129,10 @@ assert_if_newt(G):- (cwc,(clause_asserted_i(G)->true;call(assert,G))).
 
 :- else.
 
-:- ensure_loaded('system_base.pfc').
-:- ensure_loaded('system_mdefault.pfc').
-:- ensure_loaded('system_module_inheritance.pfc').
-:- ensure_loaded('system_singleValued.pfc').
+:- baseKB:ensure_loaded('system_base.pfc').
+:- baseKB:ensure_loaded('system_mdefault.pfc').
+:- baseKB:ensure_loaded('system_module_inheritance.pfc').
+:- baseKB:ensure_loaded('system_singleValued.pfc').
 
 :- multifile(baseKB:locked_baseKB/0).
 :- dynamic(baseKB:locked_baseKB/0).

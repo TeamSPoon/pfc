@@ -1337,17 +1337,13 @@ mpred_post123(P,S,PP,Was):-
   gripe_time(0.4, must(mpred_post_update4(AStatus,P,S,Was))),!.
 
 get_mpred_assertion_status(P,_PP,Was):-
- t_l:exact_assertions, !,
+ (t_l:exact_assertions ; mpred_db_type(P,rule(_))),!,
   maybe_notrace(((clause_asserted_u(P)-> Was=identical; Was= unique))).
  
 get_mpred_assertion_status(P,PP,Was):-
-  maybe_notrace((
-    clause_asserted_u(P)-> Was=identical;
-   ((locally(set_prolog_flag(occurs_check,true),clause_u(PP)),
-     % breaks to debugger if PP was still a cyclic term
-     cyclic_break(PP))
-      ->  Was= partial(PP)
-      ; Was= unique))).
+  maybe_notrace(((clause_asserted_u(P)-> Was=identical;
+    (
+      (((locally(set_prolog_flag(occurs_check,true),clause_u(PP)),cyclic_break((PPP)))-> (Was= partial(PPP));Was= unique)))))).
 
 
 same_file_facts(S1,S2):-reduce_to_mfl(S1,MFL1),reduce_to_mfl(S2,MFL2),!,same_file_facts0(MFL1,MFL2).
@@ -4436,5 +4432,6 @@ end_of_file.
 :- mpred_test(current_ooZz(booZz)).
 
 :- mpred_reset_kb.
+
 
 
