@@ -629,11 +629,6 @@ system:clause_expansion(I,O):- pfc_clause_expansion(I,O).
 
 :- retractall(t_l:disable_px).
 
-:- set_prolog_flag(pfc_booted,false).
-% :- ensure_abox(baseKB).
-:- baseKB:ensure_loaded('pfclib/system_autoexec.pfc').
-:- set_prolog_flag(pfc_booted,true).
-
 
 :- multifile(system:goal_expansion/4).
 :- module_transparent(system:goal_expansion/4).
