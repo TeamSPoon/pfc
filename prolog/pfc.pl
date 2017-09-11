@@ -42,6 +42,9 @@
      wdmsg(baseKB:'lusing_pfc'(M,CM,SM,pfc_mod))),
    assert(baseKB:'using_pfc'(M,CM,SM,pfc_mod)).
 
+:- baseKB:ensure_loaded('pfclib/system_autoexec.pfc').
+:- set_prolog_flag(pfc_booted,true).
+
 :- set_prolog_flag(retry_undefined, kb_shared).
 :- set_prolog_flag(pfc_ready, true).
 

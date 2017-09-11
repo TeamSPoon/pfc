@@ -25,7 +25,6 @@ use_pfc.
 :- set_prolog_flag(debug_on_error,true).
 :- set_prolog_flag(report_error,true).
 :- set_prolog_flag(access_level,system).
-:- statistics.
 
 :- retract(baseKB:'wusing_pfc'(M,CM,SM,pfc_toplevel)),
    assert(baseKB:'using_pfc'(M,CM,SM,pfc_toplevel)),
