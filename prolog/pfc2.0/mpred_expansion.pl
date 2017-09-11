@@ -1184,8 +1184,10 @@ db_expand_final(change(assert,_),props(_Obj,List),true):-  List==[],dumpST,!.
 db_expand_final(_,props(Obj,List),{nonvar(Obj)}):- (List==[] ; List==true).
 db_expand_final(_ ,sumo_rule(NC),sumo_rule(NC)):- !.
 
-db_expand_final(Op, meta_argtypes(Args),    O  ):- is_ftCompound(Args),functor(Args,Pred,A),
-    (Pred=t->  (fully_expand_head(Op, Args,ArgsO),O=meta_argtypes(ArgsO)) ; (assert_arity(Pred,A),O=meta_argtypes(Args))).
+db_expand_final(Op, CMP,    O  ):- compound(CMP),meta_argtypes(Args)=CMP,
+  is_ftCompound(Args),functor(Args,Pred,A),
+    (Pred=t->  (fully_expand_head(Op, Args,ArgsO),O=meta_argtypes(ArgsO)) ; 
+      (assert_arity(Pred,A),O=meta_argtypes(Args))).
 
 db_expand_final(_,NC,NCO):- string_to_mws(NC,NCO),!.
 
@@ -1331,6 +1333,7 @@ db_expand_0(Op,\+(Sent),\+(SentO)):- !, db_expand_0(Op,Sent,SentO).
 db_expand_0(Op,~(Sent),~(SentO)):- !, db_expand_0(Op,Sent,SentO).
 db_expand_0(Op,poss(Sent),poss(SentO)):- !, db_expand_0(Op,Sent,SentO).
 db_expand_0(Op,nesc(Sent),nesc(SentO)):- !, db_expand_0(Op,Sent,SentO).
+db_expand_0(Op,(G,B),(GG,BB)):-!,db_expand_0(Op,G,GG),db_expand_0(Op,B,BB).
 db_expand_0(Op,Sent,SentO):- cyclic_break(Sent),db_expand_final(Op ,Sent,SentO),!.
 
 db_expand_0(_,Sent,Sent):- \+ compound(Sent),!.
@@ -1338,11 +1341,12 @@ db_expand_0(_,Sent,Sent):- \+ compound(Sent),!.
 db_expand_0(Op,pkif(SentI),SentO):- nonvar(SentI),!,must((any_to_string(SentI,Sent),must(expand_kif_string_or_fail(Op,Sent,SentM)),SentM\=@=Sent,!,db_expand_0(Op,SentM,SentO))).
 db_expand_0(_Op,kif(Sent),SentO):- nonvar(Sent),!, must(expand_kif_string(Sent,SentM)),if_defined(sexpr_sterm_to_pterm(SentM,SentO),SentM=SentO).
 
-db_expand_0(Op,==>(EL),O):- !, db_expand_0(Op,EL,O).
-db_expand_0(Op,t(EL),O):- !, db_expand_0(Op,EL,O).
+%TODO DONT RUIN db_expand_0(Op,==>(EL),O):- !, db_expand_0(Op,EL,O).
+%TODO DONT RUIN  db_expand_0(Op,t(EL),O):- !, db_expand_0(Op,EL,O).
 % db_expand_0(_,t(Sent),t(Sent)):- ftVar(Sent),!.
 
 db_expand_0(Op,[G|B],[GG|BB]):-!,db_expand_0(Op,G,GG),db_expand_0(Op,B,BB).
+db_expand_0(Op,(G,B),(GG,BB)):-!,db_expand_0(Op,G,GG),db_expand_0(Op,B,BB).
 db_expand_0(Op,G:B,GG:BB):-!,db_expand_0(Op,G,GG),db_expand_0(Op,B,BB).
 
 db_expand_0(Op,{Sent},{SentO}):- !,fully_expand_goal(Op,Sent,SentO),!.

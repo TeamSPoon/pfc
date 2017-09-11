@@ -216,12 +216,15 @@ compilerDirective(isRuntime,comment("Only use rule/fact at runtime")).
                   pfcLHS,
 */
                   prologNegByFailure,
-                  prologIsFlag
-
+                  prologIsFlag,
+                  tFunction
                   )).
 
 
 %:- listing(ttRelationType/1).
+
+:- kb_shared(do_and_undo/2).
+:- kb_shared(tFunction/1).
 
 do_and_undo(A,U):-cwc,atom(A),atom_concat('assert',Suffix,A),!,atom_concat('delete',Suffix,U),current_predicate(U/_).
 do_and_undo(A,U):-cwc,atom(A),atom_concat('def',_,A),atom_concat('un',A,U),current_predicate(U/_).
