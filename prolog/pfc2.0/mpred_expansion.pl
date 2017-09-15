@@ -1179,7 +1179,7 @@ string_to_mws([String,A|B],OUT):- (string(String);string(A)),!,must((string_to_m
 
 
 db_expand_final(_ ,NC,NC):-  is_ftVar(NC),!.
-db_expand_final(Op,t(EL),O):- !, db_expand_final(Op,EL,O).
+%db_expand_final(Op,t(EL),O):- !, db_expand_final(Op,EL,O).
 db_expand_final(change(assert,_),props(_Obj,List),true):-  List==[],dumpST,!.
 db_expand_final(_,props(Obj,List),{nonvar(Obj)}):- (List==[] ; List==true).
 db_expand_final(_ ,sumo_rule(NC),sumo_rule(NC)):- !.
@@ -1333,7 +1333,6 @@ db_expand_0(Op,\+(Sent),\+(SentO)):- !, db_expand_0(Op,Sent,SentO).
 db_expand_0(Op,~(Sent),~(SentO)):- !, db_expand_0(Op,Sent,SentO).
 db_expand_0(Op,poss(Sent),poss(SentO)):- !, db_expand_0(Op,Sent,SentO).
 db_expand_0(Op,nesc(Sent),nesc(SentO)):- !, db_expand_0(Op,Sent,SentO).
-db_expand_0(Op,(G,B),(GG,BB)):-!,db_expand_0(Op,G,GG),db_expand_0(Op,B,BB).
 db_expand_0(Op,Sent,SentO):- cyclic_break(Sent),db_expand_final(Op ,Sent,SentO),!.
 
 db_expand_0(_,Sent,Sent):- \+ compound(Sent),!.
@@ -1341,11 +1340,13 @@ db_expand_0(_,Sent,Sent):- \+ compound(Sent),!.
 db_expand_0(Op,pkif(SentI),SentO):- nonvar(SentI),!,must((any_to_string(SentI,Sent),must(expand_kif_string_or_fail(Op,Sent,SentM)),SentM\=@=Sent,!,db_expand_0(Op,SentM,SentO))).
 db_expand_0(_Op,kif(Sent),SentO):- nonvar(Sent),!, must(expand_kif_string(Sent,SentM)),if_defined(sexpr_sterm_to_pterm(SentM,SentO),SentM=SentO).
 
-%TODO DONT RUIN db_expand_0(Op,==>(EL),O):- !, db_expand_0(Op,EL,O).
+%TODO DONT RUIN 
+db_expand_0(Op,==>(EL),O):- !, db_expand_0(Op,EL,O).
 %TODO DONT RUIN  db_expand_0(Op,t(EL),O):- !, db_expand_0(Op,EL,O).
 % db_expand_0(_,t(Sent),t(Sent)):- ftVar(Sent),!.
 
 db_expand_0(Op,[G|B],[GG|BB]):-!,db_expand_0(Op,G,GG),db_expand_0(Op,B,BB).
+db_expand_0(_Op,=>(G,B),=>(G,B)):-!.
 db_expand_0(Op,(G,B),(GG,BB)):-!,db_expand_0(Op,G,GG),db_expand_0(Op,B,BB).
 db_expand_0(Op,G:B,GG:BB):-!,db_expand_0(Op,G,GG),db_expand_0(Op,B,BB).
 
