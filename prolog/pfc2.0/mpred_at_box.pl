@@ -129,7 +129,7 @@ baseKB_mtProlog(Mt):- arg(_,v(lmcache,t_l,system),Mt).
 
 %% assert_setting01( ?X) is semidet.
 % :- srtrace.
-assert_setting01(M:P):-functor(P,_,A),duplicate_term(P,DP),setarg(A,DP,_),system:retractall(M:DP),system:asserta(M:P).
+assert_setting01(M:P):-functor(P,_,A),dupe_term(P,DP),setarg(A,DP,_),system:retractall(M:DP),system:asserta(M:P).
 
 % :- break.
 
