@@ -2084,6 +2084,7 @@ mpred_do_rule((H:-B)):- fail,
 is_head_LHS(H):- nonvar(H),get_functor(H,F,A),must(suggest_m(M)),lookup_u(mpred_prop(M,F,A,pfcLHS)).
 body_clause(SK,Cont):-nonvar(SK),SK=Cont.
 
+mpred_do_hb_catchup(_H, _B):-!.
 mpred_do_hb_catchup(_H, B):- \+ \+ (B=true),!.
 mpred_do_hb_catchup(_H, B):- compound(B), \+ \+ reserved_body_helper(B),!. 
 
@@ -2108,8 +2109,10 @@ mpred_do_hb_catchup(H,B):- %is_head_LHS(H),
                      
 % mpred_do_hb_catchup(H,B):- !,mpred_do_hb_catchup_now(H,B).
 
+mpred_do_hb_catchup_now_maybe(_,_):-!.
 mpred_do_hb_catchup_now_maybe(H,B):- B\=(cwc,_),with_exact_assertions((mpred_do_hb_catchup_now(H,B))).
 
+mpred_do_hb_catchup_now(_,_):-!.
 mpred_do_hb_catchup_now(H,B):- B\=(cwc,_),nonvar(B),with_exact_assertions(catch( (forall(call_u(B),mpred_fwc(H));true),_,true)),!.
 
 
@@ -2121,6 +2124,11 @@ mpred_do_hb_catchup_now(H,B):- B\=(cwc,_),nonvar(B),with_exact_assertions(catch(
 mpred_do_clause(H,B):-
  with_exact_assertions(mpred_do_clause0(H,B)).
 
+mpred_do_clause0(Var, B):- is_ftVar(Var),!,trace_or_throw(var_mpred_do_clause0(Var, B)).
+
+
+mpred_do_clause0((=>),_):-!.
+mpred_do_clause0((==>),_):-!.
 mpred_do_clause0(H,B):-
   % F = {clause(H,B)},
   F = (H :- B),  B\=(cwc,_),!,
@@ -2146,7 +2154,7 @@ mpred_do_fact(Fact):-
   loop_check(mpred_do_fcpt(Fact,F),true), % dmsg(trace_or_throw_ex(mpred_do_rule(Fact)))),
   % check negative triggers
   mpred_do_fcnt(Fact,F),
-  mpred_do_clause(F,true).  
+  nop(mpred_do_clause(F,true)).
 
 lookup_spft(A,B,C):- nonvar(A),!,lookup_spft_p(A,B,C).
 lookup_spft(A,B,C):- var(B),!,lookup_spft_t(A,B,C).
