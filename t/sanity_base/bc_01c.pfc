@@ -47,7 +47,11 @@ bc_p(b).
 %:- mpred_test(((mpred_undo1(((bc_q(N) <- bc_p(N))))),\+ clause(bc_q(_),true))).
 %:- mpred_test(((mpred_retract(((bc_q(N) <- bc_p(N))))),\+ clause(bc_q(_),true))).
 
+:- mpred_why(( bc_q(A) :- ( !, mpred_bc_and_with_pfc(bc_q(A))))).
+
 :- mpred_test(\+ clause(bc_q(A) ,( !, mpred_bc_and_with_pfc(bc_q(A))))).
+
+
 
 
 
