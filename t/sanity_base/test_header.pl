@@ -1,4 +1,12 @@
 
+:- if(current_prolog_flag(test_header,_)).
+
+:- wdmsg(reload_of_test_header).
+
+:- mpred_reset.
+
+:- else.
+
 
 % runtype: default = pfc
 :- if(current_prolog_flag(runtime_testing_module,_)->true;
@@ -30,6 +38,10 @@ test_header_include.
 :- endif.
 
 :- ensure_loaded(library(pfc_test)).
+
+
+:- endif. % current_prolog_flag(test_header,_).
+
 
 
 :- if(is_pfc_file).

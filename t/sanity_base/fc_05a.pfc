@@ -17,7 +17,7 @@
 :- set_prolog_flag(retry_undefined, kb_shared).
 */
 
-:- must(context_module(header_sane)).
+% :- must(context_module(header_sane)).
 
 
 aaa(O)==>bbb(O).

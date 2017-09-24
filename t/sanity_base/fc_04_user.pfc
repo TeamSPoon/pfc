@@ -14,22 +14,22 @@
 
 :- dmsg(begin_abc).
 
-:- abolish(a,1).
-:- abolish(b,1).
-%:- dynamic((a/1,b/1)).
+:- abolish(a4u,1).
+:- abolish(b4u,1).
+%:- dynamic((a4u/1,b4u/1)).
 
 % :- debug_logicmoo(logicmoo(_)).
 :- mpred_trace_exec.
 
-a(X) ==> b(X).
+a4u(X) ==> b4u(X).
 %:- rtrace,trace.
-%:-mpred_ain(user:(a(1))).
-%:-ain(a(1)).
-a(1).
-%:- user:ain_expanded(a(1)).
+%:-mpred_ain(user:(a4u(1))).
+%:-ain(a4u(1)).
+a4u(1).
+%:- user:ain_expanded(a4u(1)).
 
-:- listing([a,b]).
-:- mpred_test(a(1)).
-:- mpred_test(b(1)).
+:- listing([a4u,b4u]).
+:- mpred_test(a4u(1)).
+:- mpred_test(b4u(1)).
 
 

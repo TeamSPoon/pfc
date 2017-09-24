@@ -9,9 +9,11 @@
 %  was_module(header_sane,[]).
 :- include(test_header).
 
+/*
 :- abolish(a11,0).
 :- abolish(b11,0).
 :- abolish(c11,0).
+*/
 
 a11 ==> b11.
 b11 ==> c11.
