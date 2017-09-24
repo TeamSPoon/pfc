@@ -117,6 +117,9 @@ rtUnaryPredicate/1,
 first_std_provider/3)).
 */
 
+% ensure this file does not get unloaded with mpred_reset
+==> mpred_unload_option(never,$current_file.value).
+
 :- ensure_abox(baseKB).
 
 %:- set_fileAssertMt(baseKB).

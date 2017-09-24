@@ -25,9 +25,9 @@ must_clause_asserted(G):- cwc, must(clause_asserted_u(G)).
 
 a.
 
-:- header_sane:listing(a).
-
 :- must_clause_asserted(a).
+
+:- mpred_reset.
 
 :- mpred_reset.
 

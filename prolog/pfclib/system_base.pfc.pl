@@ -5,7 +5,10 @@
 :- ensure_abox(baseKB).
 :- use_module(library(rtrace)).
 :- use_module(library(pfc_lib)).
-/** <module> system_base_lite
+% ensure this file does not get unloaded with mpred_reset
+==> mpred_unload_option(never,$current_file.value).
+
+/** <module> system_base
 % =============================================
 % File 'system_base_lite.pfc'
 % Purpose: Agent Reactivity for SWI-Prolog

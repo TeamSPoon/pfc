@@ -17,7 +17,7 @@
 :- set_prolog_flag(retry_undefined, kb_shared).
 */
 
-:- must(context_module(header_sane)).
+
 
 %:- dmsg(begin_abc123).
               
@@ -26,7 +26,7 @@
 %:- dynamic(baseKB:ptReformulatorDirectivePredicate/1).
 
  % :- mpred_trace_exec.
-:- must(context_module(header_sane)).
+
 
 :- abolish(c,0).
 :- abolish(aaa,1).
@@ -36,7 +36,7 @@
 
 :- file_begin(pfc).
 
-:- must(context_module(header_sane)).
+
 
 :- mpred_test(ain(aaa(zzz))).
 

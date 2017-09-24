@@ -8,33 +8,35 @@
 % Tests Retraction undoes Backchaining memo idea is working
 
 
-%  was_module(bc_01d,[]).
+%  was_module(bc_01_d_01d,[]).
 
 :- include(test_header).
 
-:- dynamic(bc_q/1).
-:- dynamic(bc_p/1).
+:- dynamic(bc_01_d_q/1).
+:- dynamic(bc_01_d_p/1).
 
-:- ain((bc_q(N) <- bc_p(N))).
+:- ain((bc_01_d_q(N) <- bc_01_d_p(N))).
 
-bc_p(a).
-bc_p(b).
+bc_01_d_p(a).
+bc_01_d_p(b).
 
 
 
-:- mpred_test(call_u(bc_p(b))).
+:- mpred_test(call_u(bc_01_d_p(b))).
 
 %= nothing cached
-:- mpred_test(\+ clause(bc_q(_),true)).
+:- mpred_test(\+ clause(bc_01_d_q(_),true)).
 
-:- mpred_test(((bc_q(b)))).
+:- mpred_test(((bc_01_d_q(b)))).
 
 %= something cached
-:- mpred_test( clause(bc_q(_),true)).
+:- mpred_test( clause(bc_01_d_q(_),true)).
 
-:- ain(bc_p(a)).
+:- mpred_trace_exec.
 
-:- \+ is_asserted(bc_q(a)).
+:- ain(bc_01_d_p(a)).
+
+:- \+ clause_asserted(bc_01_d_q(a)).
 
 :- pp_DB.
 

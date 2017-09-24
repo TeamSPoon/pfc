@@ -269,6 +269,7 @@ baseKB:mpred_skipped_module(eggdrop).
 :- discontiguous baseKB:prologBuiltin/1.
 :- dynamic baseKB:prologBuiltin/1.
 
+:- reexport(library('pfc2.0/mpred_gvars.pl')).
 :- reexport(library('pfc2.0/mpred_expansion.pl')).
 :- reexport(library('pfc2.0/mpred_loader.pl')).
 :- reexport(library('pfc2.0/mpred_database.pl')).
@@ -460,6 +461,7 @@ must_pfc_p('<--'(_,_)).
 must_pfc_p('->'(_,_)).
 must_pfc_p('~'(_)).
 must_pfc_p('--->'(_,_)).
+% must_pfc_p('=>'(_,_)).
 must_pfc_p(_:P):- !, must_pfc_p(P),!.
 must_pfc_p(FAB):-functor(FAB,F,A),must_pfc_fa(F,A),!.
 
@@ -473,8 +475,10 @@ must_pfc_fa(F,2):- sub_atom(F,'='),(atom_concat(_,'>',F);atom_concat('<',_,F)).
 
 % module prefixed clauses for sure should be non pfc?
 is_never_pfc(Var):- \+ callable(Var),!.
+is_never_pfc(_):- prolog_load_context(file,F),\+ prolog_load_context(source,F),atom_concat(_,'.pl',F),\+ atom_concat(_,'pfc.pl',F).
 is_never_pfc(goal_expansion(_,_,_,_)).
 is_never_pfc(':-'(_)).
+is_never_pfc('?-'(_)).
 is_never_pfc('-->'(_,_)):-!.
 is_never_pfc(attr_unify_hook(_,_)):-!.
 
