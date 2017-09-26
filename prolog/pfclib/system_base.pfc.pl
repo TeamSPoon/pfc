@@ -6,7 +6,8 @@
 :- use_module(library(rtrace)).
 :- use_module(library(pfc_lib)).
 % ensure this file does not get unloaded with mpred_reset
-==> mpred_unload_option(never,$current_file.value).
+
+
 
 /** <module> system_base
 % =============================================
@@ -545,6 +546,8 @@ rtNotForUnboundPredicates(member/2).
 
 :- kb_shared(never_assert_u/2).
 never_assert_u(~(X),is_ftVar(~X)):- cwc, is_ftVar(X).
+
+never_assert_u(mpred_unload_option(never,X),is_ftVar(mpred_unload_option(never,X))):- cwc, is_ftVar(X).
 never_assert_u(X,is_ftVar(X)):- cwc, is_ftVar(X).
 never_assert_u(prologSingleValued(BAD),var_prologSingleValued(BAD)):-cwc, is_ftVar(BAD).
 never_assert_u(baseKB:mtProlog(baseKB),must(mtHybrid(baseKB))).
@@ -563,6 +566,7 @@ never_retract_u(X,never_retract_u(X)):- cwc, never_retract_u(X).
 never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
 
 
+==> mpred_unload_option(never,$current_file.value).
 
 
 %:- rtrace.
