@@ -102,9 +102,13 @@
 
 P ==> \+ ~P.
 ~P ==> \+ P.
-( \+ P, P) ==> {dmsg(warn(weak_conflict(P)))}.
+
+:- mpred_trace_exec.
+%  can this ever happen?
+% (( \+ P, P) ==> {dumpST,dmsg(warn(weak_conflict(P)))}).
 ( ~ P, P) ==> ({dmsg(warn(conflict(P)))}).
 % (\+ P, P) => conflict(P).
+:- mpred_notrace_exec.
 
 % ===================================================================
 %  Microtheory System
@@ -565,9 +569,12 @@ never_retract_u(X,never_retract_u(X)):- cwc, never_retract_u(X).
 :- kb_shared(never_retract_u/1).
 never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
 
-
+:- dynamic(mpred_unload_option/2).
+:- listing(mpred_unload_option/2).
+:- mpred_trace_exec.
 ==> mpred_unload_option(never,$current_file.value).
-
+:- mpred_notrace_exec.
+:- listing(mpred_unload_option/2).
 
 %:- rtrace.
 % prologHybrid(arity/2).

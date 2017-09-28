@@ -117,13 +117,11 @@ rtUnaryPredicate/1,
 first_std_provider/3)).
 */
 
-% ensure this file does not get unloaded with mpred_reset
-==> mpred_unload_option(never,$current_file.value).
-
 :- ensure_abox(baseKB).
 
-%:- set_fileAssertMt(baseKB).
+:- set_fileAssertMt(baseKB).
 
+:- dynamic(mpred_unload_option/2).
 
 assert_if_newt(G):- (cwc,(clause_asserted_i(G)->true;call(assert,G))).
 :-if(exists_file(bkb_neever)).
@@ -133,6 +131,15 @@ assert_if_newt(G):- (cwc,(clause_asserted_i(G)->true;call(assert,G))).
 :- else.
 
 :- baseKB:ensure_loaded('system_base.pfc').
+
+% ensure this file does not get unloaded with mpred_reset
+:- mpred_trace_exec.
+==> mpred_unload_option(never,$current_file.value).
+:- mpred_notrace_exec.
+:- listing(mpred_unload_option/2).
+
+
+
 :- baseKB:ensure_loaded('system_mdefault.pfc').
 :- baseKB:ensure_loaded('system_module_inheritance.pfc').
 :- baseKB:ensure_loaded('system_singleValued.pfc').
