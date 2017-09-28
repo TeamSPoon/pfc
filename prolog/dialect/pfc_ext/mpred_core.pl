@@ -723,7 +723,7 @@ assert_u_no_dep(X):- check_never_assert(X),fail.
 assert_u_no_dep(MH):- fix_mp(change(assert,assert_u),MH,MHA),
     attvar_op_fully(db_op_call(assert,assert_i), MHA),expire_tabled_list(MHA).
 
-asserta_u(X):- check_never_assert(X),fail.
+asserta_u(X):-  check_never_assert(X),fail.
 asserta_u(MH):- fix_mp(change(assert,asserta_u),MH,MHA),attvar_op_fully(db_op_call(asserta,asserta_i),MHA).
 
 assertz_u(X):- check_never_assert(X),fail.
@@ -2793,6 +2793,7 @@ notiffy_p(P,\+(P)).
 %
 % is true if NF is the normal form of \+P.
 %
+mpred_nf1_negation(P,[\+P]):- is_ftVar(P),!.
 mpred_nf1_negation((P/Cond),[NOTP/Cond]):- notiffy_p(P,NOTP), !.
 
 mpred_nf1_negation((P;Q),NF):-
@@ -2916,6 +2917,7 @@ mpred_connective(Var):-var(Var),!,fail.
 mpred_connective(';').
 mpred_connective(',').
 mpred_connective('/').
+mpred_connective('{}').
 mpred_connective('|').
 mpred_connective(('==>')).
 mpred_connective(('<-')).
@@ -2931,6 +2933,8 @@ mpred_neg_connective('\\+').
 
 is_simple_lhs(ActN):- is_ftVar(ActN),!,fail.
 is_simple_lhs( \+ _ ):-!,fail.
+is_simple_lhs( ~ _ ):-!,fail.
+is_simple_lhs( _  / _ ):-!,fail.
 is_simple_lhs((Lhs1,Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
 is_simple_lhs((Lhs1;Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
 is_simple_lhs(ActN):- is_active_lhs(ActN),!,fail.
@@ -2998,6 +3002,7 @@ In order to reduce the number of postivie triggers (pt/2s)
 
 process_rule(LhsIn,Rhs,Parent_rule):- constrain_meta(LhsIn,How),!,
   process_rule0(LhsIn/How,Rhs,Parent_rule).
+
 process_rule(LhsIn,Rhs,Parent_rule):- is_simple_lhs(LhsIn),LhsIn = (Lhs1,Lhs2),
   Lhs2\=(_,_),
   add_lhs_cond(Lhs1,Lhs2,LhsA),
@@ -3029,12 +3034,14 @@ build_trigger(WS,[],Consequent,ConsequentO):-
    mpred_compile_rhs_term_consquent(WS,Consequent,ConsequentO).
 
 build_trigger(WS,[V|Triggers],Consequent,pt(V,X)):-
-  var(V),
+  is_ftVar(V),
   !,
   build_trigger(WS,Triggers,Consequent,X).
 
 % T1 is a negation in the next two clauses
-build_trigger(WS,[(T1/Test)|Triggers],Consequent,nt(T2,Test2,X)):-
+build_trigger(WS,[TT|Triggers],Consequent,nt(T2,Test2,X)):- 
+  compound(TT),
+  TT=(T1/Test),
   mpred_unnegate(T1,T2),
   !,
   build_neg_test(WS,T2,Test,Test2),
@@ -3091,7 +3098,9 @@ build_neg_test(WS,T,Testin,Testout):-
 
 %check_never_assert(_Pred):-!.
 
-check_never_assert(Pred):- quietly_ex(ignore(( copy_term_and_varnames(Pred,Pred_2),call_u_no_bc(never_assert_u(Pred_2,Why)),variant_u(Pred,Pred_2),trace_or_throw_ex(never_assert_u(Pred,Why))))).
+check_never_assert(Pred):- quietly_ex(ignore(( copy_term_and_varnames(Pred,Pred_2),call_u_no_bc(never_assert_u(Pred_2,Why)),
+ % variant_u(Pred,Pred_2),
+ trace_or_throw_ex(never_assert_u(Pred,Why))))).
 %check_never_assert(Pred):- quietly_ex(ignore(( copy_term_and_varnames(Pred,Pred_2),call_u_no_bc(never_assert_u(Pred_2)),variant_u(Pred,Pred_2),trace_or_throw_ex(never_assert_u(Pred))))).
 %check_never_assert(Pred):- quietly_ex((( copy_term_and_varnames(Pred,Pred_2),call_u_no_bc(never_assert_u(Pred_2,Why)), variant_u(Pred,Pred_2),trace_or_throw_ex(never_assert_u(Pred,Why))))),fail.
 
