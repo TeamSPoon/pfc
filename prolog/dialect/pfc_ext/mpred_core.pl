@@ -1855,8 +1855,8 @@ mpred_retract_is_complete(P) :- \+ mpred_supported(local,P), \+ call_u(P).
 
 mpred_retract(P):- mpred_withdraw(P), mpred_retract_is_complete(P),!,mpred_trace_msg('    Withdrew: ~p',[P]).
 mpred_retract(P):- mpred_retract_preconds(P), mpred_retract_is_complete(P),!,mpred_trace_msg('    Retracted: ~p~n',[P]).
-mpred_retract(P):- listing(P),show_why(P),sleep(5),show_call(mpred_blast(P)),mpred_retract_is_complete(P),!,mpred_trace_msg('    Blasted: ~p~n',[P]).
-mpred_retract(P):- listing(P),show_why(P),!,mpred_warn('    Still True: ~p~n',[P]),sleep(5).
+mpred_retract(P):- listing(P),mpred_why(P),sleep(5),show_call(mpred_blast(P)),mpred_retract_is_complete(P),!,mpred_trace_msg('    Blasted: ~p~n',[P]).
+mpred_retract(P):- listing(P),mpred_why(P),!,mpred_warn('    Still True: ~p~n',[P]),sleep(5).
 
 mpred_retract_preconds(P):- mpred_retract_1preconds(P).
 
@@ -3531,6 +3531,7 @@ mpred_facts(L):- mpred_facts_in_kb(_,L).
 mpred_facts_in_kb(MM,L):- mpred_facts_in_kb(MM,_,true,L).
 
 mpred_facts(P,L):- mpred_facts_in_kb(_,P,L).
+mpred_facts(KB,P,L):- mpred_facts_in_kb(KB,P,L).
 mpred_facts_in_kb(MM,P,L):- mpred_facts_in_kb(MM,P,true,L).
 
 %  mpred_facts_in_kb(MM,Pattern,Condition,-ListofPmpred_facts) returns a list of facts added.
