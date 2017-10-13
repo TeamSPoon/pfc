@@ -436,8 +436,10 @@ setup_mpred_ops:-
 % Get Source Ref (Current file or User)
 %
 :- module_transparent((get_source_ref)/1).
-get_source_ref(O):- quietly_ex((current_why(U),(U=(_,_)->O=U;O=(U,ax)))),!.
-get_source_ref(O):- quietly_ex((get_source_ref1(U),(U=(_,_)->O=U;O=(U,ax)))),!.
+get_source_ref(O):- must(get_source_ref0(O)).
+:- module_transparent((get_source_ref0)/1).
+get_source_ref0(O):- quietly_ex(((get_source_ref1(U),nonvar(U)),(U=(_,_)->O=U;O=(U,ax)))),!.
+get_source_ref0(O):- quietly_ex(((current_why(U),nonvar(U)),(U=(_,_)->O=U;O=(U,ax)))),!.
 
 get_source_ref_stack(O):- findall(U,current_why(U),Whys),Whys\==[],!, U=(_,_),(Whys=[U]->O=U;O=(Whys,ax)),!.
 get_source_ref_stack(O):- get_source_ref1(U),(U=(_,_)->O=U;O=(U,ax)),!.
@@ -806,7 +808,7 @@ lookup_kb(MM,MHB):- strip_module(MHB,M,HB),
       clause_property(Ref,module(MM)).
 
 % lookup_u/cheaply_u/call_u/clause_b
-lookup_u(SPFT):- callable(SPFT),on_x_rtrace(SPFT).
+lookup_u(SPFT):- on_x_rtrace(SPFT).
 % baseKB:SPFT:- current_prolog_flag(unsafe_speedups , true) , !,baseKB:mtHybrid(MT),call(MT:SPFT).
 % lookup_u(H):-lookup_u(H,_).
 
@@ -1583,12 +1585,12 @@ mpred_run :- (get_fc_mode(_,_,Mode)->(Mode=direct;Mode=paused)),!.
 mpred_run:-
   mpred_step,
   mpred_run.
-mpred_run.
+mpred_run:- retractall(t_l:busy(_)).
 
 
 % mpred_step removes one entry from the queue and reasons from it.
 
-%:-thread_local(t_l:busy/1).
+:-thread_local(t_l:busy/1).
 
 mpred_step:-
   % if hs/1 is true, reset it and fail, thereby stopping inferencing. (hs=halt_signal)
@@ -2093,7 +2095,9 @@ mpred_fwc1(support_hilog(_,_)):-!.
 % mpred_fwc1(Fact):- current_prolog_flag(unsafe_speedups , true) , ground(Fact),fwc1s_post1s(_One,Two),Six is Two * 3,filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact),!.
 
 
+mpred_fwc1(Fact):- clause_asserted(t_l:busy(Fact)),!.
 mpred_fwc1(Fact):-
+  asserta(t_l:busy(Fact)),
   '$current_source_module'(Sm),
   mpred_trace_msg(Sm:mpred_fwc1(Fact)),
   %ignore((mpred_non_neg_literal(Fact),remove_negative_version(Fact))),
