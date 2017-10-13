@@ -556,10 +556,10 @@ never_assert_u(mpred_unload_option(never,X),is_ftVar(mpred_unload_option(never,X
 never_assert_u(X,is_ftVar(X)):- cwc, is_ftVar(X).
 never_assert_u(prologSingleValued(BAD),var_prologSingleValued(BAD)):-cwc, is_ftVar(BAD).
 never_assert_u(baseKB:mtProlog(baseKB),must(mtHybrid(baseKB))).
-never_assert_u(A,never_assert_u(A)):- cwc, never_assert_u(A).
+never_assert_u(A,never_assert_u(A)):- cwc, loop_check(never_assert_u(A)).
 % P/never_assert_u(P,Why) ==> conflict(never_assert_u(P,Why))
 :- kb_shared(never_assert_u/1).
-never_assert_u(X):- cwc, loop_check(never_assert_u(X,_)).
+% never_assert_u(X):- cwc, loop_check(never_assert_u(X,_)).
 
 
 :- kb_shared(never_retract_u/2).

@@ -2170,7 +2170,7 @@ to_predicate_isas(C,CO):-C=..[F|CL],must_maplist(to_predicate_isas,CL,CLO),!,CO=
 exact_args(Q):-is_ftVar(Q),!,fail.
 exact_args(isEach):-!,fail.
 exact_args(Q):- \+ compound(Q), !.
-exact_args(_:Q):- !,loop_check(exact_args0(Q),fail).
+exact_args(_:Q):- !,(exact_args0(Q),fail).
 exact_args(Q):- exact_args0(Q),!.
 
 

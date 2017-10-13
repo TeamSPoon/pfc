@@ -44,6 +44,8 @@ kb_wankage(M:F/A):-
 :- user:use_module(library(hook_hybrid)).
 :- user:use_module(library(logicmoo_util_strings)).
 
+
+
 :- kb_shared(baseKB:never_assert_u/1).
 :- kb_shared(baseKB:never_assert_u/2).
 :- kb_shared(baseKB:never_retract_u/1).
@@ -91,6 +93,7 @@ kb_global_base(FA):- kb_local(baseKB:FA).
 
 :- user:use_module(library(loop_check)).
 :- use_module(library(attvar_serializer)).
+
 % :- kb_shared_base(baseKB:admittedArgument/3).
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
 :- set_prolog_flag(runtime_speed, 1). % 1 = default
@@ -99,7 +102,9 @@ kb_global_base(FA):- kb_local(baseKB:FA).
 :- set_prolog_flag(unsafe_speedups, false).
 :- set_prolog_flag(pfc_booted,false).
 
+
 :- use_module(library(prolog_pack)).
+
 pfc_rescan_autoload_pack_packages_part_1:- dmsg("SCAN AUTOLOADING PACKAGES..."),
  forall('$pack':pack(Pack, _),
   forall(((pack_property(Pack, directory(PackDir)),prolog_pack:pack_info_term(PackDir,autoload(true)))),
@@ -107,13 +112,13 @@ pfc_rescan_autoload_pack_packages_part_1:- dmsg("SCAN AUTOLOADING PACKAGES..."),
  dmsg(".. SCAN AUTOLOADING COMPLETE"),!.
 :- current_prolog_flag(lm_no_autoload,true) -> true; pfc_rescan_autoload_pack_packages_part_1.
 
+
 :- meta_predicate pack_autoload_packages(0).
 pack_autoload_packages(NeedExistingIndex):- 
  forall(user:expand_file_search_path(library(''),Dir),
   ignore(( (\+ NeedExistingIndex ; absolute_file_name('INDEX',_Absolute,[relative_to(Dir),access(read),file_type(prolog),file_errors(fail)]))->
    maybe_index_autoload_dir(Dir)))),
  reload_library_index.
-
 
 
 maybe_index_autoload_dir(PackDir):- \+ access_file(PackDir,write),!,dmsg(cannot_write_autoload_dir(PackDir)).
@@ -131,6 +136,7 @@ pfc_rescan_autoload_pack_packages_part_2 :- pack_autoload_packages(true).
 
 
 input_from_file:- prolog_load_context(stream,Stream),current_input(Stream).
+
 
 :- module_transparent(intern_predicate/1).
 :- module_transparent(intern_predicate/2).
