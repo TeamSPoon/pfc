@@ -1535,8 +1535,7 @@ mpred_enqueue(P):- mpred_enqueue(P,_S).
 mpred_enqueue(P,_):- show_mpred_success(que,lookup_u(que(P,_))),!.
 %mpred_enqueue(P,_):- clause_asserted(t_l:current_local_why(_,P)),!,trace_or_throw_ex(why(P)).
 %mpred_enqueue(P,_):- t_l:busy(P),!,nop(dmsg(t_l:busy(P))).
-%mpred_enqueue(P,S):- locally(t_l:busy(P),mpred_enqueue0(P,S)).
-
+%mpred_enqueue(P,S):- locally_each(t_l:busy(P),mpred_enqueue2(P,S)).
 mpred_enqueue(P,S):-
  (var(S)->current_why(S);true),
  (must_ex(get_fc_mode(P,S,Mode)) 
@@ -1580,7 +1579,7 @@ mpred_remove_old_version(_).
 % How this is done depends on the propagation mode:
 %    direct -  mpred_fwc has already done the job.
 %    depth or breadth - use the queue mechanism.
-
+                                                            
 mpred_run :- (get_fc_mode(_,_,Mode)->(Mode=direct;Mode=paused)),!.
 % mpred_run :- repeat, \+ mpred_step, !.
 mpred_run:-
@@ -1824,7 +1823,7 @@ mpred_withdraw(P,S) :-
 mpred_withdraw_fail_if_supported(P,S):-
   ((ignore(mpred_get_support(P,S)),frozen(S,Goals),(Goals == true  -> SS=S ; SS = freeze(S,Goals)))),
   (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg(found(mpred_rem_support(P,S))))
-     -> remove_if_unsupported(P)
+     -> (remove_if_unsupported(P),retractall(t_l:busy(_)))
       ; ((mpred_trace_msg("mpred_withdraw/2 Could not find support ~p to remove (fact): ~p",
                 [SS,P]),
             \+ show_still_supported(P))))).
@@ -2094,12 +2093,12 @@ mpred_fwc1(support_hilog(_,_)):-!.
 % mpred_fwc1(singleValuedInArg(_, _)):-!.
 % this line filters sequential (and secondary) dupes
 % mpred_fwc1(Fact):- current_prolog_flag(unsafe_speedups , true) , ground(Fact),fwc1s_post1s(_One,Two),Six is Two * 3,filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact),!.
+mpred_fwc1(Fact):-'$current_source_module'(Sm),mpred_m_fwc1(Sm,Fact).
 
 
-mpred_fwc1(Fact):- clause_asserted(t_l:busy(Fact)),!.
-mpred_fwc1(Fact):-
-  asserta(t_l:busy(Fact)),
-  '$current_source_module'(Sm),
+
+mpred_m_fwc1(Sm,Fact):- clause_asserted(t_l:busy(Fact))->dmsg(Sm:warn(busy_mpred_m_fwc1(Fact)));(asserta(t_l:busy(Fact)),fail),!.
+mpred_m_fwc1(Sm,Fact):-  
   mpred_trace_msg(Sm:mpred_fwc1(Fact)),
   %ignore((mpred_non_neg_literal(Fact),remove_negative_version(Fact))),
   \+ \+ ignore(mpred_do_rule(Fact)),
