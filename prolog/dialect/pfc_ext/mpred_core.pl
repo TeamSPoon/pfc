@@ -542,7 +542,8 @@ fix_mp0(_Why,Mt:P,Mt,P):- clause_b(mtExact(Mt)),!.
 fix_mp0(Why,G,M,GO):- /*Why = change(_,_),*/ strip_module(G,WAZ,GO),
   %  ((G==GO; (context_module(CM),CM==WAZ) ; (defaultAssertMt(ABox),ABox==WAZ) ; \+ clause_b(mtHybrid(WAZ)) ; (header_sane==WAZ); (abox==WAZ))),
    must_ex(get_unnegated_functor(GO,F,A)) 
-     -> loop_check(WAZ:convention_to_mt(WAZ,Why,F,A,M)),!.
+     -> % loop_check
+     (WAZ:convention_to_mt(WAZ,Why,F,A,M)),!.
 
 
 fix_mp0(_Why,Mt:P,Mt,P):- clause_b(mtHybrid(Mt)),!.
@@ -808,7 +809,7 @@ lookup_kb(MM,MHB):- strip_module(MHB,M,HB),
       clause_property(Ref,module(MM)).
 
 % lookup_u/cheaply_u/call_u/clause_b
-lookup_u(SPFT):- on_x_rtrace(SPFT).
+lookup_u(SPFT):- callable(SPFT),on_x_rtrace(SPFT).
 % baseKB:SPFT:- current_prolog_flag(unsafe_speedups , true) , !,baseKB:mtHybrid(MT),call(MT:SPFT).
 % lookup_u(H):-lookup_u(H,_).
 
@@ -2046,9 +2047,9 @@ mpred_fwc(Ps):- each_E(mpred_fwc0,Ps,[]).
  % mpred_fwc0(genls(_,_)):-!.
 mpred_fwc0(Fact):- quietly_ex(ground(Fact)),
    \+ t_l:is_repropagating(_),
-   maybe_notrace((fwc1s_post1s(_One,Two),Six is Two * 1)), 
+   quietly_ex((once(((fwc1s_post1s(_One,Two),Six is Two * 1))))), 
    show_mpred_success(filter_buffer_n_test,(filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact))),!.
-mpred_fwc0(Fact):- maybe_notrace(copy_term_vn(Fact,FactC)),
+mpred_fwc0(Fact):- quietly_ex(copy_term_vn(Fact,FactC)),
       loop_check(mpred_fwc1(FactC),true).
 
 
@@ -2521,7 +2522,7 @@ call_u_mp(M,P1):- !,M:call(P1).
 call_u_mp(M,P):- functor(P,F,A), call_u_mp_fa(M,P,F,A).
 
 make_visible(R,M:F/A):- wdmsg(make_visible(R,M:F/A)),fail.
-make_visible(M,M:F/A):- maybe_notrace(M:export(M:F/A)).
+make_visible(M,M:F/A):- quietly_ex(M:export(M:F/A)).
 make_visible(R,M:F/A):- must_det_l((M:export(M:F/A),R:import(M:F/A),R:export(M:F/A))).
 
 make_visible(R,M,F,A):- wdmsg(make_visible(R,M,F,A)),fail.
@@ -3644,6 +3645,7 @@ mpred_untrace(Form0):- get_head_term(Form0,Form), retractall_u(mpred_is_spying_p
 
 
 % not_not_ignore_quietly_ex(G):- ignore(quietly(\+ \+ G)).
+% not_not_ignore_quietly_ex(G):- ignore( \+ (G)).
 not_not_ignore_quietly_ex(G):- ignore(quietly_ex(\+ \+ G)).
 
 % needed:  mpred_trace_rule(Name)  ...
