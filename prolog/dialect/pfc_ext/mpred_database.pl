@@ -1352,14 +1352,16 @@ neg_in_code(G):- no_repeats(loop_check(neg_in_code0(G))).
 
 :- meta_predicate neg_in_code0(*).
 :- export(neg_in_code0/1).
-neg_in_code0(G):- cwc, call_u(proven_neg(G)).
-neg_in_code0(G):- cwc, var(G),!,lookup_u(~ G).
+/*
+neg_in_code0(G):- cwc, loop_check(proven_neg(G)).
+neg_in_code0(G):- cwc, var(G),!,loop_check(lookup_u(~ G)).
 neg_in_code0(call_u(G)):- !,neg_in_code0(G).
-neg_in_code0(~(G)):- nonvar(G),!,  \+ call_u(~G) ,!.
+neg_in_code0(~(G)):- nonvar(G),!,  \+ loop_check(~G) ,!.
 neg_in_code0(G):-  is_ftNonvar(G), a(prologSingleValued,G),
       must((if_missing_mask(G,R,Test),nonvar(R),nonvar(Test))),call_u(R),!,call_u(Test).
 neg_in_code0(G):- cwc, clause(~G,Call)*-> call_u(Call).
-neg_in_code0(G):-   neg_may_naf(G), \+ call_u(G),!.
+*/
+neg_in_code0(G):- loop_check(neg_may_naf(G)), \+ loop_check(G),!.
 % neg_in_code0(_:G):-!,baseKB:neg_in_code0(G).
 
 

@@ -31,6 +31,10 @@ test_header_include.
 
 :- endif.
 
+setup_hist0:-  '$toplevel':setup_history.
+:- setup_hist0.
+
+
 
 :- if(( \+ current_module(pfc_lib) )).
 :- use_module(library(pfc)).
