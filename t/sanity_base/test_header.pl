@@ -31,6 +31,13 @@ test_header_include.
 
 :- endif.
 
+:- if(exists_source(library(editline))).
+:- use_module(library(editline)).
+:- else.
+:- if(exists_source(library(editline))).
+:- use_module(library(readline)).
+:- endif.
+:- endif.
 setup_hist0:-  '$toplevel':setup_history.
 :- setup_hist0.
 
