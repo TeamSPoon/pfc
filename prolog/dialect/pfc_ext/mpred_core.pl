@@ -532,6 +532,8 @@ fix_mp0(Why,(G :- B),M,( GO :- B)):- !, fix_mp0(Why,G,M,GO).
 % fix_mp0(Why,(G <- B),M,( GO <- B)):- !, fix_mp0(Why,G,M,GO).
 fix_mp0(Why,CM:(G :- B),M,( GO :- B)):- !, CM:fix_mp0(Why,G,M,GO).
 
+fix_mp0(_Why,spft(P,(mfl(FromMt,File,Lineno),UserWhy)),FromMt,spft(P,(mfl(FromMt,File,Lineno),UserWhy))):-!.
+
 fix_mp0(Why,M:P,MT,P):- to_real_mt(Why,M,MT)->M\==MT,!,fix_mp0(Why,MT:P,MT,P).
 
 % fix_mp0(Why,PQ,M,PPQQ):- meta_split(PQ,P,OP,Q),!,fix_mp(Why,P,M1,PP),fix_mp(Why,Q,M2,QQ),(M1\==M2 -> (QQ\==Q->M=M2;M=M1) ; M=M1),!,meta_split(PPQQ,PP,OP,QQ).
@@ -643,13 +645,13 @@ convention_to_symbolic_mt_ec(From,Why,F,A,Mt):-convention_to_symbolic_mt(From,Wh
 
 /*convention_to_symbolic_mt(_From,_Why,predicateConventionMt,2,baseKB):-!.
 convention_to_symbolic_mt(_From,_Why,genlMt,2,baseKB):-!.
-convention_to_symbolic_mt(_From,_Why,mtHybrid,1,baseKB):-!.
 convention_to_symbolic_mt(_From,_Why,mtNonAssertable,1,baseKB):-!.
 convention_to_symbolic_mt(_From,_Why,mtProlog,1,baseKB):-!.
 convention_to_symbolic_mt(_From,_Why,functorDeclares,1,baseKB):-!.
 convention_to_symbolic_mt(_From,_Why,functorIsMacro,1,baseKB):-!.
 */
 
+convention_to_symbolic_mt(_From,_Why,mtHybrid,1,baseKB):-!.
 convention_to_symbolic_mt(From,_Why,F,_,Mt):-  clause_b(From:predicateConventionMt(F,Mt)),!.
 convention_to_symbolic_mt(_From,_Why,F,A,M):- lmcache:already_decl(kb_global,M,F,A),!.
 
@@ -3651,7 +3653,9 @@ not_not_ignore_quietly_ex(G):- ignore(quietly_ex(\+ \+ G)).
 
 log_failure(ALL):- quietly_ex((log_failure_red,maybe_mpred_break(ALL),log_failure_red)).
 
-log_failure_red:- quietly(doall((between(1,3,_),
+log_failure_red:- quietly(doall((
+  show_current_source_location,
+  between(1,3,_),
   ansifmt(red,"%%%%%%%%%%%%%%%%%%%%%%%%%%% find log_failure_red in srcs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"),
   ansifmt(yellow,"%%%%%%%%%%%%%%%%%%%%%%%%%%% find log_failure_red in srcs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")))).
 
@@ -3980,15 +3984,17 @@ sanity_check(When,Must):- must_ex((show_call(When),Must)),!.
 
 %  mpred_add_support(+Fact,+Support)
 mpred_add_support(P,(Fact,Trigger)):-
-  SPFT = spft(P,Fact,Trigger),  
-   notify_if_neg_trigger(SPFT),
-  (clause_asserted_u(SPFT)-> true; sanity_check(assertz_mu(SPFT),clause_asserted_u(SPFT))).
+  MSPFT = spft(P,Fact,Trigger),
+   fix_mp(mpred_add_support,MSPFT,M,SPFT),
+   M:notify_if_neg_trigger(SPFT),
+  M:(clause_asserted_u(SPFT)-> true; sanity_check(assertz_mu(SPFT),clause_asserted_u(SPFT))).
 
 %  mpred_add_support_fast(+Fact,+Support)
 mpred_add_support_fast(P,(Fact,Trigger)):-
-  SPFT = spft(P,Fact,Trigger),  
-   notify_if_neg_trigger(SPFT),
-   sanity_check(assertz_mu(SPFT),clause_asserted_u(SPFT)).
+      MSPFT = spft(P,Fact,Trigger),
+       fix_mp(mpred_add_support,MSPFT,M,SPFT),
+   M:notify_if_neg_trigger(SPFT),
+   M:sanity_check(assertz_mu(SPFT),clause_asserted_u(SPFT)).
 
 
 notify_if_neg_trigger(spft(P,Fact,Trigger)):- 
@@ -4230,7 +4236,8 @@ mpred_why(P):-
     ((color_line(yellow,1),
       pfcShowJustifications(P,Js))))),Count),
   (Count==[]-> format("~N No justifications for ~p. ~n~n",[P]) ; true),
-  color_line(green,2))))),!.
+  color_line(green,2)
+  )))),!.
 
 mpred_why(NX):- 
   (number(NX)-> true ; retractall(t_l:whybuffer(_,_))),
@@ -4301,6 +4308,7 @@ pfcWhyCommand0(X,_,_) :-
  fail.
   
 pfcShowJustifications(P,Js) :-
+  show_current_source_location,
   format("~N~nJustifications for ~p:~n",[P]),  
   pfcShowJustification1(Js,1).
 

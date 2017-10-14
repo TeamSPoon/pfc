@@ -10,6 +10,8 @@
 
 :- include(test_header).
 
+baseKB:mtHybrid(socialMt).
+
 :- pfc_test_feature(mt,must_not_be_pfc_file).
 
 :- pfc_test_feature(mt,\+ is_pfc_file).
@@ -21,6 +23,9 @@
 :- wdmsg(feature_test_may_fail).
 
 %:- set_defaultAssertMt(header_sane).
+
+:- debug(mpred).
+:- debug(mpred(_)).
 
 baseKB:mtHybrid(socialMt).
 
@@ -47,6 +52,8 @@ baseKB:arity(loves,2).
 
 loves(sally,joe).
 
+:- listing(loves/2).
+
 baseKB:genlMt(myMt,socialMt).
 
 :- listing(myMt:_).
@@ -63,7 +70,7 @@ baseKB:genlMt(myMt,socialMt).
 
 :- mpred_test(clause(myMt:loves(_,_),_B,_R)).
 
-:- mpred_test( \+ clause_u(myMt:loves(_,_))).
+:- mpred_test(clause_u(myMt:loves(_,_))).
 
 :- mpred_test(myMt:loves(_,_)).
 

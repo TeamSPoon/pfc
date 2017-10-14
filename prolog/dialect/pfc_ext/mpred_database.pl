@@ -2215,7 +2215,7 @@ ruleBackward0(F,Condition,Support):- call_u('<-'(FF,Condition)),copy_term('<-'(F
 % Assert For User Code.
 %
 
-assert_mu(MH):- fix_mp(clause(assert,assert_u),MH,M,H),get_unnegated_functor(H,F,A),assert_mu(M,H,F,A).
+assert_mu(MH):-  fix_mp(clause(assert,assert_u), MH,M,H),get_unnegated_functor(H,F,A),assert_mu(M,H,F,A).
 asserta_mu(MH):- fix_mp(clause(assert,asserta_u),MH,M,H),asserta_mu(M,H).
 assertz_mu(MH):- fix_mp(clause(assert,assertz_u),MH,M,H),assertz_mu(M,H).
 
