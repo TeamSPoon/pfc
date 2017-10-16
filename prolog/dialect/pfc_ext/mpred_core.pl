@@ -323,6 +323,9 @@ mpred_database_term_syntax((~),1,fact(_)).
 baseKB:mpred_database_term(F,A,syntaxic(T)):- mpred_database_term_syntax(F,A,T).
 baseKB:mpred_database_term(F,A,T):- mpred_core_database_term(F,A,T).
 
+mpred_core_database_term(genlPreds,2,fact(_)).
+% mpred_core_database_term(rtArgsVerbatum,1,fact(_)).
+
 % forward,backward chaining database
 mpred_core_database_term(spft,3,support).
 
@@ -658,7 +661,7 @@ convention_to_symbolic_mt(_From,_Why,F,A,M):- lmcache:already_decl(kb_global,M,F
 
 
 
-convention_to_symbolic_mt(From,Why,F,A,Error):- bad_head_pred(F),!,trace_or_throw_ex(error_convention_to_symbolic_mt(From,Why,F,A,Error)).
+convention_to_symbolic_mt(From,Why,F,A,Error):- bad_head_pred(F),!,dumpST,dmsg(bad_head_pred(F)),break,trace_or_throw_ex(error_convention_to_symbolic_mt(From,Why,F,A,Error)).
 convention_to_symbolic_mt(_From,_Why,F,A,abox):- mpred_database_term_syntax(F,A,_).
 convention_to_symbolic_mt(_From,_Why,F,A,abox):- lmcache:already_decl(kb_shared,_,F,A),!.
 convention_to_symbolic_mt(_From,_Why,F,A,abox):- lmcache:already_decl(kb_local,_,F,A),!.
@@ -1582,7 +1585,7 @@ set_fc_mode(Mode):- asserta(t_l:mpred_fc_mode(Mode)).
 mpred_enqueue(P):- mpred_enqueue(P,_S).
 
 mpred_enqueue(P,_):- show_mpred_success(que,lookup_u(que(P,_))),!.
-%mpred_enqueue(P,_):- clause_asserted(t_l:current_local_why(_,P)),!,trace_or_throw_ex(why(P)).
+%mpred_enqueue(P,_):- nb_current('$current_why',wp(_,P)),!,trace_or_throw_ex(why(P)).
 %mpred_enqueue(P,_):- t_l:busy(P),!,nop(dmsg(t_l:busy(P))).
 %mpred_enqueue(P,S):- locally_each(t_l:busy(P),mpred_enqueue2(P,S)).
 mpred_enqueue(P,S):-
@@ -1655,7 +1658,7 @@ mpred_step:-
   get_next_fact(P),
   %asserta(t_l:busy(P)),
   ignore(mpred_fwc(P)),
-  ignore(retract(t_l:current_local_why(_,P))),
+ % ignore(retract(t_l:current_local_why(_,P))),
   %retractall(t_l:busy(P)),
   !.
 
@@ -1862,15 +1865,21 @@ mpred_withdraw_list([H|T],UU) :-
   mpred_withdraw(H,UU),
   mpred_withdraw_list(T,UU).
 
+maybe_user_support(P,S,SS):- 
+  (mpred_get_support(P,S) ->
+  (frozen(S,Goals),
+  (Goals == true  -> SS=S ; SS = freeze(S,Goals))); SS = unKnown_suppoRt).
+
 mpred_withdraw(P,S) :-
-  ((ignore(mpred_get_support(P,S)),frozen(S,Goals),(Goals == true  -> SS=S ; SS = freeze(S,Goals)))),
+  maybe_user_support(P,S,SS),
+  (SS \== unKnown_suppoRt ->
   % pfcDebug(format("~Nremoving support ~p from ~p",[SS,P])),
   (mpred_trace_msg('    Removing support: ~p~n',[SS]),
-     mpred_trace_msg('     Which was for: ~p~n',[P])),
+  mpred_trace_msg('     Which was for: ~p~n',[P])); true),
   ignore(mpred_withdraw_fail_if_supported(P,S)).
 
 mpred_withdraw_fail_if_supported(P,S):-
-  ((ignore(mpred_get_support(P,S)),frozen(S,Goals),(Goals == true  -> SS=S ; SS = freeze(S,Goals)))),
+  maybe_user_support(P,S,SS),
   (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg(found(mpred_rem_support(P,S))))
      -> (remove_if_unsupported(P),retractall(t_l:busy(_)))
       ; ((mpred_trace_msg("mpred_withdraw/2 Could not find support ~p to remove (fact): ~p",
@@ -1907,8 +1916,14 @@ mpred_retract_is_complete(P) :- \+ mpred_supported(local,P), \+ call_u(P).
 
 mpred_retract(P):- mpred_withdraw(P), mpred_retract_is_complete(P),!,mpred_trace_msg('    Withdrew: ~p',[P]).
 mpred_retract(P):- mpred_retract_preconds(P), mpred_retract_is_complete(P),!,mpred_trace_msg('    Retracted: ~p~n',[P]).
-mpred_retract(P):- listing(P),mpred_why(P),sleep(5),show_call(mpred_blast(P)),mpred_retract_is_complete(P),!,mpred_trace_msg('    Blasted: ~p~n',[P]).
-mpred_retract(P):- listing(P),mpred_why(P),!,mpred_warn('    Still True: ~p~n',[P]),sleep(5).
+mpred_retract(P):- listing(P),mpred_why(P),show_call(mpred_blast(P)),mpred_retract_is_complete(P),!,mpred_trace_msg('    Blasted: ~p~n',[P]).
+mpred_retract(P):- ok_left_over(P),mpred_trace_msg('    Still True (ok_left_over): ~p~n',[P]),!,ignore((with_no_retry_undefined((mpred_why(P),listing(P))))).
+mpred_retract(P):- listing(P),mpred_why(P),!,with_no_retry_undefined(P),mpred_warn('    Still True: ~p~n',[P]),
+  log_failure_red,sleep(2),!,ok_left_over(P).
+  
+
+ok_left_over(P):- strip_module(P,M,H),ok_left_over(M,H).
+ok_left_over(_,arity(_,_)).
 
 mpred_retract_preconds(P):- mpred_retract_1preconds(P).
 
