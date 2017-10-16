@@ -399,7 +399,7 @@ decl_rt(RT) :-
   % compile_predicates([Head]),
    nop(decl_rt(RT))))))),baseKB).
 
-% quietly_ex(G):- !,once(G).
+quietly_ex(G):- !,G,!.
 quietly_ex(G):- quietly(G).
 
 trace_or_throw_ex(G):- trace_or_throw(G).
@@ -4309,6 +4309,45 @@ mpred_why(P):- mpred_why_sub(P).
 
 % mpred_why(N):- number(N),!, call(t_l:whybuffer(P,Js)), mpred_handle_why_command(N,P,Js).
 
+/*
+
+mpred_why(P):- loop_check(quietly_ex((must_ex(mpred_why_try_each(P)),color_line(green,2))),true).
+
+% user:mpred_why((user:prolog_exception_hook(A, B, C, D) :- exception_hook(A, B, C, D))).
+% mpred_why((prolog_exception_hook(A, B, C, D) :- exception_hook(A, B, C, D))).
+
+mpred_why_try_each(MN):- strip_module(MN,_,N),number(N),!,pfcWhy0(N),!.
+
+mpred_why_try_each(ain(H)):-!,mpred_why_try_each(H).
+mpred_why_try_each(call_u(H)):-!,mpred_why_try_each(H).
+mpred_why_try_each(clause(H,B)):-!,mpred_why_try_each(H:-B).
+mpred_why_try_each(clause(H,B,_)):-!,mpred_why_try_each(H:-B).
+mpred_why_try_each(clause_u(P)):-!,mpred_why_try_each(P).
+mpred_why_try_each(clause_u(H,B)):-!,mpred_why_try_each(H:-B).
+mpred_why_try_each(clause_u(H,B,_)):-!,mpred_why_try_each(H:-B).
+
+mpred_why_try_each(P):- once((retractall(t_l:whybuffer(P,_)),color_line(green,2),
+    show_current_source_location,format("~NJustifications for ~p:",[P]))),
+    fail.
+
+mpred_why_try_each(P):- mpred_why_try_each_0(P),!.
+mpred_why_try_each(P):- mpred_why_sub(P),!.
+mpred_why_try_each(M:P :- B):- atom(M),call_from_module(M,mpred_why_try_each_0(P:-B)),!.
+mpred_why_try_each(M:P):- atom(M),call_from_module(M,mpred_why_try_each_0(P)),!.
+mpred_why_try_each(P :- B):- is_true(B),!,mpred_why_try_each(P ).
+mpred_why_try_each(M:H):- strip_module(H,Ctx,P),P==H,Ctx==M,!,mpred_why_try_each(H).
+mpred_why_try_each(_):- format("~N No justifications. ~n").
+
+mpred_why_try_each_0(P):- findall(Js,mpred_why_try_each_1(P,Js),Count),Count\==[],!.
+mpred_why_try_each_0(\+ P):- mpred_why_try_each_0(~P)*->true;(call_u(\+ P),wdmsgl(why:- \+ P)),!.
+
+mpred_why_try_each_1(P,Js):-
+  ((no_repeats(P-Js,deterministically_must(justifications(P,Js))),
+    ((color_line(yellow,1), pfcShowJustifications(P,Js))))).
+mpred_why_try_each_1(\+ P,[MFL]):- !, find_mfl(P,MFL),ansi_format([fg(cyan)],"~N    ~q",[MFL]),fail.
+mpred_why_try_each_1( P,[MFL]):-  find_mfl(P,MFL), \+ clause_asserted(t_l:shown_why(MFL)), ansi_format([fg(cyan)],"~N    ~q",[MFL]).
+
+*/
 pfcWhy0(N) :-
   number(N),
   !,
@@ -4688,6 +4727,31 @@ find_mfl(H,_B,uses_call_only(H),MFL):- !,call_only_based_mfl(H,MFL).
 find_mfl(H,B,_,mfl(M,F,L)):- lookup_spft_match_first( (H:-B),mfl(M,F,L),_),!.
 find_mfl(H,B,_Ref,mfl(M,F,L)):- lookup_spft_match_first(H,mfl(M,F,L),_),ground(B).
 
+/*
+
+
+clause_match(H,_B,uses_call_only(H)):- uses_call_only(H),!.
+clause_match(H,B,Ref):- clause_asserted(H,B,Ref),!.
+
+clause_match(H,B,Ref):- no_repeats(Ref,((((copy_term(H,HH),clause_u(H,B,Ref),H=@=HH)*->true;clause_u(H,B,Ref)), \+ reserved_body_helper(B)))).
+
+clause_match0(H,B,Ref):- no_repeats(Ref,clause_match1(H,B,Ref)).
+
+clause_match1(H,B,Ref):- clause(H,B,Ref).
+clause_match1(M:H,B,Ref):- !, (M:clause(H,B,Ref) ; clause_match2(H,B,Ref)).
+clause_match1(H,B,Ref):- clause_match2(H,B,Ref).
+
+clause_match2(H,B,Ref):- current_module(M),clause(M:H,B,Ref),(clause_property(Ref, module(MM))->MM==M;true).
+
+find_mfl(C,MFL):-find_mfl0(C,MFL),compound(MFL),MFL=mfl(_,F,_),nonvar(F).
+find_mfl0(C,MFL):- lookup_spft_match(C,MFL,ax).
+% find_mfl0(mfl(M,F,L),mfl(M,F,L)):-!.
+find_mfl0(C,MFL):-expand_to_hb(C,H,B),
+   find_mfl(H,B,_Ref,MFL)->true; (clause_match(H,B,Ref),find_mfl(H,B,Ref,MFL)).
+find_mfl0(C,MFL):-expand_to_hb(C,H,B),
+   find_mfl(H,B,_Ref,MFL)->true; (clause_match0(H,B,Ref),find_mfl(H,B,Ref,MFL)).
+
+*/
 call_only_based_mfl(H,mfl(M,F,L)):- 
   ignore(predicate_property(H,imported_from(M));predicate_property(H,module(M))),
   ignore(predicate_property(H,line_count(L))),
