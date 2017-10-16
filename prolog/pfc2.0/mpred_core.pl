@@ -766,6 +766,23 @@ clause_u(H,B):- clause_u(H,B,_).
 %clause_u(H,B):- clause_true( ==>( B , H) ).
 %clause_u(H,B):- clause_true( <-( H , B) ).
 
+match_attvar_clauses(HH,BB,H,B):- 
+    matrialize_clause((H:-B),C),
+ matrialize_clause((HH:-BB),CC),!,
+ C=CC.
+
+matrialize_clause((H:-B),(H:-B)):- \+ compound(B),!.
+matrialize_clause((H:-attr_bind(Attribs,B)),(H:-B)):-!, attr_bind(Attribs).
+matrialize_clause((H:-attr_bind(Attribs)),(H:-true)):-!, attr_bind(Attribs).
+
+:- set_prolog_flag(clause_u_h_exact,false).
+:- set_prolog_flag(clause_u_mh_inherit,false).
+
+should_inherit(_, M,_,TF):- mtInherits(M),!,TF=true.
+should_inherit(_, M,_,TF):- mtNotInherits(M),!,TF=false.
+should_inherit(h, _,_,TF):- current_prolog_flag(clause_u_h_exact,false) -> TF = true ; TF = false.
+should_inherit(mh,_,_,TF):- current_prolog_flag(clause_u_mh_inherit,TF).
+
 %% clause_u( +H, ?B, ?Why) is semidet.
 %
 % PFC Clause.
@@ -775,12 +792,13 @@ clause_u(H,B,Ref):-var(H),!,trace_or_throw_ex(var_clause_u(H,B,Ref)).
 clause_u((H:-BB),B,Ref):- is_true(B),!, trace_or_throw_ex(malformed(clause_u((H:-BB),B,Ref))),clause_u(H,BB,Ref).
 clause_u((H:-B),BB,Ref):- is_true(B),!, trace_or_throw_ex(malformed(clause_u((H:-B),BB,Ref))),clause_u(H,BB,Ref).
 
-clause_u(M:H,B,R):- !, clause_i(M:H,B,R),clause_ref_module(R). % need? \+ reserved_body_helper(B) 
-clause_u(MH,B,R):- Why = clause(clause,clause_u),
- ((notrace(fix_mp(Why,MH,M,H)),
-  clause(M:H,B,R))*->true;
-           (fix_mp(Why,MH,M,CALL)->clause_i(M:CALL,B,R))),
-   B \= inherit_above(M,_).
+clause_u(H,B,R):-clause_u_visible(H,B,R),B \= inherit_above(_,_).
+
+clause_u_visible(M:H,B,R):- !, clause_i(M:H,B,R),clause_ref_module(R). % need? \+ reserved_body_helper(B) 
+clause_u_visible(MH,B,R):- Why = clause(clause,clause_u),
+ notrace(fix_mp(Why,MH,M,H)),
+   (clause(M:H,B,R)*->true;clause_i(M:H,B,R)).
+   
 % clause_u(H,B,Why):- has_cl(H),clause_u(H,CL,R),mpred_pbody(H,CL,R,B,Why).
 %clause_u(H,B,backward(R)):- R=(<-(H,B)),clause_u(R,true).
 %clause_u(H,B,equiv(R)):- R=(<==>(LS,RS)),clause_u(R,true),(((LS=H,RS=B));((LS=B,RS=H))).
@@ -788,6 +806,34 @@ clause_u(MH,B,R):- Why = clause(clause,clause_u),
 %clause_u(H,true, pfcTypeFull(R)):-pfcDatabaseTerm(F/A),make_functor(R,F,A),pfcTypeFull(R,Type),Type\=rule,clause(R,true),once(pfcRuleOutcomeHead(R,H)).
 %clause_u('nesc'(H),B,forward(Proof)):- is_ftNonvar(H),!, clause_u(H,B,Proof).
 %clause_u(H,B,forward(R)):- R=(==>(B,H)),clause_u(R,true).
+
+clause_uu(H,B,Ref):- var(H),var(Ref),!,trace_or_throw_ex(var_clause_u(H,B,Ref)).
+clause_uu(M:H,B,R):- functor(H,F,A),functor(HH,F,A),!,should_inherit(mh,M,H,TF),clause_u_attv_m(mh,TF,M,HH,BB,R),match_attvar_clauses(HH,BB,H,B).
+clause_uu(  H,B,R):- functor(H,F,A),functor(HH,F,A),!,defaultAssertMt(M),should_inherit(h,M,H,TF),clause_u_attv_m(mh,TF,M,HH,BB,R),match_attvar_clauses(HH,BB,H,B).
+
+
+clause_u_attv_m(MP,Herit,M,H,B,Ref):-var(H),var(Ref),!,trace_or_throw_ex(var_clause_u_attv_m(MP,Herit,M,H,B,Ref)).
+clause_u_attv_m(_,_,M,H,B,R):- nonvar(R),!,must_ex(clause_i(M:H,B,R)),!. % must_ex((MH=(M:H);MH=(H))),!.
+clause_u_attv_m(MP,Herit,M,(H:-BB),B,Ref):- is_true(B),!, trace_or_throw_ex(malformed(clause_u(MP,Herit,M,(H:-BB),B,Ref))),clause_u(H,BB,Ref).
+clause_u_attv_m(MP,Herit,M,(H:-B),BB,Ref):- is_true(B),!, trace_or_throw_ex(malformed(clause_u(MP,Herit,M,(H:-B),BB,Ref))),clause_u(H,BB,Ref).
+clause_u_attv_m(MP,Herit,M,H,B,Ref):- clause_u_attv_b(MP,Herit,M,H,B,Ref),
+   B \= inherit_above(M,_), (Herit->clause_ref_module(Ref);clause_ref_module(M,Ref)).
+
+clause_u_attv_b(mh,false,M,H,B,R):- !, clause_i(M:H,B,R), B \= inherit_above(M,_).
+clause_u_attv_b(mh,true,IM,H,B,R):- genlMt_each(IM,M),clause_i(M:H,B,R), B \= inherit_above(M,_).
+clause_u_attv_b(mh,_,M,H,B,R):- !, clause_u_attv_mhbr(M:H,B,R).
+clause_u_attv_b(h,false,M,H,B,R):- clause_i(M:H,B,R).
+clause_u_attv_b(h,_,M,H,B,R):- clause_u_attv_mhbr(M:H,B,R).
+clause_u_attv_b(h,true,M,H,B,R):- clause_i(M:H,B,R).
+
+genlMt_each(M,M).
+genlMt_each(M,O):- genlMt(M,P),(O=P;genlMt(P,O)).
+
+clause_u_attv_mhbr(MH,B,R):-
+  Why = clause(clause,clause_u),
+ ((notrace(fix_mp(Why,MH,M,H)),
+  clause(M:H,B,R))*->true;
+           (fix_mp(Why,MH,M,CALL)->clause_i(M:CALL,B,R))).
 
 %% clause_u( +VALUE1, ?H, ?B, ?Proof) is semidet.
 %
@@ -797,6 +843,7 @@ clause_u(MH,B,R):- Why = clause(clause,clause_u),
 %clause_u(pfc,H,B,Proof):-clause_u(H,B,Proof).
 
 
+clause_ref_module(M,Ref):- (clause_property(Ref,module(CM))-> M==CM; true).  % clause_ref_module(Ref) ?
 clause_ref_module(Ref):- clause_property(Ref,module(CM)),module_direct(CM).
 
 module_direct(CM):- t_l:exact_kb(M)*->CM=M; true.
