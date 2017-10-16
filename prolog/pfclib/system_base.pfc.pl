@@ -5,7 +5,7 @@
 :- ensure_abox(baseKB).
 :- use_module(library(rtrace)).
 :- use_module(library(pfc_lib)).
-:- use_module(library(dictoo)).
+%:- use_module(library(dictoo)).
 % ensure this file does not get unloaded with mpred_reset
 
 
@@ -574,7 +574,7 @@ never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
 :- listing(mpred_unload_option/2).
 :- mpred_trace_exec.
 %:- rtrace,trace.
-==> mpred_unload_option(never,$current_file.value).
+:- prolog_load_context(file,F), ain(mpred_unload_option(F,never)).
 :- nortrace.
 :- mpred_notrace_exec.
 :- listing(mpred_unload_option/2).

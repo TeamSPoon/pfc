@@ -498,7 +498,7 @@ erase_w_attvars(Data0,Ref):- attempt_side_effect(erase(Ref)),add_side_effect(era
 %
 % PFC No Chaining.
 %
-mpred_nochaining(Goal):- locally(t_l:no_attempt_side_effects,call(Goal)).
+mpred_nochaining(Goal):- locally_tl(no_attempt_side_effects,call(Goal)).
 
 
 %% with_chaining( +Goal) is semidet.
@@ -1099,7 +1099,7 @@ which_missing_argnum(Q,N):-
 mpred_run_pause:- asserta(t_l:mpred_run_paused).
 mpred_run_resume:- retractall(t_l:mpred_run_paused).
 
-without_running(G):- (t_l:mpred_run_paused->G;locally(t_l:mpred_run_pause,G)).
+without_running(G):- (t_l:mpred_run_paused->G;locally_tl(mpred_run_pause,G)).
 
 mpred_remove_file_support(_File):- !.
 mpred_remove_file_support(File):- 
@@ -1439,7 +1439,7 @@ mpred_call_0((H)):- is_static_predicate(H),!,call(H).
 mpred_call_0((H)):- is_static_predicate(H),!,show_pred_info(H),dtrace(mpred_call_0((H))).
 
 %mpred_call_0(HB):-quietly((full_transform_warn_if_changed(mpred_call_0,HB,HHBB))),!,mpred_call_0(HHBB).
-mpred_call_0(H):- !, locally(t_l:infAssertedOnly(H),call_u(H)).
+mpred_call_0(H):- !, locally_tl(infAssertedOnly(H),call_u(H)).
 %mpred_call_0(argIsa(mpred_isa,2,mpred_isa/2)):-  trace_or_throw_ex(mpred_call_0(argIsa(mpred_isa,2,mpred_isa/2))),!,fail.
 % TODO: test removal
 % mpred_call_0(isa(H,B)):-!,isa_asserted(H,B).
@@ -1482,7 +1482,7 @@ call_with_bc_triggers(MP) :- strip_module(MP,_,P), functor(P,F,A), \+ t_l:infBac
   lookup_u(bt(P,Trigger)),
   no_repeats(mpred_get_support(bt(P,Trigger),S)),
   once(no_side_effects(P)),
-  locally(t_l:infBackChainPrevented(F/A),mpred_eval_lhs(Trigger,S)).
+  locally_tl(infBackChainPrevented(F/A),mpred_eval_lhs(Trigger,S)).
 
 
 %% mpred_call_with_no_triggers( +Clause) is semidet.
@@ -1643,7 +1643,7 @@ maybeSupport(P,S):-
 maybeMaybeAdd(P,_):- \+ predicate_property(P,dynamic),!.
 maybeMaybeAdd(P,_):- \+ \+ clause_u(P,true),!.
 maybeMaybeAdd(P,S):- 
- locally(t_l:assert_to(a),
+ locally_tl(assert_to(a),
     assert_u_confirmed_was_missing(P)),
    mpred_trace_op(add,P,S),
    mpred_enqueue(P,S).
@@ -2142,7 +2142,7 @@ repropagate_1(P):- call_u(repropagate_2(P)).
 %
 repropagate_2(P):-
  call_u(doall((no_repeats((mpred_facts_and_universe(P))),
-    locally(t_l:is_repropagating(P),ignore((once(show_failure(fwd_ok(P))),show_call(mpred_fwc(P)))))))).
+    locally_tl(is_repropagating(P),ignore((once(show_failure(fwd_ok(P))),show_call(mpred_fwc(P)))))))).
 
 % repropagate_meta_wrapper_rule(P==>_):- !, repropagate(P).
 

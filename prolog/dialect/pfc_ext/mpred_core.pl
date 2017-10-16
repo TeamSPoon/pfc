@@ -801,7 +801,7 @@ clause_ref_module(Ref):- clause_property(Ref,module(CM)),module_direct(CM).
 
 module_direct(CM):- t_l:exact_kb(M)*->CM=M; true.
 
-with_exact_kb(MM,Call):- locally(t_l:exact_kb(MM),Call).
+with_exact_kb(MM,Call):- locally_tl(exact_kb(MM),Call).
 
 
 lookup_kb(MM,MHB):- strip_module(MHB,M,HB),
@@ -839,7 +839,7 @@ with_umt(U,G):- sanity(stack_check(5000)),
 %with_umt(user,P):- !,with_umt(baseKB,P).
 with_umt(M,P):-
   (clause_b(mtHybrid(M))-> W=M;defaultAssertMt(W)),!,
-   locally(t_l:current_defaultAssertMt(W),
+   locally_tl(current_defaultAssertMt(W),
      call_from_module(W,P)).
 
 
@@ -948,15 +948,15 @@ ain_expanded(IIIOOO,S):- mpred_ain((IIIOOO),S).
 %
 % PFC Ainz.
 %
-mpred_ainz(G):- locally(t_l:assert_to(z),mpred_ain(G)).
-mpred_ainz(G,S):- locally(t_l:assert_to(z),mpred_ain(G,S)).
+mpred_ainz(G):- locally_tl(assert_to(z),mpred_ain(G)).
+mpred_ainz(G,S):- locally_tl(assert_to(z),mpred_ain(G,S)).
 
 %% mpred_aina(+G, ?S) is semidet.
 %
 % PFC Aina.
 %
-mpred_aina(G):- locally(t_l:assert_to(a),mpred_ain(G)).
-mpred_aina(G,S):- locally(t_l:assert_to(a),mpred_ain(G,S)).
+mpred_aina(G):- locally_tl(assert_to(a),mpred_ain(G)).
+mpred_aina(G,S):- locally_tl(assert_to(a),mpred_ain(G,S)).
 
 %%  mpred_ain(P,S)
 %
@@ -965,7 +965,7 @@ mpred_aina(G,S):- locally(t_l:assert_to(a),mpred_ain(G,S)).
 %  mpred_ain/2 and mpred_post/2 are the proper ways to add new clauses into the
 %  database and have forward reasoning done.
 %
-mpred_ain(_:P):- P==end_of_file,!.
+mpred_ain(_:P):- retractall(t_l:busy(_)), P==end_of_file,!.
 mpred_ain(_:props(_,EL)):- EL==[],!.
 mpred_ain(M:P):- M:get_source_ref(UU),M:mpred_ain(M:P,UU).
 
@@ -1019,7 +1019,7 @@ mpred_ain_now4(SM,ToMt,P,(mfl(FromMt,File,Lineno),UserWhy)):- sanity(stack_check
 mpred_ain_now4(SM,AM,PIn,S):- module_sanity_check(SM),module_sanity_check(AM),
   call_from_module(AM, 
     with_source_module(SM,
-      locally(t_l:current_defaultAssertMt(AM), SM:mpred_ain_now(PIn,S)))).
+      locally_tl(current_defaultAssertMt(AM), SM:mpred_ain_now(PIn,S)))).
 
 mpred_ain_now(PIn,S):-
   PIn=P, % must_ex(add_eachRulePreconditional(PIn,P)),  
@@ -1322,7 +1322,7 @@ mpred_post13(P,S):- !,
 :- thread_local(t_l:exact_assertions/0).
 
 with_exact_assertions(Goal):-
-  locally(t_l:exact_assertions,Goal).
+  locally_tl(exact_assertions,Goal).
  
 
 % The cyclic_break is when we have regressions arouind ~ ~ ~ ~ ~
@@ -1523,7 +1523,7 @@ get_fc_mode(_P,_S,Mode):- must_ex(Mode=direct),!.
 %
 % Temporariliy changes to forward chaining propagation mode while running the Goal
 %
-with_fc_mode(Mode,Goal):- locally(t_l:mpred_fc_mode(Mode),((Goal))).
+with_fc_mode(Mode,Goal):- locally_tl(mpred_fc_mode(Mode),((Goal))).
 
 set_fc_mode(Mode):- asserta(t_l:mpred_fc_mode(Mode)).
 
@@ -2683,7 +2683,7 @@ mpred_METACALL( How,   Cut, P) :- fail, predicate_property(P,number_of_clauses(_
        (var(Cut)->true;(Cut=cut(CutCall)->(!,CutCall);call_u_no_bc(Cut))).
 
 % mpred_METACALL(_How,_SCut, P):- must_ex(current_predicate(_,M:P)),!, call_u(M:P).
-%mpred_METACALL(How, Cut, H):- !, locally(t_l:infAssertedOnly(H),call_u(H)).
+%mpred_METACALL(How, Cut, H):- !, locally_tl(infAssertedOnly(H),call_u(H)).
 mpred_METACALL(How, _SCut, P):- call(How,P).
 
 
@@ -3664,7 +3664,7 @@ log_failure_red:- quietly(doall((
 % Dont break even if PFC Test fails
 %
 :- thread_local(t_l:no_breaks/0).
-with_no_breaks(G):- locally(t_l:no_breaks,G). 
+with_no_breaks(G):- locally_tl(no_breaks,G). 
 
 break_ex:- quietly((log_failure_red,dumpST,log_failure_red)),
   (t_l:no_breaks -> ansifmt(red,"NO__________________DUMP_BREAK/0") ;dbreak).
@@ -4335,8 +4335,8 @@ short_filename(F,FN):- F=FN,!.
 fmt_cl(P):- \+ \+ (numbervars(P,126,_,[attvar(skip),singletons(true)]),write_term(P,[portray(true)])).
 
 pfcShowSingleJust(JustNo,StepNo,C):- \+ is_file_ref(C),
-   find_mfl(C,MFL),ground(MFL),MFL=mfl(_M,F,L),!,
-   ansi_format([fg(cyan)],"~N    ~w.~w ~@",[JustNo,StepNo,fmt_cl(C)]),
+   find_mfl(C,MFL),MFL=mfl(_M,F,L),ground(F),
+   ansi_format([fg(cyan)],"~N    ~w.~w ~@",[JustNo,StepNo,fmt_cl(C)]),!,
    short_filename(F,FN),
    ansi_format([hfg(black)]," % [~w:~w]",[FN,L]),
    assert(t_l:shown_why(C)),
@@ -4438,6 +4438,7 @@ mpred_unhandled_command(X,_,_):-
  fail.
 
 mpred_pp_db_justifications(P,Js):-
+ show_current_source_location, 
  must_ex(quietly_ex(( format("~NJustifications for ~p:",[P]),
   mpred_pp_db_justification1('',Js,1)))).
 

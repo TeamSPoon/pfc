@@ -77,15 +77,15 @@ otherwise.
 %
 % PFC Ainz.
 %
-mpred_ainz(G):- locally(t_l:assert_to(z),mpred_ain(G)).
-mpred_ainz(G,S):- locally(t_l:assert_to(z),mpred_ain(G,S)).
+mpred_ainz(G):- locally_tl(assert_to(z),mpred_ain(G)).
+mpred_ainz(G,S):- locally_tl(assert_to(z),mpred_ain(G,S)).
 
 %% mpred_aina(+G, ?S) is semidet.
 %
 % PFC Aina.
 %
-mpred_aina(G):- locally(t_l:assert_to(a),mpred_ain(G)).
-mpred_aina(G,S):- locally(t_l:assert_to(a),mpred_ain(G,S)).
+mpred_aina(G):- locally_tl(assert_to(a),mpred_ain(G)).
+mpred_aina(G,S):- locally_tl(assert_to(a),mpred_ain(G,S)).
 
 %%  mpred_ain(P,S)
 %
@@ -119,9 +119,9 @@ mpred_retractall(MPRED):- expand_to_hb(MPRED,H,_),mpred_retract_all(H).
 
 
 
-mpred_why(MPRED):- mpred_to_pfc(MPRED,PFC),!,(show_call(pfcWhy(PFC)*->true);(red_line,!,fail)).
+mpred_why(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(pfcWhy(PFC))*->true;(red_line(mpred_why(MPRED)),!,fail)).
 
-mpred_test(MPRED):- mpred_to_pfc(MPRED,PFC),!,(show_call(umt(PFC)*->true);(pfc_call(PFC)*->true;red_line,!,fail)).
+mpred_test(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(umt(PFC))*->true;(pfc_call(PFC)*->mpred_why(MPRED);red_line(mpred_test(MPRED)),!,fail)).
 
 % mpred_test(MPRED):- mpred_to_pfc(MPRED,PFC),(show_success(pfcWhy(PFC))->true;(once(show_call(umt(PFC)))*->true;(red_line,!,fail))).
 

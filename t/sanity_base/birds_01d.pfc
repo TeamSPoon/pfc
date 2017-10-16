@@ -53,7 +53,7 @@ subClassOf(C1,C2)==> (instanceOf(X,C1)==>instanceOf(X,C2)).
 :- dmsg("Chilly is a penguin.").
 ==> tPenguin(iChilly).
 
-:- dmsg("Make sure is a penguin.").
+:- dmsg("Make sure Chilly is a bird now.").
 :- mpred_test((tBird(iChilly))).
 
 

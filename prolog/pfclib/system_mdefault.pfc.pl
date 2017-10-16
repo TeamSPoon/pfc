@@ -38,7 +38,7 @@
 
 :- set_fileAssertMt(baseKB).
 % ensure this file does not get unloaded with mpred_reset
-==> mpred_unload_option(never,$current_file.value).
+:- prolog_load_context(file,F), ain(mpred_unload_option(F,never)).
 
 meta_argtypes(mdefault(ftAssertable)).
 

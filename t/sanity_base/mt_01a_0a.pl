@@ -70,9 +70,10 @@ baseKB:genlMt(myMt,socialMt).
 
 :- mpred_test(clause(myMt:loves(_,_),_B,_R)).
 
-:- mpred_test(clause_u(myMt:loves(_,_))).
+:- mpred_test(\+ clause_u(myMt:loves(_,_))).
 
 :- mpred_test(myMt:loves(_,_)).
+
 
 :- mpred_test((ain(genlMt(tooLazyMt,socialMt)),clause(tooLazyMt:loves(_,_),_B,_R))).
 

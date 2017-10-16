@@ -1,12 +1,12 @@
 :- module(mpred_gvars, []).
 
 :- use_module(library(must_trace)).
-:- use_module(library(dictoo_declarations)).
-:- use_module(library(dictoo)).
+%:- use_module(library(dictoo_declarations)).
+%:- use_module(library(dictoo)).
 
 
 
-$current_file.value = X :- prolog_load_context(file,X).
+%$current_file.value = X :- prolog_load_context(file,X).
 
 /*
 :- listing(dot_cfg:dictoo_decl).
@@ -16,7 +16,7 @@ $current_file.value = X :- prolog_load_context(file,X).
 */
 
 %:- rtrace.
-:- writeln($current_file.value).
+%:- writeln($current_file.value).
 %:- nortrace.
 
 %:- break.
