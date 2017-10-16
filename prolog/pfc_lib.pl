@@ -299,7 +299,7 @@ baseKB:sanity_check:- doall((baseKB:mtProlog(M),
 %:- rtrace((mpred_at_box:defaultAssertMt(G40331),rtrace(set_prolog_flag(G40331:unknown,warning)))).
 %:- dbreak.
 :- must(set_prolog_flag(abox:unknown,error)).
-%:- locally(t_l:side_effect_ok,doall(call_no_cuts(module_local_init(abox,baseKB)))).
+%:- locally_tl(side_effect_ok,doall(call_no_cuts(module_local_init(abox,baseKB)))).
 % :- forall(baseKB:sanity_check,true).
 
 

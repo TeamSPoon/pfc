@@ -345,11 +345,18 @@ ensure_abox(M):- dynamic(M:defaultTBoxMt/1),must(ensure_abox_support(M,baseKB)),
 ensure_abox_support(M,TBox):- clause_b(M:defaultTBoxMt(TBox)),!.
 ensure_abox_support(M,TBox):- asserta(M:defaultTBoxMt(TBox)),
    set_prolog_flag(M:unknown,error),  
-  must(setup_module_ops(M)), 
   must(forall(mpred_database_term(F,A,_Type),
            kb_shared(M:F/A))),
-  must(M:ain(TBox:mtHybrid(M))),!.
-ensure_abox_support(M,TBox):- retractall(M:defaultTBoxMt(TBox)),throw(failed_ensure_abox_support(M,TBox)).
+  must(M:ain(TBox:mtHybrid(M))),   
+  must(system:add_import_module(M,system,end)),
+  (M\==user->must(ignore(system:delete_import_module(M,user)));true),!,
+  must(setup_module_ops(M)),!.
+  
+ensure_abox_support(M,TBox):- 
+       system:add_import_module(M,user,end),
+       must(ignore(system:delete_import_module(M,system))),
+       system:add_import_module(M,system,end),
+       retractall(M:defaultTBoxMt(TBox)),throw(failed_ensure_abox_support(M,TBox)).
 
 
    
@@ -373,7 +380,10 @@ mpred_op_each(OpEach):-
             call(OpEach,600,yfx,('v')),
             call(OpEach,400,fx,('~')),
             % call(OpEach,300,fx,('-')),
-            call(OpEach,350,xfx,('xor')).
+            call(OpEach,350,xfx,('xor')),
+            % replicate user:op/3s in case we remove inheritance
+            forall(current_op(X,Y,user:Z),
+              call(OpEach,X,Y,Z)).
 
 
 

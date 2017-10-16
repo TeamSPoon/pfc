@@ -13,18 +13,30 @@
 
 :- module(pfc_test,[]).
 
+test_red_lined(Failed):- quietly((
+  format('~N',[]),
+  quietly_ex((doall((between(1,3,_),
+  ansifmt(red,"%%%%%%%%%%%%%%%%%%%%%%%%%%% find ~q in srcs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n",[Failed]),
+  ansifmt(yellow,"%%%%%%%%%%%%%%%%%%%%%%%%%%% find test_red_lined in srcs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"))))))).
+
 % mpred_test/1,mpred_test_fok/1, mpred_test(+),mpred_test_fok(+),
 
 %% mpred_test(+P) is semidet.
 %
 % PFC Test.
 %
+mpred_test(G):-var(G),!,dmsg(var_mpred_test(G)),trace_or_throw(var_mpred_test(G)).
+%mpred_test((G1;G2)):- !,call_u(G1);mpred_test(G2).
 mpred_test(_):- quietly_ex((compiling; current_prolog_flag(xref,true))),!.
 mpred_test(G):- quietly_ex(mpred_is_silient),!, with_no_mpred_trace_exec(must(mpred_test_fok(G))),!.
 mpred_test(G):- current_prolog_flag(runtime_debug,D),D<1,!,with_no_mpred_trace_exec(must((G))),!.
 mpred_test(G):- with_no_breaks(with_mpred_trace_exec(must(mpred_test_fok(G)))),!.
+mpred_test(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(umt(PFC))*->true;(pfc_call(PFC)*->mpred_why2(MPRED);test_red_lined(mpred_test(MPRED)),!,fail)).
+mpred_why2(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(pfcWhy(PFC))*->true;(test_red_lined(mpred_why(MPRED)),!,fail)).
 
 
+
+why_was_true((A,B)):- !,mpred_why(A),mpred_why(B).
 why_was_true(P):- mpred_why(P),!.
 why_was_true(P):- dmsg(justfied_true(P)),!.
 

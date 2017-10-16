@@ -196,7 +196,7 @@
           ]).
 
 :- include('mpred_header.pi').
-:- use_module(library(dictoo)).
+%:- use_module(library(dictoo_lib)).
 
 :- endif.
 

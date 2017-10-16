@@ -178,10 +178,10 @@ t_l:whybuffer/2,
      pfcSearch/1]))).
 
 
-red_line:- quietly((
+red_line(Failed):- quietly((
   format('~N',[]),
   quietly_ex((doall((between(1,3,_),
-  ansifmt(red,"%%%%%%%%%%%%%%%%%%%%%%%%%%% find log_failure in srcs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"),
+  ansifmt(red,"%%%%%%%%%%%%%%%%%%%%%%%%%%% find ~q in srcs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n",[Failed]),
   ansifmt(yellow,"%%%%%%%%%%%%%%%%%%%%%%%%%%% find red_line in srcs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"))))))).
 
 

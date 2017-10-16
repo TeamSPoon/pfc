@@ -574,7 +574,7 @@ is_holds_false0(Prop):-member(Prop,[not,nholds,holds_f,mpred_f,aint,assertion_f,
 %
 % Using Assert Oper. Override.
 %
-with_assert_op_override(Op,Call):-locally(t_l:assert_op_override(Op),Call).
+with_assert_op_override(Op,Call):-locally_tl(assert_op_override(Op),Call).
 
 
 
@@ -804,14 +804,14 @@ fully_expand_real(Op,Sent,SentO):- has_skolem_attrvars(Sent),!,
 
 fully_expand_real(Op,Sent,SentO):-!,
    gripe_time(0.2,
-    must_det(locally(t_l:disable_px,
-       (locally(t_l:no_kif_var_coroutines(true),
+    must_det(locally_tl(disable_px,
+       (locally(local_override(no_kif_var_coroutines,true),
        (must_det(fully_expand_into_cache(Op,Sent,SentO)))))))).
 
 fully_expand_real(Op,Sent,SentO):-
    gripe_time(0.2,
-    must_det(locally(t_l:disable_px,
-       (locally(t_l:no_kif_var_coroutines(true),
+    must_det(locally_tl(disable_px,
+       (locally(local_override(no_kif_var_coroutines,true),
        (must_det(fully_expand_into_cache(Op,Sent,SentIO)),
                    must_det(quietly(maybe_deserialize_attvars(SentIO,SentO))))))))),!.
 
@@ -823,8 +823,8 @@ maybe_deserialize_attvars(X,Y):- current_prolog_flag(expand_attvars,true) -> des
 fully_expand_real(Op,Sent,SentO):-
    gripe_time(0.2,
     (quietly(maybe_deserialize_attvars(Sent,SentI)),
-     locally(t_l:disable_px,
-       locally(t_l:no_kif_var_coroutines(true),
+     locally_tl(disable_px,
+       locally(local_override(no_kif_var_coroutines,true),
        fully_expand_into_cache(Op,SentI,SentO))))),!.
 */    
 
@@ -932,7 +932,7 @@ do_renames_expansion(Sent,Sent):- \+ current_prolog_flag(do_renames,mpred_expans
 do_renames_expansion(Sent,SentM):- if_defined(do_renames(Sent,SentM),=(Sent,SentM)).
 
 maybe_correctArgsIsa(_ ,SentO,SentO):-!.
-maybe_correctArgsIsa(Op,SentM,SentO):- locally(t_l:infMustArgIsa,correctArgsIsa(Op,SentM,SentO)),!.
+maybe_correctArgsIsa(Op,SentM,SentO):- locally_tl(infMustArgIsa,correctArgsIsa(Op,SentM,SentO)),!.
 
 fully_expand_clause(Op,Sent,SentO):- sanity(is_ftNonvar(Op)),sanity(var(SentO)),var(Sent),!,Sent=SentO.
 fully_expand_clause(Op,'==>'(Sent),(SentO)):-!,fully_expand_clause(Op,Sent,SentO),!.
@@ -971,7 +971,7 @@ fully_expand_clause(Op, HB, OUT):-
 fully_expand_goal(change(assert,_),Sent,SentO):- var(Sent),!,SentO=call_u(Sent).
 fully_expand_goal(Op,Sent,SentO):- 
  must((
-  locally(t_l:into_form_code,fully_expand_head(Op,Sent,SentM)),
+  locally_tl(into_form_code,fully_expand_head(Op,Sent,SentM)),
     recommify(SentM,SentO))).
 
 /*
@@ -1627,9 +1627,9 @@ db_expand_argIsa(P,PO):-
 compound_all_open(C):-compound(C),functor(C,_,A),A>1,\+((arg(_,C,Arg),is_ftNonvar(Arg))),!.
 
 /*
-db_expand_0(Op,Mt:Term,Mt:O):- is_kb_module(Mt),!,locally(t_l:caller_module(baseKB,Mt),db_expand_0(Op,Term,O)).
-db_expand_0(Op,DB:Term,DB:O):- defaultAssertMt(DB),!,locally(t_l:caller_module(db,DB),db_expand_0(Op,Term,O)).
-db_expand_0(Op,KB:Term,KB:O):- atom(KB),!,locally(t_l:caller_module(prolog,KB),db_expand_0(Op,Term,O)).
+db_expand_0(Op,Mt:Term,Mt:O):- is_kb_module(Mt),!,locally_tl(caller_module(baseKB,Mt),db_expand_0(Op,Term,O)).
+db_expand_0(Op,DB:Term,DB:O):- defaultAssertMt(DB),!,locally_tl(caller_module(db,DB),db_expand_0(Op,Term,O)).
+db_expand_0(Op,KB:Term,KB:O):- atom(KB),!,locally_tl(caller_module(prolog,KB),db_expand_0(Op,Term,O)).
 */
 
 % db_expand_0(query(HLDS,Must),props(Obj,Props)):- is_ftNonvar(Obj),is_ftVar(Props),!,gather_props_for(query(HLDS,Must),Obj,Props).
@@ -1868,7 +1868,7 @@ into_mpred_form_ilc(G,O):- functor(G,F,A),G=..[F,P|ARGS],!,into_mpred_form6(G,F,
 % Converted To Managed Predicate Form6.
 %
 into_mpred_form6(C,_,_,2,_,C):-!.
-% into_mpred_form6(H,_,_,_,_,G0):- once(locally(t_l:into_form_code,(expand_term( (H :- true) , C ), reduce_clause(assert,C,G)))),expanded_different(H,G),!,into_mpred_form(G,G0),!.
+% into_mpred_form6(H,_,_,_,_,G0):- once(locally_tl(into_form_code,(expand_term( (H :- true) , C ), reduce_clause(assert,C,G)))),expanded_different(H,G),!,into_mpred_form(G,G0),!.
 into_mpred_form6(_,F,_,1,[C],O):-alt_calls(F),!,into_mpred_form(C,O),!.
 into_mpred_form6(_,':-',C,1,_,':-'(O)):-!,into_mpred_form_ilc(C,O).
 into_mpred_form6(_,not,C,1,_,not(O)):-into_mpred_form(C,O),!.
