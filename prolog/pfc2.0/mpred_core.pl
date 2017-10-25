@@ -799,7 +799,7 @@ clause_u(H,B,R):-clause_u_visible(H,B,R),B \= inherit_above(_,_).
 
 clause_u_visible(M:H,B,R):- !, clause_i(M:H,B,R),clause_ref_module(R). % need? \+ reserved_body_helper(B) 
 clause_u_visible(MH,B,R):- Why = clause(clause,clause_u),
- notrace(fix_mp(Why,MH,M,H)),
+ quietly_ex(fix_mp(Why,MH,M,H)),
    (clause(M:H,B,R)*->true;clause_i(M:H,B,R)).
    
 % clause_u(H,B,Why):- has_cl(H),clause_u(H,CL,R),mpred_pbody(H,CL,R,B,Why).
@@ -834,7 +834,7 @@ genlMt_each(M,O):- genlMt(M,P),(O=P;genlMt(P,O)).
 
 clause_u_attv_mhbr(MH,B,R):-
   Why = clause(clause,clause_u),
- ((notrace(fix_mp(Why,MH,M,H)),
+ ((quietly_ex(fix_mp(Why,MH,M,H)),
   clause(M:H,B,R))*->true;
            (fix_mp(Why,MH,M,CALL)->clause_i(M:CALL,B,R))).
 
@@ -1404,10 +1404,10 @@ mpred_post123(P,S,PP,Was):-
 
 get_mpred_assertion_status(P,_PP,Was):-
  (t_l:exact_assertions ; mpred_db_type(P,rule(_))),!,
-  maybe_notrace(((clause_asserted_u(P)-> Was=identical; Was= unique))).
+  quietly(((clause_asserted_u(P)-> Was=identical; Was= unique))).
  
 get_mpred_assertion_status(P,PP,Was):-
-  maybe_notrace(((clause_asserted_u(P)-> Was=identical;
+  quietly(((clause_asserted_u(P)-> Was=identical;
     (
       (((locally(set_prolog_flag(occurs_check,true),clause_u(PP)),cyclic_break((PPP)))-> (Was= partial(PPP));Was= unique)))))).
 
@@ -2448,7 +2448,7 @@ mpred_eval_rhs1([X|Xrest],Support):-
 mpred_eval_rhs1(Assertion,Support):- !,
  % an assertion to be added.
  mpred_trace_msg('~N~n~n\tRHS-Post1: ~p \n\tSupport: ~p~n',[Assertion,Support]),!,
- (maybe_notrace(mpred_post(Assertion,Support)) *->
+ (quietly(mpred_post(Assertion,Support)) *->
     true;
     mpred_warn("\n\t\t\n\t\tMalformed rhs of a rule (mpred_post1 failed)\n\t\tPost1: ~p\n\t\tSupport=~p.",[Assertion,Support])).
 
@@ -2523,7 +2523,7 @@ call_u(ttRelationType(C)):- !, clause_b(ttRelationType(C)).
 call_u(M:G):- !, M:call(G).
 
 % prolog_clause call_u ?
-call_u(G):- G \= (_:-_), !, notrace(defaultAssertMt(M)),!,call_u_mp(M,G).
+call_u(G):- G \= (_:-_), !, quietly_ex(defaultAssertMt(M)),!,call_u_mp(M,G).
 call_u(G):- strip_module(G,M,P), !, call_u_mp(M,P).
 
 get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.
