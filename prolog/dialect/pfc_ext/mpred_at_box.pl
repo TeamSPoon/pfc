@@ -280,7 +280,7 @@ set_defaultAssertMt(M):-
 % not just user modules
 
 defaultAssertMt(M):- nonvar(M), defaultAssertMt(ABoxVar),!,M=@=ABoxVar.
-defaultAssertMt(M):- notrace(defaultAssertMt0(M)),!.
+defaultAssertMt(M):- quietly(defaultAssertMt0(M)),!.
 
 defaultAssertMt0(M):- t_l:current_defaultAssertMt(M).
 defaultAssertMt0(M):- get_fallBackAssertMt(M),!.
