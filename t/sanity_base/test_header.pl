@@ -1,4 +1,5 @@
 
+
 :- if(current_prolog_flag(test_header,_)).
 
 :- wdmsg(reload_of_test_header).
@@ -21,7 +22,6 @@
 test_header_include.
 :- endif.
 
-
 %:- set_prolog_flag(runtime_speed,0). % 0 = dont care
 :- set_prolog_flag(runtime_speed, 0). % 1 = default
 :- set_prolog_flag(runtime_debug, 3). % 2 = important but dont sacrifice other features for it
@@ -42,6 +42,8 @@ setup_hist0:-  '$toplevel':setup_history.
 :- setup_hist0.
 
 
+:- set_stream(user_input,tty(false)).
+
 
 :- if(( \+ current_module(pfc_lib) )).
 :- use_module(library(pfc)).
@@ -50,14 +52,13 @@ setup_hist0:-  '$toplevel':setup_history.
 
 :- ensure_loaded(library(pfc_test)).
 
-
 :- endif. % current_prolog_flag(test_header,_).
 
 
 
 :- if(is_pfc_file).
 
-% :- mpred_trace_exec.
+:- mpred_trace_exec.
 
 :- else.
 
@@ -66,8 +67,8 @@ setup_hist0:-  '$toplevel':setup_history.
 :- endif.
 
 
-%:- set_prolog_flag(debug, true).
-%:- set_prolog_flag(gc, false).
+:- set_prolog_flag(debug, true).
+:- set_prolog_flag(gc, false).
 
 :- '$current_source_module'(W), '$set_typein_module'(W).
 :- sanity((defaultAssertMt(Mt1),fileAssertMt(Mt2),source_module(Mt3))),sanity((Mt1==Mt2,Mt1==Mt3)).

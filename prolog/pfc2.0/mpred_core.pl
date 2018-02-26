@@ -1017,7 +1017,7 @@ mpred_aina(G,S):- locally_tl(assert_to(a),mpred_ain(G,S)).
 %
 mpred_ain(_:P):- retractall(t_l:busy(_)), P==end_of_file,!.
 mpred_ain(_:props(_,EL)):- EL==[],!.
-mpred_ain(M:P):- M:get_source_ref(UU),M:mpred_ain(M:P,UU).
+mpred_ain(M:P):- !, M:get_source_ref(UU),M:mpred_ain(M:P,UU).
 
 mpred_add(P):-mpred_ain(P).
 
@@ -1643,6 +1643,7 @@ mpred_run:- retractall(t_l:busy(_)).
 % mpred_step removes one entry from the queue and reasons from it.
 
 :-thread_local(t_l:busy/1).
+:-thread_local(t_l:busy_r/1).
 
 mpred_step:-
   % if hs/1 is true, reset it and fail, thereby stopping inferencing. (hs=halt_signal)
@@ -1847,6 +1848,7 @@ mpred_ain_by_type(action,_ZAction):- !.
 
 mpred_withdraw(P):- mpred_reduced_chain(mpred_withdraw,P),!.
 
+mpred_withdraw(mfl(_,_,_)):-!.
 mpred_withdraw(P) :- 
   only_is_user_reason(UU),
   % iterate down the list of facts to be mpred_withdraw''ed.
@@ -1878,6 +1880,7 @@ mpred_withdraw(P,S) :-
   mpred_trace_msg('     Which was for: ~p~n',[P])); true),
   ignore(mpred_withdraw_fail_if_supported(P,S)).
 
+mpred_withdraw_fail_if_supported(mfl(_,_,_),_):-!.
 mpred_withdraw_fail_if_supported(P,S):-
   maybe_user_support(P,S,SS),
   (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg(found(mpred_rem_support(P,S))))
@@ -1911,7 +1914,7 @@ mpred_remove2(P,S) :-
      -> ( mpred_blast(P) )
       ; true).
 
-
+mpred_retract_is_complete(mfl(_,_,_)):-!.
 mpred_retract_is_complete(P) :- \+ mpred_supported(local,P), \+ call_u(P).
 
 mpred_retract(P):- mpred_withdraw(P), mpred_retract_is_complete(P),!,mpred_trace_msg('    Withdrew: ~p',[P]).
@@ -1933,7 +1936,7 @@ mpred_retract_1preconds(P):-
   mpred_db_type(S,fact(_)),
   mpred_children(S,Childs),
   Childs=[C],C=@=P,
-  mpred_trace_msg('    Removing support: ~p~n',[S]),
+  mpred_trace_msg('    Removing support1: ~p~n',[S]),
   mpred_trace_msg('       Which was for: ~p~n',[P]),
   show_call(mpred_retract(S)).  
 
@@ -1942,7 +1945,7 @@ mpred_retract_1preconds(P):-
   member(S,WhyS),
   mpred_db_type(S,fact(_)),
   mpred_children(S,Childs),
-  mpred_trace_msg('    Removing support: ~p~n',[S]),
+  mpred_trace_msg('    Removing support2: ~p~n',[S]),
   mpred_trace_msg(' Childs: ~p~n',[Childs]),
   show_call(mpred_retract(S)).
 
@@ -2154,19 +2157,29 @@ mpred_reduced_chain(P1,==>(Fact),P1):- sanity(nonvar(Fact)),!,
 mpred_fwc1(clause_asserted_u(Fact)):-!,sanity(clause_asserted_u(Fact)).
 mpred_fwc1(P):- mpred_reduced_chain(mpred_fwc1,P),!.
 mpred_fwc1(support_hilog(_,_)):-!.
-% mpred_fwc1(singleValuedInArg(_, _)):-!.
+mpred_fwc1(singleValuedInArg(_, _)):-!.
 % this line filters sequential (and secondary) dupes
 % mpred_fwc1(Fact):- current_prolog_flag(unsafe_speedups , true) , ground(Fact),fwc1s_post1s(_One,Two),Six is Two * 3,filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact),!.
 mpred_fwc1(Fact):-'$current_source_module'(Sm),mpred_m_fwc1(Sm,Fact).
 
 
+:-thread_local(t_l:busy_r/1).
+:-thread_local(t_l:busy_s/1).
 
-mpred_m_fwc1(Sm,Fact):- clause_asserted(t_l:busy(Fact))->dmsg(Sm:warn(busy_mpred_m_fwc1(Fact)));(asserta(t_l:busy(Fact)),fail),!.
-mpred_m_fwc1(Sm,Fact):-  
+mpred_m_fwc1(Sm,Fact):- clause_asserted(t_l:busy_s(Fact)),dmsg(Sm:warn(busy_mpred_m_fwc1(Fact))),!.
+mpred_m_fwc1(Sm,Fact):- clause_asserted(t_l:busy_f(Fact)),
+   asserta(t_l:busy_s(Fact),R),!,
+   mpred_m_fwc2(Sm,Fact),
+   ignore(catch(erase(R),_,fail)).
+mpred_m_fwc1(Sm,Fact):- mpred_m_fwc2(Sm,Fact).
+
+mpred_m_fwc2(Sm,Fact):-   
   mpred_trace_msg(Sm:mpred_fwc1(Fact)),
   %ignore((mpred_non_neg_literal(Fact),remove_negative_version(Fact))),
   \+ \+ ignore(mpred_do_rule(Fact)),
-  ignore(mpred_do_fact(Fact)),!.
+  asserta(t_l:busy_f(Fact),R),!,
+  ignore(mpred_do_fact(Fact)),!,
+  ignore(catch(erase(R),_,fail)).
 
 
 
@@ -2357,7 +2370,7 @@ mpred_define_bc_rule(Head,Body,Parent_rule):-
    
 get_bc_clause(Head,(Head:- (!, mpred_bc_and_with_pfc(Head)))):- is_ftNonvar(Head).
 
-:-nb_setval('$pfc_current_choice',[]).
+:- thread_initialization(nb_setval('$pfc_current_choice',[])).
 
 push_current_choice:- current_prolog_flag(pfc_support_cut,false),!.
 push_current_choice:- prolog_current_choice(CP),push_current_choice(CP).
@@ -3858,6 +3871,11 @@ mpred_set_warnings(false):-
 justification(F,J):- supporters_list(F,J).
 
 justifications(F,Js):- bagof_nr(J,justification(F,J),Js).
+
+mpred_why(M:Conseq,Ante):- atom(M),!,
+  M:mpred_why_2(Conseq,Ante).
+mpred_why(Conseq,Ante):-
+  mpred_why_2(Conseq,Ante).
 
 mpred_why_2(Conseq,Ante):- nonvar(Ante),!,mpred_children(Conseq,Ante).
 mpred_why_2(Conseq,Ante):- justifications(Conseq,Ante).

@@ -268,7 +268,7 @@ pp_filtered(F/_):-F==mpred_prop.
 %
 % Draw Line.
 %
-draw_line:- thread_self(S),S\==main,!.
+draw_line:- \+ thread_self_main,!.
 draw_line:- (t_l:print_mode(H)->true;H=unknown),fmt("~N%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%~n",[]),H=H.
 
  :- meta_predicate loop_check_just(0).
