@@ -106,7 +106,7 @@ skip_warning(T):-compound(T),functor(T,F,_),skip_warning(F).
 
 
 
-inform_message_hook(T1,T2,_):- skip_warning(T1);skip_warning(T2);(thread_self(M),M\==main).
+inform_message_hook(T1,T2,_):- (skip_warning(T1);skip_warning(T2);(\+ thread_self_main)),!.
 inform_message_hook(_,_,_):- \+ current_predicate(dumpST/0),!.
 inform_message_hook(compiler_warnings(_,[always(true,var,_),always(false,integer,_),
    always(false,integer,_),always(true,var,_),always(false,integer,_),always(false,integer,_)]),warning,[]):- !.
