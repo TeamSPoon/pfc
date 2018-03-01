@@ -1871,27 +1871,9 @@ end_module_type(Type):-current_context_module(CM),end_module_type(CM,Type).
 %
 end_module_type(CM,Type):-retractall(baseKB:registered_module_type(CM,Type)).
 
-/******
-
-% :- meta_predicate(ensure_mpred_file_loaded(0)). 
-
-:- meta_predicate ensure_mpred_file_loaded(:,+).
 
 
-ensure_mpred_file_loaded(M:F0,List):-!,
-  must_locate_file(M:F0,F),  % scope_settings  expand(true),register(false),
-  % 'format'(user_error /*e*/,'%  ~q + ~q -> ~q.~n',[M,F0,F]),
-  load_files([F],[if(not_loaded), must_be_module(true)|List]).
-   %load_files(F,[redefine_module(false),if(not_loaded),silent(false),exported(true),must_be_module(true)|List]).   
-ensure_mpred_file_loaded(M:F0,List):-
-  must_locate_file(M:F0,F),  % scope_settings
-  'format'(user_error /*e*/,'% load_mpred_file_M ~q.~n',[M=must_locate_file(F0,F)]),
-   load_files([F],[redefine_module(false),module(M),expand(true),if(not_loaded),exported(true),register(false),silent(false),must_be_module(true)|List]).
-
-******/
-
-
-:-  /**/ export(declare_load_dbase/1).
+:-  export(declare_load_dbase/1).
 
 
 
@@ -1966,6 +1948,25 @@ load_init_world(World,File):-
 
 
 
+/******
+
+% :- meta_predicate(ensure_mpred_file_loaded(0)). 
+
+:- meta_predicate ensure_mpred_file_loaded(:,+).
+
+
+ensure_mpred_file_loaded(M:F0,List):-!,
+  must_locate_file(M:F0,F),  % scope_settings  expand(true),register(false),
+  % 'format'(user_error ,'%  ~q + ~q -> ~q.~n',[M,F0,F]),
+  load_files([F],[if(not_loaded), must_be_module(true)|List]).
+   %load_files(F,[redefine_module(false),if(not_loaded),silent(false),exported(true),must_be_module(true)|List]).   
+ensure_mpred_file_loaded(M:F0,List):-
+  must_locate_file(M:F0,F),  % scope_settings
+  'format'(user_error ,'% load_mpred_file_M ~q.~n',[M=must_locate_file(F0,F)]),
+   load_files([F],[redefine_module(false),module(M),expand(true),if(not_loaded),exported(true),register(false),silent(false),must_be_module(true)|List]).
+
+******/
+
 %% ensure_mpred_file_loaded( ?MFileIn) is det.
 %
 % Ensure Managed Predicate File Loaded.
@@ -2013,7 +2014,6 @@ maybe_locate_file(FileIn,File):-
 %
 % Force Reload Managed Predicate File.
 %
-force_reload_mpred_file(MFileIn):- must(consult(MFileIn)),!.
 force_reload_mpred_file(MFileIn):- 
  strip_module(MFileIn,M,FileIn),
  (FileIn==MFileIn->defaultAssertMt(World);World=M),
@@ -2026,6 +2026,8 @@ force_reload_mpred_file(MFileIn):-
 %
 % Force Reload Managed Predicate File.
 %
+
+%force_reload_mpred_file(World,MFileIn):- must(World:consult(MFileIn)),!.
 force_reload_mpred_file(World,MFileIn):- 
  without_varname_scan(force_reload_mpred_file2(World,MFileIn)).
 
@@ -2033,6 +2035,13 @@ force_reload_mpred_file(World,MFileIn):-
 %
 % Helper for Force Reloading of a Managed Predicate File.
 %
+
+force_reload_mpred_file2(World,MFileIn):-
+  time_file(MFileIn,NewTime),
+  system:retractall(baseKB:loaded_file_world_time(MFileIn,World,_)),
+  system:assert(baseKB:loaded_file_world_time(MFileIn,World,NewTime)),
+  must(World:consult(MFileIn)),!.
+
 force_reload_mpred_file2(WorldIn,MFileIn):- 
  sanity(call_u(baseKB:mtHybrid(WorldIn))),
  must(call_u(baseKB:mtHybrid(WorldIn)->World=WorldIn;defaultAssertMt(World))),
