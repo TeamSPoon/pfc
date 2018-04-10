@@ -438,14 +438,18 @@ setup_mpred_ops:-
 %
 % Get Source Ref (Current file or User)
 %
-:- module_transparent((get_source_ref)/1).
-get_source_ref(O):- must(get_source_ref0(O)).
-:- module_transparent((get_source_ref0)/1).
-get_source_ref0(O):- quietly_ex(((get_source_ref1(U),nonvar(U)),(U=(_,_)->O=U;O=(U,ax)))),!.
-get_source_ref0(O):- quietly_ex(((current_why(U),nonvar(U)),(U=(_,_)->O=U;O=(U,ax)))),!.
+:- module_transparent((get_ref_why)/1).
+get_ref_why(UU):- quietly_ex(((current_why(U),nonvar(U)),(U=(_,_)->UU=U;UU=(U,ax)))),!.
+get_ref_why(UU):- get_source_ref(UU).
 
-get_source_ref_stack(O):- findall(U,current_why(U),Whys),Whys\==[],!, U=(_,_),(Whys=[U]->O=U;O=(Whys,ax)),!.
-get_source_ref_stack(O):- get_source_ref1(U),(U=(_,_)->O=U;O=(U,ax)),!.
+:- module_transparent((get_source_ref)/1).
+get_source_ref(UU):- must(get_source_ref0(UU)).
+:- module_transparent((get_source_ref0)/1).
+get_source_ref0(UU):- quietly_ex(((get_source_ref1(U),nonvar(U)),(U=(_,_)->UU=U;UU=(U,ax)))),!.
+get_source_ref0(UU):- quietly_ex(((current_why(U),nonvar(U)),(U=(_,_)->UU=U;UU=(U,ax)))),!.
+
+get_source_ref_stack(UU):- findall(U,current_why(U),Whys),Whys\==[],!, U=(_,_),(Whys=[U]->UU=U;UU=(Whys,ax)),!.
+get_source_ref_stack(UU):- get_source_ref1(U),(U=(_,_)->UU=U;UU=(U,ax)),!.
 
 get_startup_uu((mfl(baseKB, user_input, _), ax)):-true.
 
@@ -1017,7 +1021,7 @@ mpred_aina(G,S):- locally_tl(assert_to(a),mpred_ain(G,S)).
 %
 mpred_ain(_:P):- retractall(t_l:busy(_)), P==end_of_file,!.
 mpred_ain(_:props(_,EL)):- EL==[],!.
-mpred_ain(M:P):- !, M:get_source_ref(UU),M:mpred_ain(M:P,UU).
+mpred_ain(M:P):- !, M:get_ref_why(UU),M:mpred_ain(M:P,UU).
 
 mpred_add(P):-mpred_ain(P).
 
@@ -1081,7 +1085,7 @@ mpred_ain_now(P,S):- mpred_warn("mpred_ain(~p,~p) failed",[P,S]),!,fail.
 
 
 ain_fast(P):-  \+ t_l:is_repropagating(_),clause_asserted(P),!.
-ain_fast(P):- call_u((( get_source_ref(UU), ain_fast(P,UU)))).
+ain_fast(P):- call_u((( get_ref_why(UU), ain_fast(P,UU)))).
 
 ain_fast(P,S):- quietly_ex((maybe_updated_value(P,RP,OLD),subst(S,P,RP,RS))),!,ain_fast(RP,RS),ignore(mpred_retract_i(OLD)).
 
@@ -1188,8 +1192,8 @@ abby_normal_ERR( P, _):- \+ \+ P = props(_,[]).
 %
 mpred_post(P, S):- full_transform(post,P,P0),each_E(mpred_post1,P0,[S]).
 
-mpred_post( P):- get_source_ref(UU), mpred_post( P,   UU).
-mpred_post1( P):- get_source_ref(UU), mpred_post1( P,   UU).
+mpred_post( P):- get_ref_why(UU), mpred_post( P,   UU).
+mpred_post1( P):- get_ref_why(UU), mpred_post1( P,   UU).
 
 %% mpred_post1(+P,+S) is det.
 %
@@ -3180,7 +3184,7 @@ build_neg_test(WS,T,Testin,Testout):-
 
 %check_never_assert(_Pred):-!.
 
-check_never_assert(Pred):- quietly_ex(ignore(( copy_term_and_varnames(Pred,Pred_2),call_u_no_bc(never_assert_u(Pred_2,Why)),
+check_never_assert(Pred):- notrace(ignore(( copy_term_and_varnames(Pred,Pred_2),call_u_no_bc(never_assert_u(Pred_2,Why)),
  % variant_u(Pred,Pred_2),
  trace_or_throw_ex(never_assert_u(Pred,Why))))).
 %check_never_assert(Pred):- quietly_ex(ignore(( copy_term_and_varnames(Pred,Pred_2),call_u_no_bc(never_assert_u(Pred_2)),variant_u(Pred,Pred_2),trace_or_throw_ex(never_assert_u(Pred))))).
@@ -3192,7 +3196,7 @@ check_never_assert(Pred):- quietly_ex(ignore(( copy_term_and_varnames(Pred,Pred_
 %
 
 %check_never_retract(_Pred):-!.
-check_never_retract(Pred):- quietly_ex(ignore(( copy_term_and_varnames(Pred,Pred_2),call_u_no_bc(never_retract_u(Pred_2,Why)),variant_u(Pred,Pred_2),trace_or_throw_ex(never_retract_u(Pred,Why))))).
+check_never_retract(Pred):- notrace(ignore(( copy_term_and_varnames(Pred,Pred_2),call_u_no_bc(never_retract_u(Pred_2,Why)),variant_u(Pred,Pred_2),trace_or_throw_ex(never_retract_u(Pred,Why))))).
 
 
 :- export(mpred_mark_as_ml/3).
@@ -3722,7 +3726,7 @@ mpred_untrace(Form0):- get_head_term(Form0,Form), retractall_u(mpred_is_spying_p
 
 % not_not_ignore_quietly_ex(G):- ignore(quietly(\+ \+ G)).
 % not_not_ignore_quietly_ex(G):- ignore( \+ (G)).
-not_not_ignore_quietly_ex(G):- ignore(quietly_ex(\+ \+ G)).
+not_not_ignore_quietly_ex(G):- notrace(ignore(quietly_ex(\+ \+ G))).
 
 % needed:  mpred_trace_rule(Name)  ...
 
