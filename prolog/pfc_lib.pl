@@ -12,7 +12,7 @@
 */
 :- if(('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'using_pfc'(M,CM,SM,pfc_lib)))).
 :- module(pfc_lib,[]).
-:- set_prolog_flag_until_eof(gc,false).
+:- set_prolog_flag(gc,false).
 :- endif.
 
 :- use_module(library(each_call_cleanup)).
@@ -95,11 +95,11 @@ kb_global_base(FA):- kb_local(baseKB:FA).
 :- use_module(library(attvar_serializer)).
 
 % :- kb_shared_base(baseKB:admittedArgument/3).
-%:- set_prolog_flag_until_eof(runtime_speed,0). % 0 = dont care
-:- set_prolog_flag_until_eof(runtime_speed, 1). % 1 = default
-:- set_prolog_flag_until_eof(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
-:- set_prolog_flag_until_eof(runtime_safety, 3).  % 3 = very important
-:- set_prolog_flag_until_eof(unsafe_speedups, false).
+%:- set_prolog_flag(runtime_speed,0). % 0 = dont care
+:- set_prolog_flag(runtime_speed, 1). % 1 = default
+:- set_prolog_flag(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
+:- set_prolog_flag(runtime_safety, 3).  % 3 = very important
+:- set_prolog_flag(unsafe_speedups, false).
 :- set_prolog_flag(pfc_booted,false).
 
 
@@ -265,6 +265,9 @@ baseKB:mpred_skipped_module(eggdrop).
 :- endif.
 
 :- use_module(library(subclause_expansion)).
+:- reexport(library('pfc2.0/mpred_core.pl')).
+:- system:reexport(library('pfc2.0/mpred_at_box.pl')).
+
 :- user:use_module(library('file_scope')).
 % :- virtualize_source_file.
 :- module_transparent(baseKB:prologBuiltin/1).
@@ -272,12 +275,13 @@ baseKB:mpred_skipped_module(eggdrop).
 :- discontiguous baseKB:prologBuiltin/1.
 :- dynamic baseKB:prologBuiltin/1.
 
-
-:- multifile(baseKB:ignore_file_mpreds/1).
-:- dynamic(baseKB:ignore_file_mpreds/1).
-:- multifile(baseKB:expect_file_mpreds/1).
-:- dynamic(baseKB:expect_file_mpreds/1).
-
+:- reexport(library('pfc2.0/mpred_gvars.pl')).
+:- reexport(library('pfc2.0/mpred_expansion.pl')).
+:- reexport(library('pfc2.0/mpred_loader.pl')).
+:- reexport(library('pfc2.0/mpred_database.pl')).
+:- reexport(library('pfc2.0/mpred_listing.pl')).
+:- reexport(library('pfc2.0/mpred_prolog_file.pl')).
+:- reexport(library('pfc2.0/mpred_terms.pl')).
 
 
 %:- autoload([verbose(false)]).
@@ -323,17 +327,6 @@ baseKB:sanity_check:- doall((baseKB:mtProlog(M),
 :-hook_database:export(mpred_core:mpred_aina/1).
 :-hook_database:export(mpred_core:mpred_ainz/1).
 
-:- reexport(library('pfc2.0/mpred_core.pl')).
-:- system:reexport(library('pfc2.0/mpred_at_box.pl')).
-
-:- reexport(library('pfc2.0/mpred_gvars.pl')).
-:- reexport(library('pfc2.0/mpred_expansion.pl')).
-:- reexport(library('pfc2.0/mpred_loader.pl')).
-:- reexport(library('pfc2.0/mpred_database.pl')).
-:- reexport(library('pfc2.0/mpred_listing.pl')).
-:- reexport(library('pfc2.0/mpred_prolog_file.pl')).
-:- reexport(library('pfc2.0/mpred_terms.pl')).
-
 :-asserta_new((hook_database:ainz(G):- !, mpred_ainz(G))).
 :-asserta_new((hook_database:ain(M:G):- !, M:mpred_ain(M:G))).
 :-asserta_new((hook_database:aina(G):- !, mpred_aina(G))).
@@ -372,6 +365,11 @@ in_clause_expand(_).
 %          maybe_should_rename(M,O):-current_prolog_flag(do_renames,term_expansion),if_defined(do_renames(M,O)),!.
 maybe_should_rename(O,O).
 
+
+:- multifile(baseKB:ignore_file_mpreds/1).
+:- dynamic(baseKB:ignore_file_mpreds/1).
+:- multifile(baseKB:expect_file_mpreds/1).
+:- dynamic(baseKB:expect_file_mpreds/1).
 
 % baseKB:expect_file_mpreds(File):- prolog_load_context(file,File),t_l:current_lang(pfc).
 % baseKB:expect_file_mpreds(File):- prolog_load_context(source,File),t_l:current_lang(pfc),source_location(SFile,_W), \+ baseKB:ignore_file_mpreds(SFile),!.
@@ -639,6 +637,8 @@ system:clause_expansion(I,O):- pfc_clause_expansion(I,O).
 :- set_prolog_flag(subclause_expansion,true).
 :- set_prolog_flag(mpred_te,true).
 
+:- retractall(t_l:disable_px).
+
 
 :- multifile(system:goal_expansion/4).
 :- module_transparent(system:goal_expansion/4).
@@ -646,4 +646,6 @@ system:clause_expansion(I,O):- pfc_clause_expansion(I,O).
 system:goal_expansion(I,P,O,PO):- pfc_goal_expansion(I,P,O,PO).
 
 
+:- set_prolog_flag(mpred_te,true).
+:- set_prolog_flag(retry_undefined, kb_shared).
 

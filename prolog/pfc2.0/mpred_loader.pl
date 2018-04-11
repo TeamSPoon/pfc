@@ -1202,7 +1202,7 @@ simplify_language_name(W,W).
 % File Begin.
 %
 
-file_begin(WIn):- (simplify_language_name(WIn,To)-> To==pfc), !, begin_pfc,op_lang(WIn).
+file_begin(WIn):- simplify_language_name(WIn,pfc), !, begin_pfc,op_lang(WIn).
 file_begin(WIn):- 
  simplify_language_name(WIn,Else), 
  must_det_l((   
@@ -1230,26 +1230,21 @@ begin_pfc:-
 
 set_file_lang(W):- 
    source_location(File,_Line),
-   decache_file_type(File),
    assert_if_new(lmcache:mpred_directive_value(File,language,W)),
    (W==pfc-> assert_if_new(baseKB:expect_file_mpreds(File)) ; true),!,
-  set_lang(W),!.
-
+  set_lang(W).
 set_file_lang(W):-
   forall((prolog_load_context(file,Source);which_file(Source);prolog_load_context(source,Source)),
-   set_file_lang(Source,W)).
-
-set_file_lang(Source,W):- 
-   ignore((  % \+ lmcache:mpred_directive_value(Source,language,W),
-   source_location(File,Line),
-   (W==pfc-> ain(baseKB:expect_file_mpreds(File)) ; true),
-   prolog_load_context(module,Module),
-   INFO = source_location_lang(Module,File,Line,Source,W),
-   asserta(lmconf:INFO),
-   decache_file_type(Source),
-   debug(logicmoo(loader),'~N~p~n',[INFO]),
+  ignore((  % \+ lmcache:mpred_directive_value(Source,language,W),
+  source_location(File,Line),
+  (W==pfc-> ain(baseKB:expect_file_mpreds(File)) ; true),
+  prolog_load_context(module,Module),
+  INFO = source_location_lang(Module,File,Line,Source,W),
+  asserta(lmconf:INFO),
+  decache_file_type(Source),
+  debug(logicmoo(loader),'~N~p~n',[INFO]),
   % (Source = '/root/lib/swipl/pack/logicmoo_base/prolog/logicmoo/pfc/system_common.pfc.pl'-> must(W=pfc);true),
-  assert(lmcache:mpred_directive_value(Source,language,W)))),
+  assert(lmcache:mpred_directive_value(Source,language,W))))),
   sanity(get_lang(W)),
   asserta_until_eof(t_l:current_lang(W)),!.
 
