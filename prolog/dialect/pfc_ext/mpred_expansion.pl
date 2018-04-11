@@ -2221,7 +2221,7 @@ exact_args_f(wid).
 exact_args_f(rtArgsVerbatum).
 exact_args_f((=..)).
 exact_args_f((=)).
-exact_args_f('$was_imported_kb_content$'):-!.
+exact_args_f('$was_imported_kb_content$'):-dtrace.
 exact_args_f(F):-clause_b(rtArgsVerbatum(F)),!.
 exact_args_f(F):-cheaply_u(prologBuiltin(F)),!.
 
