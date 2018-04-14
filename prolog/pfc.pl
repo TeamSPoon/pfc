@@ -7,11 +7,13 @@
 :- if(( current_prolog_flag(xref,true) ;
    ('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'wusing_pfc'(M,CM,SM,pfc_mod))))).
 :- endif.
+
+:- if((prolog_load_context(source,File),prolog_load_context(file,File))).
 :- module(pfc_mod,[use_pfc_mod/0]).
 :- abolish(use_pfc_mod/0).
 :- prolog_load_context(file,File),unload_file(File).
 :- asserta(use_pfc_mod).
-
+:- endif.
 
 :- if( \+ current_prolog_flag(xref,true)).
 
@@ -30,6 +32,7 @@
 :- if(current_prolog_flag(pfc_version,1.2)).
 :- reexport(pfc_lib_1_2).
 :- else.
+% this is 2.0
 :- reexport(pfc_lib).
 :- endif.
 :- endif.
@@ -49,5 +52,5 @@
 :- set_prolog_flag(pfc_ready, true).
 
 :- endif.
-:- statistics.
+%:- statistics.
 

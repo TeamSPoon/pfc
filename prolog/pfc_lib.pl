@@ -42,6 +42,7 @@ kb_wankage(M:F/A):-
 
 
 :- user:use_module(library(hook_hybrid)).
+:- user:use_module(library(no_repeats)).
 :- user:use_module(library(logicmoo_util_strings)).
 
 

@@ -1,8 +1,8 @@
 :- if( current_prolog_flag(xref,true) ;  \+ current_prolog_flag(pfc_booted,false) ).
 :- module(system_autoexec,[]).
 :- else.
-:- '$set_source_module'(baseKB).
 :- endif.
+:- '$set_source_module'(baseKB).
 /** <module> system_autoexec
 % =============================================
 % File 'system_autoexec.pfc'
@@ -35,6 +35,8 @@
 % Dec 13, 2035
 % Douglas Miles
 */
+
+:- use_module(library(no_repeats)).
 
  
 :- add_to_search_path(pfclib,'.').

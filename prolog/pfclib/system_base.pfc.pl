@@ -5,6 +5,7 @@
 :- ensure_abox(baseKB).
 :- use_module(library(rtrace)).
 :- use_module(library(pfc_lib)).
+:- use_module(library(no_repeats)).
 %:- use_module(library(dictoo)).
 % ensure this file does not get unloaded with mpred_reset
 
