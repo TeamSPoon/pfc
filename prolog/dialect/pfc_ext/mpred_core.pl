@@ -1071,12 +1071,12 @@ mpred_ain_now4(SM,AM,PIn,S):- module_sanity_check(SM),module_sanity_check(AM),
     with_source_module(SM,
       locally_tl(current_defaultAssertMt(AM), SM:mpred_ain_now(PIn,S)))).
 
+
 mpred_ain_now(PIn,S):-
   PIn=P, % must_ex(add_eachRulePreconditional(PIn,P)),  
   must_ex(full_transform(ain,P,P0)),!, % P=P0,  
   must_ex(ain_fast(P0,S)),!,
   nop(ignore((P\=@=P0, mpred_db_type(P,fact(_)),show_failure(mpred_fwc(P))))).
-
 mpred_ain_now(P,S):- mpred_warn("mpred_ain(~p,~p) failed",[P,S]),!,fail.
 
 
@@ -3365,6 +3365,7 @@ head_to_functor_name(I,F):- is_ftCompound(I),get_functor(I,F).
 %  simple typeing for Pfc objects
 %
 mpred_db_type(Var,Type):- var(Var),!, Type=fact(_FT).
+mpred_db_type(_:X,Type):- !, mpred_db_type(X,Type).
 mpred_db_type(~_,Type):- !, Type=fact(_FT).
 mpred_db_type(('==>'(_,_)),Type):- !, Type=rule(fwd).
 mpred_db_type(('<==>'(_,_)),Type):- !, Type=rule(<==>).
@@ -3376,7 +3377,6 @@ mpred_db_type(nt(_,_,_),Type):- !,  Type=trigger.
 mpred_db_type(bt(_,_),Type):- !,  Type=trigger.
 mpred_db_type(actn(_),Type):- !, Type=action.
 mpred_db_type((('::::'(_,X))),Type):- !, mpred_db_type(X,Type).
-mpred_db_type(((':'(_,X))),Type):- !, mpred_db_type(X,Type).
 mpred_db_type(_,fact(_FT)):-
   %  if it''s not one of the above, it must_ex be a fact!
   !.
@@ -3722,7 +3722,7 @@ mpred_untrace(Form0):- get_head_term(Form0,Form), retractall_u(mpred_is_spying_p
 
 % not_not_ignore_quietly_ex(G):- ignore(quietly(\+ \+ G)).
 % not_not_ignore_quietly_ex(G):- ignore( \+ (G)).
-not_not_ignore_quietly_ex(G):- ignore(quietly_ex(\+ \+ G)).
+not_not_ignore_quietly_ex(G):- notrace(ignore(quietly_ex(\+ \+ G))).
 
 % needed:  mpred_trace_rule(Name)  ...
 
