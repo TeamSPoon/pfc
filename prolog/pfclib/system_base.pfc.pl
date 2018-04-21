@@ -55,7 +55,7 @@
 
 
 % :- kb_shared( ('~') /1).
-:- kb_shared(mtExact/1).
+% :- kb_shared(mtExact/1).
 % :- kb_shared(arity/2).
 :- kb_shared(col_as_unary/1).  % never used for arg2 of isa/2
 :- kb_shared(comment/2).
@@ -64,7 +64,7 @@
 :- kb_shared(never_assert_u/1).
 :- kb_shared(never_assert_u/2).
 :- kb_shared(never_retract_u/1).
-:- kb_shared(never_retract_u/2).
+%:- kb_shared(never_retract_u/2).
 :- kb_shared(predicateConventionMt/2).
 :- kb_shared(startup_option/2).
 :- kb_shared(tooSlow/0).
@@ -134,7 +134,7 @@ P ==> \+ ~P.
 
 % TODO make these undoable
 :- if((current_predicate(predicate_m_f_a_decl/4))).
-(genlMt(C,P)/(C\=baseKB)) ==> {doall(((predicate_m_f_a_decl(P,F,A,Type)),C:call(Type,C:F/A)))}.
+(genlMt(C,P)/(C\=baseKB)) ==> {doall(((predicate_m_f_a_decl(P,F,A,Type)),dmsg(C:call(Type,C:F/A)),show_failure(on_x_fail(C:call(Type,C:F/A)))))}.
 :- else.
 (genlMt(C,P)/(C\=baseKB)) ==> {doall(((pred_decl_kb_mfa_type(P,F,A,Type)),C:call(Type,C:F/A)))}.
 :- endif.
