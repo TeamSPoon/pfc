@@ -9,6 +9,7 @@
 
 :- set_file_abox_module(user).
 
+:- ensure_loaded(library(attvar_reader)).
 
 % Tests Non-module Forward chaining of assertable attributed variables
 

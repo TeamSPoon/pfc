@@ -14,6 +14,7 @@
 :- module(pfc_lib,[]).
 :- set_prolog_flag(gc,false).
 :- endif.
+:- set_prolog_flag(retry_undefined, kb_shared).
 
 :- use_module(library(each_call_cleanup)).
 :- user:use_module(library(must_trace)).
@@ -648,5 +649,5 @@ system:goal_expansion(I,P,O,PO):- pfc_goal_expansion(I,P,O,PO).
 
 
 :- set_prolog_flag(mpred_te,true).
-:- set_prolog_flag(retry_undefined, kb_shared).
+:- set_prolog_flag(retry_undefined, module).
 

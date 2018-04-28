@@ -14,7 +14,7 @@
 
 :- endif.
 
-
+:- kb_shared(a/0).
 
 
 :- \+ a.
