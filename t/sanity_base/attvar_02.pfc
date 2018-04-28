@@ -15,6 +15,7 @@
 
 :- ensure_loaded(library(dictoo)).
 :- ensure_loaded(library(attvar_reader)).
+
 %:- dynamic(sk2_out/1).
 %:- dynamic(sk2_in/1).
 

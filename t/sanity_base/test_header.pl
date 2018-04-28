@@ -42,7 +42,7 @@ setup_hist0:-  '$toplevel':setup_history.
 :- setup_hist0.
 
 
-:- set_stream(user_input,tty(false)).
+%:- set_stream(user_input,tty(false)).
 
 
 :- if(( \+ current_module(pfc_lib) )).

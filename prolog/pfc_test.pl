@@ -31,9 +31,10 @@ mpred_test(_):- quietly_ex((compiling; current_prolog_flag(xref,true))),!.
 mpred_test(G):- quietly_ex(mpred_is_silient),!, with_no_mpred_trace_exec(must(mpred_test_fok(G))),!.
 mpred_test(G):- current_prolog_flag(runtime_debug,D),D<1,!,with_no_mpred_trace_exec(must((G))),!.
 mpred_test(G):- with_no_breaks(with_mpred_trace_exec(must(mpred_test_fok(G)))),!.
+:- if(false).
 mpred_test(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(umt(PFC))*->true;(pfc_call(PFC)*->mpred_why2(MPRED);test_red_lined(mpred_test(MPRED)),!,fail)).
 mpred_why2(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(pfcWhy(PFC))*->true;(test_red_lined(mpred_why(MPRED)),!,fail)).
-
+:- endif.
 
 
 why_was_true((A,B)):- !,mpred_why(A),mpred_why(B).

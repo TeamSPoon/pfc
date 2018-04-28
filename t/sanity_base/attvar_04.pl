@@ -4,6 +4,8 @@
 
 :- include(test_header).
 
+:- ensure_loaded(library(attvar_reader)).
+
 % Tests assertable attributed variables
 
 :- debug_logicmoo(_).

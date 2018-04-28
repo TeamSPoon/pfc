@@ -24,7 +24,7 @@ must_clause_asserted(G):- cwc, must(clause_asserted_u(G)).
 
 :- listing(must_clause_asserted).
 
-:- sanity(predicate_property(must_clause_asserted(_),number_of_clauses(2))).
+:- sanity(predicate_property(must_clause_asserted(_),number_of_clauses(_))).
 
 a.
 

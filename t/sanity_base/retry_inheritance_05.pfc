@@ -14,7 +14,7 @@
 
 :- endif.
 
-
+:- set_prolog_flag(retry_undefined, kb_shared).
 
 
 :- \+ a_01.

@@ -14,18 +14,23 @@
 
 :- begin_pfc.
 
+
 header_sane:(must_clause_asserted(G):- cwc, must(clause_asserted_u(G))).
+
 :-   ain((must_clause_asserted(G):- cwc, must(clause_asserted_u(G)))).
 
 must_clause_asserted(G):- cwc, must(clause_asserted_u(G)).
 
 :- listing(must_clause_asserted).
 
-:- sanity(predicate_property(must_clause_asserted(_),number_of_clauses(2))).
+:- sanity(predicate_property(must_clause_asserted(_),number_of_clauses(1))).
 
 a.
 
 :- header_sane:listing(a).
 
 :- must_clause_asserted(a).
+
+:- statistics.
+    
 

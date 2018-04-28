@@ -596,6 +596,9 @@ functor_declares_collectiontype(typeProps,ttTemporalType).
 instTypePropsToType(instTypeProps,ttSpatialType222).
 
 
+:- thread_local(t_l:into_goal_code/0).
+
+
 %= 	 	 
 
 %% reduce_clause( ?Op, ?C, ?HB) is semidet.
@@ -966,8 +969,6 @@ fully_expand_clause(Op, HB, OUT):-
       ((HH \= (_,_)) -> reduce_clause(Op,(HH:-BB),OUT) ;
          reduce_clause(Op,(H:-BB),OUT))))).
 
-
-:- thread_local(t_l:into_goal_code/0).
 
 %% fully_expand_goal( ?Op, ^ Sent, -- SentO) is det.
 %

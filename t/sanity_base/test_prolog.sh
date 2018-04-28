@@ -88,7 +88,8 @@ then
    listOfNames=( "$@" )
    if [ $# -eq 1 ]
    then
-      on_complete=true
+      echo on_complete=true
+      on_complete=test_completed
    else
       cls
    fi
