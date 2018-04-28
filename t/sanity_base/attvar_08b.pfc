@@ -20,6 +20,7 @@
 
 % :- process_this_script.
 
+:- ensure_loaded(library(attvar_reader)).
 :- read_attvars(true).
 :- set_prolog_flag(assert_attvars,true).
 

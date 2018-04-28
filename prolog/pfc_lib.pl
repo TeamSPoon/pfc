@@ -21,6 +21,8 @@
 :- user:use_module(library(file_scope)).
 :- set_prolog_flag_until_eof(access_level,system).
 :- user:use_module(library(virtualize_source)).
+:- ensure_loaded(library(attvar_reader)).
+:- ensure_loaded(library(no_repeats)).
 
 kb_wankage(M:F/A):- 
    M:multifile(M:F/A),

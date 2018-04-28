@@ -1,7 +1,7 @@
 
-:- module(pfcumt,[umt/1]).
+:- module(pfc_umt,[umt/1]).
 
-:- throw(module(pfcumt,[umt/1])).
+:- throw(module(pfc_umt,[umt/1])).
 :- 
     op(1050,xfx,('==>')),
     op(1050,xfx,'<==>'),
@@ -27,32 +27,34 @@
 :- op(1075,xfx,'<-').
 :- op(350,xfx,'xor').
 
+nb_current_no_nil(N,V):- nb_current(N,V),V\==[].
+
 set_fileAssertMt(M):- nb_setval(defaultQueryMt,M),nb_setval(defaultAssertMt,M),nb_setval(fileAssertMt,M),maybe_ensure_abox(M).
 
 % :- use_module(pfcsyntax).
 
-defaultQueryMt(M):- nb_current(defaultQueryMt,M)->true;(defaultQueryMt0(M)->nb_setval(defaultQueryMt,M)),!.
+defaultQueryMt(M):- nb_current_no_nil(defaultQueryMt,M)->true;(defaultQueryMt0(M)->nb_setval(defaultQueryMt,M)),!.
 defaultQueryMt(M):- M=baseKB.
-defaultQueryMt0(M):- nb_current(fileAssertMt,M),!.
-defaultQueryMt0(M):- nb_current(defaultAssertMt,M),!.
-defaultQueryMt0(M):- 'strip_module'(module,M,module),M \==user,!.
+defaultQueryMt0(M):- nb_current_no_nil(fileAssertMt,M),!.
+defaultQueryMt0(M):- nb_current_no_nil(defaultAssertMt,M),!.
+defaultQueryMt0(M):- strip_module(module,M,module),M \==user,!.
 defaultQueryMt0(M):- prolog_load_context(module,M),M \==user,!.
 defaultQueryMt0(M):- '$current_typein_module'(M),M \==user,!.
 
 set_defaultAssertMt(M):- nb_setval(defaultAssertMt,M),maybe_ensure_abox(M).
 
-defaultAssertMt(M):- nb_current(defaultAssertMt,M)->true;(defaultAssertMt0(M)->nb_setval(defaultAssertMt,M)),!.
+defaultAssertMt(M):- nb_current_no_nil(defaultAssertMt,M)->true;(defaultAssertMt0(M)->nb_setval(defaultAssertMt,M)),!.
 defaultAssertMt(M):- M=baseKB.
-defaultAssertMt0(M):- nb_current(fileAssertMt,M),!.
-defaultAssertMt0(M):- nb_current(defaultQueryMt,M),!.
+defaultAssertMt0(M):- nb_current_no_nil(fileAssertMt,M),!.
+defaultAssertMt0(M):- nb_current_no_nil(defaultQueryMt,M),!.
 defaultAssertMt0(M):- 'strip_module'(module,M,module),M \==user,!.
 defaultAssertMt0(M):- '$current_typein_module'(M),M \==user,!.
 defaultAssertMt0(M):- prolog_load_context(module,M), M \==user,!.
 
-fileAssertMt(M):- nb_current(fileAssertMt,M)->true;(fileAssertMt0(M)->nb_setval(fileAssertMt,M)),!.
+fileAssertMt(M):- nb_current_no_nil(fileAssertMt,M)->true;(fileAssertMt0(M)->nb_setval(fileAssertMt,M)),!.
 fileAssertMt(M):- M=baseKB.
-fileAssertMt0(M):- nb_current(defaultAssertMt,M),!.
-fileAssertMt0(M):- nb_current(defaultQueryMt,M),!.
+fileAssertMt0(M):- nb_current_no_nil(defaultAssertMt,M),!.
+fileAssertMt0(M):- nb_current_no_nil(defaultQueryMt,M),!.
 fileAssertMt0(M):- prolog_load_context(module,M),M \==user,!.
 fileAssertMt0(M):- '$current_typein_module'(M),M \==user,!.
 fileAssertMt0(M):- 'strip_module'(module,M,module),M \==user,!.
@@ -87,18 +89,18 @@ erase_w_attvars(Data0,Ref):- attempt_side_effect(erase(Ref)),add_side_effect(era
 
 maybe_ensure_abox(Mt):- 
  strip_module(Mt,I,M),
- dmsg(maybe_ensure_abox(I:M)),
+ dmsg(maybe_ensure_abox(strip_module(Mt,I,M))),
  must(maybe_ensure_abox(M,M)).
 
-:- multifile(pfcumt:pfcDatabaseTerm_DYN/1).
-:- dynamic(pfcumt:pfcDatabaseTerm_DYN/1).
+:- multifile(pfc_umt:pfcDatabaseTerm_DYN/1).
+:- dynamic(pfc_umt:pfcDatabaseTerm_DYN/1).
 
 quietly_ex(G):- quietly(G),!.
 
 trace_or_throw_ex(G):- log_failure,trace_or_throw_ex(G).
 
-pfcumt:pfcDatabaseTerm_DYN(FA):-pfcDatabaseTerm(FA).
-pfcumt:pfcDatabaseTerm_DYN(FA):- member(FA,[never_retract_u/2,never_retract_u/1,never_assert_u/2,never_assert_u/1]).
+pfc_umt:pfcDatabaseTerm_DYN(FA):-pfcDatabaseTerm(FA).
+pfc_umt:pfcDatabaseTerm_DYN(FA):- member(FA,[never_retract_u/2,never_retract_u/1,never_assert_u/2,never_assert_u/1]).
 %% check_never_assert(+Pred) is semidet.
 %
 % Check Never Assert.
@@ -140,13 +142,13 @@ kb_shared_local(M,I,F/A):- I:kb_local(M:F/A),functor(P,F,A),
 maybe_ensure_abox(M,I) :-
   M:import(pfccore:pfcDefault/2),
   I:import(pfccore:pfcDefault/2),
- % pfcumt:abox_pred_list(PREDS)-> must_maplist(kb_shared_local(M,I),PREDS),
- forall(no_repeats(pfcumt:pfcDatabaseTerm_DYN(F/A)),show_call(kb_shared_local(M,I,F/A))).
+ % pfc_umt:abox_pred_list(PREDS)-> must_maplist(kb_shared_local(M,I),PREDS),
+ forall(no_repeats(pfc_umt:pfcDatabaseTerm_DYN(F/A)),show_call(kb_shared_local(M,I,F/A))).
 
 
 
 maybe_ensure_abox(M,I) :-
- pfcumt:abox_pred_list(PREDS),
+ pfc_umt:abox_pred_list(PREDS),
   M:module_transparent(PREDS),
   M:dynamic(PREDS),
    M:import(pfccore:pfcDefault/2),
@@ -154,7 +156,7 @@ maybe_ensure_abox(M,I) :-
  (I==M -> true ;
    ((M:export(M:PREDS),I:import(M:PREDS)))).
 
-pfcumt:abox_pred_list((([
+pfc_umt:abox_pred_list((([
      ('=>')/2,
      ('::::')/2,
 %     '<=>'/2,
@@ -436,6 +438,10 @@ retract_mu(M,(H)):- clause_u(H,true,R),op_dir_mu(retract,erase(R),M,H).
 %retract_mu(M,(X)):-!,show_success(why,retract_eq_quitely_f((X))),must((expire_tabled_list(~(X)))),must((expire_tabled_list((X)))).
 
 
+:- baseKB:multifile(baseKB:mtExact/1).
+:- baseKB:dynamic(baseKB:mtExact/1).
+:- baseKB:export(baseKB:mtExact/1).
+
 
 % ============================================
 
@@ -617,6 +623,5 @@ is_side_effect_disabled:- t_l:noDBaseMODs(_),!.
 
 
 :- fixup_exports.
-
 
 

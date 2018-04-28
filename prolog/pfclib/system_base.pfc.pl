@@ -5,6 +5,7 @@
 :- ensure_abox(baseKB).
 :- use_module(library(rtrace)).
 :- use_module(library(pfc_lib)).
+:- use_module(library(no_repeats)).
 %:- use_module(library(dictoo)).
 % ensure this file does not get unloaded with mpred_reset
 
@@ -119,6 +120,10 @@ P ==> \+ ~P.
 :- kb_global(baseKB:mtProlog/1).
 :- kb_global(baseKB:genlMt/2).
 
+:- kb_global(baseKB:mtNotInherits/1).
+:- kb_global(baseKB:mtInherits/1).
+
+
 %((ttTypeType(TT),abox:isa(T,TT))==>tSet(T)).
 %tSet(T)==>functorDeclares(T).
 :- kb_shared(functorDeclares/1).
@@ -133,7 +138,7 @@ P ==> \+ ~P.
 
 % TODO make these undoable
 :- if((current_predicate(predicate_m_f_a_decl/4))).
-(genlMt(C,P)/(C\=baseKB)) ==> {doall(((predicate_m_f_a_decl(P,F,A,Type)),C:call(Type,C:F/A)))}.
+(genlMt(C,P)/(C\=baseKB)) ==> {doall(((predicate_m_f_a_decl(P,F,A,Type)),nop(dmsg(C:call(Type,C:F/A))),show_failure(on_x_fail(C:call(Type,C:F/A)))))}.
 :- else.
 (genlMt(C,P)/(C\=baseKB)) ==> {doall(((pred_decl_kb_mfa_type(P,F,A,Type)),C:call(Type,C:F/A)))}.
 :- endif.

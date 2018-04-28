@@ -32,6 +32,7 @@
 :- read_attvars(false).
 :- set_prolog_flag(assert_attvars,true).
 :- set_prolog_flag(expand_attvars,false).
+%:- set_prolog_flag(expand_attvars,false).
 :- flag_call(runtime_debug=true).
 
 sk2:attr_unify_hook(_,_).
@@ -64,12 +65,15 @@ ca:- clause_asserted_i(sk2_in(avar([vn='Ex',sk2='SKF-6667']))).
 :- with_fc_mode(zdirect,must((get_fc_mode(xx,(xxxf,ax),DMode),DMode=zdirect))).
 
 sk2_in(avar([vn='Ex',sk2='SKF-666'])).
+:- listing(sk2_in/1).
 
-:- set_prolog_flag(expand_attvars,false).
+:- set_prolog_flag(expand_attvars,true).
+:- set_prolog_flag(assert_attvars,false).
 sk2_in(Ex)==>sk2_out(Ex).
 
+:- listing(sk2_out/1).
 
 % :- set_prolog_flag(read_attvars,true).
-:- ((sk2_out(Ex),oo_get_attr(Ex,sk2,What),What='SKF-666')).
+% :- trace,((sk2_out(Ex),oo_get_attr(Ex,sk2,What),What='SKF-666')).
 
 

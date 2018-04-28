@@ -103,10 +103,10 @@ prolog_load_file_nlc(Module:Spec, Options) :-
 prolog_load_file_nlc(Module:Spec, Options):- baseKB:never_reload_file(Spec),
    wdmsg(warn(error(skip_prolog_load_file_nlc(baseKB:never_reload_file(Module:Spec, Options))))),!.
 
-prolog_load_file_nlc(Module:Spec, Options):- thread_self(TID), \+ is_main_thread,
+prolog_load_file_nlc(Module:Spec, Options):- thread_self(TID), \+ thread_self_main,
    nop(wdmsg(warn(error(skip_prolog_load_file_nlc(wrong_thread(TID):-thread(Module:Spec, Options)))))),!.
 
-prolog_load_file_nlc(Module:Spec, Options):- thread_self(TID), \+ is_main_thread,
+prolog_load_file_nlc(Module:Spec, Options):- thread_self(TID), \+ thread_self_main,
    nop(wdmsg(warn(error(skip_prolog_load_file_nlc(wrong_thread(TID):-thread(Module:Spec, Options)))))),!,fail,dumpST.
 
 prolog_load_file_nlc(Module:DirName, Options):-  atom(DirName), is_directory(DirName)->
@@ -128,7 +128,7 @@ prolog_load_file_nlc(Module:Spec, Options):- term_to_atom(Spec,String),member(S,
 %
 % prolog load file nlc  Primary Helper.
 %
-prolog_load_file_nlc_0(Module:Spec, Options):- thread_self(TID), \+ is_main_thread,
+prolog_load_file_nlc_0(Module:Spec, Options):- thread_self(TID), \+ thread_self_main,
    wdmsg(warn(error(skip_prolog_load_file_nlc(wrong_thread(TID):-thread(Module:Spec, Options))))),!.
 
 prolog_load_file_nlc_0(Module:FileName, Options):- 
