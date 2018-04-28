@@ -21,6 +21,7 @@
 
 % :- process_this_script.
 
+:- ensure_loaded(library(attvar_reader)).
 :- read_attvars(true).
 
 sk_in(fl(X,Y,X,Y)).

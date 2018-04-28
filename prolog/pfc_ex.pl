@@ -220,7 +220,7 @@ skip_warning(compiler_warnings).
 skip_warning(T):- \+ compound(T),!,fail.
 skip_warning(_:T):- !, compound(T),functor(T,F,_),skip_warning(F).
 skip_warning(T):-compound(T),functor(T,F,_),skip_warning(F).
-base_message(T1,T2,_):- skip_warning(T1);skip_warning(T2);(thread_self(M),M\==main).
+base_message(T1,T2,_):- (skip_warning(T1);skip_warning(T2);(\+ thread_self_main)),!.
 base_message(_,_,_):- \+ current_predicate(dumpST/0),!.
 base_message(T,Type,Warn):- dmsg(message_hook(T,Type,Warn)),dumpST,dmsg(message_hook(T,Type,Warn)),!,fail.
 

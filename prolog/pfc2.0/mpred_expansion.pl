@@ -596,9 +596,6 @@ functor_declares_collectiontype(typeProps,ttTemporalType).
 instTypePropsToType(instTypeProps,ttSpatialType222).
 
 
-:- thread_local(t_l:into_goal_code/0).
-
-
 %= 	 	 
 
 %% reduce_clause( ?Op, ?C, ?HB) is semidet.
@@ -606,7 +603,6 @@ instTypePropsToType(instTypeProps,ttSpatialType222).
 % Reduce Clause.
 %
 reduce_clause(Op,C,HB):-must(nonvar(C)),quietly_must(demodulize(Op,C,CB)),CB\=@=C,!,reduce_clause(Op,CB,HB).
-reduce_clause(_,C,C):- t_l:into_goal_code,!.
 reduce_clause(Op,clause(C, B),HB):-!,reduce_clause(Op,(C :- B),HB).
 reduce_clause(Op,(C:- B),HB):- is_true(B),!,reduce_clause(Op,C,HB).
 reduce_clause(_,C,C).
@@ -819,8 +815,8 @@ fully_expand_real(Op,Sent,SentO):-
        (must_det(fully_expand_into_cache(Op,Sent,SentIO)),
                    must_det(quietly(maybe_deserialize_attvars(SentIO,SentO))))))))),!.
 
-maybe_deserialize_attvars(X,X):-!.
 maybe_deserialize_attvars(X,Y):- current_prolog_flag(expand_attvars,true) -> deserialize_attvars(X,Y) ; X=Y.
+%maybe_deserialize_attvars(X,X):-!.
 
 
 /*
@@ -862,16 +858,15 @@ expand_isEach_or_fail_conj(Sent,SentO):- expand_isEach_or_fail_real(Sent,SentM),
 %
 % Expand if String of KIF.
 expand_kif_string_or_fail(_Why,I,O):- string(I), 
-   locally(t_l:sreader_options(logicmoo_read_kif,true),
-     ((input_to_forms(string(I),Wff,Vs)->
+   input_to_forms(string(I),Wff,Vs)->
    put_variable_names(Vs) ->
-   if_defined(sexpr_sterm_to_pterm(Wff,PTerm),Wff=PTerm)->
+   if_defined(sexpr_sterm_to_pterm(Wff,PTerm))->
    PTerm\=@=I -> 
-   O=PTerm))).
+   O=PTerm.
 
 
 expand_kif_string(I,O):- any_to_string(I,S), string(S),
-  locally(t_l:sreader_options(logicmoo_read_kif,true),input_to_forms(string(S),O,Vs))->
+  input_to_forms(string(S),O,Vs)->
   put_variable_names(Vs).
   
 
@@ -959,7 +954,6 @@ fully_expand_clause(Op,(B/H),Out):- !,fully_expand_head(Op,H,HH),fully_expand_go
 % prolog_clause fully_expand_clause
 fully_expand_clause(Op, H :- B, HH :- B):- is_ftVar(B),!,fully_expand_head(Op,H,HH).
 
-fully_expand_clause(Op,Sent,SentO):- string(Sent),expand_kif_string_or_fail(Op,Sent,SentO),!.
 %covered fully_expand_clause(Op ,NC,NCO):- db_expand_final(Op,NC,NCO),!.
 fully_expand_clause(Op, HB, OUT):- 
   to_reduced_hb(Op,HB,H,B) ->
@@ -977,7 +971,7 @@ fully_expand_clause(Op, HB, OUT):-
 fully_expand_goal(change(assert,_),Sent,SentO):- var(Sent),!,SentO=call_u(Sent).
 fully_expand_goal(Op,Sent,SentO):- 
  must((
-  locally_tl(t_l:into_goal_code,locally_tl(into_form_code,fully_expand_head(Op,Sent,SentM))),
+  locally_tl(into_form_code,fully_expand_head(Op,Sent,SentM)),
     recommify(SentM,SentO))).
 
 /*
@@ -1280,14 +1274,13 @@ listToE(EL,E):-nonvar(EL),!,must(as_list(EL,List)),sanity(is_list(List)),E=..[is
 %
 db_expand_chain(_,V,_):-var(V),!,fail.
 db_expand_chain(_,M:PO,PO) :- atom(M),!.
-db_expand_chain(_,isa(I,Not),INot):-Not==not,!,INot =.. [Not,I].
-db_expand_chain(_,_,_):- t_l:into_goal_code,!,fail.
 db_expand_chain(_,(P:-B),P) :-is_true(B),!.
 db_expand_chain(_,B=>P,P) :-is_true(B),!.
 db_expand_chain(_,<=(P,B),P) :-is_true(B),!.
 db_expand_chain(_,P<==>B,P) :-is_true(B),!.
 db_expand_chain(_,B<==>P,P) :-is_true(B),!.
 db_expand_chain(_,P<-B,P) :-is_true(B),!.
+db_expand_chain(_,isa(I,Not),INot):-Not==not,!,INot =.. [Not,I].
 %db_expand_chain(_,P,PE):-fail,cyc_to_clif_entry(P,PE).
 %db_expand_chain(_,('nesc'(P)),P) :- !.
 

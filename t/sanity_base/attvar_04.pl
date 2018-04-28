@@ -16,7 +16,7 @@
 :- dynamic(sk_out/1).
 :- dynamic(sk_in/1).
 
-rtArgsVerbatum(my_sk).
+baseKB:rtArgsVerbatum(my_sk).
 
 :- read_attvars(true).
 

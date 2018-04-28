@@ -21,6 +21,7 @@
 
 :- must(mpred_trace_exec).
 :- begin_pfc.
+:- ensure_loaded(library(attvar_reader)).
 :- read_attvars(true).
 
 sk_in(fl(X,Y,X,Y)).
