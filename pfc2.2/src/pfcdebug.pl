@@ -69,11 +69,11 @@ pfcClassifyFacts([H|T],User,[H|Pfc],Rule) :-
   pfcClassifyFacts(T,User,Pfc,Rule).
 
 pfcPrintRules :-
-  bagof((P=>Q),clause((P=>Q),true),R1),
+  bagof((P==>Q),clause((P==>Q),true),R1),
   pfcPrintitems(R1),
-  bagof((P<=>Q),clause((P<=>Q),true),R2),
+  bagof((P<==>Q),clause((P<==>Q),true),R2),
   pfcPrintitems(R2),
-  bagof((P<=Q),clause((P<=Q),true),R3),
+  bagof((P<-Q),clause((P<-Q),true),R3),
   pfcPrintitems(R3).
 
 pfcPrintTriggers :-
@@ -228,6 +228,11 @@ pfc_trace_msg(PreMsg,Msg,Args) :-
     ansi_format([fg(yellow)], Msg, Args),!.
 pfc_trace_msg(_PreMsg,_Msg,_Args).
 
+
+mpred_notrace_exec:- pfcNoWatch.
+
+mpred_trace_exec:- pfcWatch.
+
 pfcWatch :- assert(pfcTraceExecution).
 
 pfcNoWatch :-  retractall(pfcTraceExecution).
@@ -280,3 +285,4 @@ pfcWarnings :-
 pfcNoWarnings :- 
   retractall(pfcWarnings(_)).
 
+:- fixup_exports.

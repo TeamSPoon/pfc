@@ -6,7 +6,7 @@
 % Dec 13, 2035
 %
 */
-:- module(pfc_ex,
+:- module(mpred_core,
    [begin_pfc/0,
           op(1050,xfx,('==>')),
           op(1050,xfx,'<==>'),
@@ -16,11 +16,11 @@
           any_to_number/2,
           is_ftText/1,
           any_to_value/2,
-          atom_to_value/2,
-          mpred_test/1
+          atom_to_value/2
+          %mpred_test/1
           ]).
 
-:- throw(module(pfcumt,[umt/1])).
+%:- throw(module(pfcumt,[umt/1])).
 
 %:- use_module(library('pfc2.2/pfcsyntax')).
 
@@ -121,13 +121,9 @@ mpred_retractall(MPRED):- expand_to_hb(MPRED,H,_),mpred_retract_all(H).
 
 mpred_why(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(pfcWhy(PFC))*->true;(red_line(mpred_why(MPRED)),!,fail)).
 
-mpred_test(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(umt(PFC))*->true;(pfc_call(PFC)*->mpred_why(MPRED);red_line(mpred_test(MPRED)),!,fail)).
+%mpred_test(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(umt(PFC))*->true;(pfc_call(PFC)*->mpred_why(MPRED);red_line(mpred_test(MPRED)),!,fail)).
 
 % mpred_test(MPRED):- mpred_to_pfc(MPRED,PFC),(show_success(pfcWhy(PFC))->true;(once(show_call(umt(PFC)))*->true;(red_line,!,fail))).
-
-quietly_ex(G):- quietly(umt((G))),!.
-
-trace_or_throw_ex(G):- trace_or_throw_ex(G).
 
 
 is_asserted(P):- mpred_to_pfc(P,PP), pfc_clause(PP).
@@ -137,6 +133,20 @@ pp_DB :- umt((ignore(pfcPrintDB),listing)).
 
 
 mpred_literal(MPRED):- mpred_to_pfc(MPRED,PFC), pfc_literal(PFC).
+
+
+% Avoid Warning: mpred_loader:prolog_load_context(reload,true), which is called from
+mpred_unload_file:- \+ call(call,prolog_load_context(reload,true)),!.
+mpred_unload_file:- source_location(File,_),mpred_unload_file(File).
+mpred_unload_file(File):-
+  findall(
+    mpred_withdraw(Data,(mfl(Module, File, LineNum),AX)),
+    % clause_u
+    call_u(spft(Data, mfl(Module, File, LineNum),AX)),
+                    ToDo),
+     length(ToDo,Len),
+     wdmsg(mpred_unload_file(File,Len)),
+     maplist(call,ToDo),!.
 
 
 /*
@@ -166,9 +176,10 @@ call_u(MPRED):- strip_module(MPRED,M,PRED),mpred_to_pfc(PRED,PFC),!,umt(M,PFC).
 
 
 % :- use_module(library(pfc_lib)).
-% :- use_module(library(pfc_ex)).
+% :- use_module(library(mpred_core)).
 
 
+:- if(false).
 
 :- module_transparent(pfc_feature/1).
 :- dynamic(pfc_feature/1).
@@ -256,6 +267,7 @@ list_problems:-listing(system:test_results/3),
   foo:listing(header_sane:_),
   nop((listing(user:_))).
 
+
 test_completed_exit(4):- halt(4).
 test_completed_exit(5):- halt(5).
 test_completed_exit(N):- (debugging-> break ; true), halt(N).
@@ -268,6 +280,7 @@ test_completed_exit_maybe(N):- test_completed_exit(N).
 set_file_abox_module(User):- '$set_typein_module'(User), '$set_source_module'(User),set_fileAssertMt(User).
 
 set_file_abox_module_wa(User):- set_file_abox_module(User),set_defaultAssertMt(User).
+
 
 
 :- multifile prolog:message//1, user:message_hook/3.
@@ -284,6 +297,7 @@ mpred_loader_file.
 %system:term_expansion(EOF,_):-end_of_file==EOF,must(check_clause_counts),fail.
 
 
+:- endif.
 
 
 
@@ -422,15 +436,6 @@ mpred_is_taut(B==>(_,A)):- mpred_is_assertable(A),mpred_is_taut(A==>B),!.
 is_retract_first(one).
 is_retract_first(a).
 
-
-
-
-
-
-clause_u(A,B,C):- clause_i(A,B,C).
-clause_u(A,B):- clause_i(A,B).
-clause_u(A):- clause_i(A).
-clause_asserted_u(A) :- clause_asserted_i(A).
 
 
 

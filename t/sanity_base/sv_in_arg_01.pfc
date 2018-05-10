@@ -49,10 +49,26 @@ someSV_testeed(a,b,1).
 
 someSV_testeed(a,c,3).
 
-:- sanity( \+ someSV_testeed(a,b,1)).
-:- sanity(someSV_testeed(a,b,2)).
+:- mpred_test( \+ someSV_testeed(a,b,1)).
+:- mpred_test(    someSV_testeed(a,b,2)).
 
-:- mpred_why(someSV_testeed(a,b,1)).
+:- (ain(someSV_testeed(a,b,1))).
 
-:- ain((\+ someSV_testeed(a,b,2))).
+:- mpred_test(   someSV_testeed(a,b,1)).
+:- mpred_test(\+ someSV_testeed(a,b,2)).
+
+:- (ain(someSV_testeed(a,b,2))).
+:- listing(someSV_testeed/3).
+
+someSV_testeed(a,c,3).
+
+:- mpred_test( \+ someSV_testeed(a,b,1)).
+:- mpred_test(    someSV_testeed(a,b,2)).
+
+:- ain((\+ someSV_testeed(a,b,1))).
+
+:- listing(someSV_testeed/3).
+
+%:- (ain(someSV_testeed(a,b,2))).
+%:- mpred_test(someSV_testeed(a,b,1)).
 

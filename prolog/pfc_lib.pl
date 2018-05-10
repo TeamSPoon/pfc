@@ -5,6 +5,8 @@
 :- module(pfc_lib,[]).
 :- endif.
 
+% :- set_prolog_flag(pfc_version,2.2).
+
 :- if(current_prolog_flag(pfc_version,2.2)).
 :- include(pfc_lib_2_2).
 :- else.

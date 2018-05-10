@@ -84,20 +84,20 @@ assumptions1([X|Rest],L) :-
 %%          [J11, J12,... J1n]      a list of proof trees.
 
 
-%% pfcChild(+P,?Q) is nondet.
+%% mpred_child(+P,?Q) is nondet.
 %
-% pfcChild(P,Q) is true iff P is an immediate justifier for Q.
+% mpred_child(P,Q) is true iff P is an immediate justifier for Q.
 %
 
-pfcChild(P,Q) :-
+mpred_child(P,Q) :-
   pfcGetSupport(Q,(P,_)).
 
-pfcChild(P,Q) :-
+mpred_child(P,Q) :-
   pfcGetSupport(Q,(_,Trig)),
   pfcType(Trig,trigger),
-  pfcChild(P,Trig).
+  mpred_child(P,Trig).
 
-pfcChildren(P,L) :- bagof(C,pfcChild(P,C),L).
+mpred_children(P,L) :- bagof(C,mpred_child(P,C),L).
 
 % pfcDescendant(P,Q) is true iff P is a justifier for Q.
 
@@ -105,7 +105,7 @@ pfcDescendant(P,Q) :-
    pfcDescendant1(P,Q,[]).
 
 pfcDescendant1(P,Q,Seen) :-
-  pfcChild(X,Q),
+  mpred_child(X,Q),
   (\+ member(X,Seen)),
   (P=X ; pfcDescendant1(P,X,[X|Seen])).
   

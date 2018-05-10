@@ -138,7 +138,7 @@ assert_if_newt(G):- (cwc,(clause_asserted_i(G)->true;call(assert,G))).
 :- mpred_trace_exec.
 :- prolog_load_context(file,F), ain(mpred_unload_option(F,never)).
 
-:- mpred_notrace_exec.
+%:- mpred_notrace_exec.
 :- listing(mpred_unload_option/2).
 
 

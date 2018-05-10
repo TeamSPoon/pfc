@@ -46,6 +46,9 @@ singleValuedInArgAX(inChairZ, 1, 1).
 :- ain( inChairZ(aZa)).
 :- (ain( inChairZ(bYb))).
 :- listing(inChairZ/1).
+
+end_of_file.   ERROR TODO
+
 :- break.
 :- cls.
 :- retrace(ain( inChairZ(cXc))).

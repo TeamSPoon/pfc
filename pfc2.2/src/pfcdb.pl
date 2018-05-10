@@ -20,9 +20,9 @@ pfcDatabaseTerm(spft/3):- ifNotDMiles(fail,true).
 pfcDatabaseTerm(pt/2).
 pfcDatabaseTerm(bt/2).
 pfcDatabaseTerm(nt/3).
-pfcDatabaseTerm('=>'/2).
-pfcDatabaseTerm('<=>'/2).
-pfcDatabaseTerm('<='/2).
+pfcDatabaseTerm('==>'/2).
+pfcDatabaseTerm('<==>'/2).
+pfcDatabaseTerm('<-'/2).
 pfcDatabaseTerm(pfcQueue/2).
 
 % removes all forward chaining rules and justifications from db.

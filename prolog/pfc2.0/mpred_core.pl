@@ -13,6 +13,8 @@
 
 %:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
 
+%:- throw(module(pfcumt,[umt/1])).
+
 :- module(mpred_core, [
     /*
   get_startup_uu/1,
@@ -1244,10 +1246,10 @@ is_ftOpenSentence(P):- compound(P), functor(P,F,N), \+ leave_some_vars_at_el(F),
 is_ftOpenSentence(P):- is_ftOpen(P).
 
 
-mpred_post12_remove( P,   S):- show_call(mpred_withdraw(P,S)), \+ mpred_supported(P),!.
-mpred_post12_remove( P,   S):- is_user_reason(S), show_call(mpred_withdraw(P)), \+ mpred_supported(P),!.
-mpred_post12_remove( P,   S):- is_user_reason(S),!, (mpred_withdraw_fail_if_supported(P,S) -> true ;  show_call(mpred_remove2(P,S))).
-mpred_post12_remove( P,   S):- ignore(show_call(mpred_withdraw_fail_if_supported(P,S))),!.
+mpred_post12_withdraw( P,   S):- show_call(mpred_withdraw(P,S)), \+ mpred_supported(P),!.
+%mpred_post12_withdraw( P,   S):- is_user_reason(S), show_call(mpred_withdraw(P)), \+ mpred_supported(P),!.
+%mpred_post12_withdraw( P,   S):- is_user_reason(S),!, (mpred_withdraw_fail_if_supported(P,S) -> true ;  show_call(mpred_remove2(P,S))).
+mpred_post12_withdraw( P,   S):- ignore(show_call(mpred_withdraw_fail_if_supported(P,S))),!.
 
 mpred_post12_negated( P,   S):- mpred_withdraw_fail_if_supported(P,S), show_call( mpred_post13(~P,S)),!.
 mpred_post12_negated( P,   S):- mpred_remove2(P,S), show_call( \+ mpred_supported(P)),!,show_call( mpred_post13(~P,S)),!.
@@ -1267,7 +1269,7 @@ mpred_post12_negated( P,   S) :- mpred_get_support(P,S2),
 
 mpred_post12(P, _):- (must_be(nonvar,P)),P==true,!.
 % mpred_post12(P, S):- quietly_ex((is_ftOpenSentence(P)->wdmsg((warn((var_mpred_post1(P, S))))))),fail.
-mpred_post12( \+  P,   S):- mpred_post12_remove( P,   S),!.
+mpred_post12( \+  P,   S):- mpred_post12_withdraw( P,   S),!.
 mpred_post12(  ~  P,   S):- mpred_post12_negated( P,   S),!.
 
 /*
@@ -1888,9 +1890,9 @@ mpred_withdraw(P,S) :-
   maybe_user_support(P,S,SS),
   (SS \== unKnown_suppoRt ->
   % pfcDebug(format("~Nremoving support ~p from ~p",[SS,P])),
-  (mpred_trace_msg('    Removing support: ~p~n',[SS]),
+  (mpred_trace_msg('\n    Removing support: ~p~n',[SS]),
   mpred_trace_msg('     Which was for: ~p~n',[P])); 
-    true),
+    nop(dmsg(mpred_withdraw(P,S)))),
   ignore(mpred_withdraw_fail_if_supported(P,S)).
 
 mpred_withdraw_fail_if_supported(mfl(_,_,_),_):-!.
@@ -1903,7 +1905,7 @@ mpred_withdraw_fail_if_supported(P,S):-
 
 mpred_withdraw_fail_if_supported_maybe_warn(_,P):- P== singleValuedInArg(arity, 2).
 mpred_withdraw_fail_if_supported_maybe_warn(_,P):- P= prologSingleValued(_Arity).
-mpred_withdraw_fail_if_supported_maybe_warn(_,~P):- nonvar(P),!.
+% mpred_withdraw_fail_if_supported_maybe_warn(_,~P):- nonvar(P),!.
 mpred_withdraw_fail_if_supported_maybe_warn(unKnown_suppoRt,P):- 
   maybe_user_support(P,S,SS),
         (((lookup_spft(P,F,T), S= (F,T), call(mpred_rem_support(P,S)),dmsg(found(mpred_rem_support2(P,S))))
@@ -2048,15 +2050,17 @@ mpred_undo1(pt(Head,Body)):-
   % undo a positive trigger.
   %
   !,
-  (show_mpred_success(mpred_undo1_pt_unfwc,retract_u(pt(Head,Body)))
+  (show_mpred_success(mpred_undo1_pt_unfwc_2,retract_u(pt(Head,Body)))
     -> mpred_unfwc(pt(Head,Body))
      ; mpred_warn("Trigger not found to undo: ~p",[pt(Head,Body)])).
 
 mpred_undo1(nt(Head,Condition,Body)):-
   % undo a negative trigger.
   !,
-  (show_mpred_success(mpred_undo1_nt_unfwc,retract_u(nt(Head,Condition,Body)))
-    -> mpred_unfwc(nt(Head,Condition,Body))
+  (
+   show_mpred_success(mpred_undo1_nt_unfwc,(nt(Head,Condition,Body),
+       dmsg(mpred_undo1(nt(Head,Condition,Body))),retract_u(nt(Head,Condition,Body))))
+    -> (mpred_unfwc(nt(Head,Condition,Body))->true;show_call(assert_u(nt(Head,Condition,Body))))
      ; mpred_trace_msg("WARNING?? Trigger not found to undo: ~p",[nt(Head,Condition,Body)])).
 
 mpred_undo1(P):- mpred_reduced_chain(mpred_undo1,P),!.
@@ -2472,7 +2476,20 @@ mpred_eval_rhs1({Action},Support):-
  !,
  fc_eval_action(Action,Support).
 
-mpred_eval_rhs1( \+ ~P, _Support):-  !,mpred_withdraw(~P).
+mpred_eval_rhs1( \+ ~P, _Support):-  !, 
+  %mpred_trace_msg('~N~n~n\t\tRHS-Withdrawing: ~p \n\tSupport: ~p~n',[~P,Support]),
+   mpred_withdraw(~P).
+
+
+% if negated litteral \+ P
+mpred_eval_rhs1(\+ P,Support):-
+ % predicate to remove.
+  \+ mpred_negated_literal( P),
+  %TODO Shouldn''t we be mpred_withdrawing the Positive version?
+  % perhaps we aready negated here dirrent nf1_*
+  mpred_trace_msg('~N~n~n\t\tRHS-Withdrawing-Neg: ~p \n\tSupport: ~p~n',[P,Support]),
+  !,
+  mpred_withdraw(P).
 
 
 % Dmiles replaced with this
@@ -2484,6 +2501,7 @@ mpred_eval_rhs1( P,Support):-
   mpred_trace_msg('~N~n~n\t\tRHS-Withdrawing-Negation: ~p \n\tSupport: ~p~n',[P,Support]),
   !,
   mpred_withdraw(PN).
+
 
 % if negated litteral \+ P
 mpred_eval_rhs1( P,Support):-
@@ -3002,108 +3020,111 @@ mpred_compile_rhs_term(Sup,I,O):- mpred_compile_rhs_term_consquent(Sup,I,O).
 
 
 
-%% mpred_unnegate(+N, ?P) is semidet.
-%
-%  is true if N is a negated term and P is the term
-%  with the negation operator stripped.  (not Logical ~ negation however)
-%
-mpred_unnegate(P,_):- is_ftVar(P),!,fail.
-mpred_unnegate((\+(P)),P).
-mpred_unnegate((-P),P).
+
+
+     %% mpred_unnegate(+N, ?P) is semidet.
+     %
+     %  is true if N is a negated term and P is the term
+     %  with the negation operator stripped.  (not Logical ~ negation however)
+     %
+     mpred_unnegate(P,_):- is_ftVar(P),!,fail.
+     mpred_unnegate((\+(P)),P).
+     mpred_unnegate((-P),P).
 
 
 
-%% mpred_negated_literal(+P) is semidet.
-%
-% PFC Negated Literal.
-%
-mpred_negated_literal(P):-
-  mpred_unnegate(P,Q),
-  mpred_positive_literal(Q).
+     %% mpred_negated_literal(+P) is semidet.
+     %
+     % PFC Negated Literal.
+     %
+     mpred_negated_literal(P):-
+       mpred_unnegate(P,Q),
+       mpred_positive_literal(Q).
 
-mpred_literal(X):- is_ftVar(X),!.
-mpred_literal(X):- mpred_negated_literal(X),!.
-mpred_literal(X):- mpred_positive_literal(X),!.
+     mpred_literal(X):- is_ftVar(X),!.
+     mpred_literal(X):- mpred_negated_literal(X),!.
+     mpred_literal(X):- mpred_positive_literal(X),!.
 
-mpred_is_trigger(X):-   mpred_db_type(X,trigger).
+     mpred_is_trigger(X):-   mpred_db_type(X,trigger).
 
-mpred_positive_fact(X):-  mpred_positive_literal(X), X \= ~(_), mpred_db_type(X,fact(_FT)), \+ mpred_db_type(X,trigger).
+     mpred_positive_fact(X):-  mpred_positive_literal(X), X \= ~(_), mpred_db_type(X,fact(_FT)), \+ mpred_db_type(X,trigger).
 
-mpred_positive_literal(X):-
-  is_ftNonvar(X),
-  \+ mpred_db_type(X,rule(_RT)),
-  get_functor(X,F,_),
-  \+ mpred_neg_connective(F),
-  !.
-
-
-mpred_connective(Var):-var(Var),!,fail.
-mpred_connective(';').
-mpred_connective(',').
-mpred_connective('/').
-mpred_connective('{}').
-mpred_connective('|').
-mpred_connective(('==>')).
-mpred_connective(('<-')).
-mpred_connective('<==>').
-mpred_connective('-').
-% mpred_connective('~').
-mpred_connective(('\\+')).
+     mpred_positive_literal(X):-
+       is_ftNonvar(X),
+       \+ mpred_db_type(X,rule(_RT)),
+       get_functor(X,F,_),
+       \+ mpred_neg_connective(F),
+       !.
 
 
-mpred_neg_connective('-').
-% mpred_neg_connective('~').
-mpred_neg_connective('\\+').
-
-is_simple_lhs(ActN):- is_ftVar(ActN),!,fail.
-is_simple_lhs( \+ _ ):-!,fail.
-is_simple_lhs( ~ _ ):-!,fail.
-is_simple_lhs( _  / _ ):-!,fail.
-is_simple_lhs((Lhs1,Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
-is_simple_lhs((Lhs1;Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
-is_simple_lhs(ActN):- is_active_lhs(ActN),!,fail.
-is_simple_lhs((Lhs1/Lhs2)):- !,fail, is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
-is_simple_lhs(_).
-
-
-is_active_lhs(ActN):- var(ActN),!,fail.
-is_active_lhs(!).
-is_active_lhs(cut_c).
-is_active_lhs(actn(_Act)).
-is_active_lhs('{}'(_Act)).
-is_active_lhs((Lhs1/Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
-is_active_lhs((Lhs1,Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
-is_active_lhs((Lhs1;Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+     mpred_connective(Var):-var(Var),!,fail.
+     mpred_connective(';').
+     mpred_connective(',').
+     mpred_connective('/').
+     mpred_connective('{}').
+     mpred_connective('|').
+     mpred_connective(('==>')).
+     mpred_connective(('<-')).
+     mpred_connective('<==>').
+     mpred_connective('-').
+     % mpred_connective('~').
+     mpred_connective(('\\+')).
 
 
-add_lhs_cond(Lhs1/Cond,Lhs2,Lhs1/(Cond,Lhs2)):-!.
-add_lhs_cond(Lhs1,Lhs2,Lhs1/Lhs2).
+     mpred_neg_connective('-').
+     % mpred_neg_connective('~').
+     mpred_neg_connective('\\+').
+
+     is_simple_lhs(ActN):- is_ftVar(ActN),!,fail.
+     is_simple_lhs( \+ _ ):-!,fail.
+     is_simple_lhs( ~ _ ):-!,fail.
+     is_simple_lhs( _  / _ ):-!,fail.
+     is_simple_lhs((Lhs1,Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
+     is_simple_lhs((Lhs1;Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
+     is_simple_lhs(ActN):- is_active_lhs(ActN),!,fail.
+     is_simple_lhs((Lhs1/Lhs2)):- !,fail, is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
+     is_simple_lhs(_).
 
 
-%% constrain_meta(+Lhs, ?Guard) is semidet.
-%
-% Creates a somewhat sane Guard.
-%
-% To turn this feature off...
-% ?- set_prolog_flag(constrain_meta,false).  
-%
-%
-constrain_meta(_,_):- current_prolog_flag(constrain_meta,false),!,fail.
-% FACT
-constrain_meta(P,mpred_positive_fact(P)):- is_ftVar(P),!.
-% NEG chaining
-constrain_meta(~ P, CP):- !,  constrain_meta(P,CP).
-constrain_meta(\+ P, CP):- !,  constrain_meta(P,CP).
-% FWD chaining
-constrain_meta((_==>Q),nonvar(Q)):- !, is_ftVar(Q).
-% EQV chaining
-constrain_meta((P<==>Q),(nonvar(Q);nonvar(P))):- (is_ftVar(Q);is_ftVar(P)),!.
-% BWD chaining
-constrain_meta((Q <- _),mpred_literal(Q)):- is_ftVar(Q),!.
-constrain_meta((Q <- _),CQ):- !, constrain_meta(Q,CQ).
-% CWC chaining
-constrain_meta((Q :- _),mpred_literal(Q)):- is_ftVar(Q),!.
-constrain_meta((Q :- _),CQ):- !, constrain_meta(Q,CQ).
+     is_active_lhs(ActN):- var(ActN),!,fail.
+     is_active_lhs(!).
+     is_active_lhs(cut_c).
+     is_active_lhs(actn(_Act)).
+     is_active_lhs('{}'(_Act)).
+     is_active_lhs((Lhs1/Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+     is_active_lhs((Lhs1,Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+     is_active_lhs((Lhs1;Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+
+
+     add_lhs_cond(Lhs1/Cond,Lhs2,Lhs1/(Cond,Lhs2)):-!.
+     add_lhs_cond(Lhs1,Lhs2,Lhs1/Lhs2).
+
+
+     %% constrain_meta(+Lhs, ?Guard) is semidet.
+     %
+     % Creates a somewhat sane Guard.
+     %
+     % To turn this feature off...
+     % ?- set_prolog_flag(constrain_meta,false).  
+     %
+     %
+     constrain_meta(_,_):- current_prolog_flag(constrain_meta,false),!,fail.
+     % FACT
+     constrain_meta(P,mpred_positive_fact(P)):- is_ftVar(P),!.
+     % NEG chaining
+     constrain_meta(~ P, CP):- !,  constrain_meta(P,CP).
+     constrain_meta(\+ P, CP):- !,  constrain_meta(P,CP).
+     % FWD chaining
+     constrain_meta((_==>Q),nonvar(Q)):- !, is_ftVar(Q).
+     % EQV chaining
+     constrain_meta((P<==>Q),(nonvar(Q);nonvar(P))):- (is_ftVar(Q);is_ftVar(P)),!.
+     % BWD chaining
+     constrain_meta((Q <- _),mpred_literal(Q)):- is_ftVar(Q),!.
+     constrain_meta((Q <- _),CQ):- !, constrain_meta(Q,CQ).
+     % CWC chaining
+     constrain_meta((Q :- _),mpred_literal(Q)):- is_ftVar(Q),!.
+     constrain_meta((Q :- _),CQ):- !, constrain_meta(Q,CQ).
+
 
 
 
@@ -3210,10 +3231,7 @@ build_trigger(WS,[T|Triggers],Consequent,pt(T,X)):-
 
 build_neg_test(WS,T,Testin,Testout):-
   build_code_test(WS,Testin,Testmid),
-
   mpred_conjoin((call_u_no_bc(T)),Testmid,Testout).
-
-
 
 %% check_never_assert(+Pred) is semidet.
 %
