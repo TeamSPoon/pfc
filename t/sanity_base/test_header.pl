@@ -71,6 +71,7 @@ setup_hist0:-  '$toplevel':setup_history.
 :- set_prolog_flag(gc, false).
 
 :- '$current_source_module'(W), '$set_typein_module'(W).
+
 :- sanity((defaultAssertMt(Mt1),fileAssertMt(Mt2),source_module(Mt3))),sanity((Mt1==Mt2,Mt1==Mt3)).
 
 

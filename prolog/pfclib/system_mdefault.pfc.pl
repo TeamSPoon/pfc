@@ -49,14 +49,14 @@ mdefault((Q <- P))/mpred_literal(Q) ==> (Q <-(P, \+ ~(Q))).
 mdefault(P==>Q)/nonvar(Q) ==> (((P ==> mdefault(Q)))).
 
 % NEG chaining
-mdefault(~Q)/mpred_positive_literal(Q)  ==>  (( \+ Q ) ==> ~ Q ).
+mdefault(~Q)/mpred_positive_fact(Q)  ==>  (( \+ Q ) ==> ~ Q ).
 
 
 % POS chaining 1 (Neg Trigger)
-mdefault(Q)/(mpred_positive_literal(Q),if_missing_mask(Q,R,Test)) ==> (  ( ( \+R /(ground(R),Test), (\+ ~Q )) ==> Q )).
+mdefault(Q)/(mpred_positive_fact(Q),if_missing_mask(Q,R,Test)) ==> (  ( ( \+R /(ground(R),Test), (\+ ~Q )) ==> Q )).
 
 % POS chaining 2 (Pos Trigger)
-mdefault(Q)/(mpred_positive_literal(Q),if_missing_mask(Q,R,Test)) ==> ( ((R/(ground(R), Test, \+(R=Q))) ==> (\+ Q))).
+mdefault(Q)/(mpred_positive_fact(Q),if_missing_mask(Q,R,Test)) ==> ( ((R/(ground(R), Test, \+(R=Q))) ==> (\+ Q))).
 
 
 % mdefault(Q) ==> if_missing(Q,Q).

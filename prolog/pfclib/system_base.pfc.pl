@@ -106,17 +106,6 @@
 :- meta_predicate t(*,?,?,?,?,?,?,?).
 */
 
-
-P ==> \+ ~P.
-~P ==> \+ P.
-
-:- mpred_trace_exec.
-%  can this ever happen?
-% (( \+ P, P) ==> {dumpST,dmsg(warn(weak_conflict(P)))}).
-( ~ P, P) ==> ({dmsg(warn(conflict(P)))}).
-% (\+ P, P) => conflict(P).
-:- mpred_notrace_exec.
-
 % ===================================================================
 %  Microtheory System
 % ===================================================================
@@ -197,7 +186,8 @@ compilerDirective(redundantMaybe,comment("Probably redundant")).
 compilerDirective(isRedundant,comment("Redundant")).
 compilerDirective(isRuntime,comment("Only use rule/fact at runtime")).
 
-==> ttRelationType(isEach(
+
+:- forall(member(PredType,[
                   prologBuiltin,
                   prologDynamic,
                   prologHybrid,
@@ -237,7 +227,8 @@ compilerDirective(isRuntime,comment("Only use rule/fact at runtime")).
                   prologNegByFailure,
                   prologIsFlag,
                   tFunction
-                  )).
+                  ]),ain(ttRelationType(PredType))).
+
 
 
 %:- listing(ttRelationType/1).
@@ -328,12 +319,6 @@ genlPreds(prologSideEffects,rtNotForUnboundPredicates).
 
 ==> nondet.
 
-
-%% ~( ?VALUE1) is semidet.
-%
-%
-
-((~(G):-  (cwc, neg_in_code(G)))).
 
 :- kb_shared(warningsAbout/2).
 
@@ -585,11 +570,32 @@ never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
 %:- rtrace,trace.
 :- prolog_load_context(file,F), ain(mpred_unload_option(F,never)).
 :- nortrace.
-:- mpred_notrace_exec.
+%:- mpred_notrace_exec.
 :- listing(mpred_unload_option/2).
+
+
+P/mpred_positive_fact(P) ==> \+ ~P.
+~P/mpred_positive_fact(P) ==> \+ P.
+
+:- mpred_trace_exec.
+%  can this ever happen?
+% (( \+ P, P) ==> {dumpST,dmsg(warn(weak_conflict(P)))}).
+( (~ P/mpred_positive_fact(P)), P) ==> ({dmsg(warn(conflict(P)))}).
+% (\+ P, P) => conflict(P).
+
+%% ~( ?VALUE1) is semidet.
+%
+%
+
+%:- rtrace.
+:- call(assertz,(((~(G):-  (cwc, neg_in_code(G)))))).
+
+% :- pfcNoWatch.
+
 
 %:- rtrace.
 % prologHybrid(arity/2).
 prologDynamic(term_expansion/2).
 prologBuiltin(var/1).
+
 

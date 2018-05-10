@@ -13,12 +13,14 @@ arity(mpred_sv,2).
 mpred_sv(Pred,Arity)==> arity(Pred,Arity),hybrid_support(Pred,Arity),singleValuedInArg(Pred,Arity).
 
 :- dynamic(mpred_sv_shared/2).
-mpred_sv_shared(Pred,Arity)==>{kb_shared(Pred/Arity)},mpred_sv(Pred,Arity).
+mpred_sv_shared(Pred,Arity)==>({kb_shared(Pred/Arity)},mpred_sv(Pred,Arity)).
 mpred_sv_shared(mpred_sv,2).
 mpred_sv_shared(singleValuedInArg,2).
 mpred_sv_shared(singleValuedInArgDefault,3).
 
-(prologSingleValued(Pred), arity(Pred,Arity), \+ singleValuedInArg(Pred,_)) ==> singleValuedInArg(Pred,Arity).
+(prologSingleValued(Pred), arity(Pred,Arity), \+ singleValuedInArg(Pred,_)) 
+   ==> singleValuedInArg(Pred,Arity).
+
 
 % prologSingleValued(Pred),arity(Pred,Arity) ==> hybrid_support(Pred,Arity).
 % mdefault(((prologSingleValued(Pred),arity(Pred,Arity))==> singleValuedInArg(Pred,Arity))).
@@ -33,23 +35,47 @@ arity(singleValuedInArgDefault, 3).
 prologHybrid(singleValuedInArgDefault(prologSingleValued,ftInt,ftTerm)).
 singleValuedInArg(singleValuedInArgDefault,3).
 
-((singleValuedInArg(Pred,_))==>(prologSingleValued(Pred))).
+(singleValuedInArg(Pred,_)==>prologSingleValued(Pred)).
 
 ((singleValuedInArgDefault(SingleValued,ArgN,S1)/ground(S1)) ==> singleValuedInArg(SingleValued,ArgN)).
 
-((singleValuedInArg(F, N)/(must((atom(F),arity(F,A))))),
-  ( \+ singleValuedInArgDefault(F, N, _)))
-     ==> singleValuedInArgAX(F,A,N).
+(singleValuedInArg(F, N),arity(F,A)) ==> singleValuedInArgAX(F,A,N).
+
+:- kb_shared(singleValuedInArgAX/3).
 
 (singleValuedInArgAX(F,A,N), 
    {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)})
        ==> 
   (( P ==> 
-        ({call(dif:dif(Q_SLOT,P_SLOT)),call_u(Q),ground(Q)}, single_override(P,Q)))).
+        ({P_SLOT\=isMissing,call(dif:dif(Q_SLOT,P_SLOT)),call_u(Q),ground(Q)}, single_override(P,Q)))).
 
-(single_override(P,Q), {retract(Q)}) ==>
-   (\+ P ==> ({mpred_supported(Q)},  Q, \+ single_override(P,Q))).
 
+((single_override(P,Q), {ignore(retract(Q))}) ==>
+   (\+ P ==> (( \+ single_override(P,Q)), {mpred_supported(Q)}, Q))).
+
+
+/*
+(singleValuedInArgAX_0(F,A,N), 
+   {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)})
+       ==> 
+  (( P ==> 
+        ({call(dif:dif(Q_SLOT,P_SLOT)),call_u(Q),ground(Q), ignore(retract(Q))},  mdefault(Q)))).
+
+
+(single_override0(P,Q), {retract(Q)}) ==>  mdefault(Q),\+ ~P.
+
+((single_override1(P,Q),{ignore(retract(Q))}) ==> ( ( \+ P) ==> {}, Q)).
+
+((single_override3(P,Q), {ignore(retract(Q))}) ==>
+   (\+ P ==> (( \+ single_override(P,Q)), Q))).
+
+((single_override4(P,Q), {ignore(retract(Q))}) ==>
+   (\+ P ==> mdefault(Q))).
+((single_override(P,Q)) ==> (mdefault(Q),P)).
+(((single_override(P,Q), {ignore(retract(Q))}), \+P) ==> Q).
+
+*/
+% (\+ single_override(_P , Q)/nonvar(Q)) ==> Q.
 /*
 (singleValuedInArgAX(F,A,N), 
    {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)})

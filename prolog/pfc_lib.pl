@@ -602,6 +602,18 @@ same_expandsion(I, (:-ain(MO))):-!,same_expandsion(I,MO).
 same_expandsion(I, (:-mpred_ain(MO))):-!,same_expandsion(I,MO).
 same_expandsion(I,O):-I==O.
 
+% prolog:message(ignored_weak_import(Into, From:PI))--> { nonvar(Into),Into \== system,dtrace(dmsg(ignored_weak_import(Into, From:PI))),fail}.
+% prolog:message(Into)--> { nonvar(Into),functor_safe(Into,_F,A),A>1,arg(1,Into,N),\+ number(N),dtrace(wdmsg(Into)),fail}.
+
+/*
+:- multifile(user:clause_expansion/2).
+user:clause_expansion(I,O):- pfc_clause_expansion(I,O).
+*/
+
+/*
+:- multifile(clause_expansion/2).
+clause_expansion(I,O):- pfc_clause_expansion(I,O).
+*/
 
 
 % term_expansion(I,P1,O,P2):- is_pfc_file,mpred_te(term,system,I,P1,O,P2).
@@ -638,9 +650,14 @@ saveBaseKB:- tell(baseKB),listing(baseKB:_),told.
 :- fixup_exports.
 
 
+:- if(exists_source(library(retry_undefined))).
+
 :- use_module(library(retry_undefined)).
 :- install_retry_undefined(baseKB,kb_shared).
 
+:- else.
+
+:- endif.
 
 :- multifile(system:clause_expansion/2).
 :- module_transparent(system:clause_expansion/2).

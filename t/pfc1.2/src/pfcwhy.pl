@@ -17,46 +17,46 @@ end_of_file.
 pfcWhy :- 
  umt((
   t_l:whybuffer(P,_),
-  pfcWhy0(P))).
+  mpred_why0(P))).
 % see pfc_why
-pfcWhy(X):- source_file(_,_), % non-interactive
+mpred_why(X):- source_file(_,_), % non-interactive
   color_line(green,2),
   forall(no_repeats(P-Js,justifications(P,Js)),
-    (color_line(yellow,1),pfcShowJustifications(X,Js))),
+    (color_line(yellow,1),mpred_showJustifications(X,Js))),
   color_line(green,2),!.
   
 
-pfcWhy(X):-
-  umt((pfcWhy0(X))).
+mpred_why(X):-
+  umt((mpred_why0(X))).
 
-pfcWhy0(N) :-
+mpred_why0(N) :-
   number(N),
   !,
   t_l:whybuffer(P,Js),
-  pfcWhyCommand0(N,P,Js).
+  mpred_whyCommand0(N,P,Js).
 
-pfcWhy0(P) :-
+mpred_why0(P) :-
   justifications(P,Js),
   retractall(t_l:whybuffer(_,_)),
   assert(t_l:whybuffer(P,Js)),
-  pfcWhyBrouse(P,Js).
+  mpred_whyBrouse(P,Js).
 
-pfcWhy1(P) :-
+mpred_why1(P) :-
   justifications(P,Js),
-  pfcWhyBrouse(P,Js).
+  mpred_whyBrouse(P,Js).
 
-pfcWhyBrouse(P,Js) :-
-  pfcShowJustifications(P,Js),
+mpred_whyBrouse(P,Js) :-
+  mpred_showJustifications(P,Js),
   ttyflush,
   read_pending_chars(current_input,_,[]),!,
   ttyflush,
   % pfcAsk(' >> ',Answer),
   % read_pending_chars(current_input,[Answer|_],[]),!,  
   format('~N',[]),write('proof [q/h/u/?.?]: '),get_char(Answer),
-  pfcWhyCommand0(Answer,P,Js).
+  mpred_whyCommand0(Answer,P,Js).
 
-pfcWhyCommand0(q,_,_) :- !.
-pfcWhyCommand0(h,_,_) :- 
+mpred_whyCommand0(q,_,_) :- !.
+mpred_whyCommand0(h,_,_) :- 
   !,
   format("~n
 Justification Brouser Commands:
@@ -66,53 +66,53 @@ Justification Brouser Commands:
  u   up a level
 ",[]).
 
-pfcWhyCommand0(N,_P,Js) :-
+mpred_whyCommand0(N,_P,Js) :-
   float(N),
   !,
-  pfcSelectJustificationNode(Js,N,Node),
-  pfcWhy1(Node).
+  mpred_selectJustificationNode(Js,N,Node),
+  mpred_why1(Node).
 
-pfcWhyCommand0(u,_,_) :-
+mpred_whyCommand0(u,_,_) :-
   % u=up
   !.
 
-pfcWhyCommand0(N,_,_) :-
+mpred_whyCommand0(N,_,_) :-
   integer(N),
   !,
   format("~n~w is a yet unimplemented command.",[N]),
   fail.
 
-pfcWhyCommand0(X,_,_) :-
+mpred_whyCommand0(X,_,_) :-
  format("~n~w is an unrecognized command, enter h. for help.",[X]),
  fail.
   
-pfcShowJustifications(P,Js) :-
+mpred_showJustifications(P,Js) :-
   format("~nJustifications for ~w:",[P]),
-  pfcShowJustification1(Js,1).
+  mpred_showJustification1(Js,1).
 
-pfcShowJustification1([],_).
+mpred_showJustification1([],_).
 
-pfcShowJustification1([J|Js],N) :-
+mpred_showJustification1([J|Js],N) :-
   % show one justification and recurse.
   nl,
-  pfcShowJustifications2(J,N,1),
+  mpred_showJustifications2(J,N,1),
   N2 is N+1,
-  pfcShowJustification1(Js,N2).
+  mpred_showJustification1(Js,N2).
 
-pfcShowJustifications2([],_,_).
+mpred_showJustifications2([],_,_).
 
-pfcShowJustifications2([C|Rest],JustNo,StepNo) :- 
+mpred_showJustifications2([C|Rest],JustNo,StepNo) :- 
   copy_term(C,CCopy),
   numbervars(CCopy,0,_),
   format("~n    ~w.~w ~w",[JustNo,StepNo,CCopy]),
   StepNext is 1+StepNo,
-  pfcShowJustifications2(Rest,JustNo,StepNext).
+  mpred_showJustifications2(Rest,JustNo,StepNext).
 
 pfcAsk(Msg,Ans) :-
   format("~n~w",[Msg]),
   read(Ans).
 
-pfcSelectJustificationNode(Js,Index,Step) :-
+mpred_selectJustificationNode(Js,Index,Step) :-
   JustNo is integer(Index),
   nth1(JustNo,Js,Justification),
   StepNo is 1+ integer(Index*10 - JustNo*10),

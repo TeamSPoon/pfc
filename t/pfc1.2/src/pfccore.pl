@@ -14,10 +14,10 @@
 :- use_module(library(lists)).
 
 
-:- dynamic ('<=')/2.
-:- dynamic ('=>')/2.
+:- dynamic ('<-')/2.
+:- dynamic ('==>')/2.
 :- dynamic ('::::')/2.
-%:- dynamic '<=>'/2.
+%:- dynamic '<==>'/2.
 :- dynamic 'pt'/2.
 :- dynamic 'nt'/3.
 :- dynamic 'bt'/2.
@@ -62,7 +62,7 @@ add(M:P) :- b_setval(defaultQueryMt,M),b_setval(defaultAssertMt,M),!,
   M:add(P,UU).
 add(P) :-  pfcCurrentUserSupport(UU),add(P,UU).
 
-add((=>P),S) :- add(P,S).
+add((==>(P)),S) :- add(P,S).
 
 add(P,S) :- 
   post(P,S),
@@ -87,8 +87,8 @@ post(P,S) :- post1(P,S).
 % adds an entry to the pfc queue for subsequent forward chaining.
 % It always succeeds.
 
-post1(M:'=>'(P),S) :-!, post1_(M:P,S).
-post1('=>'(P),S) :-!, post1_(P,S).
+post1(M:'==>'(P),S) :-!, post1_(M:P,S).
+post1('==>'(P),S) :-!, post1_(P,S).
 post1(P,S) :- post1_(P,S),!.
 
 post1_(PIn,S) :- 
@@ -384,7 +384,7 @@ pfc_withdraw(P,S) :-
   (pfc_trace_msg('    Removing support: ','~p~n',[S]),
      pfc_trace_msg('     Which was: ','~p~n',[P])),
   
-  ((pfc_rem_support(P,S)
+  ((pfcRemSupport(P,S)
      -> removeIfUnsupported(P)
       ; pfcWarn("pfc_withdraw/2 Could not find support ~p to remove from fact ~p",
                 [S,P]))).
@@ -416,13 +416,13 @@ remove(F) :-
 % removes any remaining supports for fact F, complaining as it goes.
 
 pfcRemoveSupports(F) :- 
-  pfc_rem_support(F,S),
+  pfcRemSupport(F,S),
   pfcWarn("~p was still supported by ~p",[F,S]),
   fail.
 pfcRemoveSupports(_).
 
 pfc_remove_supports_quietly(F) :- 
-  pfc_rem_support(F,_),
+  pfcRemSupport(F,_),
   fail.
 pfc_remove_supports_quietly(_).
 
@@ -485,12 +485,12 @@ pfcUnFcCheckTriggers(_).
 
 pfcRetractSupportRelations(Fact) :-
   pfcType(Fact,Type),
-  (Type=trigger -> pfc_rem_support(P,(_,Fact))),
+  (Type=trigger -> pfcRemSupport(P,(_,Fact))),
   removeIfUnsupported(P),
   fail.
 pfcRetractSupportRelations(Fact) :-
   % pfcType(Fact,Type),
-  pfc_rem_support(P,(Fact,_)),
+  pfcRemSupport(P,(Fact,_)),
   removeIfUnsupported(P),
   fail.
 pfcRetractSupportRelations(_).
@@ -587,24 +587,24 @@ fc1(Fact) :-
 %% a rule.
 %% 
 
-fc_rule_check((P=>Q)) :-  
+fc_rule_check((P==>Q)) :-  
   !,  
-  processRule(P,Q,(P=>Q)).
-fc_rule_check((Name::::P=>Q)) :- 
+  processRule(P,Q,(P==>Q)).
+fc_rule_check((Name::::P==>Q)) :- 
   !,  
-  processRule(P,Q,(Name::::P=>Q)).
-fc_rule_check((P<=>Q)) :- 
+  processRule(P,Q,(Name::::P==>Q)).
+fc_rule_check((P<==>Q)) :- 
   !, 
-  processRule(P,Q,(P<=>Q)), 
-  processRule(Q,P,(P<=>Q)).
-fc_rule_check((Name::::P<=>Q)) :- 
+  processRule(P,Q,(P<==>Q)), 
+  processRule(Q,P,(P<==>Q)).
+fc_rule_check((Name::::P<==>Q)) :- 
   !, 
-  processRule(P,Q,((Name::::P<=>Q))), 
-  processRule(Q,P,((Name::::P<=>Q))).
+  processRule(P,Q,((Name::::P<==>Q))), 
+  processRule(Q,P,((Name::::P<==>Q))).
 
-fc_rule_check(('<='(P,Q))) :-
+fc_rule_check(('<-'(P,Q))) :-
   !,
-  pfcDefineBcRule(P,Q,('<='(P,Q))).
+  pfcDefineBcRule(P,Q,('<-'(P,Q))).
 
 fc_rule_check(_).
 
@@ -803,54 +803,67 @@ undoable(A) :- umt(fcUndoMethod(A,_)).
 
 
 pfc_nf(LHS,List) :-
-  pfc_nf1(LHS,List2),
+  mpred_nf1(LHS,List2),
   pfc_nf_negations(List2,List).
 
 
-%% pfc_nf1(+In,-Out) maps the LHR of a pfc rule In to one normal form
+%% mpred_nf1(+In,-Out) maps the LHR of a pfc rule In to one normal form
 %% Out.  Backtracking into this predicate will produce additional clauses.
 
 % handle a variable.
 
-pfc_nf1(P,[P]) :- var(P), !.
+mpred_nf1(P,[P]) :- is_ftVar(P), !.
+
+
+mpred_nf1(P/Cond,[(\+P)/Cond]):- mpred_negated_literal(P), !, dmsg(warn(mpred_nf1(P/Cond,[(\+P)/Cond]))).
+
+mpred_nf1(P/Cond,[P/Cond]):- var(P),!.
+mpred_nf1(P/Cond,[P/Cond]):- ((mpred_db_type(P,trigger);mpred_literal(P))), !.
+
 
 % these next two rules are here for upward compatibility and will go 
 % away eventually when the P/Condition form is no longer used anywhere.
 
-pfc_nf1(P/Cond,[(\+P)/Cond]) :- pfcNegatedLiteral(P), !.
+mpred_nf1(P/Cond,[(\+P)/Cond]) :- pfcNegatedLiteral(P), !.
 
-pfc_nf1(P/Cond,[P/Cond]) :-  pfcAtom(P), !.
+mpred_nf1(P/Cond,[P/Cond]) :-  pfcAtom(P), !.
 
 %% handle a negated form
 
-pfc_nf1(NegTerm,NF) :-
+mpred_nf1(NegTerm,NF) :-
   pfc_negation(NegTerm,Term),
   !,
   pfc_nf1_negation(Term,NF).
 
 %% disjunction.
 
-pfc_nf1((P;Q),NF) :- 
+mpred_nf1((P;Q),NF) :- 
   !,
-  (pfc_nf1(P,NF) ;   pfc_nf1(Q,NF)).
+  (mpred_nf1(P,NF) ;   mpred_nf1(Q,NF)).
 
 
 %% conjunction.
 
-pfc_nf1((P,Q),NF) :-
+mpred_nf1((P,Q),NF) :-
   !,
-  pfc_nf1(P,NF1),
-  pfc_nf1(Q,NF2),
+  mpred_nf1(P,NF1),
+  mpred_nf1(Q,NF2),
   append(NF1,NF2,NF).
+
+
+% prolog_clause mpred_nf1
+mpred_nf1((H :- B)  , [(H :- B)]):-  
+  mpred_positive_literal(H),!.
+
 
 %% handle a random atom.
 
-pfc_nf1(P,[P]) :- 
+mpred_nf1(P,[P]) :- 
   pfcAtom(P), 
   !.
 
 %%% shouln't we have something to catch the rest as errors?
-pfc_nf1(Term,[Term]) :-
+mpred_nf1(Term,[Term]) :-
   pfcWarn("pfc_nf doesn't know how to normalize ~p",[Term]).
 
 
@@ -868,7 +881,7 @@ pfc_nf1_negation((P,Q),NF) :-
   !,
   pfc_nf1_negation(P,NF) 
   ;
-  (pfc_nf1(P,Pnf),
+  (mpred_nf1(P,Pnf),
    pfc_nf1_negation(Q,Qnf),
    append(Pnf,Qnf,NF)).
 
@@ -892,6 +905,138 @@ pfc_nf_negation(Form,{\+ X}) :-
   Form=(~({X})),
   !.
 pfc_nf_negation(X,X).
+
+
+
+
+     %% mpred_unnegate(+N, ?P) is semidet.
+     %
+     %  is true if N is a negated term and P is the term
+     %  with the negation operator stripped.  (not Logical ~ negation however)
+     %
+     mpred_unnegate(P,_):- is_ftVar(P),!,fail.
+     mpred_unnegate((\+(P)),P).
+     mpred_unnegate((-P),P).
+
+
+
+     %% mpred_negated_literal(+P) is semidet.
+     %
+     % PFC Negated Literal.
+     %
+     mpred_negated_literal(P):-
+       mpred_unnegate(P,Q),
+       mpred_positive_literal(Q).
+
+     orig_2_0_mpred_literal(X):- is_ftVar(X),!.
+     orig_2_0_mpred_literal(X):- mpred_negated_literal(X),!.
+     orig_2_0_mpred_literal(X):- mpred_positive_literal(X),!.
+
+     mpred_is_trigger(X):-   mpred_db_type(X,trigger).
+
+     mpred_positive_fact(X):-  mpred_positive_literal(X), X \= ~(_), mpred_db_type(X,fact(_FT)), \+ mpred_db_type(X,trigger).
+
+     mpred_positive_literal(X):-
+       is_ftNonvar(X),
+       \+ mpred_db_type(X,rule(_RT)),
+       get_functor(X,F,_),
+       \+ mpred_neg_connective(F),
+       !.
+
+
+     mpred_connective(Var):-var(Var),!,fail.
+     mpred_connective(';').
+     mpred_connective(',').
+     mpred_connective('/').
+     mpred_connective('{}').
+     mpred_connective('|').
+     mpred_connective(('==>')).
+     mpred_connective(('<-')).
+     mpred_connective('==>').
+     mpred_connective('-').
+     % mpred_connective('~').
+     mpred_connective(('\\+')).
+
+
+     mpred_neg_connective('-').
+     % mpred_neg_connective('~').
+     mpred_neg_connective('\\+').
+
+     is_simple_lhs(ActN):- is_ftVar(ActN),!,fail.
+     is_simple_lhs( \+ _ ):-!,fail.
+     is_simple_lhs( ~ _ ):-!,fail.
+     is_simple_lhs( _  / _ ):-!,fail.
+     is_simple_lhs((Lhs1,Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
+     is_simple_lhs((Lhs1;Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
+     is_simple_lhs(ActN):- is_active_lhs(ActN),!,fail.
+     is_simple_lhs((Lhs1/Lhs2)):- !,fail, is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
+     is_simple_lhs(_).
+
+
+     is_active_lhs(ActN):- var(ActN),!,fail.
+     is_active_lhs(!).
+     is_active_lhs(cut_c).
+     is_active_lhs(actn(_Act)).
+     is_active_lhs('{}'(_Act)).
+     is_active_lhs((Lhs1/Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+     is_active_lhs((Lhs1,Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+     is_active_lhs((Lhs1;Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+
+
+     add_lhs_cond(Lhs1/Cond,Lhs2,Lhs1/(Cond,Lhs2)):-!.
+     add_lhs_cond(Lhs1,Lhs2,Lhs1/Lhs2).
+
+
+     %% constrain_meta(+Lhs, ?Guard) is semidet.
+     %
+     % Creates a somewhat sane Guard.
+     %
+     % To turn this feature off...
+     % ?- set_prolog_flag(constrain_meta,false).  
+     %
+     %
+     constrain_meta(_,_):- current_prolog_flag(constrain_meta,false),!,fail.
+     % FACT
+     constrain_meta(P,mpred_positive_fact(P)):- is_ftVar(P),!.
+     % NEG chaining
+     constrain_meta(~ P, CP):- !,  constrain_meta(P,CP).
+     constrain_meta(\+ P, CP):- !,  constrain_meta(P,CP).
+     % FWD chaining
+     constrain_meta((_==>Q),nonvar(Q)):- !, is_ftVar(Q).
+     % EQV chaining
+     constrain_meta((P<==>Q),(nonvar(Q);nonvar(P))):- (is_ftVar(Q);is_ftVar(P)),!.
+     % BWD chaining
+     constrain_meta((Q <- _),mpred_literal(Q)):- is_ftVar(Q),!.
+     constrain_meta((Q <- _),CQ):- !, constrain_meta(Q,CQ).
+     % CWC chaining
+     constrain_meta((Q :- _),mpred_literal(Q)):- is_ftVar(Q),!.
+     constrain_meta((Q :- _),CQ):- !, constrain_meta(Q,CQ).
+
+
+
+%% mpred_db_type(+VALUE1, ?Type) is semidet.
+%
+% PFC Database Type.
+%
+%  simple typeing for Pfc objects
+%
+mpred_db_type(Var,Type):- var(Var),!, Type=fact(_FT).
+mpred_db_type(_:X,Type):- !, mpred_db_type(X,Type).
+mpred_db_type(~_,Type):- !, Type=fact(_FT).
+mpred_db_type(('==>'(_,_)),Type):- !, Type=rule(fwd).
+mpred_db_type(('==>'(_,_)),Type):- !, Type=rule(==>).
+mpred_db_type(('<-'(_,_)),Type):- !, Type=rule(bwc).
+mpred_db_type((':-'(_,_)),Type):- !, Type=rule(cwc).
+mpred_db_type(pt(_,_,_),Type):- !, Type=trigger.
+mpred_db_type(pt(_,_),Type):- !, Type=trigger.
+mpred_db_type(nt(_,_,_),Type):- !,  Type=trigger.
+mpred_db_type(bt(_,_),Type):- !,  Type=trigger.
+mpred_db_type(actn(_),Type):- !, Type=action.
+mpred_db_type((('::::'(_,X))),Type):- !, mpred_db_type(X,Type).
+mpred_db_type(_,fact(_FT)):-
+  %  if it''s not one of the above, it must_ex be a fact!
+  !.
+
 
 
 %%
@@ -918,6 +1063,7 @@ pfcCompileRhsTerm(P,P).
 %% pfc_negation(N,P) is true if N is a negated term and P is the term
 %% with the negation operator stripped.
 
+pfc_negation(P,_):- is_ftVar(P),!,fail.
 pfc_negation((~P),P).
 pfc_negation((-P),P).
 pfc_negation((\+(P)),P).
@@ -939,12 +1085,16 @@ pfcConnective(';').
 pfcConnective(',').
 pfcConnective('/').
 pfcConnective('|').
-pfcConnective(('=>')).
-pfcConnective(('<=')).
-pfcConnective('<=>').
+pfcConnective(('==>')).
+pfcConnective(('<-')).
+pfcConnective('<==>').
+
+pfcConnective(('==>')).
+pfcConnective(('<-=')).
+pfcConnective('==>').
 
 pfcConnective('-').
-pfcConnective('~').
+%pfcConnective('~').
 pfcConnective(( \+ )).
 
 processRule(Lhs,Rhs,ParentRule) :-
@@ -1019,9 +1169,9 @@ buildTest(Test,Test).
 
 %% simple typeing for pfc objects
 
-pfcType(('=>'(_,_)),Type) :- !, Type=rule.
-pfcType(('<=>'(_,_)),Type) :- !, Type=rule.
-pfcType(('<='(_,_)),Type) :- !, Type=rule.
+pfcType(('==>'(_,_)),Type) :- !, Type=rule.
+pfcType(('<==>'(_,_)),Type) :- !, Type=rule.
+pfcType(('<-'(_,_)),Type) :- !, Type=rule.
 pfcType(pt(_,_,_),Type) :- !, Type=trigger.
 pfcType(pt(_,_),Type) :- !, Type=trigger.
 pfcType(nt(_,_,_),Type) :- !,  Type=trigger.
@@ -1098,6 +1248,5 @@ pfcConjoin(C1,C2,(C1,C2)).
 */
 
 :- fixup_exports.
-
 
 

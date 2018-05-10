@@ -7,7 +7,7 @@
    )).
 :- endif.
 
-:- throw(module(pfc_umt,[umt/1])).
+%:- throw(module(pfc_umt,[umt/1])).
 
 :- module(pfcxform,[
     op(500,fx,'~'),

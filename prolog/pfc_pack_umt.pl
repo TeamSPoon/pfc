@@ -1,7 +1,7 @@
 
+% :- throw(module(pfc_umt,[umt/1])).
 :- module(pfc_umt,[umt/1]).
 
-:- throw(module(pfc_umt,[umt/1])).
 :- 
     op(1050,xfx,('==>')),
     op(1050,xfx,'<==>'),
@@ -66,7 +66,8 @@ get_clause_head(P:-_,H):-!,get_clause_head(P,H).
 get_clause_head(_:P,H):- get_clause_head(P,H).
 get_clause_head(H,H).
 
-get_unnegated_head(P,H):- get_clause_head(P,M),((current_predicate(pfc_negation/2),pfc_negation(M,H))->true;M=H).
+get_unnegated_head(P,H):- get_clause_head(P,M),((current_predicate(pfc_negation/2),
+  pfc_negation(M,H))->true;M=H).
 
 get_unnegated_functor(P,F,A):-get_unnegated_head(P,H),!,functor(H,F,A).
 
@@ -84,6 +85,7 @@ mpred_trace_exec :- pfcWatch.
 %
 erase_w_attvars(Data0,Ref):- attempt_side_effect(erase(Ref)),add_side_effect(erase,Data0).
 
+ensure_abox(Mt):- maybe_ensure_abox(Mt).
 
 :- meta_predicate(maybe_ensure_abox(:)).
 
@@ -95,11 +97,14 @@ maybe_ensure_abox(Mt):-
 :- multifile(pfc_umt:pfcDatabaseTerm_DYN/1).
 :- dynamic(pfc_umt:pfcDatabaseTerm_DYN/1).
 
-quietly_ex(G):- quietly(G),!.
+%quietly_ex(G):- quietly(G),!.
+quietly_ex(G):- quietly(umt((G))),!.
+
+%trace_or_throw_ex(G):- trace_or_throw_ex(G).
 
 trace_or_throw_ex(G):- log_failure,trace_or_throw_ex(G).
 
-pfc_umt:pfcDatabaseTerm_DYN(FA):-pfcDatabaseTerm(FA).
+%pfc_umt:pfcDatabaseTerm_DYN(FA):- pfcDatabaseTerm(FA).
 pfc_umt:pfcDatabaseTerm_DYN(FA):- member(FA,[never_retract_u/2,never_retract_u/1,never_assert_u/2,never_assert_u/1]).
 %% check_never_assert(+Pred) is semidet.
 %
@@ -140,7 +145,7 @@ kb_shared_local(M,I,F/A):- I:kb_local(M:F/A),functor(P,F,A),
    CM==M))))).
  
 maybe_ensure_abox(M,I) :-
-  add_import_module(Mt,pfc_lib,end),
+  add_import_module(M,pfc_lib,end),
   M:import(pfccore:pfcDefault/2),
   I:import(pfccore:pfcDefault/2),
  % pfc_umt:abox_pred_list(PREDS)-> must_maplist(kb_shared_local(M,I),PREDS),
@@ -255,6 +260,20 @@ should_call_for_facts(_,F,_):- \+ a(pfcControlled,F),!.
 
 
 a(C,I):-umt(((current_predicate(C/1),call(C,I)))).
+
+
+
+%% is_relative( :TermV) is semidet.
+%
+% If Is A Relative.
+%
+is_relative(V):- (\+is_ftCompound(V)),!,fail.
+is_relative(update(_)).
+is_relative(replace(_)).
+is_relative(rel(_)).
+is_relative(+(X)):- \+ is_ftVar(X).
+is_relative(-(X)):- \+ is_ftVar(X).
+is_relative(*(X)):- \+ is_ftVar(X).
 
 
 
@@ -373,8 +392,12 @@ is_source_ref1(_).
 % ======================= 
 % user''s program''s database
 % ======================= 
-clause_u(X,Y):-umt(clause(X,Y)).
-clause_u(X,Y,Z):-umt(clause(X,Y,Z)).
+%clause_u(X,Y,Z):-umt(clause(X,Y,Z)).
+clause_u(A,B,C):- umt(clause_i(A,B,C)).
+%clause_u(X,Y):-umt(clause(X,Y)).
+clause_u(A,B):- umt(clause_i(A,B)).
+clause_u(A):- clause_i(A).
+clause_asserted_u(A) :- clause_asserted_i(A).
 
 
 %% assert_u(:X) is det.
@@ -408,8 +431,10 @@ assertz_mu(M,P):- op_dir_mu(assert,assertz,M,P).
 %
 assert_mu_fa(M,M2:Pred,F,A):- M == M2,!, assert_mu(M,Pred,F,A).
 assert_mu_fa(M,_:Pred,F,A):- dtrace,sanity(\+ is_ftVar(Pred)),!, assert_mu(M,Pred,F,A).
-assert_mu_fa(M,Pred,F,_):- clause_b(singleValuedInArg(F,SV)),!,must(update_single_valued_arg(M,Pred,SV)),!.
-assert_mu_fa(M,Pred,F,A):- a(prologSingleValued,F),!,must(update_single_valued_arg(M,Pred,A)),!.
+
+%assert_mu_fa(M,Pred,F,_):- clause_b(singleValuedInArg(F,SV)),!,must(update_single_valued_arg(M,Pred,SV)),!.
+%assert_mu_fa(M,Pred,F,A):- a(prologSingleValued,F),!,must(update_single_valued_arg(M,Pred,A)),!.
+
 assert_mu_fa(M,Pred,F,_):- a(prologOrdered,F),!,op_dir_mu(assert,assertz,M,Pred).
 assert_mu_fa(M,Pred,_,_):- t_l:assert_to(Where),!, (Where = a -> op_dir_mu(assert,asserta,M,Pred); op_dir_mu(assert,assertz,M,Pred)).
 assert_mu_fa(M,Pred,_,1):- !, op_dir_mu(assert,assertz,M,Pred),!.

@@ -37,10 +37,6 @@
 
 :- file_begin(pfc).
 
-p(a).
-p(b).
-
+p(a). p(b).
 single_override(p(a),p(b)).
-
-:- prolog.
 

@@ -46,12 +46,13 @@ someSV_testing(a,c,3).
 arity(someSV_testing,3).
 singleValuedInArg(someSV_testing,3).
 
+%:- rtrace.
 someSV_testing(a,c,4).
 
 :- listing(someSV_testing/3).
 :- sanity(someSV_testing(a,c,4)).
 :- sanity(someSV_testing(a,b,2)).
 :- sanity( \+ someSV_testing(a,b,1)).
-:- mpred_notrace_exec.
+%:- mpred_notrace_exec.
 
 

@@ -38,9 +38,9 @@
 :- file_begin(pfc).
 
                  
-baseKB:prologSingleValued(inChair/1).
+prologSingleValued(inChair/1).
 
-:- import(baseKB:inChair/1).
+:- sanity(singleValuedInArgAX(inChair,1,1)).
 
 dmilesWorld.
 dmilesWorld ==> inChair(a).
