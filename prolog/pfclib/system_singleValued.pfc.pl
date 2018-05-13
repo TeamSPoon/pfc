@@ -47,7 +47,8 @@ singleValuedInArg(singleValuedInArgDefault,3).
    {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)})
        ==> 
   (( P ==> 
-        ({P_SLOT\=isMissing,call(dif:dif(Q_SLOT,P_SLOT)),call_u(Q),ground(Q)}, single_override(P,Q)))).
+        ({P_SLOT\=isMissing,call(dif:dif(Q_SLOT,P_SLOT)),
+          call_u(Q),ground(Q)}, (\+ Q, single_override(P,Q))))).
 
 
 ((single_override(P,Q), {ignore(retract(Q))}) ==>
