@@ -471,7 +471,7 @@ rtArgsVerbatum(second_order).
 %prologBuiltin(resolveConflict/1).
 
 % :- kb_shared(bt/2).
-(bt(P,_)/(nonvar(P),get_bc_clause(P,Post))) ==> ({kb_shared(P)},Post).
+(bt(P,_)/(nonvar(P),must(get_bc_clause(P,Post)))) ==> ({ignore(kb_shared(P))},Post).
 
 %redundantMaybe ==> ((prologHybrid(F),arity(F,A))==>prop_mpred(M,pfcVisible,F,A)).
 %redundantMaybe ==> (prop_mpred(M,pfcVisible,F,A)==>prologHybrid(F),arity(F,A)).

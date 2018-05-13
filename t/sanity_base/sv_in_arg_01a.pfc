@@ -45,29 +45,30 @@ singleValuedInArg(someSV_testeed,3).
 
 :- mpred_test(singleValuedInArgAX(someSV_testeed,3,3)).
 
-
 someSV_testeed(a,b,1).
-:- (ain(someSV_testeed(a,b,2))).
+someSV_testeed(a,b,2).
+
 :- listing(someSV_testeed/3).
-
-
-someSV_testeed(a,c,3).
-
 :- mpred_test( \+ someSV_testeed(a,b,1)).
 :- mpred_test(    someSV_testeed(a,b,2)).
 
 :- ain(someSV_testeed(a,b,1)).
 
+:- listing(someSV_testeed/3).
 :- mpred_test(   someSV_testeed(a,b,1)).
 :- mpred_test(\+ someSV_testeed(a,b,2)).
 
 :- ain(someSV_testeed(a,b,2)).
+
 :- listing(someSV_testeed/3).
-
-someSV_testeed(a,c,3).
-
 :- mpred_test( \+ someSV_testeed(a,b,1)).
 :- mpred_test(    someSV_testeed(a,b,2)).
+
+:- ain(someSV_testeed(a,b,1)).
+
+:- listing(someSV_testeed/3).
+:- mpred_test(   someSV_testeed(a,b,1)).
+:- mpred_test(\+ someSV_testeed(a,b,2)).
 
 :- ain((\+ someSV_testeed(a,b,1))).
 
