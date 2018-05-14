@@ -60,9 +60,6 @@ kb_global_w(M:F/A):-
 :- kb_global_w(baseKB:rtArgsVerbatum/1).
 
 
-
-
-
 :- kb_shared(baseKB:never_assert_u/1).
 :- kb_shared(baseKB:never_assert_u/2).
 :- kb_shared(baseKB:never_retract_u/1).
