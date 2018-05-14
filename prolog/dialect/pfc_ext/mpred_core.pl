@@ -1255,7 +1255,7 @@ mpred_post12_negated( P,   S):- mpred_withdraw_fail_if_supported(P,S), show_call
 mpred_post12_negated( P,   S):- mpred_remove2(P,S), show_call( \+ mpred_supported(P)),!,show_call( mpred_post13(~P,S)),!.
 mpred_post12_negated( P,   S) :- mpred_get_support(P,S2), 
     color_line(magenta,2),
-    dmsg((mpred_post12( ~ P,   S) :- get_support(P,S2))),
+    dmsg((mpred_post12( ~ P,   S) :- mpred_get_support(P,S2))),
     color_line(magenta,1),color_line(green,1),color_line(yellow,1),
     color_line(magenta,1),color_line(green,1),color_line(yellow,1),
     color_line(magenta,1),color_line(green,1),color_line(yellow,1),
@@ -1913,7 +1913,7 @@ mpred_withdraw_fail_if_supported_maybe_warn(unKnown_suppoRt,P):-
             ; (( nop(mpred_withdraw_fail_if_supported_maybe_warn(SS,P)),
                   \+ show_still_supported(P))))).
 mpred_withdraw_fail_if_supported_maybe_warn(S,P):- 
-  get_support(P,S,SS),
+  mpred_get_support(P,S),SS=S,
         (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg(found(mpred_rem_support3(P,S))))
            -> (remove_if_unsupported(P),retractall(t_l:busy(_)))
             ; (( nop(mpred_withdraw_fail_if_supported_maybe_warn(SS,P)),
