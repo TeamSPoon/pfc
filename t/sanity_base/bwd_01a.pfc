@@ -44,8 +44,6 @@ bc_p(b).
 % Are we cleaning up backchains?
 :- xlisting(bc_q/1).
 
-:- break.
-
 :- mpred_test(((mpred_retract(((bc_q(N) <- bc_p(N))))),\+ clause(bc_q(_),true))).
 
 

@@ -1592,9 +1592,9 @@ map_f(F,F):-!.
 %
 ex_argIsa(P,N,C):- clause(_:argIsa(P,N,C),true).
 
-
+db_expand_argIsa(P,_):- \+ compound(P),!,fail.
+db_expand_argIsa(P,_):- is_dict(P),!,fail.
 db_expand_argIsa(P,PO):- 
-  compound(P),
   P=..[ARE,FF,AA],
    atom_concat('arg',REST,ARE),
    member(E,['Genl','Isa','SometimesIsa','Format','QuotedIsa']),atom_concat(N,E,REST),
@@ -1603,7 +1603,6 @@ db_expand_argIsa(P,PO):-
   PO=..[AE,FF,NN,AA],!.
 
 db_expand_argIsa(P,PO):- 
-  compound(P),
   P=..[ARE,FF,C1,C2],
    atom_concat('interArg',REST,ARE),
    member(E,['Isa','Genl','Format','QuotedIsa','GenlQuantity','NotIsa','SometimesIsa','NotQuotedIsa']),
@@ -1615,7 +1614,6 @@ db_expand_argIsa(P,PO):-
   PO=..[AE,FF,N1,C1,N2,C2],!.
 
 db_expand_argIsa(P,PO):- 
-  compound(P),
   P=..[ARE,FF,AA,RESULT],
    atom_concat('interArg',REST,ARE),
    member(E,['ResultGenl','ResultIsa','ResultNotIsa','ResultSometimesIsa','ResultFormat','ResultQuotedIsa','ResultNotQuotedIsa']),

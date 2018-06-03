@@ -388,7 +388,7 @@ record_se:- (t_l:use_side_effect_buffer ; t_l:verify_side_effect_buffer).
 % Add Side Effect.
 %
 add_side_effect(_,_):- ( \+  record_se ),!.
-add_side_effect(Op,Data0):-get_source_ref1(Why),serialize_attvars(Data0,Data),assert(t_l:side_effect_buffer(Op,Data,Why)).
+add_side_effect(Op,Data0):- current_why(Why),serialize_attvars(Data0,Data),assert(t_l:side_effect_buffer(Op,Data,Why)).
 
 
 %% attvar_op( +:PRED1, ?Data) is semidet.
@@ -907,7 +907,7 @@ update_single_valued_arg(M,P,N):-
   replace_arg(P,N,Q_SLOT,Q),
   var(Q_SLOT),
   same_functors(P,Q),
-  % get_source_ref1(U),
+  % current_why(U),
   must_det_l((
      % rtrace(attvar_op(assert_if_new,M:spft(P,U,ax))),
      % (call_u(P)->true;(assertz_mu(P))),
@@ -1045,7 +1045,7 @@ clause_asserted_local(MCL):-
 % If Is A Already Supported.
 %
 is_already_supported(P,(S,T),(S,T)):- clause_asserted_local(spft(P,S,T)),!.
-is_already_supported(P,_S,UU):- clause_asserted_local(spft(P,US,UT)),must(get_source_ref(UU)),UU=(US,UT).
+is_already_supported(P,_S,UU):- clause_asserted_local(spft(P,US,UT)),must(get_source_uu(UU)),UU=(US,UT).
 
 % TOO UNSAFE 
 % is_already_supported(P,_S):- copy_term_and_varnames(P,PC),sp ftY(PC,_,_),P=@=PC,!.

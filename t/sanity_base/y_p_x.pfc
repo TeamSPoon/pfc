@@ -1,12 +1,10 @@
 #!/usr/bin/env swipl
 %
-%  PFC is ':A' language extension for prolog.. there is so much that can be done in this language extension to Prolog
+%  PFC is a language extension for prolog.
 %
 % Dec 13, 2035
 % Douglas Miles
 
-% Still amodule scoping bug? Nope
-%  was_module(y_p_x_t,[]).
 
 :- include(test_header).
 

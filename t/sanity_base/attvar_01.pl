@@ -5,7 +5,7 @@
 
 :- ensure_loaded(library(attvar_reader)).
 
-:- pfc_test_feature(mt,must_not_be_pfc_file).
+%:- pfc_test_feature(mt,must_not_be_pfc_file).
 
 sk1:attr_unify_hook(_,_).
 

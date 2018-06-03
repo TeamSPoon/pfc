@@ -342,7 +342,8 @@ maybe_ensure_abox(M):- show_call(not_is_pfc_file,ensure_abox(M)).
 
 
 :- module_transparent((ensure_abox)/1).
-ensure_abox(M):- add_import_module(M,pfc_lib,end), dynamic(M:defaultTBoxMt/1),must(ensure_abox_support(M,baseKB)),!.
+ensure_abox(M):- (M==user->true;add_import_module(M,pfc_lib,end)), dynamic(M:defaultTBoxMt/1),
+  must(ensure_abox_support(M,baseKB)),!.
 :- module_transparent((ensure_abox_support)/2).
 ensure_abox_support(M,TBox):- clause_b(M:defaultTBoxMt(TBox)),!.
 ensure_abox_support(M,TBox):- asserta(M:defaultTBoxMt(TBox)),
@@ -355,7 +356,7 @@ ensure_abox_support(M,TBox):- asserta(M:defaultTBoxMt(TBox)),
   must(setup_module_ops(M)),!.
   
 ensure_abox_support(M,TBox):- 
-       system:add_import_module(M,user,end),
+       % system:add_import_module(M,user,end),
        must(ignore(system:delete_import_module(M,system))),
        system:add_import_module(M,system,end),
        retractall(M:defaultTBoxMt(TBox)),throw(failed_ensure_abox_support(M,TBox)).

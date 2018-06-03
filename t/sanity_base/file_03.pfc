@@ -11,6 +11,10 @@
 %  was_module(sanity,[]).
 
 :- include(test_header).
-:- make.
+%:- make.
 
 :- wdmsg(test_was_dupe).
+
+              
+
+

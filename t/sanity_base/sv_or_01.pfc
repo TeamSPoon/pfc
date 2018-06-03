@@ -40,3 +40,6 @@
 p(a). p(b).
 single_override(p(a),p(b)).
 
+:- listing(p/1).
+
+

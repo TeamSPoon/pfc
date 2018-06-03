@@ -52,12 +52,19 @@
 :- set_prolog_flag(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
 
 :- if((current_prolog_flag(runtime_debug,D),D>1)).
-:- '$def_modules'([clause_expansion/2],O),dmsg(O),nl.
-:- make:list_undefined([]).
 :- endif.
+:- '$def_modules'([clause_expansion/2],O),dmsg('$def_modules'([clause_expansion/2],O)),nl.
+:- make:list_undefined([]).
 
 :- sanity(is_pfc_file).
 
+:- dynamic(pfcSanityA/0).
+:- dynamic(pfcSanityB/0).
+%:- trace.
+pfcSanityA==>pfcSanityB.
+:- \+ clause(pfcSanityB,true).
+pfcSanityA.
+:- clause(pfcSanityB,true).
 
 % :- kb_shared( ('~') /1).
 :- kb_shared(mtExact/1).
@@ -75,6 +82,7 @@
 :- kb_shared(tooSlow/0).
 :- kb_shared(ttRelationType/1).
 :- kb_shared(singleValuedInArg/2).
+%:- kb_shared(singleValuedInArgAX/3).
 :- kb_shared(functorIsMacro/1).
 :- kb_shared(support_hilog/2).
 :- kb_shared(mpred_undo_sys/3).
@@ -130,13 +138,29 @@
 
 ((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C),(C==user->dmsg(warn(mtHybrid(C)));true)}).
 
+predicateTriggerType(kb_local).
+predicateTriggerType(kb_shared).
+predicateTriggerType(kb_global).
+predicateTriggerType(kbi_define).
+
 % TODO make these undoable
 :- if((current_predicate(predicate_m_f_a_decl/4))).
-(genlMt(C,P)/(C\=baseKB)) ==> {doall(((predicate_m_f_a_decl(P,F,A,Type)),nop(dmsg(C:call(Type,C:F/A))),show_failure(on_x_fail(C:call(Type,C:F/A)))))}.
+(genlMt(C,M)/(C\=baseKB)) ==> {doall(((predicate_m_f_a_decl(M,F,A,Type)),
+  ain(baseKB:mpred_prop(M,F,A,Type))))}.
+
+predicateTriggerType(Type) ==>
+(( mpred_prop(M,F,A,Type),genlMt(C,M)/(C\=baseKB)) ==> {
+ ( nop(dmsg(C:call(Type,C:F/A))),
+   show_failure(on_x_fail(C:call(Type,C:F/A))))}).
+
+
 :- else.
+
+:- break.
 (genlMt(C,P)/(C\=baseKB)) ==> {doall(((pred_decl_kb_mfa_type(P,F,A,Type)),C:call(Type,C:F/A)))}.
 :- endif.
-(genlMt(C,P)/(is_ftNonvar(C),is_ftNonvar(P),P\==baseKB,(mtProlog(C);mtProlog(P))) ==> {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}).
+
+(genlMt(C,P)/(is_ftNonvar(C),is_ftNonvar(P),P\==baseKB,(mtProlog(C);mtProlog(P))) ==> {P\==user,catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}).
 
 %(do_import_modules,genlMt(C,P),mtHybrid(C),mtProlog(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}.
 %(do_import_modules,genlMt(C,P),mtProlog(C),mtHybrid(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}.
@@ -175,6 +199,7 @@ functorDeclares(RT)==> % {kb_shared(RT/1)},
 
 :- kb_shared(baseKB:compilerDirective/1).
 functorDeclares(compilerDirective).
+%compilerDirective(F)==>{kb_global(F/0)}.
 compilerDirective(F)==>{kb_shared(F/0)}.
 
 compilerDirective(hardCodedExpansion,comment("Is Already Implemented From Code")).
@@ -241,10 +266,14 @@ do_and_undo(A,U):-cwc,atom(A),atom_concat('def',_,A),atom_concat('un',A,U),curre
 do_and_undo(A,U):-cwc,strip_module(A,M,P),compound(P),P=..[F|ARGS],lookup_u(do_and_undo(F,UF)),UA=..[UF|ARGS], U = (M:UA).
 ll:- cwc,call(listing,[isa/2,mtHybrid/1,col_as_unary/1, tRRP2/1,tRR/1,tRRP/1]). % ttTypeType,
 
+:- is_pfc_file.
 
-
-arity(arity,2).
+:- ain(arity(arity,2)).
+:- ain(arity(do_and_undo,2)).
+%:- rtrace.
+%:- trace.
 arity(functorIsMacro,1).
+%:- break.
 functorIsMacro(functorIsMacro).
 
 ((prologHybrid(F),arity(F,A))==>{kb_shared(F/A)}).

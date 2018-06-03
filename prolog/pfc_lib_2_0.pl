@@ -48,6 +48,7 @@ kb_global_w(M:F/A):-
 :- dynamic(rdf_rewrite:(~)/1).
 :- kb_global_w(rdf_rewrite:arity/2).
 :- kb_global_w(baseKB:genlMt/2).
+:- kb_global_w(baseKB:predicateTriggerType/1).
 :- kb_global_w(baseKB:mpred_prop/4).
 :- kb_global_w(baseKB:mtHybrid/1).
 :- kb_global_w(baseKB:mtProlog/1).
@@ -58,6 +59,8 @@ kb_global_w(M:F/A):-
 :- kb_global_w(baseKB:mtNotInherits/1).
 :- kb_global_w(baseKB:mtInherits/1).
 :- kb_global_w(baseKB:rtArgsVerbatum/1).
+:- kb_global_w(baseKB:prologHybridType/3).
+
 
 
 :- kb_shared(baseKB:never_assert_u/1).
@@ -277,6 +280,7 @@ baseKB:mpred_skipped_module(eggdrop).
 
 :- use_module(library(subclause_expansion)).
 :- reexport(library('pfc2.0/mpred_core.pl')).
+:- system:reexport(library('pfc2.0/mpred_justify.pl')).
 :- system:reexport(library('pfc2.0/mpred_at_box.pl')).
 
 :- user:use_module(library('file_scope')).
@@ -373,7 +377,7 @@ in_clause_expand(_).
 
 
 % SHOULD NOT NEED THIS 
-%          maybe_should_rename(M,O):-current_prolog_flag(do_renames,term_expansion),if_defined(do_renames(M,O)),!.
+%   maybe_should_rename(M,O):-current_prolog_flag(do_renames,term_expansion),if_defined(do_renames(M,O)),!.
 maybe_should_rename(O,O).
 
 
@@ -421,8 +425,15 @@ is_pfc_module(SM):- clause_b(mtHybrid(SM)).
 must_not_be_pfc_file:- is_pfc_file0, rtrace(is_pfc_file0),trace,!,fail.
 must_not_be_pfc_file:- !.
 
+:- export(must_not_be_pfc_file/0).
+:- header_sane:import(must_not_be_pfc_file/0).
+
+
 is_pfc_file:- current_prolog_flag(never_pfc,true),!,must_not_be_pfc_file,!,fail.
 is_pfc_file:- quietly(is_pfc_file0),!.
+
+:- export(is_pfc_file/0).
+:- header_sane:import(is_pfc_file/0).
 
 is_pfc_file0:- source_location(File,_W),!,is_pfc_file(File),!.
 is_pfc_file0:- prolog_load_context(module, M),is_pfc_module(M),!,clause_b(mtHybrid(M)).
@@ -466,6 +477,7 @@ must_pfc(IM,SM:'==>'(IM)):- (in_dialect_pfc;must_pfc_p(IM)),!,source_module(SM),
 must_pfc_exp(IM,MO):- in_dialect_pfc,fully_expand(IM,MO),!.
 must_pfc_exp(IM,MO):- must_pfc_p(IM),!,fully_expand(IM,MO),!.
 
+must_pfc_p(F):- \+ compound(F),!,atom(F),must_pfc_fa(F,0),!.
 must_pfc_p('-->'(_,_)):-!,fail.
 must_pfc_p(':-'(_,(CWC,_))):- atom(CWC),arg(_,v(bwc,fwc,awc,zwc),CWC),!.
 must_pfc_p(':-'(_,(CWC,_))):- atom(CWC),arg(_,v(cwc),CWC),!,is_pfc_file.
@@ -481,7 +493,7 @@ must_pfc_p('~'(_)).
 must_pfc_p('--->'(_,_)).
 % must_pfc_p('=>'(_,_)).
 must_pfc_p(_:P):- !, must_pfc_p(P),!.
-must_pfc_p(FAB):-functor(FAB,F,A),must_pfc_fa(F,A),!.
+must_pfc_p(FAB):- compound_name_arity(FAB,F,A),must_pfc_fa(F,A),!.
 
 must_pfc_fa(prologHybrid,_).
 must_pfc_fa(F,A):- mpred_database_term(F,A,_),!.
@@ -576,7 +588,8 @@ term_expansion_UNUSED(:-module(M,List),Pos,ExportList,Pos):- nonvar(Pos),
 
 
 :- module_transparent(pfc_clause_expansion/2).
-pfc_clause_expansion(I,O):- nonvar(I),I\==end_of_file,
+pfc_clause_expansion(I,O):- 
+  nonvar(I), I\==end_of_file,  
   base_clause_expansion(I,M),!,I\=@=M,
    ((
       maybe_should_rename(M,MO), 
@@ -644,6 +657,11 @@ saveBaseKB:- tell(baseKB),listing(baseKB:_),told.
 
 :- set_prolog_flag(subclause_expansion,false).
 
+pfc_may_see_module(M):-import_module(M,pfc_lib).
+pfc_may_see_module(M):-clause_b('using_pfc'(_OM,_CM,M,pfc_mod)).
+pfc_may_see_module(M):-clause_b(mtHybrid(M)).
+pfc_may_see_module(baseKB).
+
 :- fixup_exports.
 
 
@@ -656,10 +674,21 @@ saveBaseKB:- tell(baseKB),listing(baseKB:_),told.
 
 :- endif.
 
+
+
+
+:- multifile(system:goal_expansion/4).
+:- module_transparent(system:goal_expansion/4).
+:- system:import(pfc_goal_expansion/4).
+system:goal_expansion(I,P,O,PO):- pfc_goal_expansion(I,P,O,PO).
+
 :- multifile(system:clause_expansion/2).
 :- module_transparent(system:clause_expansion/2).
 :- system:import(pfc_clause_expansion/2).
-system:clause_expansion(I,O):- pfc_clause_expansion(I,O).
+
+system:clause_expansion(I,O):-
+ % ((is_pfc_file;prolog_load_context(module,M),pfc_may_see_module(M))),
+  pfc_clause_expansion(I,O).
 
 
 %:- set_prolog_flag(read_attvars,false).
@@ -667,12 +696,6 @@ system:clause_expansion(I,O):- pfc_clause_expansion(I,O).
 :- set_prolog_flag(mpred_te,true).
 
 :- retractall(t_l:disable_px).
-
-
-:- multifile(system:goal_expansion/4).
-:- module_transparent(system:goal_expansion/4).
-:- system:import(pfc_goal_expansion/4).
-system:goal_expansion(I,P,O,PO):- pfc_goal_expansion(I,P,O,PO).
 
 
 :- set_prolog_flag(mpred_te,true).

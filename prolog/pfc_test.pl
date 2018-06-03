@@ -11,7 +11,7 @@
 % ===================================================================
 */
 
-:- module(pfc_test,[]).
+:- module(pfc_test,[why_was_true/1]).
 
 test_red_lined(Failed):- quietly((
   format('~N',[]),
@@ -133,10 +133,11 @@ inform_message_hook(_,warning,_):- current_prolog_flag(runtime_debug, N),N>2,bre
 :- dynamic(system:test_results/3).
 
 system:test_repl:-  assertz(system:test_results(need_retake,warn,need_retake)).
-system:test_completed:- listing(system:test_results/3),test_completed_exit_maybe(4).
-system:test_retake:- listing(system:test_results/3),test_completed_exit_maybe(7).
+system:test_completed:- listing(system:test_results/3),test_completed_exit_maybe(7).
+system:test_retake:- listing(system:test_results/3),test_completed_exit_maybe(3).
 
-test_completed_exit(7):- debugging,!,dmsg(halt(7)).
+test_completed_exit(N):- dmsg(test_completed_exit(N)),fail.
+test_completed_exit(7):- halt(7).
 test_completed_exit(4):- halt(4).
 test_completed_exit(5):- halt(5).
 test_completed_exit(N):- (debugging-> break ; true), halt(N).
@@ -147,7 +148,8 @@ test_completed_exit_maybe(_):- system:test_results(_,warning,_),test_completed_e
 test_completed_exit_maybe(_):- system:test_results(_,warn,_),test_completed_exit(3).
 test_completed_exit_maybe(N):- test_completed_exit(N).
 
-set_file_abox_module(User):- '$set_typein_module'(User), '$set_source_module'(User),set_fileAssertMt(User).
+set_file_abox_module(User):- '$set_typein_module'(User), '$set_source_module'(User),
+  set_fileAssertMt(User).
 
 set_file_abox_module_wa(User):- set_file_abox_module(User),set_defaultAssertMt(User).
 
@@ -168,6 +170,15 @@ message_hook_handle(T,Type,Warn):-
 
 :- fixup_exports.
 
-user:message_hook(T,Type,Warn):- current_prolog_flag(logicmoo_message_hook,Was),Was\==none,once(message_hook_handle(T,Type,Warn)).
+user:message_hook(T,Type,Warn):- current_prolog_flag(logicmoo_message_hook,Was),Was\==none,
+   once(message_hook_handle(T,Type,Warn)).
 
+user:message_hook(T,Type,Warn):-  Type \== silent,Type \== debug, Type \== informational,
+  memberchk(Type,[error,warning]),
+  once((dmsg(message_hook_type(Type)),dmsg(message_hook(T,Type,Warn)),
+  ignore((source_location(File,Line),dmsg(source_location(File,Line)))),
+  assertz(system:test_results(File:Line/T,Type,Warn)),nop(dumpST),
+  nop(dmsg(message_hook(File:Line:T,Type,Warn))))),
+   
+  fail.
 

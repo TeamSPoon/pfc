@@ -8,7 +8,7 @@
 % if p(foo,1)) is a fact and we assert_db p(foo,2), then the forrmer assertion
 % is retracted.
 % prologSingleValued(Pred)
-:-kb_local(baseKB:mpred_sv/2).
+:- kb_global(baseKB:mpred_sv/2).
 arity(mpred_sv,2).
 mpred_sv(Pred,Arity)==> arity(Pred,Arity),hybrid_support(Pred,Arity),singleValuedInArg(Pred,Arity).
 
@@ -18,8 +18,15 @@ mpred_sv_shared(mpred_sv,2).
 mpred_sv_shared(singleValuedInArg,2).
 mpred_sv_shared(singleValuedInArgDefault,3).
 
-(prologSingleValued(Pred), arity(Pred,Arity), \+ singleValuedInArg(Pred,_)) 
+( prologSingleValued(Pred), arity(Pred,Arity)/ ( \+ singleValuedInArg(Pred,_)))
    ==> singleValuedInArg(Pred,Arity).
+
+%( \+ singleValuedInArg(Pred,_), prologSingleValued(Pred), arity(Pred,Arity)) 
+%   ==> singleValuedInArg(Pred,Arity).
+
+% THIS HAS A BUG!?!
+%( prologSingleValued(Pred), arity(Pred,Arity), \+ singleValuedInArg(Pred,_))
+%   ==> singleValuedInArg(Pred,Arity).
 
 
 % prologSingleValued(Pred),arity(Pred,Arity) ==> hybrid_support(Pred,Arity).
@@ -39,20 +46,42 @@ singleValuedInArg(singleValuedInArgDefault,3).
 
 ((singleValuedInArgDefault(SingleValued,ArgN,S1)/ground(S1)) ==> singleValuedInArg(SingleValued,ArgN)).
 
-(singleValuedInArg(F, N),arity(F,A)) ==> singleValuedInArgAX(F,A,N).
-
 :- kb_shared(singleValuedInArgAX/3).
 
-(singleValuedInArgAX(F,A,N), 
+(singleValuedInArg(F, N),arity(F,A)) ==> singleValuedInArgAX(F,A,N).
+
+
+((singleValuedInArgAX(F,A,N), 
    {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)})
        ==> 
-  (( P ==> 
-        ({P_SLOT\=isMissing,call(dif:dif(Q_SLOT,P_SLOT)),
-          call_u(Q),ground(Q)}, (\+ Q, single_override(P,Q))))).
+  ((( P,{P_SLOT\=isMissing, 
+        call(dif:dif(Q_SLOT,P_SLOT)),call_u(Q),ground(Q)},Q)
+        ==> (\+ Q, P)))).
+  
+unused ==> 
+((singleValuedInArgAX(F,A,N), 
+   {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)})
+       ==> 
+  (( P/ground(P) ==> 
+        ({P_SLOT\==isMissing,call(dif:dif(Q_SLOT,P_SLOT) ),
+          call_u(Q),ground(Q),ignore(retract(Q))})))).
 
+unused ==> ((singleValuedInArgAX_maybe(F,A,N), 
+   {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)})
+       ==> 
+  (( P/ground(P) ==> 
+        ({P_SLOT\==isMissing,call(dif:dif(Q_SLOT,P_SLOT)),
+          call_u(Q),ground(Q)}, (\+ Q, P, single_override_maybe(P,Q)))))).
 
 ((single_override(P,Q), {ignore(retract(Q))}) ==>
-   (\+ P ==> (( \+ single_override(P,Q)), {mpred_supported(Q)}, Q))).
+   ( (\+ P ==> (( \+ single_override(P,Q)), {mpred_supported(Q)}, Q)) )).
+
+
+end_of_file.
+end_of_file.
+end_of_file.
+end_of_file.
+end_of_file.
 
 
 /*

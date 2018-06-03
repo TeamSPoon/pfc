@@ -34,13 +34,13 @@
 :- set_prolog_flag(mpred_te,true).
 :- set_prolog_flag(verbose_load,true).
 
-:- retract(baseKB:'wusing_pfc'(M,CM,SM,pfc_mod)),
+:- must(retract(baseKB:'wusing_pfc'(M,CM,SM,pfc_mod))),
    wdmsg(baseKB:'chusing_pfc'(M,CM,SM,pfc_mod)),
    (M==SM -> 
      (maybe_ensure_abox(SM),nop((M:ain(genlMt(SM,baseKB)))));
-     wdmsg(baseKB:'lusing_pfc'(M,CM,SM,pfc_mod))),
+     wdmsg(baseKB:'lusing_pfc'(M,CM,SM,pfc_mod))),   
    assert(baseKB:'using_pfc'(M,CM,SM,pfc_mod)).
-
+   
 :- baseKB:ensure_loaded('pfclib/system_autoexec.pfc').
 :- set_prolog_flag(pfc_booted,true).
 
