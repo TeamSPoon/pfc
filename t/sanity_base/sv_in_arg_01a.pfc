@@ -36,7 +36,6 @@
 :- set_fileAssertMt(header_sane).
 
 :- file_begin(pfc).
-
                  
 :- dynamic(someSV_testeed/3).
 arity(someSV_testeed,3).

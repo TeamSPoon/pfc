@@ -38,33 +38,28 @@ test_header_include.
 :- use_module(library(readline)).
 :- endif.
 :- endif.
-setup_hist0:-  '$toplevel':setup_history.
-:- setup_hist0.
+:-  '$toplevel':setup_history.
+
 
 
 %:- set_stream(user_input,tty(false)).
 
 
-:- if(( \+ current_module(pfc_lib) )).
+:- use_module(library(pfc_lib)).
+%:- if(( \+ current_module(pfc_lib) )).
 :- use_module(library(pfc)).
-:- prolog_load_context(source,File),(atom_contains(File,'.pfc')-> sanity(is_pfc_file) ; must_not_be_pfc_file).
-:- endif.
+%:- endif.
+
 
 :- ensure_loaded(library(pfc_test)).
 
-:- endif. % current_prolog_flag(test_header,_).
+%:- endif. % current_prolog_flag(test_header,_).
 
 
-
-:- if(is_pfc_file).
-
-:- mpred_trace_exec.
-
-:- else.
+:- prolog_load_context(source,File),
+   (atom_contains(File,'.pfc')-> sanity(is_pfc_file) ; sanity(must_not_be_pfc_file)).
 
 :- mpred_trace_exec.
-
-:- endif.
 
 
 :- set_prolog_flag(debug, true).

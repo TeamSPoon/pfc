@@ -20,7 +20,7 @@
           %mpred_test/1
           ]).
 
-%:- throw(module(pfcumt,[umt/1])).
+:- throw(module(pfcumt,[umt/1])).
 
 %:- use_module(library('pfc2.2/pfcsyntax')).
 
@@ -244,7 +244,8 @@ user:message_hook(T,Type,Warn):- fail, ( \+ current_prolog_flag(runtime_debug,0)
 :- dynamic(system:test_results/3).
 
 maybe_message_hook(compiler_warnings(_,[always(true,var,_),always(false,integer,_),
-   always(false,integer,_),always(true,var,_),always(false,integer,_),always(false,integer,_)]),warning,[]):- !.
+   always(false,integer,_),always(true,var,_),always(false,integer,_),always(false,integer,_)]),
+   warning,[]):- !.
 
 maybe_message_hook(import_private(_,_),_,_).
 maybe_message_hook(check(undefined(_, _)),_,_).

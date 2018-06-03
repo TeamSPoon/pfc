@@ -38,13 +38,13 @@
 
 :- dynamic(someSV_testing/3).
 
-someSV_testing(a,b,1).
-someSV_testing(a,b,2).
-someSV_testing(a,c,3).
-
 :- mpred_trace_exec.
 arity(someSV_testing,3).
 singleValuedInArg(someSV_testing,3).
+
+someSV_testing(a,b,1).
+someSV_testing(a,b,2).
+someSV_testing(a,c,3).
 
 %:- rtrace.
 someSV_testing(a,c,4).

@@ -66,10 +66,12 @@ someSV_testeed(a,c,3).
 
 someSV_testeed(a,c,3).
 
+:- listing(someSV_testeed/3).
+
 :- mpred_test( \+ someSV_testeed(a,b,1)).
 :- mpred_test(    someSV_testeed(a,b,2)).
 
-:- ain((\+ someSV_testeed(a,b,1))).
+:- ain((\+ someSV_testeed(a,b,2))).
 
 :- listing(someSV_testeed/3).
 

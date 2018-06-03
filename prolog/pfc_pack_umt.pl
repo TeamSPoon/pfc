@@ -1,5 +1,5 @@
 
-% :- throw(module(pfc_umt,[umt/1])).
+:- throw(module(pfc_umt,[umt/1])).
 :- module(pfc_umt,[umt/1]).
 
 :- 

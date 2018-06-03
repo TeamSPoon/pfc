@@ -384,7 +384,7 @@ mpred_file_term_expansion(Type,LoaderMod,I,OO):- !,fail,
 % Ensure rule macro predicates are being used checked just before assert/query time
 mpred_file_term_expansion0(Type,LoaderMod,I,O):- 
   sanity((ground(Type:LoaderMod),nonvar(I),var(O))),
-  quietly_must(get_source_ref1(mfl(MF,F,L))),!,
+  quietly_must(get_source_mfl(mfl(MF,F,L))),!,
   % \+ mpred_prolog_only_file(F),
   call_u(baseKB:mtHybrid(MT1)),
   must((proper_source_mod([LoaderMod,MF,MT1],AM))),

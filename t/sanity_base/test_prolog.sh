@@ -40,7 +40,7 @@ fi
 #[[ $_ != "$0" ]] && echo "Script is being sourced" && exit 9
 
 me="${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}"
-good_exit=4
+good_exit=7
 exitcode=$good_exit
 
 keep_going=""
