@@ -23,7 +23,7 @@ transitive(path).
 (transitive(P) ==>
   (t(P,X,Y),t(P,Y, Z) ==> t(P, X, Z))).
 
-(reflexive(P) ==>
+(symmetric(P) ==>
   (t(P,X,Y) ==> t(P,Y,X))).
 
 transitive(path).
@@ -195,14 +195,14 @@ end_of_file.
 %       Found positive trigger: transitive(_623000)==>(t(_623000,_623018,_623020),t(_623000,_623020,_623028)==>t(_623000,_623018,_623028))
 %               body: mpred_positive_fact((transitive(_623000)==>(t(_623000,_623018,_623020),t(_623000,_623020,_623028)==>t(_623000,_623018,_623028))))*->rhs([\+ ~ (transitive(_623000)==>(t(_623000,_623018,_623020),t(_623000,_623020,_623028)==>t(_623000,_623018,_623028)))])
 % /opt/logicmoo_workspace/packs_sys/pfc/t/sanity_base/tml_01c.pfc:26
-% mpred_fwc1((reflexive(_637588)==>(t(_637588, _637600, _637602)==>t(_637588, _637602, _637600)))).
+% mpred_fwc1((symmetric(_637588)==>(t(_637588, _637600, _637602)==>t(_637588, _637602, _637600)))).
 %       Adding positive
-%               trigger: reflexive(_638772)
+%               trigger: symmetric(_638772)
 %               body: rhs([(t(_638772,_633888,_633890)==>t(_638772,_633890,_633888))])
-%        Support: (reflexive(_638344)==>(t(_638344,_638356,_638358)==>t(_638344,_638358,_638356))),mfl(header_sane,'/opt/logicmoo_workspace/packs_sys/pfc/t/sanity_base/tml_01c.pfc',26)
-% make_as_dynamic(do_call_inherited(baseKB, reflexive(_671180)), baseKB, reflexive, 1).
-%       Found positive trigger: reflexive(_671752)==>(t(_671752,_671764,_671766)==>t(_671752,_671766,_671764))
-%               body: mpred_positive_fact((reflexive(_671752)==>(t(_671752,_671764,_671766)==>t(_671752,_671766,_671764))))*->rhs([\+ ~ (reflexive(_671752)==>(t(_671752,_671764,_671766)==>t(_671752,_671766,_671764)))])
+%        Support: (symmetric(_638344)==>(t(_638344,_638356,_638358)==>t(_638344,_638358,_638356))),mfl(header_sane,'/opt/logicmoo_workspace/packs_sys/pfc/t/sanity_base/tml_01c.pfc',26)
+% make_as_dynamic(do_call_inherited(baseKB, symmetric(_671180)), baseKB, symmetric, 1).
+%       Found positive trigger: symmetric(_671752)==>(t(_671752,_671764,_671766)==>t(_671752,_671766,_671764))
+%               body: mpred_positive_fact((symmetric(_671752)==>(t(_671752,_671764,_671766)==>t(_671752,_671766,_671764))))*->rhs([\+ ~ (symmetric(_671752)==>(t(_671752,_671764,_671766)==>t(_671752,_671766,_671764)))])
 % /opt/logicmoo_workspace/packs_sys/pfc/t/sanity_base/tml_01c.pfc:31
 % mpred_fwc1(~path(_685950, _685950)).
 %       Found positive trigger: ~path(_686548,_686548)
