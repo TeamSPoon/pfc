@@ -1,0 +1,17 @@
+/*
+root@gitlab:/opt/logicmoo_workspace/packs_sys/tau# make
+g++ hash.cpp clause.cpp literal.cpp parser.cpp formatter.cpp tml.cpp -g -otml -std=c++11 -W -Wall -Wpedantic -D_DEBUG
+root@gitlab:/opt/logicmoo_workspace/packs_sys/tau# ls
+clause.cpp  example        fwd       hash.h       literal.h    lpgen.cpp  parser      README.md  tml      tml.h
+clause.h    formatter.cpp  hash.cpp  literal.cpp  logprimes.h  Makefile   parser.cpp  strings.h  tml.cpp
+root@gitlab:/opt/logicmoo_workspace/packs_sys/tau# ./tml
+^C
+root@gitlab:/opt/logicmoo_workspace/packs_sys/tau# ./tml < example
+Done, unsatisfiable
+edge(?x,?y)  -> path(?x,?y) .[2785391047446746593]
+path(?x,?y) edge(?y,?z)  -> path(?x,?z) .[14791333343326697258]
+
+ -> edge(1,2) edge(2,3) edge(3,4) .[17014546603586652263]
+root@gitlab:/opt/logicmoo_workspace/packs_sys/tau#
+*/
+
