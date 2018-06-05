@@ -625,10 +625,10 @@ pfc_provide_storage_op(change(retract,all),FactOrRule):- loop_check_nr(mpred_rem
 %
 % PFC Pbody.
 %
-%mpred_pbody(H,B,_R,fail,deduced(backchains)):- get_bc_clause(H,_H,B),!.
-%mpred_pbody(H,infoF(INFO),R,B,Why):-!,mpred_pbody_f(H,INFO,R,B,Why).
-%mpred_pbody(H,B,R,BIn,WHY):- is_true(B),!,BIn=B,get_why(H,H,R,WHY).
-%mpred_pbody(H,B,R,B,asserted(R,(H:-B))).
+mpred_pbody(H,B,_R,fail,deduced(backchains)):- get_bc_clause(H,(H:-B)),!.
+mpred_pbody(H,infoF(INFO),R,B,Why):-!,mpred_pbody_f(H,INFO,R,B,Why).
+mpred_pbody(H,B,R,BIn,WHY):- is_true(B),!,BIn=B,get_why(H,H,R,WHY).
+mpred_pbody(H,B,R,B,asserted(R,(H:-B))).
 
 
 %% get_why( +VALUE1, ?CL, ?R, :TermR) is semidet.
@@ -757,7 +757,7 @@ ain_minfo(How,((A,B):-INFOC)):-mpred_is_info(INFOC),(is_ftNonvar(A);is_ftNonvar(
 ain_minfo(How,((A;B):-INFOC)):-mpred_is_info(INFOC),(is_ftNonvar(A);is_ftNonvar(B)),!,ain_minfo(How,((A):-INFOC)),ain_minfo(How,((B):-INFOC)),!.
 ain_minfo(How,(-(A):-infoF(C))):-is_ftNonvar(C),is_ftNonvar(A),!,ain_minfo(How,((A):-infoF((C)))). % attvar_op(How,(-(A):-infoF(C))).
 ain_minfo(How,(~(A):-infoF(C))):-is_ftNonvar(C),is_ftNonvar(A),!,ain_minfo(How,((A):-infoF((C)))). % attvar_op(How,(-(A):-infoF(C))).
-ain_minfo(How,(A:-INFOC)):- is_ftNonvar(INFOC), get_bc_clause(A,AA,INFOCC),A=AA,INFOC==INFOCC,!,attvar_op(How,(A:-INFOC)),!.
+ain_minfo(How,(A:-INFOC)):- is_ftNonvar(INFOC), get_bc_clause(A,(A:-INFOC)),!,attvar_op(How,(A:-INFOC)),!.
 ain_minfo(How,bt(_ABOX,H,_)):-!,get_bc_clause(H,Post),attvar_op(How,Post).
 ain_minfo(How,nt(H,Test,Body)):-!,attvar_op(How,(H:-fail,nt(H,Test,Body))).
 ain_minfo(How,pt(H,Body)):-!,attvar_op(How,(H:-fail,pt(H,Body))).
@@ -779,15 +779,11 @@ ain_minfo_2(How,G):-ain_minfo(How,G).
 %
 % PFC If Is A Info.
 %
-mpred_is_info((CWC,Info)):- (atom(CWC),cwc(CWC));mpred_is_info(Info).
 mpred_is_info(mpred_bc_only(C)):-is_ftNonvar(C),!.
 mpred_is_info(infoF(C)):-is_ftNonvar(C),!.
 mpred_is_info(inherit_above(_,_)).
+mpred_is_info((Fail,_)):-Fail==fail.
 
-cwc(awc).
-cwc(zwc).
-cwc(fail).
-%cwc(Call):- callable(Call),Call.
 
 %:- was_dynamic(not_not/1).
 
@@ -817,6 +813,9 @@ fwc:-true.
 % Bwc.
 %
 bwc:-true.
+
+awc:-true.
+zwc:-true.
 
 %% wac is semidet.
 %
@@ -1407,7 +1406,7 @@ mpred_call_only_facts(Clause) :-  strip_module(Clause,_,ClauseF), on_x_debug(no_
 % PFC call  Primary Helper.
 %
 mpred_call_0(Var):-is_ftVar(Var),!,mpred_call_with_no_triggers(Var).
-mpred_call_0(M):- fixed_syntax(M,O),!,mpred_call_0(O).
+mpred_call_0(M):-fixed_negations(M,O),!,mpred_call_0(O).
 mpred_call_0(U:X):-U==user,!,mpred_call_0(X).
 mpred_call_0(t(A,B)):-(atom(A)->true;(no_repeats(arity_no_bc(A,1)),atom(A))),ABC=..[A,B],mpred_call_0(ABC).
 mpred_call_0(isa(B,A)):-(atom(A)->true;(call_u(tCol(A)),atom(A))),ABC=..[A,B],mpred_call_0(ABC).
@@ -1530,11 +1529,8 @@ mpred_bc_only(G):- no_repeats(loop_check(mpred_bc_only0(G))).
 %
 % PFC Backchaining + FACTS + Inheritance.
 %
-mpred_bc_and_with_pfc(G):- no_repeats(loop_check(mpred_bc_and_with_pfc_0(G))).
-
-mpred_bc_and_with_pfc_0(G):- mpred_call_only_facts(G).
-mpred_bc_and_with_pfc_0(G):- mpred_bc_only0(G).
-mpred_bc_and_with_pfc_0(G):- strip_module(G,M,P),inherit_above(M,P).
+mpred_bc_and_with_pfc(G):- no_repeats(loop_check(mpred_bc_only0(G))).
+mpred_bc_and_with_pfc(G):- strip_module(G,M,P),inherit_above(M,P).
 
 
 
@@ -2209,7 +2205,7 @@ ruleBackward(R,Condition,Support):- ruleBackward0(R,Condition,Support),
 % Rule Backward Primary Helper.
 %
 ruleBackward0(F,Condition,Support):- call_u('<-'(FF,Condition)),copy_term('<-'(FF,Condition),Support),FF=F.
-% % ruleBackward0(F,Condition,(F :- Condition)):- clause_u(F,Condition),\+ (is_true(Condition);mpred_is_info(Condition)).
+%ruleBackward0(F,Condition,(F :- Condition)):- clause_u(F,Condition),\+ (is_true(Condition);mpred_is_info(Condition)).
 
 
 % ======================= 
@@ -2235,10 +2231,7 @@ assertz_mu(MH):- fix_mp(clause(assert,assertz_u),MH,M,H),assertz_mu(M,H).
 % Assert For User Code.
 %
 assert_mu(M,M2:Pred,F,A):- M == M2,!, assert_mu(M,Pred,F,A).
-assert_mu(M,(M2:Pred :- B),F,A):- M == M2,!, assert_mu(M,(Pred :- B),F,A).
 assert_mu(M,_:Pred,F,A):- dtrace,sanity(\+ is_ftVar(Pred)),!, assert_mu(M,Pred,F,A).
-assert_mu(M,(Pred:- (AWC,More)),_,_):- AWC == awc,!,asserta_mu(M,(Pred:- (AWC,More))).
-assert_mu(M,(Pred:- (ZWC,More)),_,_):- ZWC == zwc,!,assertz_mu(M,(Pred:- (ZWC,More))).
 %assert_mu(M,Pred,F,_):- clause_b(singleValuedInArg(F,SV)),!,must(update_single_valued_arg(M,Pred,SV)),!.
 %assert_mu(M,Pred,F,A):- a(prologSingleValued,F),!,must(update_single_valued_arg(M,Pred,A)),!.
 assert_mu(M,Pred,F,_):- a(prologOrdered,F),!,assertz_mu(M,Pred).
