@@ -2200,20 +2200,23 @@ mpred_fwc1(Prop):-'$current_source_module'(Sm),mpred_m_fwc1(Sm,Prop).
 :-thread_local(t_l:busy_r/1).
 :-thread_local(t_l:busy_s/1).
 
+mpred_m_fwc1(Sm,Prop):- fixed_syntax(Prop,After),!,mpred_m_fwc1(Sm,After).
 mpred_m_fwc1(Sm,Prop):- clause_asserted(t_l:busy_s(Prop)),dmsg(Sm:warn(busy_mpred_m_fwc1(Prop))),!.
-mpred_m_fwc1(Sm,Prop):- clause_asserted(t_l:busy_f(Prop)),
-   asserta(t_l:busy_s(Prop),R),!,
-   mpred_m_fwc2(Sm,Prop),
-   ignore(catch(erase(R),_,fail)).
+mpred_m_fwc1(Sm,Prop):- clause_asserted(t_l:busy_f(Prop)),!,
+   setup_call_cleanup(
+     asserta(t_l:busy_s(Prop),R),
+     ignore(mpred_m_fwc2(Sm,Prop)),
+     ignore(catch(erase(R),_,fail))).
 mpred_m_fwc1(Sm,Prop):- mpred_m_fwc2(Sm,Prop).
 
 mpred_m_fwc2(Sm,Prop):-   
   mpred_trace_msg(Sm:mpred_fwc1(Prop)),
   %ignore((mpred_non_neg_literal(Prop),remove_negative_version(Prop))),
   \+ \+ ignore(mpred_do_rule(Prop)),
-  asserta(t_l:busy_f(Prop),R),!,
-  ignore(mpred_do_fact(Prop)),!,
-  ignore(catch(erase(R),_,fail)).
+  setup_call_cleanup(
+    asserta(t_l:busy_f(Prop),R),
+    ignore(mpred_do_fact(Prop)),
+    ignore(catch(erase(R),_,fail))).
 
 
 
@@ -2326,7 +2329,7 @@ mpred_do_fact(Fact):-
 
 lookup_spft_match(A,B,C):- copy_term(A,AA),lookup_spft(A,B,C),A=@=AA.
 
-lookup_spft_match_deeper(H,Fact,Trigger):-
+lookup_spft_match_deeper(H,Fact,Trigger):- fail,
   copy_term(H,HH),
   lookup_spft((H:- _B),Fact,Trigger),
   H=@=HH.
@@ -2341,10 +2344,10 @@ lookup_spft(A,B,C):- nonvar(A),!,lookup_spft_p(A,B,C).
 lookup_spft(A,B,C):- var(B),!,lookup_spft_t(A,B,C).
 lookup_spft(A,B,C):- lookup_spft_f(A,B,C).
 
-lookup_spft_p(A,B,C):- lookup_u(spft(A,B,C)).
+lookup_spft_p(A,B,C):- with_some_vars_locked(A,lookup_u(spft(A,B,C))).
 % TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_p(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,show_mpred_success(baseKB:spft(AA,B,C)).
 
-lookup_spft_f(A,B,C):- lookup_u(spft(A,B,C)).
+lookup_spft_f(A,B,C):- with_some_vars_locked(B,lookup_u(spft(A,B,C))).
 % TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_f(A,B,C):- full_transform(lookup,B,BB),!,B\=@=BB,!,show_mpred_success(baseKB:spft(A,BB,C)).
 
 lookup_spft_t(A,B,C):- lookup_u(spft(A,B,C)).
@@ -2678,9 +2681,11 @@ reserved_body(attr_bind(_)).
 reserved_body(attr_bind(_,_)).
 reserved_body(B):-reserved_body_helper(B).
 
-reserved_body_helper((AWC,_)):- awc == AWC.
-reserved_body_helper(inherit_above(_,_)).
-reserved_body_helper((!,mpred_bc_and_with_pfc(_))).
+reserved_body_helper(B):- \+ compound(B),!,fail.
+reserved_body_helper((ZAWC,_)):- atom(ZAWC),cwc(ZAWC).
+%reserved_body_helper(inherit_above(_,_)).
+%reserved_body_helper(Body):- get_bc_clause(_Head,_Head2,BCBody),!,Body=BCBody.
+%reserved_body_helper((_,Body)):-!,reserved_body_helper(Body).
 
 call_u_mp_fa(M,P,F,A):- !,loop_check(call_u_mp_lc(M,P,F,A)).
 
@@ -2782,7 +2787,7 @@ mpred_METACALL(How, Cut, (C1;C2)):-!,(mpred_METACALL(How, Cut, C1);mpred_METACAL
 % mpred_METACALL(_How, _SCut, P):- predicate_property(P,built_in),!, call(P).
 
 
-mpred_METACALL(How, Cut, M):- fixed_negations(M,O),!,mpred_METACALL(How, Cut, O).
+mpred_METACALL(How, Cut, M):- fixed_syntax(M,O),!,mpred_METACALL(How, Cut, O).
 mpred_METACALL(How, Cut, U:X):-U==user,!,mpred_METACALL(How, Cut, X).
 % mpred_METACALL(How, Cut, t(A,B)):-(atom(A)->true;(no_repeats(arity(A,1)),atom(A))),ABC=..[A,B],mpred_METACALL(How, Cut, ABC).
 % mpred_METACALL(How, Cut, isa(B,A)):-(atom(A)->true;(no_repeats(tCol(A)),atom(A))),ABC=..[A,B],mpred_METACALL(How, Cut, ABC).
@@ -2870,7 +2875,7 @@ mpred_nf1(P,[P]):- is_ftVar(P), !.
 mpred_nf1(P/Cond,[(\+P)/Cond]):- mpred_negated_literal(P), !, dmsg(warn(mpred_nf1(P/Cond,[(\+P)/Cond]))).
 
 mpred_nf1(P/Cond,[P/Cond]):- var(P),!.
-mpred_nf1(P/Cond,[P/Cond]):- ((mpred_db_type(P,trigger(_));mpred_literal(P))), !.
+mpred_nf1(P/Cond,[P/Cond]):- ((mpred_db_type(P,trigger(_));mpred_literal_nonvar(P))), !.
 
 %  handle a negated form
 
@@ -2921,8 +2926,9 @@ mpred_nf1((H :- B)  ,[P]):-
 
 %  handle a random literal.
 
+mpred_nf1(P,[P]) :- is_ftVar(P), !.
 mpred_nf1(P,[P]):-
-  mpred_literal(P),
+  mpred_literal_nonvar(P),
   !.
 
 mpred_nf1(Term,[Term]):- mpred_trace_msg("mpred_nf Accepting ~p",[Term]),!.
@@ -3035,6 +3041,7 @@ mpred_compile_rhs_term(Sup,I,O):- mpred_compile_rhs_term_consquent(Sup,I,O).
      mpred_unnegate(P,_):- is_ftVar(P),!,fail.
      mpred_unnegate((\+(P)),P).
      mpred_unnegate((-P),P).
+     mpred_unnegate((~P),P).
 
 
 
@@ -3137,10 +3144,10 @@ mpred_compile_rhs_term(Sup,I,O):- mpred_compile_rhs_term_consquent(Sup,I,O).
      % EQV chaining
      constrain_meta((P<==>Q),(nonvar(Q);nonvar(P))):- (is_ftVar(Q);is_ftVar(P)),!.
      % BWD chaining
-     constrain_meta((Q <- _),mpred_literal(Q)):- is_ftVar(Q),!.
+     constrain_meta((Q <- _),mpred_literal_nonvar(Q)):- is_ftVar(Q),!.
      constrain_meta((Q <- _),CQ):- !, constrain_meta(Q,CQ).
      % CWC chaining
-     constrain_meta((Q :- _),mpred_literal(Q)):- is_ftVar(Q),!.
+     constrain_meta((Q :- _),mpred_literal_nonvar(Q)):- is_ftVar(Q),!.
      constrain_meta((Q :- _),CQ):- !, constrain_meta(Q,CQ).
 
 
