@@ -2231,7 +2231,10 @@ assertz_mu(MH):- fix_mp(clause(assert,assertz_u),MH,M,H),assertz_mu(M,H).
 % Assert For User Code.
 %
 assert_mu(M,M2:Pred,F,A):- M == M2,!, assert_mu(M,Pred,F,A).
+% maYBE assert_mu(M,(M2:Pred :- B),F,A):- M == M2,!, assert_mu(M,(Pred :- B),F,A).
 assert_mu(M,_:Pred,F,A):- dtrace,sanity(\+ is_ftVar(Pred)),!, assert_mu(M,Pred,F,A).
+assert_mu(M,(Pred:- (AWC,More)),_,_):- AWC == awc,!,asserta_mu(M,(Pred:- (AWC,More))).
+assert_mu(M,(Pred:- (ZWC,More)),_,_):- ZWC == zwc,!,assertz_mu(M,(Pred:- (ZWC,More))).
 %assert_mu(M,Pred,F,_):- clause_b(singleValuedInArg(F,SV)),!,must(update_single_valued_arg(M,Pred,SV)),!.
 %assert_mu(M,Pred,F,A):- a(prologSingleValued,F),!,must(update_single_valued_arg(M,Pred,A)),!.
 assert_mu(M,Pred,F,_):- a(prologOrdered,F),!,assertz_mu(M,Pred).

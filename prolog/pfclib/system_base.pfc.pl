@@ -619,7 +619,7 @@ exceptWhen({Cond},P)==> (~P :- cwc, Cond).
 :- mpred_trace_exec.
 %  can this ever happen?
 % (( \+ P, P) ==> {dumpST,dmsg(warn(weak_conflict(P)))}).
-( (~ P/mpred_positive_fact(P)), P) ==> ({dmsg(warn(conflict(P)))}).
+% TAKEN CARE OF ( (~ P/mpred_positive_fact(P)), P) ==> ({dmsg(warn(conflict(P)))}).
 % (\+ P, P) => conflict(P).
 
 %% ~( ?VALUE1) is semidet.
