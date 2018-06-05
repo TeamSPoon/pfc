@@ -1512,13 +1512,6 @@ assert_u_confirmed_was_missing(P):- once((get_unnegated_functor(P,F,_),get_funct
 
 % assert_u_confirmed_was_missing(P):- mpred_enqueue(onChange(P),'was_missing'), fail.
 
-assert_u_confirmed_was_missing(P):- P= ( :-(AWC,_) ),
- AWC == awc,!,
- \+ \+ must_ex(asserta_mu(P)),!.  
-
-assert_u_confirmed_was_missing(P):- P= ( :-(_,_) ),!, % or assumed zwc
- \+ \+ must_ex(assertz_mu(P)),!.  
-
 % assert_u_confirmed_was_missing(P):- term_attvars(P,L),L\==[],!,  \+ \+ must_ex(assert_to_mu(P)),!.
 
 assert_u_confirmed_was_missing(P):-
@@ -2201,25 +2194,25 @@ mpred_fwc1(mpred_unload_option(_,_)):-!.
 % mpred_fwc1(singleValuedInArg(_, _)):-!.
 % this line filters sequential (and secondary) dupes
 % mpred_fwc1(Fact):- current_prolog_flag(unsafe_speedups , true) , ground(Fact),fwc1s_post1s(_One,Two),Six is Two * 3,filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact),!.
-mpred_fwc1(Fact):-'$current_source_module'(Sm),mpred_m_fwc1(Sm,Fact).
+mpred_fwc1(Prop):-'$current_source_module'(Sm),mpred_m_fwc1(Sm,Prop).
 
 
 :-thread_local(t_l:busy_r/1).
 :-thread_local(t_l:busy_s/1).
 
-mpred_m_fwc1(Sm,Fact):- clause_asserted(t_l:busy_s(Fact)),dmsg(Sm:warn(busy_mpred_m_fwc1(Fact))),!.
-mpred_m_fwc1(Sm,Fact):- clause_asserted(t_l:busy_f(Fact)),
-   asserta(t_l:busy_s(Fact),R),!,
-   mpred_m_fwc2(Sm,Fact),
+mpred_m_fwc1(Sm,Prop):- clause_asserted(t_l:busy_s(Prop)),dmsg(Sm:warn(busy_mpred_m_fwc1(Prop))),!.
+mpred_m_fwc1(Sm,Prop):- clause_asserted(t_l:busy_f(Prop)),
+   asserta(t_l:busy_s(Prop),R),!,
+   mpred_m_fwc2(Sm,Prop),
    ignore(catch(erase(R),_,fail)).
-mpred_m_fwc1(Sm,Fact):- mpred_m_fwc2(Sm,Fact).
+mpred_m_fwc1(Sm,Prop):- mpred_m_fwc2(Sm,Prop).
 
-mpred_m_fwc2(Sm,Fact):-   
-  mpred_trace_msg(Sm:mpred_fwc1(Fact)),
-  %ignore((mpred_non_neg_literal(Fact),remove_negative_version(Fact))),
-  \+ \+ ignore(mpred_do_rule(Fact)),
-  asserta(t_l:busy_f(Fact),R),!,
-  ignore(mpred_do_fact(Fact)),!,
+mpred_m_fwc2(Sm,Prop):-   
+  mpred_trace_msg(Sm:mpred_fwc1(Prop)),
+  %ignore((mpred_non_neg_literal(Prop),remove_negative_version(Prop))),
+  \+ \+ ignore(mpred_do_rule(Prop)),
+  asserta(t_l:busy_f(Prop),R),!,
+  ignore(mpred_do_fact(Prop)),!,
   ignore(catch(erase(R),_,fail)).
 
 

@@ -611,10 +611,10 @@ never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
 (enforce(~P)/mpred_positive_literal(P)) ==> (~P, (P ==> \+ P)).
 % (enforce(P) /mpred_positive_literal(P) ==>  ( P, (~P ==> \+ ~P))).
 
-exceptWhen({Cond},P)==> (((P:- awc,Cond,!,fail))).
-exceptWhen(Cond,P)==> (((P,Cond)==> ~P)).
-exceptWhen(Cond,P)==> (((~P <- Cond))).
-exceptWhen({Cond},P)==> (~P :- cwc, Cond).
+preventedWhen(P,{Cond})==> (((P:- awc,Cond,!,fail))).
+preventedWhen(P,Cond)==> (((P,Cond)==> ~P)).
+preventedWhen(P,Cond)==> ((((~P) <- Cond))).
+preventedWhen(P,{Cond})==> ((~P) :- cwc, Cond).
 
 :- mpred_trace_exec.
 %  can this ever happen?

@@ -2120,7 +2120,7 @@ fix_syntax(P0,P0):- not_ftCompound(P0),!.
 fix_syntax(I,O):- fixed_negations(I,M),fix_syntax(M,O).
 %fix_syntax(~P/Cond,O):-  !,O=(((P/Cond)==> ~P)).
 %fix_syntax((~P)/Cond,O):- !,O=((~P <- {Cond} )).
-fix_syntax(~(P/Cond),O):- !,O= exceptWhen({Cond},P).
+fix_syntax(~(P/Cond),O):- !,O= preventedWhen(P,{Cond}).
 fix_syntax((~P)/Cond,O):- !, fix_syntax(~(P/Cond),O).
 fix_syntax((~P)/Cond,O):- !,O=(((P/Cond)==> ~P)).
 %fix_syntax((~P)/Cond,O):- !,O=(((P/Cond)==> ~P)).
