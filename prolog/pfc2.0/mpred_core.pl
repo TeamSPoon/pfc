@@ -2396,9 +2396,9 @@ mpred_do_fcnt(_,_).
 % corresponding bt triggers to the database.
 %
 mpred_define_bc_rule(Head,_ZBody,Parent_rule):-
-  (\+ mpred_literal(Head)),
+  (\+ mpred_literal_nonvar(Head)),
   mpred_warn("Malformed backward chaining rule.  ~p not atomic.",[Head]),
-  mpred_error("rule: ~p",[Parent_rule]),
+  mpred_error("caused by rule: ~p",[Parent_rule]),
   !,
   fail.
 
@@ -2413,7 +2413,14 @@ mpred_define_bc_rule(Head,Body,Parent_rule):-
           ignore((build_trigger(Parent_ruleCopy,Lhs,rhs(Rhs),Trigger),
            ain_fast(bt(Head,Trigger),(Parent_ruleCopy,U))))).
    
-get_bc_clause(Head,(Head:- (!, mpred_bc_and_with_pfc(Head)))):- is_ftNonvar(Head).
+get_bc_clause(Head,(HeadC:- BodyC)):- get_bc_clause(Head,HeadC,BodyC).
+
+get_bc_clause(HeadIn, ~HeadC, Body):- compound(HeadIn), HeadIn = ~Head,!,
+     Body = ( awc, 
+            ( nonvar(HeadC)-> (HeadC = Head,!) ; (HeadC = Head)), 
+              mpred_bc_and_with_pfc(~Head)).
+get_bc_clause(Head, Head, Body):-  % % :- is_ftNonvar(Head).
+     Body = ( awc, !, mpred_bc_and_with_pfc(Head)).
 
 :- thread_initialization(nb_setval('$pfc_current_choice',[])).
 
@@ -3042,24 +3049,37 @@ mpred_compile_rhs_term(Sup,I,O):- mpred_compile_rhs_term_consquent(Sup,I,O).
      %
      % PFC Negated Literal.
      %
+     %mpred_negated_literal(P):- is_ftVar(P),!,fail.
      mpred_negated_literal(P):-
        mpred_unnegate(P,Q),
        mpred_positive_literal(Q).
+     %mpred_negated_literal(~(_)).
+
+
+     mpred_literal_or_var(X):- is_ftVar(X),!.
+     mpred_literal_or_var(X):- mpred_negated_literal(X),!.
+     mpred_literal_or_var(X):- mpred_positive_literal(X),!.
 
      mpred_literal(X):- is_ftVar(X),!.
      mpred_literal(X):- mpred_negated_literal(X),!.
      mpred_literal(X):- mpred_positive_literal(X),!.
 
-     mpred_is_trigger(X):-   mpred_db_type(X,trigger(_)).
-
-     mpred_positive_fact(X):-  mpred_positive_literal(X), X \= ~(_), mpred_db_type(X,fact(_FT)), \+ mpred_db_type(X,trigger).
+     mpred_literal_nonvar(X):- is_ftVar(X),!,fail.
+     mpred_literal_nonvar(X):- mpred_negated_literal(X),!.
+     mpred_literal_nonvar(X):- mpred_positive_literal(X),!.
 
      mpred_positive_literal(X):-
        is_ftNonvar(X),
+       X \= ~(_), % MAYBE COMMENT THIS OUT
        \+ mpred_db_type(X,rule(_RT)),
        get_functor(X,F,_),
        \+ mpred_neg_connective(F),
        !.
+
+     mpred_positive_fact(X):-  mpred_positive_literal(X), X \= ~(_), mpred_db_type(X,fact(_FT)), \+ mpred_db_type(X,trigger).
+
+     mpred_is_trigger(X):-   mpred_db_type(X,trigger(_)).
+
 
 
      mpred_connective(Var):-var(Var),!,fail.
