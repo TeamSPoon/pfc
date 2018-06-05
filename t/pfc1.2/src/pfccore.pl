@@ -818,7 +818,7 @@ mpred_nf1(P,[P]) :- is_ftVar(P), !.
 mpred_nf1(P/Cond,[(\+P)/Cond]):- mpred_negated_literal(P), !, dmsg(warn(mpred_nf1(P/Cond,[(\+P)/Cond]))).
 
 mpred_nf1(P/Cond,[P/Cond]):- var(P),!.
-mpred_nf1(P/Cond,[P/Cond]):- ((mpred_db_type(P,trigger);mpred_literal(P))), !.
+mpred_nf1(P/Cond,[P/Cond]):- ((mpred_db_type(P,trigger);mpred_literal_nonvar(P))), !.
 
 
 % these next two rules are here for upward compatibility and will go 

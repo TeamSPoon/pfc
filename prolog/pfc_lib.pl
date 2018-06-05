@@ -470,6 +470,7 @@ is_loadin(_,(_:-_)):-!.
 is_loadin(M,CC):- functor(CC,F,A),show_call(kb_local(M:F/A)),break.
 
 
+must_pfc(IM,MO):- fixed_syntax(IM,MM),!,must_pfc(MM,MO).
 must_pfc(IM,_):- is_never_pfc(IM),!,fail.
 %must_pfc(IM,'==>'(IM)):- (in_dialect_pfc;must_pfc_p(IM)),!.
 must_pfc(IM,SM:'==>'(IM)):- (in_dialect_pfc;must_pfc_p(IM)),!,source_module(SM),!.

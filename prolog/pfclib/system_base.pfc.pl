@@ -49,6 +49,8 @@
 % Douglas Miles
 */
 
+:- use_module(library(pfc_test)).
+
 :- set_prolog_flag(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
 
 :- if((current_prolog_flag(runtime_debug,D),D>1)).
@@ -603,8 +605,16 @@ never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
 :- listing(mpred_unload_option/2).
 
 
-P/mpred_positive_fact(P) ==> \+ ~P.
+% P/mpred_positive_fact(P) ==> \+ ~P.
 ~P/mpred_positive_fact(P) ==> \+ P.
+(~P/mpred_positive_literal(P)) ==> enforce(~P).
+(enforce(~P)/mpred_positive_literal(P)) ==> (~P, (P ==> \+ P)).
+% (enforce(P) /mpred_positive_literal(P) ==>  ( P, (~P ==> \+ ~P))).
+
+exceptWhen({Cond},P)==> (((P:- awc,Cond,!,fail))).
+exceptWhen(Cond,P)==> (((P,Cond)==> ~P)).
+exceptWhen(Cond,P)==> (((~P <- Cond))).
+exceptWhen({Cond},P)==> (~P :- cwc, Cond).
 
 :- mpred_trace_exec.
 %  can this ever happen?
