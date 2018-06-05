@@ -2113,6 +2113,31 @@ simply_functors(Db_pred,Op,Wild):- once(into_mpred_form(Wild,Simpler)),Wild\=@=S
 
 % -  dmsg_hook(db_op(query(HLDS,call),holds_t(ft_info,tCol,'$VAR'(_)))):-trace_or_throw_ex(dtrace).
 
+lin_visits(P,Visits):-attvar(P),get_attr(P,linv,num(Visits)),!.
+lin_visits(_,0).
+
+set_lin_visits(P,Visits):-attvar(P),get_attr(P,linv,NumVisits),!,setarg(1,NumVisits,Visits).
+set_lin_visits(P,Visits):-put_attr(P,linv,num(Visits)).
+
+linearize_headvar_dupes(In,Out,How):- 
+  term_variables(In,Vs),
+  linearize_headvar_dupes((=),In,Out,How),
+  maplist(del_attr_rl(linv),Vs).
+
+del_attr_rl(Attr,Vs):- del_attr(Vs,Attr).
+
+linearize_headvar_dupes(Equ,In,Out,How):- linearize_headvar_dupes(Equ,In,Out,true,How).
+linearize_headvar_dupes(_Equ,P,PO,Left,Connector):- 
+  (var(P),lin_visits(P,Visits)->Visits==0),!,
+  set_lin_visits(P,1),PO=P,Left=Connector.
+linearize_headvar_dupes(Equ,P,PO,Left,Connector):- var(P),!,PO=_,conjoin(Left,call(Equ,P,PO),Connector),!.
+linearize_headvar_dupes(_Equ,P,PO,Left,Connector):- \+ compound(P),PO=P,Connector=Left,!.
+linearize_headvar_dupes(Equ,[P1|PL],[PO1|PL2],Left,Connector):-!, 
+  linearize_headvar_dupes(Equ,P1,PO1,Left,MID),
+  linearize_headvar_dupes(Equ,PL,PL2,MID,Connector).
+linearize_headvar_dupes(Equ,P,PO,Left,Connector):-P=..[F|PL],
+ linearize_headvar_dupes(Equ,PL,POL,Left,Connector),PO=..[F|POL].
+
 
 fixed_syntax(I,O):- compound(I), with_some_vars_locked(I,fix_syntax(I,O))->I\=@=O.
 
@@ -2126,11 +2151,13 @@ fix_syntax((~P)/Cond,O):- !,O=(((P/Cond)==> ~P)).
 %fix_syntax((~P)/Cond,O):- !,O=(((P/Cond)==> ~P)).
 %fix_syntax((~P)/Cond,O):- !,O=(((P/ (\+Cond)) ==> \+ ~P)).
 %fix_syntax(P/Cond,O):- mpred_literal_nonvar(P),!,O=((P <- { Cond } )).
+fix_syntax((~P),O):- linearize_headvar_dupes(P,PL,Cond)->Cond\==true,!,O= preventedWhen(PL,{Cond}).
 fix_syntax(P/Cond,O):- !,O=((P <- {Cond} )).
 fix_syntax(((P/Cond):-B), (P :- B, Cond)).
 fix_syntax(P:-B,PP:-B):- fix_syntax(P,PP).
 fix_syntax(P,P).
 
+sameObjs(X,X).
 
 fixed_negations(I,O):- compound(I), with_some_vars_locked(I,fix_negations(I,O))->I\=@=O.
 
