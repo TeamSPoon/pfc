@@ -100,6 +100,7 @@
             %expands_on/2,
             fix_negations/2,
             fixed_negations/2,
+            fixed_syntax/2,
             foreach_arg/7,
             from_univ/4,
             fully_expand/2,            
@@ -2112,10 +2113,38 @@ simply_functors(Db_pred,Op,Wild):- once(into_mpred_form(Wild,Simpler)),Wild\=@=S
 
 % -  dmsg_hook(db_op(query(HLDS,call),holds_t(ft_info,tCol,'$VAR'(_)))):-trace_or_throw_ex(dtrace).
 
-fixed_negations(I,O):- fix_negations(I,O)->I\=@=O.
+
+fixed_syntax(I,O):- compound(I), with_vars_locked(I,fix_syntax(I,O))->I\=@=O.
+
+fix_syntax(P0,P0):- not_ftCompound(P0),!.
+fix_syntax(I,O):- fixed_negations(I,M),fix_syntax(M,O).
+%fix_syntax(~P/Cond,O):-  !,O=(((P/Cond)==> ~P)).
+%fix_syntax((~P)/Cond,O):- !,O=((~P <- {Cond} )).
+fix_syntax(~(P/Cond),O):- !,O= exceptWhen({Cond},P).
+fix_syntax((~P)/Cond,O):- !, fix_syntax(~(P/Cond),O).
+fix_syntax((~P)/Cond,O):- !,O=(((P/Cond)==> ~P)).
+%fix_syntax((~P)/Cond,O):- !,O=(((P/Cond)==> ~P)).
+%fix_syntax((~P)/Cond,O):- !,O=(((P/ (\+Cond)) ==> \+ ~P)).
+%fix_syntax(P/Cond,O):- mpred_literal_nonvar(P),!,O=((P <- { Cond } )).
+fix_syntax(P/Cond,O):- !,O=((P <- {Cond} )).
+fix_syntax(((P/Cond):-B), (P :- B, Cond)).
+fix_syntax(P:-B,PP:-B):- fix_syntax(P,PP).
+fix_syntax(P,P).
+
+
+fixed_negations(I,O):- compound(I), with_vars_locked(I,fix_negations(I,O))->I\=@=O.
+
 fix_negations(P0,P0):- not_ftCompound(P0),!.
 fix_negations(~(P0),~(P0)):- not_ftCompound(P0),!.
 fix_negations(\+(P0),\+(P0)):- not_ftCompound(P0),!.
+fix_negations(\+ \+ (P0), (P0)):- not_ftCompound(P0),!.
+
+fix_negations(\+ \+ (I), (O)):- !, fix_negations((I), (O)).
+
+fix_negations(P==>Q, PP==>QQ):-!,
+  fix_negations(P,PP),
+  fix_negations(Q,QQ),!.
+
 fix_negations(~(~I),O):- !, fix_negations(\+(~I),O).
 fix_negations(~not(I),O):- !, fix_negations(\+(~I),O).
 fix_negations(~~(I),O):- functor(~~(I),~~,1),!, fix_negations(\+(~I),O).
@@ -2124,6 +2153,7 @@ fix_negations(~(I),~(O)):- !, fix_negations(I,O).
 fix_negations(\+(I),\+(O)):- !, fix_negations(I,O).
 fix_negations(C,C):- if_defined(exact_args(C),fail),!.
 fix_negations([H|T],[HH|TT]):-!,fix_negations(H,HH),fix_negations(T,TT),!.
+
 fix_negations(C,CO):-C=..[F|CL],must_maplist(fix_negations,CL,CLO),!,CO=..[F|CLO].
 
 
@@ -2134,7 +2164,7 @@ fix_negations(C,CO):-C=..[F|CL],must_maplist(fix_negations,CL,CLO),!,CO=..[F|CLO
 reduce_clause_from_fwd(_Op,H,H):- quietly(\+is_ftCompound(H)),!.
 reduce_clause_from_fwd(Op,(H:-B),HH):-B==true,reduce_clause_from_fwd(Op,H,HH).
 reduce_clause_from_fwd(Op,(B==>H),HH):-B==true,reduce_clause_from_fwd(Op,H,HH).
-reduce_clause_from_fwd(Op,I,O):- quietly(fixed_negations(I,M)),!,reduce_clause_from_fwd(Op,M,O).
+reduce_clause_from_fwd(Op,I,O):- quietly(fixed_syntax(I,M)),!,reduce_clause_from_fwd(Op,M,O).
 reduce_clause_from_fwd(Op,(==>H),HH):-!,reduce_clause_from_fwd(Op,H,HH).
 reduce_clause_from_fwd(Op,(H<- B),HH):-B==true,reduce_clause_from_fwd(Op,H,HH).
 reduce_clause_from_fwd(Op,(B<==> H),HH):-B==true,reduce_clause_from_fwd(Op,'==>'(H),HH).

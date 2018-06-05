@@ -833,10 +833,10 @@ prologHybridFact(G):- (var(G)->(mpred_fact_arity(F,A),functor(G,F,A));true),into
 %
 % PFC Pbody.
 %
-mpred_pbody(H,B,_R,fail,deduced(backchains)):- get_bc_clause(H,(H:-B)),!.
-mpred_pbody(H,infoF(INFO),R,B,Why):-!,mpred_pbody_f(H,INFO,R,B,Why).
-mpred_pbody(H,B,R,BIn,WHY):- is_true(B),!,BIn=B,get_why(H,H,R,WHY).
-mpred_pbody(H,B,R,B,asserted(R,(H:-B))).
+% mpred_pbody(H,B,_R,fail,deduced(backchains)):- get_bc_clause(H,_,B)),!.
+%mpred_pbody(H,infoF(INFO),R,B,Why):-!,mpred_pbody_f(H,INFO,R,B,Why).
+%mpred_pbody(H,B,R,BIn,WHY):- is_true(B),!,BIn=B,get_why(H,H,R,WHY).
+%mpred_pbody(H,B,R,B,asserted(R,(H:-B))).
 
 
 %% get_why( +VALUE1, ?CL, ?R, :TermR) is semidet.
@@ -991,6 +991,8 @@ ain_minfo_2(How,G):-ain_minfo(How,G).
 %
 % PFC If Is A Info.
 %
+mpred_is_info((AWC,_)):- awc == AWC.
+mpred_is_info((ZWC,_)):- zwc == ZWC.
 mpred_is_info(mpred_bc_only(C)):-is_ftNonvar(C),!.
 mpred_is_info(infoF(C)):-is_ftNonvar(C),!.
 mpred_is_info(inherit_above(_,_)).

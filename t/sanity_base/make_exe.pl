@@ -1,3 +1,4 @@
 
-:- include(header_sane).
+:- include(test_header).
 
+:- qsave_program(tml_test).
