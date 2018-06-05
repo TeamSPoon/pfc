@@ -606,12 +606,11 @@ never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
 
 
 % P/mpred_positive_fact(P) ==> \+ ~P.
-~P/mpred_positive_fact(P) ==> \+ P.
-(~P/mpred_positive_literal(P)) ==> enforce(~P).
+(~P/mpred_positive_fact(P)) ==> enforce(~P).
 (enforce(~P)/mpred_positive_literal(P)) ==> (~P, (P ==> \+ P)).
 % (enforce(P) /mpred_positive_literal(P) ==>  ( P, (~P ==> \+ ~P))).
 
-preventedWhen(P,{Cond})==> (((P:- awc,Cond,!,fail))).
+% % preventedWhen(P,{Cond})==> (((P:- awc,Cond,!,fail))).
 preventedWhen(P,Cond)==> (((P,Cond)==> ~P)).
 % preventedWhen(P,Cond)==> ((((~P) <- Cond))).
 preventedWhen(P,{Cond})==> ((~P) :- cwc, Cond).

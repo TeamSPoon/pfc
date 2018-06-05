@@ -8,7 +8,6 @@
 %:- mpred_notrace_exec.
 % reset runtime counter
 :- statistics(runtime,_Secs).
-:- cls.
 
 
 ~path(X,X).
