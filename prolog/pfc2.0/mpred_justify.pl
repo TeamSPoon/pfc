@@ -781,8 +781,8 @@ memberchk_variant(X, [Y|Ys]) :-
 
 supporters_list0(Var,[is_ftVar(Var)]):-is_ftVar(Var),!.
 supporters_list0(F,OUT):- 
-  with_quiet_vars_lock((((mpred_get_support_why(F,(Fact,Trigger)),
-    triggerSupports(Fact,Trigger,MoreFacts)))*-> OUT=[Fact|MoreFacts] ; supporters_list1(F,OUT))).
+  (((mpred_get_support_why(F,(Fact,Trigger)),
+    triggerSupports(Fact,Trigger,MoreFacts)))*-> OUT=[Fact|MoreFacts] ; supporters_list1(F,OUT)).
 
 supporters_list1(Var,[is_ftVar(Var)]):-is_ftVar(Var),!.
 supporters_list1(U,[]):- axiomatic_supporter(U),!.
