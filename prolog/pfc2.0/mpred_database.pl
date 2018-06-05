@@ -625,10 +625,10 @@ pfc_provide_storage_op(change(retract,all),FactOrRule):- loop_check_nr(mpred_rem
 %
 % PFC Pbody.
 %
-mpred_pbody(H,B,_R,fail,deduced(backchains)):- get_bc_clause(H,(H:-B)),!.
-mpred_pbody(H,infoF(INFO),R,B,Why):-!,mpred_pbody_f(H,INFO,R,B,Why).
-mpred_pbody(H,B,R,BIn,WHY):- is_true(B),!,BIn=B,get_why(H,H,R,WHY).
-mpred_pbody(H,B,R,B,asserted(R,(H:-B))).
+%mpred_pbody(H,B,_R,fail,deduced(backchains)):- get_bc_clause(H,_H,B),!.
+%mpred_pbody(H,infoF(INFO),R,B,Why):-!,mpred_pbody_f(H,INFO,R,B,Why).
+%mpred_pbody(H,B,R,BIn,WHY):- is_true(B),!,BIn=B,get_why(H,H,R,WHY).
+%mpred_pbody(H,B,R,B,asserted(R,(H:-B))).
 
 
 %% get_why( +VALUE1, ?CL, ?R, :TermR) is semidet.
@@ -757,7 +757,7 @@ ain_minfo(How,((A,B):-INFOC)):-mpred_is_info(INFOC),(is_ftNonvar(A);is_ftNonvar(
 ain_minfo(How,((A;B):-INFOC)):-mpred_is_info(INFOC),(is_ftNonvar(A);is_ftNonvar(B)),!,ain_minfo(How,((A):-INFOC)),ain_minfo(How,((B):-INFOC)),!.
 ain_minfo(How,(-(A):-infoF(C))):-is_ftNonvar(C),is_ftNonvar(A),!,ain_minfo(How,((A):-infoF((C)))). % attvar_op(How,(-(A):-infoF(C))).
 ain_minfo(How,(~(A):-infoF(C))):-is_ftNonvar(C),is_ftNonvar(A),!,ain_minfo(How,((A):-infoF((C)))). % attvar_op(How,(-(A):-infoF(C))).
-ain_minfo(How,(A:-INFOC)):- is_ftNonvar(INFOC), get_bc_clause(A,(A:-INFOC)),!,attvar_op(How,(A:-INFOC)),!.
+ain_minfo(How,(A:-INFOC)):- is_ftNonvar(INFOC), get_bc_clause(A,AA,INFOCC),A=AA,INFOC==INFOCC,!,attvar_op(How,(A:-INFOC)),!.
 ain_minfo(How,bt(_ABOX,H,_)):-!,get_bc_clause(H,Post),attvar_op(How,Post).
 ain_minfo(How,nt(H,Test,Body)):-!,attvar_op(How,(H:-fail,nt(H,Test,Body))).
 ain_minfo(How,pt(H,Body)):-!,attvar_op(How,(H:-fail,pt(H,Body))).
@@ -779,11 +779,15 @@ ain_minfo_2(How,G):-ain_minfo(How,G).
 %
 % PFC If Is A Info.
 %
+mpred_is_info((CWC,Info)):- (atom(CWC),cwc(CWC));mpred_is_info(Info).
 mpred_is_info(mpred_bc_only(C)):-is_ftNonvar(C),!.
 mpred_is_info(infoF(C)):-is_ftNonvar(C),!.
 mpred_is_info(inherit_above(_,_)).
-mpred_is_info((Fail,_)):-Fail==fail.
 
+cwc(awc).
+cwc(zwc).
+cwc(fail).
+%cwc(Call):- callable(Call),Call.
 
 %:- was_dynamic(not_not/1).
 
@@ -813,9 +817,6 @@ fwc:-true.
 % Bwc.
 %
 bwc:-true.
-
-awc:-true.
-zwc:-true.
 
 %% wac is semidet.
 %
@@ -1529,8 +1530,11 @@ mpred_bc_only(G):- no_repeats(loop_check(mpred_bc_only0(G))).
 %
 % PFC Backchaining + FACTS + Inheritance.
 %
-mpred_bc_and_with_pfc(G):- no_repeats(loop_check(mpred_bc_only0(G))).
-mpred_bc_and_with_pfc(G):- strip_module(G,M,P),inherit_above(M,P).
+mpred_bc_and_with_pfc(G):- no_repeats(loop_check(mpred_bc_and_with_pfc_0(G))).
+
+mpred_bc_and_with_pfc_0(G):- mpred_call_only_facts(G). % was missing
+mpred_bc_and_with_pfc_0(G):- mpred_bc_only0(G).
+mpred_bc_and_with_pfc_0(G):- strip_module(G,M,P),inherit_above(M,P).
 
 
 
