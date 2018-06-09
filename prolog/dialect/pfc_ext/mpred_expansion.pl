@@ -2139,13 +2139,13 @@ linearize_headvar_dupes(Equ,P,PO,Left,Connector):-P=..[F|M],
  linearize_headvar_dupes(Equ,M,POL,Left,Connector),PO=..[F|POL].
 
 
-fixed_syntax(I,O):- compound(I), with_some_vars_locked(I,fix_syntax(I,O))->I\=@=O.
+fixed_syntax(I,O):- compound(I), with_vars_locked(I,fix_syntax(I,O))->I\=@=O.
 
-fix_syntax(P0,P0):- not_ftCompound(P0),!.
-fix_syntax(~I,O):- compound(I),I= P/Cond, !,O= preventedWhen(P,{Cond}).
-fix_syntax(I,O):- I= ((~P)/Cond),!,fix_syntax(~(P/Cond),O).
+fix_syntax(P0,P0):- \+ compound(P0),!.
+fix_syntax(I,O):-sub_compound_of(I,~(P/Cond)), !,O= preventedWhen(P,{Cond}).
+fix_syntax(I,O):- sub_compound_of(I, (~P/Cond)), !,fix_syntax(~(P/Cond),O).
 fix_syntax(~I,O):- compound(I),linearize_headvar_dupes(I,M,Cond)->Cond\==true,!,O= preventedWhen(M,{Cond}).
-fix_syntax(~I,O):- compound(I),linearize_headvar_dupes(I,M,Cond),!,O= preventedWhen(M,{Cond}).
+%fix_syntax(~I,O):- compound(I),linearize_headvar_dupes(I,M,Cond),!,O= preventedWhen(M,{Cond}).
 fix_syntax(I,O):- fixed_negations(I,M),fix_syntax(M,O).
 %fix_syntax(~P/Cond,O):-  !,O=(((P/Cond)==> ~P)).
 %fix_syntax((~P)/Cond,O):- !,O=((~P <- {Cond} )).
@@ -2154,11 +2154,13 @@ fix_syntax(I,O):- fixed_negations(I,M),fix_syntax(M,O).
 %fix_syntax((~P)/Cond,O):- !,O=(((P/ (\+Cond)) ==> \+ ~P)).
 %fix_syntax(P/Cond,O):- mpred_literal_nonvar(P),!,O=((P <- { Cond } )).
 fix_syntax(P/Cond,O):- !,O=((P <- {Cond} )).
-fix_syntax(((P/Cond):-B), O):-!,O=(P :- (B, Cond)).
+fix_syntax(I, O):- sub_compound_of(I,((P/Cond):-B)),!,O=(P :- (B, Cond)).
 fix_syntax(P:-B,PP:-B):-!, fix_syntax(P,PP).
 % fix_syntax(I,O):- compound(I),linearize_headvar_dupes(I,PL,Cond)->Cond\==true,!,O= enabledWhen(PL,{Cond}).
 fix_syntax(P,P).
 
+
+sub_compound_of(I,Of):- \+ \+ (numbervars(I,99,_,[attvar(bind)]),I=Of ), I = Of.
 
 fixed_negations(I,O):- compound(I), with_some_vars_locked(I,fix_negations(I,O))->I\=@=O.
 

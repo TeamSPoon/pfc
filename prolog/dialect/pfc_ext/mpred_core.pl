@@ -2123,10 +2123,11 @@ mpred_retract_supported_relations(_).
 %  it from the DB if they are not.
 remove_if_unsupported(P):-
   loop_check(remove_if_unsupported0(P),true).
-remove_if_unsupported0(P):-
-   mpred_supported(P) 
-     -> mpred_trace_msg('~p',[still_supported(P)]) ;  doall((mpred_undo(P))).
+remove_if_unsupported0(P):- \+ mpred_supported(P),!,doall((mpred_undo(P))).
+remove_if_unsupported0(P):- \+ is_single_valued(P),!,mpred_trace_msg('~p',[still_supported(P)]).
+remove_if_unsupported0(P):- mpred_trace_msg('~p',[sv_still_supported(P)]), doall((mpred_undo(P))).
 
+is_single_valued(P):- get_unnegated_functor(P,F,_)->call_u(prologSingleValued(F)).
 
 
 
