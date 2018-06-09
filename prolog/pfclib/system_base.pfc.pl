@@ -56,7 +56,6 @@
 :- if((current_prolog_flag(runtime_debug,D),D>1)).
 :- endif.
 :- '$def_modules'([clause_expansion/2],O),dmsg('$def_modules'([clause_expansion/2],O)),nl.
-:- make:list_undefined([]).
 
 :- sanity(is_pfc_file).
 
@@ -605,15 +604,15 @@ never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
 :- listing(mpred_unload_option/2).
 
 
-% P/mpred_positive_fact(P) ==> \+ ~P.
-(~P/mpred_positive_fact(P)) ==> enforce(~P).
-(enforce(~P)/mpred_positive_literal(P)) ==> (~P, (P ==> \+ P)).
-% (enforce(P) /mpred_positive_literal(P) ==>  ( P, (~P ==> \+ ~P))).
+P/mpred_positive_fact(P) ==> \+ ~P.
+(~P)/mpred_positive_fact(P) ==> \+ P.
+(nesc(~P)/mpred_positive_fact(P)) ==> (~P, (P ==> \+ P)).
+(nesc(P) /mpred_positive_fact(P) ==>  ( P, (~P ==> \+ ~P))).
 
 % % preventedWhen(P,{Cond})==> (((P:- awc,Cond,!,fail))).
-preventedWhen(P,Cond)==> (((P,Cond)==> ~P)).
+preventedWhen(P,Cond)==> (((P/mpred_positive_fact(P),Cond)==> nesc(~P))).
 % preventedWhen(P,Cond)==> ((((~P) <- Cond))).
-preventedWhen(P,{Cond})==> ((~P) :- cwc, Cond).
+preventedWhen(P,{Cond})/mpred_positive_fact(P)==> ((~P) :- cwc, Cond).
 
 :- mpred_trace_exec.
 %  can this ever happen?

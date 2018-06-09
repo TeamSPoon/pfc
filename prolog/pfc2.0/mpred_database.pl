@@ -2243,8 +2243,8 @@ assert_mu(M,(Pred:- (ZWC,More)),_,_):- ZWC == zwc,!,assertz_mu(M,(Pred:- (ZWC,Mo
 %assert_mu(M,Pred,F,A):- a(prologSingleValued,F),!,must(update_single_valued_arg(M,Pred,A)),!.
 assert_mu(M,Pred,F,_):- a(prologOrdered,F),!,assertz_mu(M,Pred).
 assert_mu(M,Pred,_,_):- t_l:assert_to(Where),!, (Where = a -> asserta_mu(M,Pred); assertz_mu(M,Pred)).
-assert_mu(M,Pred,_,1):- !, assertz_mu(M,Pred),!.
-assert_mu(M,Pred,_,_):- asserta_mu(M,Pred).
+%assert_mu(M,Pred,_,1):- !, assertz_mu(M,Pred),!.
+assert_mu(M,Pred,_,_):- assertz_mu(M,Pred).
 
 
 :-thread_local(t_l:side_effect_ok/0).
