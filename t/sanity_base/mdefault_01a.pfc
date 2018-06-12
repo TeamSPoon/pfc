@@ -1,8 +1,8 @@
 
 :- include(test_header).
 
-functorDeclares(tFish).
-functorDeclares(tSwim).
+:- dynamic(tFish/1).
+:- dynamic(tSwim/1).
 
 :- dmsg("tweety and chilly are fish.").
 tFish(iTweety).
