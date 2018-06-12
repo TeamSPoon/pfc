@@ -32,9 +32,14 @@
 */
 
 
+:- sanity(is_pfc_file).
+
+
 :- mpred_unload_file.
 
 :- file_begin(pfc).
+
+:- sanity(is_pfc_file).
 
 :- set_fileAssertMt(baseKB).
 % ensure this file does not get unloaded with mpred_reset

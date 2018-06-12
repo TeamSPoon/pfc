@@ -2507,10 +2507,11 @@ mpred_eval_rhs1(\+ P,Support):- nonvar(P),
 % Dmiles replaced with this
 mpred_eval_rhs1( P,Support):- 
  % predicate to remove.
+  P\= ~(_),
   mpred_unnegate( P , PN),!,
   %TODO Shouldn''t we be mpred_withdrawing the Positive version?  (We are)
   % perhaps we aready negated here from mpred_nf1_negation?!
-  mpred_trace_msg('~N~n~n\t\tRHS-Withdrawing-Negation: ~p \n\tSupport: ~p~n',[P,Support]),
+  mpred_trace_msg('~N~n~n\t\tNegation causes RHS-Withdrawing: ~p \n\tSupport: ~p~n',[P,Support]),
   !,
   mpred_withdraw(PN).
 
@@ -2518,6 +2519,7 @@ mpred_eval_rhs1( P,Support):-
 % if negated litteral \+ P
 mpred_eval_rhs1( P,Support):-
  % predicate to remove.
+  P \= ~(_),
   \+ \+ mpred_negated_literal( P),
   %TODO Shouldn''t we be mpred_withdrawing the Positive version?
   % perhaps we aready negated here dirrent nf1_*

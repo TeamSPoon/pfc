@@ -56,8 +56,8 @@ test_header_include.
 %:- endif. % current_prolog_flag(test_header,_).
 
 
-:- prolog_load_context(source,File),
-   (atom_contains(File,'.pfc')-> sanity(is_pfc_file) ; sanity(must_not_be_pfc_file)).
+:- prolog_load_context(source,File),!,
+   ignore((((atom_contains(File,'.pfc')-> sanity(pfc_lib:is_pfc_file) ; sanity( \+ pfc_lib:is_pfc_file))))),!.
 
 :- mpred_trace_exec.
 
@@ -67,7 +67,13 @@ test_header_include.
 
 :- '$current_source_module'(W), '$set_typein_module'(W).
 
-:- sanity((defaultAssertMt(Mt1),fileAssertMt(Mt2),source_module(Mt3))),sanity((Mt1==Mt2,Mt1==Mt3)).
+:- sanity(
+ ((fileAssertMt(Mt2),
+(defaultAssertMt(Mt1),
+    %fileAssertMt(Mt2),
+   source_module(Mt3))),
+  sanity((Mt1==Mt2,Mt1==Mt3)))).
+
 
 
 

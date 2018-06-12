@@ -34,12 +34,16 @@ zisa(C1,C2) ==>
 % penguins do not fly.
 penguin(X) ==> ( ~fly(X)).
 
+:- mpred_trace_exec.
 % chilly is a penguin.
 ==> penguin(chilly).
+
+:- break.
 
 % tweety is a canary.
 ==> canary(tweety).
 
+:- mpred_test(penguin(chilly)).
 
 :- mpred_test(~fly(chilly)).
 
