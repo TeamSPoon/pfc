@@ -603,9 +603,21 @@ never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
 %:- mpred_notrace_exec.
 :- listing(mpred_unload_option/2).
 
+:- mpred_trace_exec.
+%(P/mpred_positive_fact(P),~P) ==> \+ ~P.
+
+
+
+% ~P ==>  ({retractall(P)}).
+% P ==>  ({retractall(~P)}).
+ 
+% ~P ==>  \+ P.
+ %(P ,{mpred_positive_fact(P)})==>  \+ ~ P.
+%:- break.
+
 
 P/mpred_positive_fact(P) ==> \+ ~P.
-(~P)/mpred_positive_fact(P) ==> \+ P.
+(~P)/mpred_positive_fact(P) ==> (\+ P , ~P).
 (nesc(~P)/mpred_positive_fact(P)) ==> (~P, (P ==> \+ P)).
 (nesc(P) /mpred_positive_fact(P) ==>  ( P, (~P ==> \+ ~P))).
 

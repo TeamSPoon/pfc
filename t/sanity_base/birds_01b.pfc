@@ -131,6 +131,7 @@ never_retract_u(tBird(ext,iChilly)).
 
 ~ tPenguin(ext,iChilly).                              
 
+:- break.
 
 :- mpred_test((tBird(ext,iChilly))).
 

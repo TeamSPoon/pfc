@@ -401,12 +401,13 @@ maybe_should_rename(O,O).
 :- discontiguous(baseKB:'$pldoc'/4).
 
 
-baseKB:ignore_file_mpreds(File):- atom(File),check_ignore_file_mpreds(File).
-
 check_ignore_file_mpreds(File):- baseKB:expect_file_mpreds(File),!,fail.
 check_ignore_file_mpreds(File):- ( atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.clif',File);atom_concat(_,'.pfc',File)),!,asserta(baseKB:expect_file_mpreds(File)),fail.
 check_ignore_file_mpreds(File):- baseKB:expect_file_mpreds(Stem),atom_concat(Stem,_,File),!,asserta(baseKB:expect_file_mpreds(File)),!,fail.
 check_ignore_file_mpreds(File):- baseKB:ignore_file_mpreds(Stem),atom_concat(Stem,_,File),!,asserta(baseKB:ignore_file_mpreds(File)).
+
+baseKB:ignore_file_mpreds(File):- atom(File),check_ignore_file_mpreds(File).
+
 %check_ignore_file_mpreds(File):- module_property(M,file(File)),module_property(M,class(library)),asserta(baseKB:ignore_file_mpreds(File)),!.
 % check_ignore_file_mpreds(File):- baseKB:ignore_file_mpreds(File),!.
 % check_ignore_file_mpreds(File):- asserta(baseKB:expect_file_mpreds(File)),!,fail.
@@ -421,33 +422,30 @@ in_dialect_pfc:- is_pfc_file. % \+ current_prolog_flag(dialect_pfc,cwc),!.
 %is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_mod)),!,baseKB:mtCanAssert(SM).
 is_pfc_module(SM):- clause_b(mtHybrid(SM)).
 
-% First checks to confirm there is nothing inhibiting
-must_not_be_pfc_file:- is_pfc_file0, rtrace(is_pfc_file0),trace,!,fail.
-must_not_be_pfc_file:- !.
-
-:- export(must_not_be_pfc_file/0).
-:- header_sane:import(must_not_be_pfc_file/0).
 
 
-is_pfc_file:- current_prolog_flag(never_pfc,true),!,must_not_be_pfc_file,!,fail.
+is_pfc_file:- current_prolog_flag(expect_pfc_file,always),!,sanity(must( is_pfc_file0)),!.
+is_pfc_file:- current_prolog_flag(expect_pfc_file,never),!,ignore(sanity(must( \+ is_pfc_file0))),!,fail.
 is_pfc_file:- quietly(is_pfc_file0),!.
 
-:- export(is_pfc_file/0).
-:- header_sane:import(is_pfc_file/0).
+%:- export(is_pfc_file/0).
+%:- header_sane:import(is_pfc_file/0).
 
-is_pfc_file0:- source_location(File,_W),!,is_pfc_file(File),!.
-is_pfc_file0:- prolog_load_context(module, M),is_pfc_module(M),!,clause_b(mtHybrid(M)).
-%is_pfc_file0:- source_context_module(M),is_pfc_module(M).
+is_pfc_file0:- source_location(File,_W),prolog_load_context(source, SFile),is_pfc_filename(File,SFile).
+is_pfc_file0:- prolog_load_context(module, M),M\==baseKB,is_pfc_module(M),!,clause_b(mtHybrid(M)).
 
-:- meta_predicate is_pfc_file(:).
-is_pfc_file(M:File):- is_pfc_file(M,File).
-is_pfc_file(_,File):- atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File),!.
-is_pfc_file(_,File):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
-is_pfc_file(_,File):- baseKB:ignore_file_mpreds(File),!,fail.
-is_pfc_file(_,File):- baseKB:expect_file_mpreds(File),!.
-is_pfc_file(M,Other):- prolog_load_context(source, File),Other\==File,!,is_pfc_file(M,File).
-%is_pfc_file(M,_):- prolog_load_context(module, SM), SM\==M,!, is_pfc_module(SM).
-%is_pfc_file(M,_):- is_pfc_module(M).
+is_pfc_file(File):- is_pfc_filename(File,File).
+% First checks to confirm there is nothing inhibiting
+is_pfc_filename(File,_):- baseKB:ignore_file_mpreds(File),!,fail.
+is_pfc_filename(File,_):- baseKB:expect_file_mpreds(File),!.
+is_pfc_filename(File,_):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
+is_pfc_filename(File,_):- atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File),!.
+is_pfc_filename(File,File):-!,fail.
+is_pfc_filename(_,File):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
+is_pfc_filename(_,File):- baseKB:expect_file_mpreds(File),!.
+is_pfc_filename(_,File):- baseKB:ignore_file_mpreds(File),!,fail.
+is_pfc_filename(_,File):- atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File),!.
+
 
 :- fixup_exports.
 

@@ -247,10 +247,10 @@ set_fileAssertMt(M):-
   assert_setting(baseKB:file_to_module(File,M)),
   assert_setting(lmcache:mpred_directive_value(File,module,M)),
   asserta_until_eof(t_l:current_defaultAssertMt(M)),!,
-  (is_pfc_file -> set_current_modules(M) ; true).
+  (pfc_lib:is_pfc_file -> set_current_modules(M) ; true).
 
 
-:- import(pfc_lib:is_pfc_file/0).
+%:- import(pfc_lib:is_pfc_file/0).
 % :- '$hide'(set_fileAssertMt(_)).
 
 
