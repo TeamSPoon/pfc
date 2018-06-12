@@ -10,8 +10,8 @@
 :- statistics(runtime,_Secs).
 %:- cls.
 
-~path(1,3).
-~path(1,4).
+nesc(~path(1,3)).
+nesc(~path(1,4)).
 
 path(1,2).
 path(2,3).

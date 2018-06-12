@@ -2654,7 +2654,8 @@ call_u_mp(M,retractall(X)):- !, M:mpred_prolog_retractall(X).
 
 % prolog_clause call_u
 % call_u_mp(M, (H:-B)):- B=@=call(BA),!,B=call(BA),!, (M:clause_u(H,BA);M:clause_u(H,B)),sanity(\+ reserved_body(B)).
-call_u_mp(M, (H:-B)):- !,call_u_mp(M,clause_u(H,B)),sanity(\+ reserved_body(B)).
+call_u_mp(M, (H:-B)):- !,call_u_mp(M,clause_u(H,B)),(\+ reserved_body(B)).
+% call_u_mp(M, (H:-B)):- !,call_u_mp(M,clause_u(H,B)),sanity(\+ reserved_body(B)).
 
 % call_u_mp(M,P1):- predicate_property(M:P1,foreign),!,M:call(P1).
 % call_u_mp(M,P1):- predicate_property(M:P1,static),!,M:call(P1).
@@ -3079,7 +3080,8 @@ mpred_compile_rhs_term(Sup,I,O):- mpred_compile_rhs_term_consquent(Sup,I,O).
        \+ mpred_neg_connective(F),
        !.
 
-     mpred_positive_fact(X):-  mpred_positive_literal(X), X \= ~(_), mpred_db_type(X,fact(_FT)), \+ mpred_db_type(X,trigger).
+     mpred_positive_fact(X):-  mpred_positive_literal(X), X \= ~(_), 
+     mpred_db_type(X,fact(_FT)), \+ mpred_db_type(X,trigger).
 
      mpred_is_trigger(X):-   mpred_db_type(X,trigger(_)).
 

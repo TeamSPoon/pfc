@@ -1063,11 +1063,16 @@ if_missing1(Q):- mpred_literal_nv(Q), call_u( \+ ~ Q), if_missing_mask(Q,R,Test)
 if_missing_mask(M:Q,M:R,M:Test):- nonvar(Q),!,if_missing_mask(Q,R,Test).
 if_missing_mask(Q,~Q,\+Q):- \+ is_ftCompound(Q),!.
 
-if_missing_mask(ISA, ~ ISA, \+ ISA):- functor(ISA,F,1),(F==tSwim;call_u(functorDeclares(F))),!.
-if_missing_mask(HB,RO,TestO):- once(mpred_rule_hb(HB,H,B)),B\==true,HB\==H,!,if_missing_mask(H,R,TestO),subst(HB,H,R,RO).
+%if_missing_mask(ISA, ~ ISA, \+ ISA):- functor(ISA,F,1),(F==tSwim;call_u(functorDeclares(F))),!.
+if_missing_mask(HB,RO,TestO):- once(mpred_rule_hb(HB,H,B)),B\==true,HB\==H,!,
+     if_missing_mask(H,R,TestO),subst(HB,H,R,RO).
+
+if_missing_mask(ISA, ISA, \+ ISA):- functor(ISA, _F,1),!.% (F==tSwim;call_u(functorDeclares(F))),!.
+
 if_missing_mask(Q,R,Test):-
    which_missing_argnum(Q,N),
    if_missing_n_mask(Q,N,R,Test),!.
+
 if_missing_mask(ISA, ~ ISA, \+ ISA).
 
 %% if_missing_n_mask( +Q, ?N, ?R, ?Test) is semidet.
@@ -1094,11 +1099,13 @@ if_missing_mask(Q,N,R,dif:dif(Was,NEW)):-
 %
 % Which Missing Argnum.
 %
-which_missing_argnum(Q,N):-
+which_missing_argnum(Q,N):- compound(Q),\+ compound_name_arity(Q,_,0),
  must((acyclic_term(Q),is_ftCompound(Q),get_functor(Q,F,A))),
  F\=t,
-  (call_u(singleValuedInArg(F,N)) -> true;
-    ((get_assertion_head_arg(N,Q,Was),is_ftNonvar(Was)) -> true; ( A>1 -> N=A ; fail))).
+  (call_u(singleValuedInArg(F,N)) -> true; which_missing_argnum(Q,F,A,N)).
+
+which_missing_argnum(_,_,1,_):-!,fail.
+which_missing_argnum(Q,_F,A,N):- between(A,1,N),get_assertion_head_arg(N,Q,Was),is_ftNonvar(Was).
 
 mpred_run_pause:- asserta(t_l:mpred_run_paused).
 mpred_run_resume:- retractall(t_l:mpred_run_paused).
