@@ -1,7 +1,7 @@
 
 :- use_module(library(pfc)).
 :- cls.
-:- mpred_no_trace_exec.
+:- mpred_notrace_exec.
 :- statistics(cputime,X),assert(load_time(X)).
 
 :- maplist(mpred_ain,
@@ -22,5 +22,5 @@ adj(10,1),
 (tc(X,Y), tc(Y,Z))==> tc(X,Z)]).
 
 :- statistics(cputime,X),retract(load_time(LT)), Time is X-LT,
-   write(time_was(Time)).
+   wdmsg(time_was(Time)).
 
