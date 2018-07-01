@@ -136,7 +136,7 @@
             listToE/2,
             map_f/2,
             mpred_expand_rule/2,
-            must_expand/1,
+            should_expand/1,
             must_remodulize/3,
             recommify/2,
             recommify/3,
@@ -678,51 +678,52 @@ db_expand_maplist(FE,List,T,G,O):-bagof(M, (member(T,List),call(FE,G,M)), ML),li
 
 %= 	 	 
 
-%% must_expand( :TermG) is semidet.
+%% should_expand( :TermG) is semidet.
 %
 % Must Be Successfull Expand.
 %
-%TODO Maybe later? must_expand(G):- \+ skip_expand(G), arg(_,G,E),compound(E).
-must_expand(G):- \+ compound(G),!,fail.
-must_expand(_:G):- !,must_expand(G).
-must_expand((G:-_)):- !,must_expand(G).
-must_expand(G):- functor(G,F,_),must_expand_f(F),!.
-must_expand(G):- functor(G,F,_),exact_args_f(F),!,fail.  % Will expand these only after evaluation
-must_expand(G):- arg(A,G,C),(string(C);(compound(C),A==2)),!.
+%TODO Maybe later? should_expand(G):- \+ skip_expand(G), arg(_,G,E),compound(E).
+should_expand(G):- \+ compound(G),!,fail.
+should_expand(_:G):- !,should_expand(G).
+should_expand((G:-_)):- !,should_expand(G).
+should_expand(G):- functor(G,F,_),should_expand_f(F),!.
+should_expand(G):- functor(G,F,_),exact_args_f(F),!,fail.  % Will expand these only after evaluation
+should_expand(G):- arg(A,G,C),(string(C);(compound(C),A==2)),!.
 
 
-must_expand_f(kif).
-must_expand_f(pkif).
-must_expand_f('==>').
-must_expand_f('~').
+should_expand_f(kif).
+should_expand_f(pkif).
+should_expand_f('==>').
+should_expand_f('~').
 
-must_expand_f(props).
-must_expand_f(iprops).
-must_expand_f(upprop).
-must_expand_f(typeProps).
-must_expand_f(mudLabelTypeProps).
-must_expand_f(iprops).
-must_expand_f(isa).
-must_expand_f(t).
-must_expand_f(isEach).
+should_expand_f(props).
+should_expand_f(iprops).
+should_expand_f(upprop).
+should_expand_f(typeProps).
+should_expand_f(mudLabelTypeProps).
+should_expand_f(iprops).
+should_expand_f(isa).
+should_expand_f(t).
+should_expand_f(isEach).
 
 % Collecton Hooks
-must_expand_f(tPred).
-must_expand_f(tFunction).
-must_expand_f(tRelation).
-must_expand_f(tCol).
-must_expand_f(tSet).
-must_expand_f(F):-atom_concat('tt',_,F).
-must_expand_f(F):-atom_concat('rt',_,F).
+should_expand_f(tPred).
+should_expand_f(tFunction).
+should_expand_f(tRelation).
+should_expand_f(tCol).
+should_expand_f(tSet).
+should_expand_f(F):-atom_concat('tt',_,F).
+should_expand_f(F):-atom_concat('rt',_,F).
 
 % Pred Impl Hooks
-must_expand_f(prologHybrid).
-must_expand_f(prologBuiltin).
-must_expand_f(prologDynamic).
-must_expand_f(F):-atom_concat('prolog',_,F).
-must_expand_f(F):-atom_concat('pddl',_,F).
-must_expand_f(F):-atom_concat('pfc',_,F).
-must_expand_f(F):-atom_concat('mpred_',_,F).
+should_expand_f(singleValuedHybrid).
+%should_expand_f(prologHybrid).
+%should_expand_f(prologBuiltin).
+%should_expand_f(prologDynamic).
+should_expand_f(F):-atom_concat('prolog',_,F).
+should_expand_f(F):-atom_concat('pddl',_,F).
+should_expand_f(F):-atom_concat('pfc',_,F).
+should_expand_f(F):-atom_concat('mpred_',_,F).
 
 
 %= 	 	 
@@ -801,26 +802,90 @@ has_skolem_attrvars(Sent):- quietly((term_attvars(Sent,Attvars),member(Var,Attva
 fully_expand_real(X,Y):- must((fully_expand_real(clause(unknown,cuz),X,Y))).
 
 
-fully_expand_real(Op,Sent,SentO):- has_skolem_attrvars(Sent),!,
+
+fully_expand_real(_Op,Sent,SentO):- \+ compound(Sent),!,Sent=SentO.
+fully_expand_real(Op,isa(I,C),SentO):- !,fully_expand_real_2(Op,isa(I,C),SentO).
+fully_expand_real(Op,==>(Sent),SentO):- !,fully_expand_real_2(Op,Sent,SentO).
+fully_expand_real(Op,==>(SentA,SentB),SentOO):- !,fully_expand_real_2(Op,==>(SentA,SentB),SentOO).
+fully_expand_real(Op,mudKeyword(SentA,SentB),SentOO):- !,fully_expand_real_2(Op,mudKeyword(SentA,SentB),SentOO).
+fully_expand_real(Op,<==>(SentA,SentB),SentOO):- !,fully_expand_real_2(Op,<==>(SentA,SentB),SentOO).
+fully_expand_real(Op,(Sent/I),(SentO/O)):- !,fully_expand_real_2(Op,Sent,SentO),fully_expand_goal(Op,I,O).
+fully_expand_real(_Op,{}(IC),{}(IC)):- !.
+fully_expand_real(Op,Sent,SentO):- functor(Sent,F,A),always_quite_expand_fa(F,A),!,fully_expand_real_2(Op,Sent,SentO).
+fully_expand_real(Op,(SentA,SentB),(SentAA,SentBB)):- !,
+  fully_expand_real(Op,SentA,SentAA),fully_expand_real(Op,SentB,SentBB).
+fully_expand_real(Op,SentI,SentO):- maybe_expand_reduce(Op,SentI,Sent),!,
+   fully_expand_real_2(Op,Sent,SentO),!,
+   (Sent=@=SentO-> true ;            
+     (SentI \=@= Sent -> true ; 
+       show_expansion("~N-----++",Op,Sent,SentO))).
+fully_expand_real(_Op,Sent,Sent):- current_prolog_flag(runtime_speed,3),!.
+fully_expand_real(_Op,Sent,Sent):- current_prolog_flag(runtime_safety,0),!.
+fully_expand_real(_Op,(H:-B),(H:-B)):-!.
+fully_expand_real(Op,Sent,SentO):-
+  fully_expand_real_2(Op,Sent,SentO),!,
+  (Sent=@=SentO-> true ; 
+    (dumpST,show_expansion("~N<!--BREAK-ERROR--->",Op,Sent,SentO),nop(break))).
+
+show_expansion(Prefix,Op,Sent,SentO):-dmsg(Prefix),dmsg(-->(Op)),dmsg(Sent),dmsg(-->),dmsg(SentO),!.
+
+fully_expand_real_2(Op,Sent,SentO):- has_skolem_attrvars(Sent),!,
    gripe_time(0.2,
     (must_det(quietly(serialize_attvars(Sent,SentI))),
       sanity(\+ has_skolem_attrvars(SentI)),
-     must_det(fully_expand_real(Op,SentI,SentO)),!)),!.
+     must_det(fully_expand_real_3(Op,SentI,SentO)),!)),!.
+fully_expand_real_2(Op,Sent,SentO):- fully_expand_real_3(Op,Sent,SentO).
 
-fully_expand_real(Op,Sent,SentO):-!,
-   gripe_time(0.2,
-    must_det(locally_tl(disable_px,
-       (locally(local_override(no_kif_var_coroutines,true),
-       (must_det(fully_expand_into_cache(Op,Sent,SentO)))))))).
-
-fully_expand_real(Op,Sent,SentO):-
+fully_expand_real_3(Op,Sent,SentO):-
    gripe_time(0.2,
     must_det(locally_tl(disable_px,
        (locally(local_override(no_kif_var_coroutines,true),
        (must_det(fully_expand_into_cache(Op,Sent,SentIO)),
-                   must_det(quietly(maybe_deserialize_attvars(SentIO,SentO))))))))),!.
+                   must_det(quietly(maybe_deserialize_attvars(SentIO,SentO))))))))).
 
-maybe_deserialize_attvars(X,Y):- current_prolog_flag(expand_attvars,true) -> deserialize_attvars(X,Y) ; X=Y.
+
+maybe_expand(_Op,C,_):- \+ compound(C),!,fail.
+maybe_expand(Op,M:P,M:PP):-!,maybe_expand(Op,P,PP).
+maybe_expand(_Op,C,_):- compound_name_arity(C,_,0),!,fail.
+maybe_expand(_Op,P,_):- var(P),!,fail.
+maybe_expand(Op,P,P):-maybe_expand_p(Op,P),!.
+
+
+maybe_expand_reduce(_Op,==>(P),P).
+maybe_expand_reduce(_Op,expand(P),P).
+maybe_expand_reduce(_Op,Sent,Sent):- functor(Sent,F,_), clause_b(rtSymmetricBinaryPredicate(F)).
+
+
+maybe_expand_p( Op, H:-_ ):- !, maybe_expand_p(Op,H).
+maybe_expand_p(_Op,==>(_,_)).
+maybe_expand_p(_Op,mudKeyword(_,_)).
+maybe_expand_p(_Op,isa(_,_)).
+maybe_expand_p(_Op,(_/_)).
+maybe_expand_p(_Op,(_,_)).
+maybe_expand_p(_Op,P):- functor(P,F,A),!,always_quite_expand_fa(F,A).
+
+always_quite_expand_fa(F,1):- maybe_expand_f(F).
+always_quite_expand_fa(F,2):- clause_b(rtSymmetricBinaryPredicate(F)).
+always_quite_expand_fa(t,_).
+%always_quite_expand_fa(F,2):- should_expand_f(F).
+
+maybe_expand_f(meta_argtypes).
+maybe_expand_f(functorIsMacro).
+maybe_expand_f(tPred).
+maybe_expand_f(t).
+maybe_expand_f(ttExpressionType).
+maybe_expand_f(prologHybrid).
+maybe_expand_f(prologBuiltin).
+maybe_expand_f(prologSingleValued).
+maybe_expand_f(prologHybrid).
+maybe_expand_f(singleValuedHybrid).
+maybe_expand_f(prologSideEffects).
+maybe_expand_f(prologMultiValued).
+%maybe_expand_f(F):- should_expand_f(F).
+
+
+maybe_deserialize_attvars(X,Y):- current_prolog_flag(expand_attvars,true) 
+  -> deserialize_attvars(X,Y) ; X=Y.
 %maybe_deserialize_attvars(X,X):-!.
 
 
@@ -2231,18 +2296,20 @@ to_predicate_isas(C,CO):-C=..[F|CL],must_maplist(to_predicate_isas,CL,CLO),!,CO=
 %
 % Exact Arguments.
 %
-exact_args(Q):-is_ftVar(Q),!,fail.
-exact_args(isEach):-!,fail.
+exact_args(Q):- is_ftVar(Q),!,fail.
 exact_args(Q):- \+ compound(Q), !.
-exact_args(_:Q):- !,(exact_args0(Q),fail).
+exact_args(isEach):-!,fail.
+%exact_args(_:Q):- !,(exact_args0(Q),fail).
+exact_args(_:Q):- !,(exact_args0(Q)).
 exact_args(Q):- exact_args0(Q),!.
+
 
 
 exact_args0(Q):- \+ compound(Q), !.
 exact_args0((A/B)):- (is_ftVar(A);(number(B);is_ftVar(B))),!.
 exact_args0(==>(_,_)):-!,fail.
 % exact_args0(Q):- Q=..[_,A],atomic(A),!.
-exact_args0(Q):- functor(Q,F,A),A>0,!,exact_args_f(F),!.
+exact_args0(Q):- compound_name_arity(Q,F,A),A>0,!,exact_args_f(F),!.
 
 exact_args_f(-->).
 exact_args_f(if_defined).
