@@ -184,7 +184,7 @@ ttTypeType(ttTypeType).
 ttTypeType(ttRelationType).
 ttTypeType(TT)==>functorDeclares(TT).
 
-ttTypeType(ttModuleType,mudToCyc('MicrotheoryType')).
+==>ttTypeType(ttModuleType,mudToCyc('MicrotheoryType')).
 typeGenls(ttModuleType,tMicrotheory).
 ==>ttModuleType(tSourceCode,mudToCyc('tComputerCode'),comment("Source code files containing callable features")).
 ==>ttModuleType(tSourceData,mudToCyc('iboPropositionalInformationThing'),comment("Source data files containing world state information")).
@@ -203,20 +203,21 @@ functorDeclares(compilerDirective).
 %compilerDirective(F)==>{kb_global(F/0)}.
 compilerDirective(F)==>{kb_shared(F/0)}.
 
-compilerDirective(hardCodedExpansion,comment("Is Already Implemented From Code")).
-compilerDirective(codeTooSlow,comment("A faster more incomplete version is filling in for it")).
-compilerDirective(pfc_checking,comment("Checks for common Pfc Errors")).
-compilerDirective(pass2,comment("Probably not needed at first")).
-compilerDirective(tooSlow,comment("Slow and Probably not needed at first")).
-compilerDirective(redundantMaybe,comment("Probably redundant")).
-compilerDirective(isRedundant,comment("Redundant")).
-compilerDirective(isRuntime,comment("Only use rule/fact at runtime")).
+==> compilerDirective(hardCodedExpansion,comment("Is Already Implemented From Code")).
+==> compilerDirective(codeTooSlow,comment("A faster more incomplete version is filling in for it")).
+==> compilerDirective(pfc_checking,comment("Checks for common Pfc Errors")).
+==> compilerDirective(pass2,comment("Probably not needed at first")).
+==> compilerDirective(tooSlow,comment("Slow and Probably not needed at first")).
+==> compilerDirective(redundantMaybe,comment("Probably redundant")).
+==> compilerDirective(isRedundant,comment("Redundant")).
+==> compilerDirective(isRuntime,comment("Only use rule/fact at runtime")).
 
 
 :- forall(member(PredType,[
                   prologBuiltin,
                   prologDynamic,
                   prologHybrid,
+                  singleValuedHybrid,
 
                   prologKIF,
                   prologPTTP,
@@ -314,27 +315,27 @@ pfc_checking ==> (mpred_prop(M,F,A,pfcBcTrigger)==>{M:warn_if_static(F,A)}).
 mpred_prop(M,F,A,What)/(\+ ground(F/A))==>{trace_or_throw_ex(mpred_prop(M,F,A,What))}.
 
 
-prop_mpred(M,pfcCreates,F,A)==> 
+mpred_prop(M,F,A,pfcCreates)==> 
  % {functor(P,F,A),quietly(make_dynamic(P)),kb_shared(F/A),create_predicate_inheritance(abox,F,A)},
   {kb_shared(M:F/A)},
   {M:warn_if_static(F,A)}.
-prop_mpred(M,pfcControlled,F,A)==> {kb_shared(M:F/A)}.
-prop_mpred(M,pfcWatches,F,A)==> {kb_shared(M:F/A)}.
+mpred_prop(M,F,A,pfcControlled)==> {kb_shared(M:F/A)}.
+mpred_prop(M,F,A,pfcWatches)==> {kb_shared(M:F/A)}.
                                                                                      
 
-mpred_prop(M,F,A,pfcPosTrigger)==>prop_mpred(M,pfcWatches,F,A).
-mpred_prop(M,F,A,pfcNegTrigger)==>prop_mpred(M,pfcWatches,F,A).
-mpred_prop(M,F,A,pfcBcTrigger)==>prop_mpred(M,pfcCreates,F,A).
-mpred_prop(M,F,A,pfcLHS)==> arity(F,A),functorIsMacro(F),prop_mpred(M,pfcWatches,F,A).
-mpred_prop(M,F,A,pfcRHS)==> prop_mpred(M,pfcCreates,F,A).
+mpred_prop(M,F,A,pfcPosTrigger)==>mpred_prop(M,F,A,pfcWatches).
+mpred_prop(M,F,A,pfcNegTrigger)==>mpred_prop(M,F,A,pfcWatches).
+mpred_prop(M,F,A,pfcBcTrigger)==>mpred_prop(M,F,A,pfcCreates).
+mpred_prop(M,F,A,pfcLHS)==> arity(F,A),functorIsMacro(F),mpred_prop(M,F,A,pfcWatches).
+mpred_prop(M,F,A,pfcRHS)==> mpred_prop(M,F,A,pfcCreates).
 
 
 
 mpred_prop(M,F,A,pfcCallCode)/predicate_is_undefined_fa(F,A)
-    ==> prop_mpred(M,needsDefined,F,A).
+    ==> mpred_prop(M,F,A,needsDefined).
 /*
 mpred_prop(M,F,A,pfcCallCodeAnte)/predicate_is_undefined_fa(F,A)
-    ==> prop_mpred(M,pfcWatches,F,A).
+    ==> mpred_prop(M,F,A,pfcWatches).
 */
 
 :- if(\+ current_prolog_flag(retry_undefined,_)).
@@ -352,7 +353,7 @@ genlPreds(prologSideEffects,rtNotForUnboundPredicates).
 
 :- kb_shared(warningsAbout/2).
 
-prologHybrid(warningsAbout/2,rtArgsVerbatum).
+==>prologHybrid(warningsAbout/2,rtArgsVerbatum).
 warningsAbout(Msg,Why)==>{wdmsg(error(warningsAbout(Msg,Why))),break}.
 
 %% t( ?CALL) is semidet.
@@ -503,8 +504,8 @@ rtArgsVerbatum(second_order).
 % :- kb_shared(bt/2).
 (bt(P,_)/(nonvar(P),must(get_bc_clause(P,Post)))) ==> ({ignore(kb_shared(P))},Post).
 
-%redundantMaybe ==> ((prologHybrid(F),arity(F,A))==>prop_mpred(M,pfcVisible,F,A)).
-%redundantMaybe ==> (prop_mpred(M,pfcVisible,F,A)==>prologHybrid(F),arity(F,A)).
+%redundantMaybe ==> ((prologHybrid(F),arity(F,A))==>mpred_prop(M,F,A,pfcVisible)).
+%redundantMaybe ==> (mpred_prop(M,F,A,pfcVisible)==>prologHybrid(F),arity(F,A)).
 
 % ((mpred_prop(M,F,A,pfcRHS)/(A\=0)) ==> {kb_shared(F/A)}).
 % ((mpred_prop(M,F,A,_)/(A\=0)) ==> {kb_shared(F/A)}).
@@ -532,7 +533,8 @@ without_depth_limit(G):- cwc, call_with_depth_limit(G,72057594037927935,Result),
 
 
 :- dynamic(mpred_undo_sys/3).
-:- (ain(pfcControlled(mpred_undo_sys(ftAssertion, ftCallable, ftCallable)))).
+:- (mpred_ain(==>pfcControlled(mpred_undo_sys(ftAssertion, ftCallable, ftCallable)))).
+:- (ain(==>pfcControlled(mpred_undo_sys(ftAssertion, ftCallable, ftCallable)))).
 mpred_undo_sys(P, WhenAdded, WhenRemoved) ==> (P ==> {WhenAdded}), mpred_do_and_undo_method(WhenAdded,WhenRemoved).
 
 % DONT mpred_undo_sys(added(P),ain(P),mpred_retract(P)).

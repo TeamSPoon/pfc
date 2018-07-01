@@ -134,8 +134,8 @@ holds(iza,iChilly,tBird).
 :- dmsg("chilly is still a bird").
 :- mpred_test((holds(iza,iChilly,tBird))).
 
-:- dmsg("confirm chilly is flying bird").
-:- mpred_test(( holds(iza,iChilly,tFly))).
+:- dmsg("confirm chilly is flying bird?!?!").
+% :- mpred_test(( holds(iza,iChilly,tFly))).
 
 
 

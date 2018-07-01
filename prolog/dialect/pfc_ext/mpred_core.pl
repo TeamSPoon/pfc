@@ -696,23 +696,24 @@ full_transform(Why,MH,MHH):- has_skolem_attrvars(MH),!,
  rtrace(fully_expand_real(change(assert,skolems(Why)),MH,MHH)),!,
    nop(sanity(on_f_debug(same_modules(MH,MHH)))),!.
 */
-full_transform(Why,MH,MHH):- \+ compound(MH),!,
-   must_det(fully_expand_real(change(assert,Why),MH,MHH)),!.
+%full_transform(Why,MH,MHH):- \+ compound(MH),!,
+%   must_det(fully_expand_real(change(assert,Why),MH,MHH)),!.
      % nop(sanity(on_f_debug(same_modules(MH,MHH)))).
-full_transform(Op,==> CI,SentO):- nonvar(CI),!, full_transform(Op,CI,SentO).
-full_transform(Op,isa(I,C),SentO):- nonvar(C),!,must_ex(fully_expand_real(Op,isa(I,C),SentO)),!.
-full_transform(_,CI,SentO):- CI=..[_C,I], atom(I),!,if_defined(do_renames(CI,SentO),CI=SentO),!.
+%full_transform(Op,==> CI,SentO):- nonvar(CI),!, full_transform(Op,CI,SentO).
+%full_transform(Op,isa(I,C),SentO):- nonvar(C),!,must_ex(fully_expand_real(Op,isa(I,C),SentO)),!.
+%full_transform(_,CI,SentO):- CI=..[_C,I], atom(I),!,if_defined(do_renames(CI,SentO),CI=SentO),!.
 full_transform(Why,MH,MHH):-
- must_det(fully_expand_real(change(assert,Why),MH,MHH)),!.
-   % nop(sanity(on_f_debug(same_modules(MH,MHH)))).
-
-full_transform_compound(Op,ISA,SentO):- nonvar(ISA),isa(I,C)=ISA,!, must_ex(fully_expand_real(Op,isa(I,C),SentO)),!.
-full_transform_compound(Why,MH,MHH):-
- must_det(fully_expand_real(change(assert,Why),MH,MHH)),!.
-   % nop(sanity(on_f_debug(same_modules(MH,MHH)))).
+ must_det(fully_expand_real(change(assert,Why),MH,MHH)),!,
+ nop(sanity(on_f_debug(same_modules(MH,MHH)))).
 
 same_modules(MH,MHH):- strip_module(MH,HM,_),strip_module(MHH,HHM,_),!,
    HM==HHM.
+
+%full_transform_compound(Op,ISA,SentO):- compound(ISA),isa(I,C)=ISA,!, must_ex(fully_expand_real(Op,isa(I,C),SentO)),!.
+%full_transform_compound(Why,MH,MHH):-
+% must_det(fully_expand_real(change(assert,Why),MH,MHH)),!.
+   % nop(sanity(on_f_debug(same_modules(MH,MHH)))).
+
 
 %:- if(\+ current_prolog_flag(umt_local,false)).
 
@@ -1038,12 +1039,12 @@ mpred_add(P):- mpred_ain(P).
 decl_assertable_module(AM):- must_ex(dynamic(AM:spft/3)).
 
 % mpred_ain_cm(SM:(==>(AM:P)),P,AM,SM):- SM\==AM, current_predicate(SM:spft/3),!,decl_assertable_module(SM).
-mpred_ain_cm(SM:(==>(AM:P)),P,AM,SM):- AM==SM,!,decl_assertable_module(AM).
-mpred_ain_cm(SM:(==>(AM:P)),P,AM,AM):- decl_assertable_module(AM),!,decl_assertable_module(SM).
-mpred_ain_cm((==>(AM:P)),P,AM,AM):- decl_assertable_module(AM),!.
-mpred_ain_cm((==>(P)),P,AM,SM):- get_assert_to(AM), guess_pos_source_to(SM),!.
-mpred_ain_cm(M:(==>(P)),P,AM,AM):- context_module(M),get_assert_to(AM),!. %  guess_pos_source_to(SM).
-mpred_ain_cm(AM:(==>(P)),P,AM,AM):- !.
+mpred_ain_cm(SM:(==>(AM:P)),==>P,AM,SM):- AM==SM,!,decl_assertable_module(AM).
+mpred_ain_cm(SM:(==>(AM:P)),==>P,AM,AM):- decl_assertable_module(AM),!,decl_assertable_module(SM).
+mpred_ain_cm((==>(AM:P)),==>P,AM,AM):- decl_assertable_module(AM),!.
+mpred_ain_cm((==>(P)),==>P,AM,SM):- get_assert_to(AM), guess_pos_source_to(SM),!.
+mpred_ain_cm(M:(==>(P)),==>P,AM,AM):- context_module(M),get_assert_to(AM),!. %  guess_pos_source_to(SM).
+mpred_ain_cm(AM:(==>(P)),==>P,AM,AM):- !.
 
 mpred_ain_cm(AM:P,P,SM,AM):- !, context_module(SM).
 mpred_ain_cm(   P,P,SM,AM):- get_assert_to(AM), context_module(SM).
@@ -2593,20 +2594,19 @@ lookup_m_g(To,_M,G):- clause(To:G,true).
 
 
 
-call_u(G):- \+  current_prolog_flag(retry_undefined, kb_shared),!,
-   strip_module(G,M,P), no_repeats(gripe_time(5.3,on_x_rtrace(call_u_mp(M,P)))).
-
-call_u(functorDeclares(H)):- !, get_var_or_functor(H,F),clause_b(functorDeclares(F)).
-call_u(singleValuedInArg(H,A)):- !, get_var_or_functor(H,F),clause_b(singleValuedInArg(F,A)).
-call_u(singleValuedInArgAX(H,A,N)):- !, get_var_or_functor(H,F),clause_b(singleValuedInArgAX(F,A,N)).
+call_u(functorDeclares(H)):-  get_var_or_functor(H,F),!,clause_b(functorDeclares(F)).
+call_u(singleValuedInArg(H,A)):- get_var_or_functor(H,F),!,clause_b(singleValuedInArg(F,A)).
+call_u(singleValuedInArgAX(H,A,N)):- get_var_or_functor(H,F),!,clause_b(singleValuedInArgAX(F,A,N)).
 call_u(ttRelationType(C)):- !, clause_b(ttRelationType(C)).
 
 % call_u(M:G):- !,module_sanity_check(M),call_u_mp(M,G).
 
-call_u(M:G):- !, M:call(G).
+%call_u(G):- \+  current_prolog_flag(retry_undefined, kb_shared),!,
+%   strip_module(G,M,P), no_repeats(gripe_time(5.3,on_x_rtrace(call_u_mp(M,P)))).
+%call_u(M:G):- !, M:call(G).
 
 % prolog_clause call_u ?
-call_u(G):- G \= (_:-_), !, quietly_ex(defaultAssertMt(M)),!,call_u_mp(M,G).
+%call_u(G):- G \= (_:-_), !, quietly_ex(defaultAssertMt(M)),!,call_u_mp(M,G).
 call_u(G):- strip_module(G,M,P), !, call_u_mp(M,P).
 
 get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.
@@ -2636,7 +2636,7 @@ call_u_mp(M,mtHybrid(P)):-!,clause_b(M:mtHybrid(P)).
 %call_u_mp(_,is_string(P)):- !, logicmoo_util_bugger:is_string(P).
 
 
-call_u_mp(M,call(O,P1)):- !,append_term(O,P1,P),call_u_mp(M,P).
+call_u_mp(M,call(O,P1)):- append_term(O,P1,P),!,call_u_mp(M,P).
 call_u_mp(M,call(P1)):- !, call_u_mp(M,P1).
 
 /*
