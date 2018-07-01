@@ -1,7 +1,7 @@
 
 :- use_module(library(pfc)).
 :- cls.
-:- mpred_no_trace_exec.
+:- mpred_notrace_exec.
 :- statistics(cputime,X),assert(load_time(X)).
 
 :- maplist(mpred_ain,
