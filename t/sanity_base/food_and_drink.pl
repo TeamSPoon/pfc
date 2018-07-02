@@ -7,33 +7,37 @@ Sue wants to get a drink and has no thoughts about food.
 
 */
 
+:- use_module(library(clpfd)).
+:- use_module(library(tabling)).
 
-cost(food,35.0).
-cost(drink,15.0).
+cost(food,35).
+cost(drink,15).
 
 buyable(A):- cost(A,_).
 person(P):- wants(P,_,_).
 
-has(joe,money,40.0).
+has(joe,money,40).
 
-has(joe,food,0.0).
-has(joe,drink,0.0).
-has(sue,food,0.0).
-has(sue,drink,0.0).
+has(joe,food,0).
+has(joe,drink,0).
+has(sue,food,0).
+has(sue,drink,0).
 
-wants(joe,food,0.33).
-wants(joe,drink,0.66).
-wants(sue,drink,0.66).
 
-% This rule helps us infer sue wants  food at .34
+wants(joe,food,33).
+wants(joe,drink,66).
+wants(sue,drink,66).
+
+% This rule helps us infer sue wants  food at 34
 wants(Person,Type1,Amount):- 
-  dif(Type1,Type2), 
-  buyable(Type2),
-  person(Person),
-  wants(Person,Type2,Other),
-  Amount #= 1.0 - Other.
+  clause(wants(Person,Type2,Other),true),
+  dif(Type1,Type2),
+  buyable(Type1),
+  buyable(Type2),  
+  Amount #= 100 - Other.
 
 wants_more(P,Thing1):- 
+   person(P),
    dif(Thing1,Thing2),
    wants(P,Thing1,A1),
    wants(P,Thing2,A2),
