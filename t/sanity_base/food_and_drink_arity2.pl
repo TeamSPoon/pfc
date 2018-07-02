@@ -2,7 +2,7 @@
 
 Joe is takin Sue on a date but he doesnt have enough money to buy them both food and drink
 
-Joe wants food .66 more than a drink .34.
+Joe wants food .66 more than anyhting
 Sue is on a diet so she wants food at .05 (so must be something else on menu?)
 
 */
@@ -34,12 +34,10 @@ pred(has5,has). arg1(has5,sue). arg2(has5,drink). arg3(has5,0).
 
 % wants(joe,food,66).
 pred(wants1,wants). arg1(wants1,joe). arg2(wants1,food). arg3(wants1,66).
-% wants(joe,drink,34).
-pred(wants2,wants). arg1(wants2,joe). arg2(wants2,drink). arg3(wants2,34).
 % wants(sue,food,5).
-pred(wants3,wants). arg1(wants3,sue). arg2(wants3,food). arg3(wants3,5).
+pred(wants2,wants). arg1(wants2,sue). arg2(wants2,food). arg3(wants3,5).
 
-% This rule helps us infer sue wants drink at 66
+% This rule helps us infer sue wants drink at 95 and joe at 34
 % wants(Person,Type,Amount):- dif(Type1,Type2), buyable(Type2), person(Person),wants(Person,Type2,Other), Amount #= 1 - Other.
 pred(rule1,wants).
 arg1(rule1,Person):- arg2(rule1,Type),arg3(rule1,Amount),rule1_wants(Person,Type,Amount).
