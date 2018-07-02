@@ -39,7 +39,8 @@ wants_more(P,Thing1):-
    wants(P,Thing2,A2),
    A1>A2.
 
-happy:-
+do_test 
+ :-
    dif(P1,P2),
    wants_more(P1,Thing1),
    wants_more(P2,Thing2),
@@ -53,7 +54,11 @@ happy:-
      orders_for(Thing1,P1),
      orders_for(Thing2,P2)]),nl.
 
-   
+
+
+:- do_test.
+
+
 
 
 

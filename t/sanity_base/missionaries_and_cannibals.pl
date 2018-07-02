@@ -98,6 +98,9 @@ output([[A,B]|MovesList]) :-
    	write(B), write(' -> '), write(A), nl.
 
 % Find the solution for the missionaries and cannibals problem
-find :- 
+do_test :- 
    path(world(3,3,left,0,0),world(0,0,right,3,3),[world(3,3,left,0,0)],_).
+
+:- do_test.
+
 
