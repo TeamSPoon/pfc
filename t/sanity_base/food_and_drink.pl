@@ -25,10 +25,9 @@ has(sue,drink,0).
 
 
 wants(joe,food,66).
-wants(joe,drink,34).
 wants(sue,food,5).
 
-% This rule helps us infer sue wants other than food
+% This rule helps us infer sue wants drink at 95 and joe at 34
 wants(Person,Type1,Amount):- 
   buyable(Type2),
   clause(wants(Person,Type2,Other)),  
