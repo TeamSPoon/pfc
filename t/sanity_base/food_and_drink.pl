@@ -2,7 +2,7 @@
 
 Joe is takin Sue on a date but he doesnt have enough money to buy them both food and drink
 
-Joe wants food .66 more than a drink .34.
+Joe wants food .66 more than anyhting
 Sue is on a diet so she wants food at .05 (so must be something else on menu?)
 
 */
