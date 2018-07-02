@@ -1,8 +1,7 @@
 % to run the code in SWI-Prolog, do
 %        ?- ['missionaries_and_cannibals.pl'].
-%        ?- find.
-
-% Represent a state as world(CL,ML,B,CR,MR)
+%
+% Represent state as `world(CL,ML,B,CR,MR)`
 
 start(world(3,3,left,0,0)).
 
