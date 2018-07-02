@@ -101,6 +101,26 @@ output([[A,B]|MovesList]) :-
 do_test :- 
    path(world(3,3,left,0,0),world(0,0,right,3,3),[world(3,3,left,0,0)],_).
 
-:- do_test.
+:- use_module(library(statistics)).
+:- time(do_test).
+
+/*
+
+dmiles@gitlab:/opt/logicmoo_workspace/packs_sys/pfc/t/sanity_base# swipl -f missionaries_and_cannibals.pl
+
+world(3,3,left,0,0) -> world(1,3,right,2,0)
+world(1,3,right,2,0) -> world(2,3,left,1,0)
+world(2,3,left,1,0) -> world(0,3,right,3,0)
+world(0,3,right,3,0) -> world(1,3,left,2,0)
+world(1,3,left,2,0) -> world(1,1,right,2,2)
+world(1,1,right,2,2) -> world(2,2,left,1,1)
+world(2,2,left,1,1) -> world(2,0,right,1,3)
+world(2,0,right,1,3) -> world(3,0,left,0,3)
+world(3,0,left,0,3) -> world(1,0,right,2,3)
+world(1,0,right,2,3) -> world(1,1,left,2,2)
+world(1,1,left,2,2) -> world(0,0,right,3,3)
+% 10,253 inferences, 0.009 CPU in 0.009 seconds (100% CPU, 1101537 Lips)
+
+*/
 
 
