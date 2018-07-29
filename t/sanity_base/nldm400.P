@@ -1,8 +1,6 @@
 
 
-% :- use_module(library(tabling)).
-
-
+:- use_module(library(tabling)).
 :- table(tc/2).
 
 tc(X,Y):- adj(X,Y).
@@ -329,11 +327,9 @@ adj(318,319).
 adj(319,320).
 adj(320,1).
 
-%:- statistics(cputime,X),assert(load_time(X)).
+:- use_module(library(statistics)).
+:- statistics(cputime,X),assert(load_time(X)).
 :- time(findall(_,tc(_X,_Y),_)).
-%:- statistics(cputime,X),retract(load_time(LT)), Time is X-LT,write(time_was(Time)).
-
-
-
+:- statistics(cputime,X),retract(load_time(LT)), Time is X-LT,write(time_was(Time)).
 
 

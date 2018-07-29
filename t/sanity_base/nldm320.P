@@ -1,10 +1,11 @@
 
 
-:- use_module(library(tabling)).
-:- use_module(library(statistics)).
+% swipl  % 396,814,768 inferences, 62.415 CPU in 62.434 seconds (100% CPU, 6357653 Lips)
+% XSB 5 seconds
+% dra-intrerp 
 
-
-:- table(tc/2).
+:- use_module(library(dra)).
+:- dra_table(tc/2).
 
 tc(X,Y):- adj(X,Y).
 tc(X,Z):- tc(X,Y), tc(Y,Z).
@@ -330,11 +331,8 @@ adj(318,319).
 adj(319,320).
 adj(320,1).
 
-%:- statistics(cputime,X),assert(load_time(X)).
+:- use_module(library(statistics)).
+:- statistics(cputime,X),assert(load_time(X)).
 :- time(findall(_,tc(_X,_Y),_)).
-%:- statistics(cputime,X),retract(load_time(LT)), Time is X-LT,write(time_was(Time)).
-
-
-
-
+:- statistics(cputime,X),retract(load_time(LT)), Time is X-LT,write(time_was(Time)).
 

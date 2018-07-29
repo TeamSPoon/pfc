@@ -11,7 +11,9 @@
 % ===================================================================
 */
 
-:- module(pfc_test,[why_was_true/1]).
+:- module(pfc_test,[why_was_true/1,mpred_test/1]).
+
+:- use_module(library(must_trace)).
 
 test_red_lined(Failed):- quietly((
   format('~N',[]),
@@ -111,16 +113,24 @@ inform_message_hook(T1,T2,_):- (skip_warning(T1);skip_warning(T2);(\+ thread_sel
 inform_message_hook(_,_,_):- \+ current_predicate(dumpST/0),!.
 inform_message_hook(compiler_warnings(_,[always(true,var,_),always(false,integer,_),
    always(false,integer,_),always(true,var,_),always(false,integer,_),always(false,integer,_)]),warning,[]):- !.
-
 inform_message_hook(import_private(_,_),_,_).
 inform_message_hook(check(undefined(_, _)),_,_).
 inform_message_hook(ignored_weak_import(header_sane,_),_,_).
 inform_message_hook(error(existence_error(procedure,'$toplevel':_),_),error,_).
 % inform_message_hook(_,warning,_).
+
+inform_message_hook(T,Type,Warn):- atom(Type),
+  memberchk(Type,[error,warning]),!,
+  once((dmsg(message_hook_type(Type)),dmsg(message_hook(T,Type,Warn)),
+  ignore((source_location(File,Line),dmsg(source_location(File,Line)))),
+  assertz(system:test_results(File:Line/T,Type,Warn)),nop(dumpST),
+  nop(dmsg(message_hook(File:Line:T,Type,Warn))))),   
+  fail.
 inform_message_hook(T,Type,Warn):-
   ignore(source_location(File,Line)),
   once((nl,dmsg(message_hook(T,Type,Warn)),nl,
-  assertz(system:test_results(File:Line/T,Type,Warn)),dumpST,nl,dmsg(message_hook(File:Line:T,Type,Warn)),nl)),
+  assertz(system:test_results(File:Line/T,Type,Warn)),
+  dumpST,nl,dmsg(message_hook(File:Line:T,Type,Warn)),nl)),
   fail.
 
 inform_message_hook(T,Type,Warn):- dmsg(message_hook(T,Type,Warn)),dumpST,dmsg(message_hook(T,Type,Warn)),!,fail.
@@ -170,15 +180,9 @@ message_hook_handle(T,Type,Warn):-
 
 :- fixup_exports.
 
-user:message_hook(T,Type,Warn):- current_prolog_flag(logicmoo_message_hook,Was),Was\==none,
-   once(message_hook_handle(T,Type,Warn)).
+user:message_hook(T,Type,Warn):- 
+   Type \== silent,Type \== debug, Type \== informational,
+   current_prolog_flag(logicmoo_message_hook,Was),Was\==none,
+   once(message_hook_handle(T,Type,Warn)),!.
 
-user:message_hook(T,Type,Warn):-  Type \== silent,Type \== debug, Type \== informational,
-  memberchk(Type,[error,warning]),
-  once((dmsg(message_hook_type(Type)),dmsg(message_hook(T,Type,Warn)),
-  ignore((source_location(File,Line),dmsg(source_location(File,Line)))),
-  assertz(system:test_results(File:Line/T,Type,Warn)),nop(dumpST),
-  nop(dmsg(message_hook(File:Line:T,Type,Warn))))),
-   
-  fail.
 

@@ -1,8 +1,8 @@
 
 
 
-:- use_module(library(tabling)).
-:- use_module(library(statistics)).
+%:- use_module(library(tabling)).
+%:- use_module(library(statistics)).
 
 
 :- table(tc/2).
