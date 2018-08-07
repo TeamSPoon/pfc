@@ -528,10 +528,11 @@ make_uu_remove((_,ax)).
 %
 % Has Functor.
 %
-has_functor(_):-!,fail.
+
+% -- % has_functor(_):-!,fail.
 has_functor(F/A):-!,is_ftNameArity(F,A),!.
 has_functor(C):- (\+ is_ftCompound(C)),!,fail.
-has_functor(C):-is_ftCompound(C),\+is_list(C).
+has_functor(C):- is_ftCompound(C),\+is_list(C).
 
 
 %% mpred_each_literal( +P, ?E) is semidet.

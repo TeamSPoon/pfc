@@ -424,14 +424,14 @@ is_pfc_module(SM):- clause_b(mtHybrid(SM)).
 
 
 
-is_pfc_file:- current_prolog_flag(expect_pfc_file,always),!,sanity(must( is_pfc_file0)),!.
-is_pfc_file:- current_prolog_flag(expect_pfc_file,never),!,ignore(sanity(must( \+ is_pfc_file0))),!,fail.
+is_pfc_file:- current_prolog_flag(expect_pfc_file,always),!,must_or_rtrace(is_pfc_file0).
+is_pfc_file:- current_prolog_flag(expect_pfc_file,never),!,must_or_rtrace(\+ is_pfc_file0).
 is_pfc_file:- quietly(is_pfc_file0),!.
 
 %:- export(is_pfc_file/0).
 %:- header_sane:import(is_pfc_file/0).
 
-is_pfc_file0:- source_location(File,_W),prolog_load_context(source, SFile),is_pfc_filename(File,SFile).
+is_pfc_file0:- (source_location(File,_W);prolog_load_context(file,file))-> prolog_load_context(source, SFile)-> is_pfc_filename(File,SFile).
 is_pfc_file0:- prolog_load_context(module, M),M\==baseKB,is_pfc_module(M),!,clause_b(mtHybrid(M)).
 
 is_pfc_file(File):- is_pfc_filename(File,File).
@@ -470,6 +470,7 @@ is_loadin(M,CC):- functor(CC,F,A),show_call(kb_local(M:F/A)),break.
 
 must_pfc(IM,_):- is_never_pfc(IM),!,fail.
 %must_pfc(IM,'==>'(IM)):- (in_dialect_pfc;must_pfc_p(IM)),!.
+must_pfc(SM:IM,SM:'==>'(IM)):- !, (in_dialect_pfc;must_pfc_p(IM)),!.
 must_pfc(IM,SM:'==>'(IM)):- (in_dialect_pfc;must_pfc_p(IM)),!,source_module(SM),!.
 
 must_pfc_exp(IM,MO):- in_dialect_pfc,fully_expand(IM,MO),!.
@@ -533,6 +534,7 @@ base_clause_expansion(IM,':-'(ain(==>(IM)))):- \+ compound(IM),(sub_atom(IM,';')
 base_clause_expansion(NeverPFC, EverPFC):- is_never_pfc(NeverPFC),!,NeverPFC=EverPFC.
 
 % base_clause_expansion(In,Out):- only_expand(In,Out),!.
+base_clause_expansion(M:IN, ':-'(M:ain(M:ASSERT))):- with_umt(M,must_pfc(M:IN,ASSERT)).
 base_clause_expansion(IN, ':-'(ain(ASSERT))):- must_pfc(IN,ASSERT).
 base_clause_expansion(ASSERT, ':-'(ain(ASSERT))):- is_pfc_file.
 
