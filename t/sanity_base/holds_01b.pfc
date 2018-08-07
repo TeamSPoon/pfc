@@ -24,11 +24,12 @@ meta_argtypes(genlInverse(rtBinaryPredicate,rtBinaryPredicate)).
 genlInverse(mudContains,mudInsideOf).
 
 
-% :- must(ain((( genlInverse(P,PSuper),arity(P,2),arity(PSuper,2), t(P,A,B)) ==> t(PSuper,B,A)))).
+% :- must(ain((( genlInverse(P1,P2),arity(P1,2),arity(P2,2), t(P1,A,B)) ==> t(P2,B,A)))).
 
-:- must(ain((( genlInverse(P,PSuper),arity(P,2),arity(PSuper,2)) ==> ( t(P,A,B) ==> t(PSuper,B,A))))).
+%:- must(ain((( genlInverse(P1,P2),arity(P1,2),arity(P2,2)) ==> ( t(P1,A,B) ==> t(P2,B,A))))).
+
+genlInverse(P1,P2) ==> ( t(P1,A,B) ==> t(P2,B,A)).
 
 :- mpred_test(mudInsideOf(b,a)).
 
-:- break.
 

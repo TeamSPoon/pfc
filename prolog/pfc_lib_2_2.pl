@@ -438,7 +438,7 @@ is_pfc_file:- current_prolog_flag(never_pfc,true),!,must_not_be_pfc_file,!,fail.
 is_pfc_file:- quietly(is_pfc_file0),!.
 
 is_pfc_file0:- source_location(File,_W),!,is_pfc_file(File),!.
-is_pfc_file0:- prolog_load_context(module, M),is_pfc_module(M),!,clause_b(mtHybrid(M)).
+is_pfc_file0:- prolog_load_context(module, M),is_pfc_module(M),!.
 %is_pfc_file0:- source_context_module(M),is_pfc_module(M).
 
 :- meta_predicate is_pfc_file(:).

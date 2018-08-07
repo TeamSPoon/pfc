@@ -1417,8 +1417,9 @@ db_expand_0(_Op,kif(Sent),SentO):- nonvar(Sent),!, must(expand_kif_string(Sent,S
 
 %TODO DONT RUIN 
 db_expand_0(Op,==>(EL),O):- !, db_expand_0(Op,EL,O).
-%TODO DONT RUIN  db_expand_0(Op,t(EL),O):- !, db_expand_0(Op,EL,O).
-% db_expand_0(_,t(Sent),t(Sent)):- ftVar(Sent),!.
+db_expand_0(_,t(Sent),t(Sent)):- ftVar(Sent),!.
+%TODO DONT RUIN   
+db_expand_0(Op,t(EL),O):- !, db_expand_0(Op,EL,O).
 
 db_expand_0(Op,[G|B],[GG|BB]):-!,db_expand_0(Op,G,GG),db_expand_0(Op,B,BB).
 db_expand_0(_Op,=>(G,B),=>(G,B)):-!.
@@ -1907,6 +1908,7 @@ into_mpred_form((H,B),(HH,BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
 into_mpred_form((H;B),(HH;BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
 into_mpred_form((H/B),(HH/BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
 into_mpred_form(WAS,isa(I,C)):- was_isa_ex(WAS,I,C),!.
+into_mpred_form(t(P),O):-is_ftNonvar(P),!,into_mpred_form(P,O).
 into_mpred_form(t(P,A),O):-atom(P),!,O=..[P,A].
 into_mpred_form(t(P,A,B),O):-atom(P),!,O=..[P,A,B].
 into_mpred_form(t(P,A,B,C),O):-atom(P),!,O=..[P,A,B,C].
