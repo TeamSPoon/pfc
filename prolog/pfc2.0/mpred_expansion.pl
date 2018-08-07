@@ -822,6 +822,8 @@ fully_expand_real(Op,SentI,SentO):- maybe_expand_reduce(Op,SentI,Sent),!,
 fully_expand_real(_Op,Sent,Sent):- current_prolog_flag(runtime_speed,3),!.
 fully_expand_real(_Op,Sent,Sent):- current_prolog_flag(runtime_safety,0),!.
 fully_expand_real(_Op,(H:-B),(H:-B)):-!.
+
+fully_expand_real(Op,Sent,SentO):- !, fully_expand_real_2(Op,Sent,SentO),!.
 fully_expand_real(Op,Sent,SentO):-
   fully_expand_real_2(Op,Sent,SentO),!,
   (Sent=@=SentO-> true ; 
