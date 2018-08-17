@@ -17,21 +17,23 @@
 */
 
 
-(a(A),b(A,C),c(C)) ==> d(A,C).
+(aa(A),bb(A,C),cc(C)) ==> dd(A,C).
 
-a(x). b(x,z). c(t).
-a(y). b(y,x). c(y).
-a(y). b(y,t). c(z).
-b(z,y). c(x).
+aa(x). bb(x,z). cc(t).
+aa(y). bb(y,x). cc(y).
+aa(y). bb(y,t). cc(z).
+bb(z,y). cc(x).
+bb(z,r). cc(r).
 
 
-:- mpred_must(d(z,y)).
-:- mpred_must(d(x,z)).
-:- mpred_must(d(y,t)).
+:- mpred_must(dd(y,x)).
+:- mpred_must(dd(x,z)).
+:- mpred_must(dd(y,t)).
 
-a(z). 
+aa(z). 
 
-:- mpred_must(d(z,y)).
+:- mpred_must(dd(z,y)).
+:- mpred_must(dd(z,r)).
 
 
 
