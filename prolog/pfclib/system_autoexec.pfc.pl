@@ -43,7 +43,9 @@
  
 :- add_to_search_path(pfclib,'.').
 
-:-       op(990,xfx,(':=')),
+
+:-  /*
+         op(990,xfx,(':=')),
          op(250,yfx,('?')),
          op(1,fx,('$')),
          op(200,fy,('@')),
@@ -109,6 +111,7 @@
          op(400,yfx,('xor')),
       %   op(1000,xfy,(',')),
          op(700,xfx,('==')).
+         */
 /*
 :-kb_shared((rtSententialOperator/1,
 tReifiableFunction/1,
@@ -137,7 +140,7 @@ assert_if_newt(G):- (cwc,(clause_asserted_i(G)->true;call(assert,G))).
 :- baseKB:ensure_loaded('system_base.pfc').
 
 % ensure this file does not get unloaded with mpred_reset
-:- mpred_trace_exec.
+%:- mpred_trace_exec.
 :- prolog_load_context(file,F), ain(mpred_unload_option(F,never)).
 
 %:- mpred_notrace_exec.

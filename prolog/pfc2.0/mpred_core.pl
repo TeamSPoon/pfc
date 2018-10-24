@@ -199,6 +199,7 @@ push_current_choice/1,
 :- use_module(library(no_repeats)).
 
 :- include('mpred_header.pi').
+:- current_prolog_flag(mpred_pfc_silent,false)-> true ; set_prolog_flag(mpred_pfc_silent,true).
 
 %:- endif.
 
@@ -214,7 +215,7 @@ push_current_choice/1,
       each_E(*,+,+),
       fc_eval_action(*,*),
       fix_mp(+,+,-,-),
-      foreach(*,?),
+      %foreach(*,?),
       %lookup_kb(?,*),
       %lookup_kb(?,*,?),
       quietly_ex(*),
@@ -3876,6 +3877,7 @@ maybe_mpred_break(Info):- (t_l:no_breaks->true;(debugging(logicmoo(pfc))->dtrace
 maybe_mpred_break(Info):- (t_l:no_breaks->true;(debugging(logicmoo(pfc))->dtrace(dmsg(Info));(dmsg(Info)))),break_ex.
 
 % if the correct flag is set, dtrace exection of Pfc
+mpred_trace_msg(_):- current_prolog_flag(mpred_pfc_silent,true).
 mpred_trace_msg(Info):- not_not_ignore_quietly_ex(((((clause_asserted_u(mpred_is_tracing_exec);tracing)->(show_wdmsg(Info));true)))).
 mpred_trace_msg(Format,Args):- not_not_ignore_quietly_ex((((clause_asserted_u(mpred_is_tracing_exec);tracing)-> (show_wdmsg(Format,Args))))),!.
 % mpred_trace_msg(Format,Args):- not_not_ignore_quietly_ex((((format_to_message(Format,Args,Info),mpred_trace_msg(Info))))).
@@ -3898,7 +3900,7 @@ mpred_pfc_silent(TF):-set_prolog_flag(mpred_pfc_silent,TF).
 mpred_watch:- mpred_trace_exec,mpred_pfc_silent(false).
 mpred_nowatch:-  mpred_notrace_exec.
 
-mpred_trace_exec:- assert_u_no_dep(mpred_is_tracing_exec),mpred_pfc_silent(false).
+mpred_trace_exec:- trace, assert_u_no_dep(mpred_is_tracing_exec),mpred_pfc_silent(false).
 mpred_notrace_exec:- retractall_u(mpred_is_tracing_exec).
 
 mpred_trace_all:- mpred_trace_exec,mpred_trace,mpred_set_warnings(true),mpred_pfc_silent(false).
