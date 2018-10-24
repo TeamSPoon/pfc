@@ -1,15 +1,17 @@
 :- module(system_base_lite,[]).
 :- set_module(class(development)).
 %:- mpred_unload_file.
-:- '$set_source_module'(baseKB).
-:- ensure_abox(baseKB).
+%:- '$set_source_module'(baseKB).
+%:- ensure_abox(baseKB).
 :- baseKB:export(baseKB:never_assert_u/1).
 :- baseKB:export(baseKB:never_assert_u/2).
 :- rdf_rewrite:import(baseKB:never_assert_u/1).
 :- rdf_rewrite:import(baseKB:never_assert_u/2).
 :- use_module(library(rtrace)).
 :- pfc_lib:use_module(library(pfc_lib)).
-:- add_import_module(baseKB,pfc_lib,end).
+:- set_fileAssertMt(baseKB).
+%:- add_import_module(baseKB,pfc_lib,end).
+:- initialization(fix_baseKB_imports,now).
 :- use_module(library(no_repeats)).
 %:- use_module(library(dictoo)).
 % ensure this file does not get unloaded with mpred_reset
@@ -161,7 +163,7 @@ predicateTriggerType(Type) ==>
 (genlMt(C,P)/(C\=baseKB)) ==> {doall(((pred_decl_kb_mfa_type(P,F,A,Type)),C:call(Type,C:F/A)))}.
 :- endif.
 
-(genlMt(C,P)/(is_ftNonvar(C),is_ftNonvar(P),P\==baseKB,(mtProlog(C);mtProlog(P))) ==> {P\==user,catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}).
+(genlMt(C,P)/(is_ftNonvar(C),is_ftNonvar(P),P\==baseKB,(mtProlog(C);mtProlog(P))) ==> {P\==user,catch(nop(add_import_module(C,P,end)),error(_,_),dmsg(error(add_import_module(C,P,end))))}).
 
 %(do_import_modules,genlMt(C,P),mtHybrid(C),mtProlog(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}.
 %(do_import_modules,genlMt(C,P),mtProlog(C),mtHybrid(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}.

@@ -273,7 +273,8 @@ lm_util:register_mpred_impl_file(F):- (current_prolog_flag(xref,true)->true;
 
 :- prolog_load_context(module,M),
  once((M==baseKB;
-   ((assert_if_new(baseKB:mtProlog(M)),on_x_log_cont(add_import_module(baseKB,M,end)))))).
+   ((assert_if_new(baseKB:mtProlog(M)),
+   nop(on_x_log_cont(add_import_module(baseKB,M,end))))))).
 
 :-((current_prolog_flag(xref,true)->true;
     (   (prolog_load_context(source,F),

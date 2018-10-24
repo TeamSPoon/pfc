@@ -203,14 +203,14 @@ get_file_type_local(File,Type):-clause_b(lmcache:mpred_directive_value(File,lang
 
 
 mtCanAssert(Module):- clause_b(mtNonAssertable(Module)),!,fail.
-mtCanAssert(Module):- clause_b(mtHybrid(Module)).
 mtCanAssert(ABox):- \+ \+ (ABox=abox),!,trace_or_throw_ex(mtCanAssert(ABox)),fail.
+mtCanAssert(Module):- clause_b(mtHybrid(Module)).
 mtCanAssert(user):-  is_user_pfc.
-mtCanAssert(Module):- clause_b(mtExact(Module)).
+% mtCanAssert(Module):- clause_b(mtExact(Module)).
 mtCanAssert(Module):-  module_property(Module,file(_)),!,fail.
 mtCanAssert(Module):- (loading_source_file(File),get_file_type_local(File,pfc),prolog_load_context(module,Module)).
 mtCanAssert(Module):- clause_b(mtProlog(Module)),!,fail.
-mtCanAssert(_).
+mtCanAssert(Module):- \+ is_code_module(Module),!.
 
 is_user_pfc:- clause_b(mtHybrid(user)).
 
@@ -234,6 +234,9 @@ fileAssertMt0(M):- 'strip_module'(module,M,module),mtCanAssert(M),!.
 fileAssertMt0(M):- must(get_fallBackAssertMt(M)),!.
 
 
+:- initialization(fix_baseKB_imports,now).
+
+
 %% set_fileAssertMt( ABox) is semidet.
 %
 % Sets the File''s Module.
@@ -247,14 +250,14 @@ set_fileAssertMt(M):-
   assert_setting(baseKB:file_to_module(File,M)),
   assert_setting(lmcache:mpred_directive_value(File,module,M)),
   asserta_until_eof(t_l:current_defaultAssertMt(M)),!,
-  (pfc_lib:is_pfc_file -> set_current_modules(M) ; true).
+  ((pfc_lib:is_pfc_file) -> show_call(set_current_modules_until_eof(M)) ; true).
 
 
 %:- import(pfc_lib:is_pfc_file/0).
 % :- '$hide'(set_fileAssertMt(_)).
 
 
-set_current_modules(M):- 
+set_current_modules_until_eof(M):- 
  '$current_typein_module'(CM),'$set_typein_module'(M),call_on_eof('$set_typein_module'(CM)),
  '$current_source_module'(SM),'$set_source_module'(M),call_on_eof('$set_source_module'(SM)).
 
@@ -268,7 +271,7 @@ set_defaultAssertMt(M):-
    ensure_abox(M),!,
    % assert_setting(t_l:current_defaultAssertMt(M)),
    asserta_until_eof(t_l:current_defaultAssertMt(M)),
-  (source_location(_,_)-> ((fileAssertMt(M) -> true; set_fileAssertMt(M)))  ;set_current_modules(M)).
+  (source_location(_,_)-> ((fileAssertMt(M) -> true; set_fileAssertMt(M)))  ;set_current_modules_until_eof(M)).
 
 % :- '$hide'(set_defaultAssertMt(_)).
 
@@ -342,7 +345,9 @@ maybe_ensure_abox(M):- show_call(not_is_pfc_file,ensure_abox(M)).
 
 
 :- module_transparent((ensure_abox)/1).
-ensure_abox(M):- (M==user->true;add_import_module(M,pfc_lib,end)), dynamic(M:defaultTBoxMt/1),
+ensure_abox(M):- 
+  ignore(((M==user;M==baseKB)->true;nop(add_import_module(M,pfc_lib,end)))),
+  dynamic(M:defaultTBoxMt/1),
   must(ensure_abox_support(M,baseKB)),!.
 :- module_transparent((ensure_abox_support)/2).
 ensure_abox_support(M,TBox):- clause_b(M:defaultTBoxMt(TBox)),!.
@@ -358,6 +363,7 @@ ensure_abox_support(M,TBox):- asserta(M:defaultTBoxMt(TBox)),
 ensure_abox_support(M,TBox):- 
        % system:add_import_module(M,user,end),
        must(ignore(system:delete_import_module(M,system))),
+       must(ignore(system:delete_import_module(M,baseKB))),
        system:add_import_module(M,system,end),
        retractall(M:defaultTBoxMt(TBox)),throw(failed_ensure_abox_support(M,TBox)).
 

@@ -1,7 +1,9 @@
 :- if( current_prolog_flag(xref,true) ;  \+ current_prolog_flag(pfc_booted,false) ).
 :- module(system_autoexec,[]).
 :- else.
-:- '$set_source_module'(baseKB).
+:- pfc_lib:use_module(library(pfc_lib)).
+:- set_fileAssertMt(baseKB).
+% :- '$set_source_module'(baseKB).
 :- endif.
 /** <module> system_autoexec
 % =============================================
@@ -119,7 +121,7 @@ rtUnaryPredicate/1,
 first_std_provider/3)).
 */
 
-:- ensure_abox(baseKB).
+%:- ensure_abox(baseKB).
 
 :- set_fileAssertMt(baseKB).
 

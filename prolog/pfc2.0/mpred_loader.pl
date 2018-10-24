@@ -237,7 +237,7 @@ mpred_unload_file(File):-
         show_bool(0),
         convert_side_effect(?, +, -),
         
-        ensure_loaded_no_mpreds(0),
+        ensure_loaded_no_mpreds(:),
         ensure_mpred_file_loaded(:),
         ensure_mpred_file_loaded(+, :),
         force_reload_mpred_file(?),
@@ -1755,9 +1755,10 @@ make_dynamic_ilc(C):- % trace_or_throw_ex(make_dynamic_ilc(C)),
 %
 load_language_file(Name0):- 
  forall(filematch_ext('qlf',Name0,Name),
-  ((
+  once((dmsg(load_language_file(Name0->Name)),
    locally([set_prolog_flag(subclause_expansion,false),
          set_prolog_flag(read_attvars,false),
+         (t_l:disable_px),
          (user:term_expansion(_,_):-!,fail),
          (user:term_expansion(_,_,_,_):-!,fail),
          (user:goal_expansion(_,_):-!,fail),
@@ -1766,7 +1767,8 @@ load_language_file(Name0):-
          (system:term_expansion(_,_,_,_):-!,fail),
          (system:goal_expansion(_,_,_,_):-!,fail),
          (system:goal_expansion(_,_):-!,fail)],
-     gripe_time(1,(baseKB:load_files(Name,[qcompile(part),register(false),if(not_loaded  )])->asserta(baseKB:never_reload_file(Name));retract(baseKB:never_reload_file(Name)))))))),!.
+     gripe_time(1,(baseKB:load_files([Name],[qcompile(part),register(false),if(not_loaded)])))
+       ->asserta(baseKB:never_reload_file(Name));retract(baseKB:never_reload_file(Name)))))),!.
  
 
 
@@ -1791,7 +1793,7 @@ with_mpred_expansions(Goal):-
     locally_hide(t_l:disable_px,Goal)).
 
 :-  /**/ export(ensure_loaded_no_mpreds/1).
-:- meta_predicate(ensure_loaded_no_mpreds(0)).
+:- meta_predicate(ensure_loaded_no_mpreds(:)).
 
 
 
@@ -1799,7 +1801,8 @@ with_mpred_expansions(Goal):-
 %
 % Ensure Loaded No Managed Predicates.
 %
-ensure_loaded_no_mpreds(F):-with_delayed_chaining(forall(must_locate_file(F,L),ensure_loaded(L))).
+ensure_loaded_no_mpreds(M:F):- 
+  with_delayed_chaining(forall(must_locate_file(F,L),(asserta(baseKB:ignore_file_mpreds(L)),M:ensure_loaded(M:L)))).
 
 :- meta_predicate(with_delayed_chaining(:)).
 %% with_delayed_chaining( :Goal) is det.
@@ -1950,7 +1953,7 @@ load_init_world(World,File):-
 
 /******
 
-% :- meta_predicate(ensure_mpred_file_loaded(0)). 
+% :- meta_predicate(ensure_mpred_file_loaded(:)). 
 
 :- meta_predicate ensure_mpred_file_loaded(:,+).
 
@@ -2001,7 +2004,7 @@ ensure_mpred_file_loaded(World,FileIn):-
 %
 must_locate_file(FileIn,File):- must(maybe_locate_file(FileIn,File)).
 
-maybe_locate_file(FileIn,File):-
+maybe_locate_file(FileIn,File):- 
  no_repeats(File, quietly(filematch_ext(['','mpred','ocl','moo','plmoo','pl','plt','pro','p','pl.in','pfc','pfct'],FileIn,File))).
 
 

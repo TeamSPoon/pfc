@@ -871,6 +871,8 @@ lookup_kb(MM,MHB):- strip_module(MHB,M,HB),
       clause_property(Ref,module(MM)).
 
 % lookup_u/cheaply_u/call_u/clause_b
+lookup_m(SPFT):- callable(SPFT),!,clause_b(SPFT).
+lookup_m(SPFT):- callable(SPFT),!,baseKB:on_x_rtrace(SPFT).
 lookup_u(SPFT):- callable(SPFT),on_x_rtrace(SPFT).
 % baseKB:SPFT:- current_prolog_flag(unsafe_speedups , true) , !,baseKB:mtHybrid(MT),call(MT:SPFT).
 % lookup_u(H):-lookup_u(H,_).
@@ -1050,23 +1052,47 @@ mpred_ain_cm(AM:P,P,SM,AM):- !, context_module(SM).
 mpred_ain_cm(   P,P,SM,AM):- get_assert_to(AM), context_module(SM).
 
 
-guess_pos_assert_to(ToMt):- t_l:current_defaultAssertMt(ToMt),!.
-guess_pos_assert_to(ToMt):- guess_pos_source_to(ToMt),mtCanAssert(ToMt).
-guess_pos_assert_to(ToMt):- guess_pos_source_to(ToMt), \+ mtCanAssert(ToMt).
+guess_pos_assert_to(ToMt):- 
+    ((guess_pos_source_to(ToMt), \+ is_code_module(ToMt), mtCanAssert(ToMt))*-> true; 
+    ((guess_pos_source_to(ToMt), \+ is_code_module(ToMt))*-> true ;
+    ((guess_pos_source_to(ToMt), mtCanAssert(ToMt))*-> true;    
+    guess_pos_source_to(ToMt)))).
 
 :- dynamic(baseKB:mtExact/1).
 
 
 % guess_pos_source_to(ToMt):- t_l:current_defaultAssertMt(ToMt).
-guess_pos_source_to(ToMt):- '$current_source_module'(ToMt).
-guess_pos_source_to(ToMt):- context_module(ToMt).
-guess_pos_source_to(ToMt):- '$current_typein_module'(ToMt).
-guess_pos_source_to(ToMt):- guess_pfc_file(File),module_property(ToMt,file(File)),File\==ToMt.
-guess_pos_source_to(ToMt):- prolog_load_context(module,ToMt).
+
+guess_pos_source_to(ToMt):- no_repeats(ToMt,guess_pos_source_to0(ToMt)).
+
+guess_pos_source_to0(ToMt):- t_l:current_defaultAssertMt(ToMt).
+guess_pos_source_to0(ToMt):- '$current_source_module'(ToMt).
+guess_pos_source_to0(ToMt):- context_module(ToMt).
+guess_pos_source_to0(ToMt):- '$current_typein_module'(ToMt).
+guess_pos_source_to0(ToMt):- guess_pfc_file(File),module_property(ToMt,file(File)),File\==ToMt.
+guess_pos_source_to0(ToMt):- prolog_load_context(module,ToMt).
+guess_pos_source_to0(ToMt):- defaultAssertMt(ToMt).
+guess_pos_source_to0(baseKB).
+
 guess_pfc_file(File):- which_file(File).
 guess_pfc_file(File):- loading_source_file(File),get_file_type_local(File,pfc).
 
-get_assert_to(ABox):- guess_pos_assert_to(ABoxVar),!,ABox=ABoxVar.
+get_assert_to(ABox):- (var(ABox)->guess_pos_assert_to(ABox);(guess_pos_assert_to(ABoxVar),ABox=ABoxVar)),!.
+
+% get_query_from(SM):- '$current_source_module'(SM).
+get_query_from(SM):- guess_pos_assert_to(SM), \+ is_code_module(SM),!.
+get_query_from(baseKB).
+
+is_code_module(system).
+is_code_module(user).
+is_code_module(mpred_core).
+is_code_module(M):- clause_b(mtProlog(M)),!,fail.
+is_code_module(M):- module_property(M,class(system)).
+is_code_module(M):- module_property(M,class(library)).
+is_code_module(baseKB):-!,fail.
+is_code_module(Mt):- clause_b(mtHybrid(Mt)),!,fail.
+is_code_module(M):- module_property(M,file(_)).
+%call_u_mp(user, P1 ):- !,  call_u_mp(baseKB,P1).
 
 
 mpred_ain(MTP,S):- quietly_ex(is_ftVar(MTP)),!,trace_or_throw_ex(var_mpred_ain(MTP,S)).
@@ -1076,7 +1102,11 @@ mpred_ain(MTP,S):- mpred_ain_cm(MTP,P,AM,SM),mpred_ain_now4(SM,AM,P,S).
 mpred_ain_now4(SM,ToMt,P,(mfl(FromMt,File,Lineno),UserWhy)):- sanity(stack_check),ToMt \== FromMt,!,
   mpred_ain_now4(SM,ToMt,P,(mfl(ToMt,File,Lineno),UserWhy)).
 
-mpred_ain_now4(SM,AM,PIn,S):- module_sanity_check(SM),module_sanity_check(AM),
+mpred_ain_now4(SM0,AM0,PIn,S):- SM0==AM0, is_code_module(AM0),!,
+  get_assert_to(AM),get_query_from(SM),!,mpred_ain_now4(SM,AM,PIn,S).
+  
+mpred_ain_now4(SM,AM,PIn,S):- % module_sanity_check(SM),
+  module_sanity_check(AM),
   call_from_module(AM, 
     with_source_module(SM,
       locally_tl(current_defaultAssertMt(AM), SM:mpred_ain_now(PIn,S)))).
@@ -1188,8 +1218,7 @@ abby_normal_ERR(Var):- is_ftVar(Var),!.
 abby_normal_ERR( isa(_,_,_),   _).
 abby_normal_ERR( tCol(COMMA),   _):- COMMA==','.
 abby_normal_ERR( tCol(VAR),   _):- var(VAR).
-abby_normal_ERR( P, _):- \+ \+ P = props(_,[]).
-   
+abby_normal_ERR( P, _):- \+ \+ P = props(_,[]).   
 
 %% mpred_post(+Ps,+S)
 %
@@ -1568,7 +1597,7 @@ mpred_unique_u(P):- \+ clause_asserted_u(P).
 % return Mode to forward assertion P in the prolog db.
 %
 get_fc_mode(_P,_S,Mode):- t_l:mpred_fc_mode(Mode),!.
-get_fc_mode(_P,_S,Mode):- lookup_u(pm(Mode)),!.
+get_fc_mode(_P,_S,Mode):- lookup_m(pm(Mode)),!.
 get_fc_mode(_P,_S,Mode):- must_ex(Mode=direct),!.
 
 
@@ -1589,7 +1618,7 @@ set_fc_mode(Mode):- asserta(t_l:mpred_fc_mode(Mode)).
 
 mpred_enqueue(P):- mpred_enqueue(P,_S).
 
-mpred_enqueue(P,_):- show_mpred_success(que,lookup_u(que(P,_))),!.
+mpred_enqueue(P,_):- show_mpred_success(que,lookup_m(que(P,_))),!.
 %mpred_enqueue(P,_):- nb_current('$current_why',wp(_,P)),!,trace_or_throw_ex(why(P)).
 %mpred_enqueue(P,_):- t_l:busy(P),!,nop(dmsg(t_l:busy(P))).
 %mpred_enqueue(P,S):- locally_each(t_l:busy(P),mpred_enqueue2(P,S)).
@@ -1652,7 +1681,7 @@ mpred_run:- retractall(t_l:busy(_)).
 
 mpred_step:-
   % if hs/1 is true, reset it and fail, thereby stopping inferencing. (hs=halt_signal)
-  quietly_ex((lookup_u(hs(Was)))),
+  quietly_ex((lookup_m(hs(Was)))),
   mpred_retract_i(hs(Was)),
   mpred_trace_msg('Stopping on: ~p',[hs(Was)]),
   !,
@@ -1696,7 +1725,7 @@ select_next_fact(P):-
   !.
 
 % the default selection predicate takes the item at the froint of the queue.
-defaultmpred_select(P):- lookup_u(que(P,_)),!.
+defaultmpred_select(P):- lookup_m(que(P,_)),!.
 
 % mpred_halt stops the forward chaining.
 mpred_halt:-  mpred_halt(anonymous(mpred_halt)).
@@ -1705,7 +1734,7 @@ mpred_halt(Format,Args):- format_to_message(Format,Args,Info), mpred_halt(Info).
 
 mpred_halt(Now):-
   mpred_trace_msg("New halt signal ",[Now]),
-  (lookup_u(hs(Was)) ->
+  (lookup_m(hs(Was)) ->
        mpred_warn("mpred_halt finds halt signal already set to: ~p ",[Was])
      ; assert_u_no_dep(hs(Now))).
 
@@ -2354,7 +2383,7 @@ lookup_spft_f(A,B,C):- with_some_vars_locked(B,lookup_u(spft(A,B,C))).
 
 lookup_spft_t(A,B,C):- lookup_u(spft(A,B,C)).
 
-get_tms_mode(_P,Mode):- lookup_u(tms(ModeO)),!,ModeO=Mode.
+get_tms_mode(_P,Mode):- lookup_m(tms(ModeO)),!,ModeO=Mode.
 get_tms_mode(_P,Mode):- Mode=local.
 
 
@@ -2615,10 +2644,10 @@ get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.
 
 
 
-%call_u_mp(user, P1 ):- !,  call_u_mp(baseKB,P1).
-
 call_u_mp(mpred_core, P1 ):- break_ex,'$current_source_module'(SM),SM\==mpred_core,!,  call_u_mp(SM,P1).
-call_u_mp(user, P1 ):- '$current_source_module'(SM),SM\==user,!,  call_u_mp(SM,P1).
+call_u_mp(query, P1 ):- !, must(get_query_from(SM)),call_u_mp(SM,P1).
+call_u_mp(assert, P1 ):- !, must(get_assert_to(SM)),call_u_mp(SM,P1).
+call_u_mp(System, P1 ):-  is_code_module(System),!, call_u_mp(query,P1).
 call_u_mp(M,P):- var(P),!,call((clause_b(mtExact(M))->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
 call_u_mp(_, M:P1):-!,call_u_mp(M,P1).
 call_u_mp(M, (P1,P2)):-!,call_u_mp(M,P1),call_u_mp(M,P2).

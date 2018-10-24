@@ -145,7 +145,7 @@ kb_shared_local(M,I,F/A):- I:kb_local(M:F/A),functor(P,F,A),
    CM==M))))).
  
 maybe_ensure_abox(M,I) :-
-  add_import_module(M,pfc_lib,end),
+  ignore(((M==user;M==baseKB)->true;nop(add_import_module(M,pfc_lib,end)))),
   M:import(pfccore:pfcDefault/2),
   I:import(pfccore:pfcDefault/2),
  % pfc_umt:abox_pred_list(PREDS)-> must_maplist(kb_shared_local(M,I),PREDS),
