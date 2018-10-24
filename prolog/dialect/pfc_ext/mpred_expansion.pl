@@ -1045,7 +1045,7 @@ fully_expand_clause(Op, HB, OUT):-
 fully_expand_goal(change(assert,_),Sent,SentO):- var(Sent),!,SentO=call_u(Sent).
 fully_expand_goal(Op,Sent,SentO):- 
  must((
-  locally_tl(t_l:into_goal_code,locally_tl(into_form_code,fully_expand_head(Op,Sent,SentM))),
+  locally_tl(into_goal_code,locally_tl(into_form_code,fully_expand_head(Op,Sent,SentM))),
     recommify(SentM,SentO))).
 
 /*
@@ -1412,6 +1412,7 @@ db_expand_0(Op,Sent,SentO):- cyclic_break(Sent),db_expand_final(Op ,Sent,SentO),
 
 db_expand_0(_,Sent,Sent):- \+ compound(Sent),!.
 
+db_expand_0(_Op,GG,SentO):-ground(GG),GG=..[_,G],(G= -kif(_);G= -pkif(_)),!,SentO=G.
 db_expand_0(Op,pkif(SentI),SentO):- nonvar(SentI),!,must((any_to_string(SentI,Sent),must(expand_kif_string_or_fail(Op,Sent,SentM)),SentM\=@=Sent,!,db_expand_0(Op,SentM,SentO))).
 db_expand_0(_Op,kif(Sent),SentO):- nonvar(Sent),!, must(expand_kif_string(Sent,SentM)),if_defined(sexpr_sterm_to_pterm(SentM,SentO),SentM=SentO).
 
@@ -1619,6 +1620,7 @@ db_expand_0(Op,isa(A,F),OO):-atom(F),O=..[F,A],!,db_expand_0(Op,O,OO).
 db_expand_0(Op,isa(A,F),OO):-is_ftNonvar(A),is_ftNonvar(F),expand_props(_Prefix,Op,props(A,F),OO),!.
 db_expand_0(_Op,isa(A,F),isa(A,F)):-!.
 db_expand_0(Op,props(A,F),OO):-expand_props(_Prefix,Op,props(A,F),OO),!.
+db_expand_0(Op,typeProps(A,F),EXP):-expand_props(_Prefix,Op,props(I,F),OO),!,fully_expand(Op,(isa(I,A)==>OO),EXP).
 
 % covered db_expand_0(_,arity(F,A),arity(F,A)):-atom(F),!.
 db_expand_0(Op,IN,OUT):- 
@@ -2323,9 +2325,12 @@ exact_args_f(dif).
 exact_args_f(maplist).
 exact_args_f(action_info).
 exact_args_f(never_retract_u).
+exact_args_f(install_converter).
+exact_args_f(installed_converter).
 exact_args_f(actn).
 exact_args_f(wid).
 exact_args_f(wdmsg).
+exact_args_f(fol_to_pkif).
 exact_args_f(ftListFn).
 exact_args_f(vtActionTemplate).
 exact_args_f(txtConcatFn).
@@ -2352,7 +2357,6 @@ exact_args_f(call).
 exact_args_f(assertz_if_new).
 exact_args_f(asserts_eq_quitely).
 exact_args_f(asserted).
-exact_args_f(wid).
 exact_args_f(rtArgsVerbatum).
 exact_args_f((=..)).
 exact_args_f((=)).

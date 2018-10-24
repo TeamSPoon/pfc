@@ -287,7 +287,7 @@ set_file_abox_module_wa(User):- set_file_abox_module(User),set_defaultAssertMt(U
 :- multifile prolog:message//1, user:message_hook/3.
 % user:message_hook(import_private(pfc_lib,_:_/_),warning,_):- source_location(_,_),!.
 user:message_hook(io_warning(_,'Illegal UTF-8 start'),warning,_):- source_location(_,_),!.
-user:message_hook(T,Type,Warn):-
+user:message_hook(T,Type,Warn):- current_prolog_flag(runtime_message_hook, true),
   ((current_prolog_flag(runtime_debug, N),N>2) -> true ; source_location(_,_)),
   memberchk(Type,[error,warning]),once(maybe_message_hook(T,Type,Warn)),fail.
 
