@@ -65,7 +65,7 @@
 :- dynamic(pfcSanityB/0).
 %:- trace.
 pfcSanityA==>pfcSanityB.
-:- \+ clause(pfcSanityB,true).
+%:- \+ clause(pfcSanityB,true).
 pfcSanityA.
 :- clause(pfcSanityB,true).
 
@@ -598,16 +598,16 @@ never_retract_u(X,never_retract_u(X)):- cwc, never_retract_u(X).
 :- kb_shared(never_retract_u/1).
 never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
 
-:- dynamic(mpred_unload_option/2).
-:- listing(mpred_unload_option/2).
-:- mpred_trace_exec.
+%:- dynamic(mpred_unload_option/2).
+%:- listing(mpred_unload_option/2).
+%:- mpred_trace_exec.
 %:- rtrace,trace.
 :- prolog_load_context(file,F), ain(mpred_unload_option(F,never)).
-:- nortrace.
+%:- nortrace.
 %:- mpred_notrace_exec.
-:- listing(mpred_unload_option/2).
+%:- listing(mpred_unload_option/2).
 
-:- mpred_trace_exec.
+%:- mpred_trace_exec.
 %(P/mpred_positive_fact(P),~P) ==> \+ ~P.
 
 
@@ -632,7 +632,7 @@ preventedWhen(P,Cond)==> (((P/mpred_positive_fact(P),Cond)==> nesc(~P))).
 % preventedWhen(P,Cond)==> ((((~P) <- Cond))).
 preventedWhen(P,{Cond})/mpred_positive_fact(P)==> ((~P) :- cwc, Cond).
 
-:- mpred_trace_exec.
+%:- mpred_trace_exec.
 %  can this ever happen?
 % (( \+ P, P) ==> {dumpST,dmsg(warn(weak_conflict(P)))}).
 % TAKEN CARE OF ( (~ P/mpred_positive_fact(P)), P) ==> ({dmsg(warn(conflict(P)))}).
