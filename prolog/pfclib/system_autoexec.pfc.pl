@@ -44,7 +44,8 @@
 :- add_to_search_path(pfclib,'.').
 
 
-:-  /*
+  /*
+  :-
          op(990,xfx,(':=')),
          op(250,yfx,('?')),
          op(1,fx,('$')),
