@@ -121,7 +121,7 @@ functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_d
 % :- ensure_loaded(library('logicmoo/util/logicmoo_util_bugger.pl')).
 :- use_module(mpred_core).
 %:- use_module(mpred_type_isa).
-%:- use_module(library(listing_vars)).
+%:- use_module(library(util_varnames)).
 
 /*
 :- module_transparent retract_mu/1,
