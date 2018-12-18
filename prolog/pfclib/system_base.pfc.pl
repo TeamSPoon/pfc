@@ -7,12 +7,12 @@
 :- baseKB:export(baseKB:never_assert_u/2).
 :- rdf_rewrite:import(baseKB:never_assert_u/1).
 :- rdf_rewrite:import(baseKB:never_assert_u/2).
-:- use_module(library(rtrace)).
+%:- use_module(library(rtrace)).
 :- pfc_lib:use_module(library(pfc_lib)).
 :- set_fileAssertMt(baseKB).
 %:- add_import_module(baseKB,pfc_lib,end).
 :- initialization(fix_baseKB_imports,now).
-:- use_module(library(no_repeats)).
+%:- use_module(library(no_repeats)).
 %:- use_module(library(dictoo)).
 % ensure this file does not get unloaded with mpred_reset
 

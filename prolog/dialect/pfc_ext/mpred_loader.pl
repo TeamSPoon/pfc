@@ -200,7 +200,7 @@
 
 :- endif.
 
-:- user:use_module(library('file_scope')).
+%:- user:use_module(library('file_scope')).
 
 :- thread_local(t_l:into_form_code/0).
 

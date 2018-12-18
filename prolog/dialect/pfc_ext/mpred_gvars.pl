@@ -1,6 +1,6 @@
 :- module(mpred_gvars, []).
 
-:- use_module(library(must_trace)).
+%:- use_module(library(must_trace)).
 %:- use_module(library(dictoo_declarations)).
 %:- use_module(library(dictoo)).
 

@@ -196,7 +196,7 @@ push_current_choice/1,
 
 %:- use_module(mpred_kb_ops).
 %:- use_module(library(listing_vars)).
-:- use_module(library(no_repeats)).
+%:- use_module(library(no_repeats)).
 
 :- include('mpred_header.pi').
 :- current_prolog_flag(mpred_pfc_silent,false)-> true ; set_prolog_flag(mpred_pfc_silent,true).
@@ -1930,7 +1930,7 @@ mpred_withdraw_fail_if_supported_maybe_warn(_,P):- P= prologSingleValued(_Arity)
 mpred_withdraw_fail_if_supported_maybe_warn(unKnown_suppoRt,P):- 
   maybe_user_support(P,S,SS),
         (((lookup_spft(P,F,T), S= (F,T), call(mpred_rem_support(P,S)),
-           dmsg(found(mpred_rem_support2(P,S))))
+           nop(dmsg(found(mpred_rem_support2(P,S)))))
            -> (remove_if_unsupported(P),retractall(t_l:busy(_)))
             ; (( nop(mpred_withdraw_fail_if_supported_maybe_warn(SS,P)),
                   \+ show_still_supported(P))))).
@@ -3900,7 +3900,7 @@ mpred_pfc_silent(TF):-set_prolog_flag(mpred_pfc_silent,TF).
 mpred_watch:- mpred_trace_exec,mpred_pfc_silent(false).
 mpred_nowatch:-  mpred_notrace_exec.
 
-mpred_trace_exec:- trace, assert_u_no_dep(mpred_is_tracing_exec),mpred_pfc_silent(false).
+mpred_trace_exec:- assert_u_no_dep(mpred_is_tracing_exec),mpred_pfc_silent(false).
 mpred_notrace_exec:- retractall_u(mpred_is_tracing_exec).
 
 mpred_trace_all:- mpred_trace_exec,mpred_trace,mpred_set_warnings(true),mpred_pfc_silent(false).
