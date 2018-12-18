@@ -186,7 +186,7 @@
 
 
 :- use_module(library(apply)).
-:- use_module(library(attvar_serializer)).
+%:- use_module(library(attvar_serializer)).
 
 %= :- kb_shared(was_chain_rule/1).
 %= :- kb_shared(baseKB:rtReformulatorDirectivePredicate/1).

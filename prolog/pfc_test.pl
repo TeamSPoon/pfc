@@ -13,7 +13,7 @@
 
 :- module(pfc_test,[why_was_true/1,mpred_test/1]).
 
-:- use_module(library(must_trace)).
+%:- use_module(library(must_trace)).
 
 test_red_lined(Failed):- quietly((
   format('~N',[]),

@@ -35,6 +35,8 @@ kb_global_w(M:F/A):-
 :- user:use_module(library(file_scope)).
 :- set_prolog_flag_until_eof(access_level,system).
 
+:- user:use_module(library(logicmoo_utils_all)).
+/*
 :- user:use_module(library(attvar_reader)).
 :- user:use_module(library(each_call_cleanup)).
 :- user:use_module(library(must_trace)).
@@ -44,6 +46,7 @@ kb_global_w(M:F/A):-
 :- user:use_module(library(logicmoo_util_strings)).
 :- user:use_module(library(loop_check)).
 :- user:use_module(library(attvar_serializer)).
+*/
 
 :- dynamic(rdf_rewrite:(~)/1).
 :- kb_global_w(rdf_rewrite:arity/2).
@@ -283,7 +286,7 @@ baseKB:mpred_skipped_module(eggdrop).
 :- dmsg("Ensuring PFC Loaded").
 :- endif.
 
-:- use_module(library(subclause_expansion)).
+%:- use_module(library(subclause_expansion)).
 :- reexport(library('pfc2.0/mpred_core.pl')).
 :- system:reexport(library('pfc2.0/mpred_justify.pl')).
 :- system:reexport(library('pfc2.0/mpred_at_box.pl')).
@@ -671,9 +674,9 @@ pfc_may_see_module(M):-import_module(M,pfc_lib).
 :- fixup_exports.
 
 
-:- if(exists_source(library(retry_undefined))).
+:- if(exists_source(library(hybrid_db/retry_undefined))).
 
-:- use_module(library(retry_undefined)).
+:- use_module(library(hybrid_db/retry_undefined)).
 :- install_retry_undefined(baseKB,kb_shared).
 
 :- else.

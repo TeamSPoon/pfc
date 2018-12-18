@@ -17,7 +17,7 @@
 
 %:- use_module(mpred_kb_ops).
 %:- use_module(library(listing_vars)).
-:- use_module(library(no_repeats)).
+%:- use_module(library(no_repeats)).
 
 :- include('mpred_header.pi').
 

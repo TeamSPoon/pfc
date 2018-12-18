@@ -121,7 +121,7 @@ functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_d
 % :- ensure_loaded(library('logicmoo/util/logicmoo_util_bugger.pl')).
 :- use_module(mpred_core).
 %:- use_module(mpred_type_isa).
-:- use_module(library(listing_vars)).
+%:- use_module(library(listing_vars)).
 
 /*
 :- module_transparent retract_mu/1,
@@ -343,7 +343,7 @@ w_get_fa(Mask,F,A):-get_functor(Mask,F,A).
 
 :- multifile(baseKB:mpred_hook_rescan_files/0).
 :- dynamic(baseKB:mpred_hook_rescan_files/0).
-:- use_module(library(logicmoo_util_common)).
+:- use_module(library(logicmoo_common)).
 %:- was_dynamic(use_presently/0).
 % used to annotate a predciate to indicate PFC support
 
