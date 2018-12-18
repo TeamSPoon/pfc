@@ -674,9 +674,9 @@ pfc_may_see_module(M):-import_module(M,pfc_lib).
 :- fixup_exports.
 
 
-:- if(exists_source(library(hybrid_db/retry_undefined))).
+:- if(exists_source(library(logicmoo/retry_undefined))).
 
-:- use_module(library(hybrid_db/retry_undefined)).
+:- use_module(library(logicmoo/retry_undefined)).
 :- install_retry_undefined(baseKB,kb_shared).
 
 :- else.
