@@ -37,7 +37,7 @@ kb_global_w(M:F/A):-
 :- set_prolog_flag_until_eof(access_level,system).
 
 :- user:use_module(library(attvar_reader)).
-:- user:use_module(library(each_call_cleanup)).
+:- user:use_module(library(logimcoo/each_call)).
 :- user:use_module(library(must_trace)).
 :- user:use_module(library(virtualize_source)).
 :- user:use_module(library(hook_hybrid)).

@@ -200,7 +200,8 @@ push_current_choice/1,
 
 :- include('mpred_header.pi').
 :- current_prolog_flag(mpred_pfc_silent,false)-> true ; set_prolog_flag(mpred_pfc_silent,true).
-
+                                                       
+:- use_module(library(pfc_test)).
 %:- endif.
 
 :- meta_predicate
@@ -722,10 +723,14 @@ listing_i(MP):- % strip_module(MP,M,P),!,
  forall(to_mpi_matcher(MP,MM:PI),
    listing_mpi(MP,MM:PI)). 
 
+:- reconsult(library(listing)).
+:- use_module(library(logicmoo/xlisting)).
+
 %listing_mpi(_MP,MMPI):-  (predicate_property(MMPI,number_of_clauses(NC))->NC==0;true),!,
 %  unify_listing_header(MMPI),prolog_listing_list_clauses(MMPI, none),!.
-listing_mpi(_MP,MMPI):- !,unify_listing_header(MMPI), prolog_listing_list_clauses(MMPI, none).
-listing_mpi(_MP,MM:PI):- forall(clause(MM:PI,B,R),foo:once(portray_hbr(MM:PI,B,R))).
+%listing_mpi(_MP,MMPI):- !,unify_listing_header(MMPI), 
+%   prolog_listing:list_clauses(MMPI, none).
+listing_mpi(_MP,MM:PI):- forall(clause_u(MM:PI,B,R),foo:once(portray_hbr(MM:PI,B,R))).
 
 listing_u(P):-call_u_no_bc(xlisting((P,-lmcache,/*-spft,*/-xlisting))),!.
 
@@ -2020,6 +2025,8 @@ mpred_blast(F) :-
   mpred_remove_supports_whine(F),
   mpred_undo(F).
 
+mpred_retract_all(P):- 
+  repeat, \+ mpred_retract(P).
 
 % removes any remaining supports for fact F, complaining as it goes.
 

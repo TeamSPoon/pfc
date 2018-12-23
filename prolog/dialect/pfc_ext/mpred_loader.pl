@@ -788,9 +788,8 @@ guess_if_mpred_file0(F):- atom(F),exists_file(F), file_name_extension(_,WAS,F),W
 % Decache File Type.
 %
 decache_file_type(F):-
-  retractall(baseKB:registered_mpred_file(F)),
-  retractall(baseKB:ignore_file_mpreds(F)).
-
+  forall(clause(baseKB:registered_mpred_file(F),true,Ref),erase(Ref)),
+  forall(clause(baseKB:ignore_file_mpreds(F),true,Ref),erase(Ref)),!.
 
 
 
