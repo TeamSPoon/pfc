@@ -31,17 +31,19 @@ kb_global_w(M:F/A):-
    M:kb_global(M:F/A),
    system:import(M:F/A).
 
+:- user:use_module(library(logicmoo_utils_all)).
 
+/*
 :- user:use_module(library(file_scope)).
 :- set_prolog_flag_until_eof(access_level,system).
 
-:- user:use_module(library(logicmoo_utils_all)).
-/*
+:- user:use_module(library(hook_hybrid)).
+:- user:use_module(library(logimcoo/each_call)).
 :- user:use_module(library(attvar_reader)).
 :- user:use_module(library(each_call_cleanup)).
 :- user:use_module(library(must_trace)).
 :- user:use_module(library(virtualize_source)).
-:- user:use_module(library(hook_hybrid)).
+
 :- user:use_module(library(no_repeats)).
 :- user:use_module(library(logicmoo_util_strings)).
 :- user:use_module(library(loop_check)).
@@ -291,7 +293,7 @@ baseKB:mpred_skipped_module(eggdrop).
 :- system:reexport(library('pfc2.0/mpred_justify.pl')).
 :- system:reexport(library('pfc2.0/mpred_at_box.pl')).
 
-:- user:use_module(library('file_scope')).
+%:- user:use_module(library('file_scope')).
 % :- virtualize_source_file.
 :- module_transparent(baseKB:prologBuiltin/1).
 :- multifile baseKB:prologBuiltin/1.
@@ -675,7 +677,6 @@ pfc_may_see_module(M):-import_module(M,pfc_lib).
 
 
 :- if(exists_source(library(logicmoo/retry_undefined))).
-
 :- use_module(library(logicmoo/retry_undefined)).
 :- install_retry_undefined(baseKB,kb_shared).
 
