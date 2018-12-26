@@ -95,8 +95,14 @@ kb_global_w(M:F/A):-
 
 :- set_prolog_flag_until_eof(debug,true).
 
+:- if(\+ current_prolog_flag(lm_no_autoload,_)).
+:- set_prolog_flag(lm_no_autoload,true).
+:- wdmsg("WARNING: PFC_NOAUTOLOAD").
+:- endif.
+
 :- if(\+ current_prolog_flag(lm_pfc_lean,_)).
 :- set_prolog_flag(lm_pfc_lean,true).
+:- wdmsg("WARNING: PFC_LEAN").
 :- endif.
 
 
@@ -466,7 +472,7 @@ sub_atom(F,C):- sub_atom(F,_,_,_,C).
 only_expand(':-'(I), ':-'(M)):- !,in_dialect_pfc,fully_expand('==>'(I),M),!.
 only_expand(I,OO):- fail, quietly(must_pfc(I,M)),  
   % current_why(S),!,
-  S= mfl(Module, File, Line),source_location(File,Line),prolog_load_context(module,Module),
+  S= mfl4(VarNameZ,Module, File, Line),source_location(File,Line),prolog_load_context(module,Module),
   conjuncts_to_list(M,O), !, %  [I]\=@=O,
   make_load_list(O,S,OO).
 

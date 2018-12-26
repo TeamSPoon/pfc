@@ -458,7 +458,7 @@ sub_atom(F,C):- sub_atom(F,_,_,_,C).
 only_expand(':-'(I), ':-'(M)):- !,in_dialect_pfc,fully_expand('==>'(I),M),!.
 only_expand(I,OO):- fail, quietly(must_pfc(I,M)),  
   % current_why(S),!,
-  S= mfl(Module, File, Line),source_location(File,Line),prolog_load_context(module,Module),
+  S= mfl4(VarNameZ,Module, File, Line),source_location(File,Line),prolog_load_context(module,Module),
   conjuncts_to_list(M,O), !, %  [I]\=@=O,
   make_load_list(O,S,OO).
 

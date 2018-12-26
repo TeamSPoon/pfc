@@ -216,9 +216,9 @@ mpred_unload_file:- \+ call(call,prolog_load_context(reload,true)),!.
 mpred_unload_file:- source_location(File,_),mpred_unload_file(File).
 mpred_unload_file(File):-
   findall(
-    mpred_withdraw(Data,(mfl(Module, File, LineNum),AX)),
+    mpred_withdraw(Data,(mfl4(VarNameZ,Module, File, LineNum),AX)),
     % clause_u
-    call_u(spft(Data, mfl(Module, File, LineNum),AX)),
+    call_u(spft(Data, mfl4(VarNameZ,Module, File, LineNum),AX)),
                     ToDo),
      length(ToDo,Len),
      wdmsg(mpred_unload_file(File,Len)),
@@ -384,18 +384,18 @@ mpred_file_term_expansion(Type,LoaderMod,I,OO):- !,fail,
 % Ensure rule macro predicates are being used checked just before assert/query time
 mpred_file_term_expansion0(Type,LoaderMod,I,O):- 
   sanity((ground(Type:LoaderMod),nonvar(I),var(O))),
-  quietly_must(get_source_mfl(mfl(MF,F,L))),!,
+  quietly_must(get_source_mfl(mfl4(VarNameZ,MF,F,L))),!,
   % \+ mpred_prolog_only_file(F),
   call_u(baseKB:mtHybrid(MT1)),
   must((proper_source_mod([LoaderMod,MF,MT1],AM))),
   (((nb_current('$source_term',TermWas), TermWas == I);
     (b_getval('$term',TermWas), TermWas == I))),
   call_cleanup(
-        locally(t_l:current_why_source(mfl(AM,F,L)),
+        locally(t_l:current_why_source(mfl4(VarNameZ,AM,F,L)),
         (( get_original_term_source(Orig), 
            b_setval('$orig_term',Orig),
            b_setval('$term',[]),
-           (O= (:- must(mpred_ain(I,(mfl(AM,F,L),ax)))))))),
+           (O= (:- must(mpred_ain(I,(mfl4(VarNameZ,AM,F,L),ax)))))))),
     b_setval('$term',TermWas)),!, wdmsg(I-->O).
 
 

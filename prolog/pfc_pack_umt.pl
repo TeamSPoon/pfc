@@ -339,7 +339,7 @@ get_source_ref(O):- quietly_ex((get_source_ref1(U),(U=(_,_)->O=U;O=(U,ax)))),!.
 get_source_ref_stack(O):- findall(U,current_why(U),Whys),Whys\==[],!, U=(_,_),(Whys=[U]->O=U;O=(Whys,ax)),!.
 get_source_ref_stack(O):- get_source_ref1(U),(U=(_,_)->O=U;O=(U,ax)),!.
 
-get_startup_uu((mfl(baseKB, user_input, _), ax)):-true.
+get_startup_uu((mfl4(VarNameZ,baseKB, user_input, _), ax)):-true.
 
 is_user_reason((_,U)):-atomic(U).
 
@@ -374,12 +374,12 @@ get_source_ref1(M):- ground(M),!.
 get_source_ref1(M):- get_source_ref10(M),!.
 get_source_ref1(_).
 
-get_source_ref10(M):- current_why(M), nonvar(M) , M =mfl(_,_,_).
-get_source_ref10(mfl(M,F,L)):- defaultAssertMt(M), source_location(F,L).
+get_source_ref10(M):- current_why(M), nonvar(M) , M =mfl4(VarNameZ,_,_,_).
+get_source_ref10(mfl4(VarNameZ,M,F,L)):- defaultAssertMt(M), source_location(F,L),unifyable_varname(.
 
-get_source_ref10(mfl(M,F,L)):- defaultAssertMt(M), current_source_file(F:L).
-get_source_ref10(mfl(M,F,_L)):- defaultAssertMt(M), current_source_file(F).
-get_source_ref10(mfl(M,_F,_L)):- defaultAssertMt(M).
+get_source_ref10(mfl4(VarNameZ,M,F,L)):- defaultAssertMt(M), current_source_file(F:L),prolog_load_context(variable_names,VarNameZ).
+get_source_ref10(mfl4(VarNameZ,M,F,_L)):- defaultAssertMt(M), current_source_file(F).
+get_source_ref10(mfl4(VarNameZ,M,_F,_L)):- defaultAssertMt(M).
 %get_source_ref10(M):- (defaultAssertMt(M)->true;(atom(M)->(module_property(M,class(_)),!);(var(M),module_property(M,class(_))))).
 get_source_ref10(M):- fail,dtrace,
  ((defaultAssertMt(M) -> !;
@@ -522,7 +522,7 @@ pfc_with_chaining(Goal):- locally(- t_l:no_attempt_side_effects,call(Goal)).
 % Op(Assert/Retract) in Ordered in Module Unit.
 %
 :- module_transparent(op_dir_mu/4).
-op_dir_mu(Op,Type,M,spft(P,mfl(KB,F,L),T)):-M\==KB,!,op_dir_mu(Op,Type,KB,spft(P,mfl(KB,F,L),T)).
+op_dir_mu(Op,Type,M,spft(P,mfl4(VarNameZ,KB,F,L),T)):-M\==KB,!,op_dir_mu(Op,Type,KB,spft(P,mfl4(VarNameZ,KB,F,L),T)).
 op_dir_mu(Op,Type,M,X):- correct_module(M,X,T),T\==M,!,op_dir_mu(Op,Type,T,X).
 op_dir_mu(Op,Type,M,M2:Pred):- sanity(M == M2),!, op_dir_mu(Op,Type,M,Pred).
 op_dir_mu(Op,Type,M,X):- 

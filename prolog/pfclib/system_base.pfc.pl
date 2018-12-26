@@ -472,7 +472,6 @@ rtArgsVerbatum('xQuoteFn').
 rtArgsVerbatum('$VAR').
 rtArgsVerbatum('NART').
 rtArgsVerbatum(X):- cwc, atom(X),atom_concat(_,'Fn',X).
-
 rtArgsVerbatum(ain).
 rtArgsVerbatum(ruleRewrite).
 rtArgsVerbatum(mpred_action).

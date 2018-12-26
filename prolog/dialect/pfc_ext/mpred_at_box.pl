@@ -129,7 +129,7 @@ baseKB_mtProlog(Mt):- arg(_,v(lmcache,t_l,system),Mt).
 
 %% assert_setting01( ?X) is semidet.
 % :- srtrace.
-assert_setting01(M:P):-functor(P,_,A),dupe_term(P,DP),setarg(A,DP,_),system:retractall(M:DP),system:asserta(M:P).
+assert_setting01(M:P):-safe_functor(P,_,A),dupe_term(P,DP),setarg(A,DP,_),system:retractall(M:DP),system:asserta(M:P).
 
 % :- break.
 
@@ -549,7 +549,7 @@ fixup_modules:-  trace_or_throw_ex(unexpected(fixup_modules)),
 %
 % Correct Module.
 %
-correct_module(M,G,T):-functor(G,F,A),quietly_must(correct_module(M,G,F,A,T)),!.
+correct_module(M,G,T):-safe_functor(G,F,A),quietly_must(correct_module(M,G,F,A,T)),!.
 
 %% correct_module( ?M, ?Goal, ?F, ?A, ?T) is semidet.
 %
@@ -559,7 +559,7 @@ correct_module(abox,G,F,A,T):- !, defaultAssertMt(M),correct_module(M,G,F,A,T).
 correct_module(tbox,G,F,A,T):- !, get_current_default_tbox(M),correct_module(M,G,F,A,T).
 correct_module(user,G,F,A,T):- fail,!,defaultAssertMt(M),correct_module(M,G,F,A,T).
 
-correct_module(HintMt,Goal,F,A,OtherMt):-var(Goal),functor(Goal,F,A),!,correct_module(HintMt,Goal,F,A,OtherMt).
+correct_module(HintMt,Goal,F,A,OtherMt):-var(Goal),safe_functor(Goal,F,A),!,correct_module(HintMt,Goal,F,A,OtherMt).
 correct_module(HintMt,Goal,_,_,OtherMt):- predicate_property(HintMt:Goal,imported_from(OtherMt)).
 correct_module(_,Goal,_,_,OtherMt):- predicate_property(Goal,imported_from(OtherMt)).
 correct_module(HintMt,_,_,_,HintMt):- call_u(mtExact(HintMt)).
@@ -586,7 +586,7 @@ add_import_predicate(Mt,Goal,OtherMt):- fail,
 add_import_predicate(Mt,Goal,OtherMt):- trace_or_throw_ex(add_import_predicate(Mt,Goal,OtherMt)),
    catch(Mt:import(OtherMt:Goal),_,fail),!.
 add_import_predicate(Mt,Goal,OtherMt):-
-   functor(Goal,F,A),
+   safe_functor(Goal,F,A),
    make_as_dynamic(imported_from(OtherMt),Mt,F,A),
    assert_if_new(( Mt:Goal :- OtherMt:Goal)).
 
@@ -600,7 +600,7 @@ transitive_path(F,[Arg1,SecondNodeMt|REST],Arg2):-
 
 
 
-autoload_library_index(F,A,PredMt,File):- functor(P,F,A),'$autoload':library_index(P,PredMt,File).
+autoload_library_index(F,A,PredMt,File):- safe_functor(P,F,A),'$autoload':library_index(P,PredMt,File).
 
 
 :- multifile(baseKB:hybrid_support/2).
@@ -648,7 +648,7 @@ make_shared_multifile(CallerMt,    t_l,F,A):-!,CallerMt:thread_local(t_l:F/A),Ca
 make_shared_multifile(CallerMt,lmcache,F,A):-!,CallerMt:multifile(lmcache:F/A),CallerMt:volatile(lmcache:F/A),CallerMt:dynamic(lmcache:F/A),!.
 
 make_shared_multifile(CallerMt,PredMt,F,A):-
-  functor(Goal,F,A),
+  safe_functor(Goal,F,A),
   correct_module(PredMt,Goal,F,A,HomeM),
   HomeM\==PredMt,!,
   make_shared_multifile(CallerMt,HomeM,F,A).
@@ -675,7 +675,7 @@ make_shared_multifile(_CallerMt,PredMt,F,A):-!,
 %
 make_reachable(_,Test):- \+ \+ ((Test= (_:F/_), is_ftVar(F))),!.
 make_reachable(CM,M:F/A):-  atom(CM),ignore(CM=M),quietly_must(atom(CM)),quietly_must(atom(M)),
-   functor(G,F,A),
+   safe_functor(G,F,A),
    correct_module(M,G,F,A,TT), !,import_predicate(CM,TT:F/A).
 
 
