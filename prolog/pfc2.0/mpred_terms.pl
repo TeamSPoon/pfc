@@ -59,11 +59,11 @@ atom_to_value(V,ftDiceFn(T1,T2,-T3)):- atomic_list_concat_safe([D1,'d',D2,'-',D3
 %
 is_ftText(Arg):- string(Arg),!.
 is_ftText(Arg):- \+ compound(Arg),!,fail.
-is_ftText(Arg):- functor(Arg,s,_),!.
+is_ftText(Arg):- safe_functor(Arg,s,_),!.
 is_ftText([Arg|_]):-string(Arg),!.
 is_ftText(Arg):- is_ftVar(Arg),!,fail.
 is_ftText(Arg):- text_to_string_safe(Arg,_),!.
-is_ftText(Arg):- functor(Arg,S,_), ereq(resultIsa(S,ftText)).
+is_ftText(Arg):- safe_functor(Arg,S,_), ereq(resultIsa(S,ftText)).
 
 :- kb_global(baseKB:ftText/1).
 :-ain(baseKB:(ftText(A):- !, if_defined(term_is_ft(A, ftText),is_ftText(A)),!)).
@@ -338,7 +338,7 @@ mpred_fact_arity(F,A):- call_u(arity(F,A)),
 %
 % Prolog Hybrid Fact.
 %
-prologHybridFact(G):- (var(G)->(mpred_fact_arity(F,A),functor(G,F,A));true),into_mpred_form(G,M),!,no_repeats(call_u(M)).
+prologHybridFact(G):- (var(G)->(mpred_fact_arity(F,A),safe_functor(G,F,A));true),into_mpred_form(G,M),!,no_repeats(call_u(M)).
 
 
 

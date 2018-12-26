@@ -14,9 +14,14 @@
 use_pfc.
 
 
-:- if(\+ current_prolog_flag(lm_pfc_lean,_)).
+:- if(\+ current_prolog_flag(lm_no_autoload,_)).
 :- set_prolog_flag(lm_no_autoload,false).
+:- wdmsg("WARNING: PFC_AUTOLOAD").
+:- endif.
+
+:- if(\+ current_prolog_flag(lm_pfc_lean,_)).
 :- set_prolog_flag(lm_pfc_lean,false).
+:- wdmsg("WARNING: PFC_NOT_LEAN").
 :- endif.
 
 :- reexport(pfc).     

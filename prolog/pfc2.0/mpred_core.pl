@@ -203,7 +203,8 @@ push_current_choice/1,
                                                        
 :- use_module(library(pfc_test)).
 %:- endif.
-
+:- use_module(library(logicmoo_common)).
+:- use_module(library(logicmoo/misc_terms)).
 :- meta_predicate
       %call_u_mp(+,*,+),
       call_u(*),
@@ -381,7 +382,7 @@ show_mpred_success(Type,G):- G*->mpred_trace_msg(success(Type,G)) ; fail.
 decl_rt(RT) :- 
  '@'(((
    sanity(atom(RT)),
-   Head=..[RT,FP],
+   Head univ_safe [RT,FP],
    AIN = ((Head :- cwc, /* dmsg(warn(call(Head))), */ mpred_prop(M,FP,_,RT))),
    (clause_asserted(AIN) -> 
     (nop(listing(RT)),
@@ -390,7 +391,7 @@ decl_rt(RT) :-
   ((
    (current_predicate(RT/1)->
    ( nop(listing(RT)),
-     RHead=..[RT,F/A],
+     RHead univ_safe [RT,F/A],
      forall(retract(RHead),ain(mpred_prop(M,F,A,RT))),
      forall(retract(Head),(get_arity(FP,F,A),sanity(atom(F)),sanity(integer(A)),ain(mpred_prop(M,F,A,RT)))),
      sanity((predicate_property(RHead,number_of_clauses(CL)),CL==0)),
@@ -458,7 +459,7 @@ get_why_uu(UU):- findall(U,current_why(U),Whys),Whys\==[],!,u_to_uu(Whys,UU).
 get_why_uu(UU):- get_source_uu(UU),!.
 
 
-get_startup_uu(UU):-u_to_uu((isRuntime,mfl(baseKB, user_input, _)),UU).
+get_startup_uu(UU):-u_to_uu((isRuntime,mfl4(VarNameZ,baseKB, user_input, _)),UU),varnames_load_context(VarNameZ).
 
 is_user_reason((_,U)):-atomic(U).
 only_is_user_reason((U1,U2)):- freeze(U2,is_user_reason((U1,U2))).
@@ -487,12 +488,12 @@ get_first_user_reason0(_,(M,ax)):-get_source_mfl(M).
 :- mpred_core:import(mpred_at_box:defaultAssertMt/1).
 
 :- module_transparent((get_source_mfl)/1).
-get_source_mfl(M):- current_why(M), nonvar(M) , M =mfl(_,_,_).
-get_source_mfl(mfl(M,F,L)):- defaultAssertMt(M), source_location(F,L).
+get_source_mfl(M):- current_why(M), nonvar(M) , M =mfl4(_VarNameZ,_,_,_).
+get_source_mfl(mfl4(VarNameZ,M,F,L)):- defaultAssertMt(M), source_location(F,L),varnames_load_context(VarNameZ).
 
-get_source_mfl(mfl(M,F,L)):- defaultAssertMt(M), current_source_file(F:L).
-get_source_mfl(mfl(M,F,_L)):- defaultAssertMt(M), current_source_file(F).
-get_source_mfl(mfl(M,_F,_L)):- defaultAssertMt(M).
+get_source_mfl(mfl4(VarNameZ,M,F,L)):- defaultAssertMt(M), current_source_file(F:L),varnames_load_context(VarNameZ).
+get_source_mfl(mfl4(VarNameZ,M,F,_L)):- defaultAssertMt(M), current_source_file(F),varnames_load_context(VarNameZ).
+get_source_mfl(mfl4(VarNameZ,M,_F,_L)):- defaultAssertMt(M), varnames_load_context(VarNameZ).
 %get_source_mfl(M):- (defaultAssertMt(M)->true;(atom(M)->(module_property(M,class(_)),!);(var(M),module_property(M,class(_))))).
 get_source_mfl(M):- fail,dtrace,
  ((defaultAssertMt(M) -> !;
@@ -524,7 +525,7 @@ fix_mp(Why,I,UO):- quietly_must(fix_mp(Why,I,U,O)),maybe_prepend_mt(U,O,UO).
 fix_mp(Why,G,M,GOO):-
   must_ex((quietly_ex((fix_mp0(Why,G,M,GO),strip_module(GO,_,GOO))))).
 
-meta_split(PQ,P,OP,Q):-PQ =..[OP,P,Q],arg(_,v('<-','==>','<==>','==>',(','),(';')),OP).
+meta_split(PQ,P,OP,Q):-PQ  univ_safe [OP,P,Q],arg(_,v('<-','==>','<==>','==>',(','),(';')),OP).
 
 fix_mp0(Nonvar,Var,ABox,VarO):- sanity(nonvar(Nonvar)), is_ftVar(Var),!,Var=VarO,defaultAssertMt(ABox),!.
 fix_mp0(Why, '~'(G0), M, '~'(CALL)):-nonvar(G0),!,fix_mp0(Why,G0,M,CALL).
@@ -534,7 +535,7 @@ fix_mp0(Why,(G :- B),M,( GO :- B)):- !, fix_mp0(Why,G,M,GO).
 % fix_mp0(Why,(G <- B),M,( GO <- B)):- !, fix_mp0(Why,G,M,GO).
 fix_mp0(Why,CM:(G :- B),M,( GO :- B)):- !, CM:fix_mp0(Why,G,M,GO).
 
-fix_mp0(_Why,spft(P,(mfl(FromMt,File,Lineno),UserWhy)),FromMt,spft(P,(mfl(FromMt,File,Lineno),UserWhy))):-!.
+fix_mp0(_Why,spft(P,(mfl4(VarNameZ,FromMt,File,Lineno),UserWhy)),FromMt,spft(P,(mfl4(VarNameZ,FromMt,File,Lineno),UserWhy))):-!.
 
 fix_mp0(Why,M:P,MT,P):- to_real_mt(Why,M,MT)->M\==MT,!,fix_mp0(Why,MT:P,MT,P).
 
@@ -555,11 +556,11 @@ fix_mp0(_Why,Mt:P,Mt,P):- clause_b(mtHybrid(Mt)),!.
 fix_mp0(_Why,I,ABox,I):- defaultAssertMt(ABox),!.
 
 /*
-fix_mp(Why,Junct,ABox,Result):- fail, (mpred_db_type(Junct,rule(_));(functor(Junct,F,_),bad_head_pred(F))),!,
+fix_mp(Why,Junct,ABox,Result):- fail, (mpred_db_type(Junct,rule(_));(safe_functor(Junct,F,_),bad_head_pred(F))),!,
    must_ex((mpred_rule_hb(Junct,HC,BC),nonvar(HC))),
-   Junct=..[F|List],
+   Junct univ_safe [F|List],
    must_maplist(fix_mp(call(hb(HC,BC,Op))),List,ListO),
-   Result=..[F|ListO],
+   Result univ_safe [F|ListO],
    defaultAssertMt(ABox),!.
 
 %fix_mp(call(hb(HC,_BC,Op)),H,M,HH):- contains_var(H,HC),!,
@@ -585,7 +586,7 @@ convention_to_mt(From,Why,F,A,RealMt):-convention_to_symbolic_mt_ec(From,Why,F,A
 get_unnegated_functor(G,F,A):- strip_module(G,_,GO),
    get_assertion_head_unnegated(GO,Unwrap),
    nonvar(Unwrap),
-   functor(Unwrap,F,A),
+   safe_functor(Unwrap,F,A),
    ignore(show_failure(\+ bad_head_pred(F))),!.
    
 
@@ -619,7 +620,7 @@ get_assertion_head(P,P).
 
 
 get_head_term(Form,Form):-var(Form),!.
-get_head_term(F/A,Form):- integer(A),functor(Form,F,A),!.
+get_head_term(F/A,Form):- integer(A),safe_functor(Form,F,A),!.
 get_head_term(Form0,Form):- get_assertion_head_unnegated(Form0,Form).
 
 
@@ -666,7 +667,7 @@ convention_to_symbolic_mt(_From,_Why,F,A,abox):- mpred_database_term_syntax(F,A,
 convention_to_symbolic_mt(_From,_Why,F,A,abox):- lmcache:already_decl(kb_shared,_,F,A),!.
 convention_to_symbolic_mt(_From,_Why,F,A,abox):- lmcache:already_decl(kb_local,_,F,A),!.
 
-convention_to_symbolic_mt(_From,_Why,F,A,Mt):-  functor(P,F,A),show_success(predicate_property(P,imported_from(Mt))),!.
+convention_to_symbolic_mt(_From,_Why,F,A,Mt):-  safe_functor(P,F,A),show_success(predicate_property(P,imported_from(Mt))),!.
 convention_to_symbolic_mt(_From,_Why,F,A,   M):- lmcache:already_decl(kb_global,M,F,A),!.
 convention_to_symbolic_mt(_From,_Why,F,A,abox):- mpred_database_term(F,A,_).
 convention_to_symbolic_mt(_From,_Why,F,A,abox):- clause_b(safe_wrap(_M,F,A,ereq)).
@@ -687,7 +688,7 @@ full_transform_and_orignal(Why,MH,MHO):- full_transform(Why,MH,MHH),
 
 
 full_transform(Op,ISA,SentO):- nonvar(ISA),isa(I,C)=ISA,!, must_ex(fully_expand_real(Op,isa(I,C),SentO)),!.
-full_transform(Op,Sent,SentO):- functor(Sent,F,A),may_fully_expand(F,A),!,
+full_transform(Op,Sent,SentO):- safe_functor(Sent,F,A),may_fully_expand(F,A),!,
    must_ex(fully_expand_real(Op,Sent,SentO)),!.
 
 */
@@ -703,7 +704,7 @@ full_transform(Why,MH,MHH):- has_skolem_attrvars(MH),!,
      % nop(sanity(on_f_debug(same_modules(MH,MHH)))).
 %full_transform(Op,==> CI,SentO):- nonvar(CI),!, full_transform(Op,CI,SentO).
 %full_transform(Op,isa(I,C),SentO):- nonvar(C),!,must_ex(fully_expand_real(Op,isa(I,C),SentO)),!.
-%full_transform(_,CI,SentO):- CI=..[_C,I], atom(I),!,if_defined(do_renames(CI,SentO),CI=SentO),!.
+%full_transform(_,CI,SentO):- CI univ_safe [_C,I], atom(I),!,if_defined(do_renames(CI,SentO),CI=SentO),!.
 full_transform(Why,MH,MHH):-
  must_det(fully_expand_real(change(assert,Why),MH,MHH)),!,
  nop(sanity(on_f_debug(same_modules(MH,MHH)))).
@@ -827,8 +828,8 @@ clause_u_visible(MH,B,R):- Why = clause(clause,clause_u),
 %clause_u(H,B,forward(R)):- R=(==>(B,H)),clause_u(R,true).
 
 clause_uu(H,B,Ref):- var(H),var(Ref),!,trace_or_throw_ex(var_clause_u(H,B,Ref)).
-clause_uu(M:H,B,R):- functor(H,F,A),functor(HH,F,A),!,should_inherit(mh,M,H,TF),clause_u_attv_m(mh,TF,M,HH,BB,R),match_attvar_clauses(HH,BB,H,B).
-clause_uu(  H,B,R):- functor(H,F,A),functor(HH,F,A),!,defaultAssertMt(M),should_inherit(h,M,H,TF),clause_u_attv_m(mh,TF,M,HH,BB,R),match_attvar_clauses(HH,BB,H,B).
+clause_uu(M:H,B,R):- safe_functor(H,F,A),safe_functor(HH,F,A),!,should_inherit(mh,M,H,TF),clause_u_attv_m(mh,TF,M,HH,BB,R),match_attvar_clauses(HH,BB,H,B).
+clause_uu(  H,B,R):- safe_functor(H,F,A),safe_functor(HH,F,A),!,defaultAssertMt(M),should_inherit(h,M,H,TF),clause_u_attv_m(mh,TF,M,HH,BB,R),match_attvar_clauses(HH,BB,H,B).
 
 
 clause_u_attv_m(MP,Herit,M,H,B,Ref):-var(H),var(Ref),!,trace_or_throw_ex(var_clause_u_attv_m(MP,Herit,M,H,B,Ref)).
@@ -1105,8 +1106,8 @@ mpred_ain(MTP,S):- quietly_ex(is_ftVar(MTP)),!,trace_or_throw_ex(var_mpred_ain(M
 mpred_ain(MTP,S):- mpred_ain_cm(MTP,P,AM,SM),mpred_ain_now4(SM,AM,P,S).
 
 
-mpred_ain_now4(SM,ToMt,P,(mfl(FromMt,File,Lineno),UserWhy)):- sanity(stack_check),ToMt \== FromMt,!,
-  mpred_ain_now4(SM,ToMt,P,(mfl(ToMt,File,Lineno),UserWhy)).
+mpred_ain_now4(SM,ToMt,P,(mfl4(VarNameZ,FromMt,File,Lineno),UserWhy)):- sanity(stack_check),ToMt \== FromMt,!,
+  mpred_ain_now4(SM,ToMt,P,(mfl4(VarNameZ,ToMt,File,Lineno),UserWhy)).
 
 mpred_ain_now4(SM0,AM0,PIn,S):- SM0==AM0, is_code_module(AM0),!,
   get_assert_to(AM),get_query_from(SM),!,mpred_ain_now4(SM,AM,PIn,S).
@@ -1273,7 +1274,7 @@ leave_some_vars_at_el(==>).
 
 is_ftOpen(A):- member(A,['$VAR'('????????????'),'$VAR'(_)]).
 
-is_ftOpenSentence(P):- compound(P), functor(P,F,N), \+ leave_some_vars_at_el(F),
+is_ftOpenSentence(P):- compound(P), safe_functor(P,F,N), \+ leave_some_vars_at_el(F),
    (arg(N,P,A);(N\==1,arg(1,P,A))),is_ftOpen(A).
 is_ftOpenSentence(P):- is_ftOpen(P).
 
@@ -1460,10 +1461,10 @@ get_mpred_assertion_status(P,PP,Was):-
 
 
 same_file_facts(S1,S2):-reduce_to_mfl(S1,MFL1),reduce_to_mfl(S2,MFL2),!,same_file_facts0(MFL1,MFL2).
-same_file_facts0(mfl(M,F,_),mfl(M,FF,_)):-nonvar(M),!, FF=@=F.
+same_file_facts0(mfl4(VarNameZ,M,F,_),mfl4(VarNameZ,M,FF,_)):-nonvar(M),!, FF=@=F.
 same_file_facts0(F,FF):- FF=@=F,!.
 
-reduce_to_mfl(MFL,MFL):- MFL=mfl(_,_,_),!.
+reduce_to_mfl(MFL,MFL):- MFL=mfl4(_VarNameZ,_,_,_),!.
 reduce_to_mfl((MFL,_),MFLO):- !,reduce_to_mfl(MFL,MFLO).
 
 %% mpred_post_update4(++AssertionStatus, +Ps, +S, ++SupportStatus) is det.
@@ -1888,7 +1889,7 @@ mpred_ain_by_type(action,_ZAction):- !.
 
 mpred_withdraw(P):- mpred_reduced_chain(mpred_withdraw,P),!.
 
-mpred_withdraw(mfl(_,_,_)):-!.
+mpred_withdraw(mfl4(_VarNameZ,_,_,_)):-!.
 mpred_withdraw(P) :- 
   only_is_user_reason(UU),
   % iterate down the list of facts to be mpred_withdraw''ed.
@@ -1921,7 +1922,7 @@ mpred_withdraw(P,S) :-
     nop(dmsg(mpred_withdraw(P,S)))),
   ignore(mpred_withdraw_fail_if_supported(P,S)).
 
-mpred_withdraw_fail_if_supported(mfl(_,_,_),_):-!.
+mpred_withdraw_fail_if_supported(mfl4(_VarNameZ,_,_,_),_):-!.
 mpred_withdraw_fail_if_supported(P,S):-
   maybe_user_support(P,S,SS),
   (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg(found(mpred_rem_support1(P,S))))
@@ -1972,7 +1973,7 @@ mpred_remove2(P,S) :-
      -> ( mpred_blast(P) )
       ; true).
 
-mpred_retract_is_complete(mfl(_,_,_)):-!.
+mpred_retract_is_complete(mfl4(_VarNameZ,_,_,_)):-!.
 mpred_retract_is_complete(P) :- \+ mpred_supported(local,P), \+ call_u(P).
 
 mpred_retract(P):- mpred_withdraw(P), mpred_retract_is_complete(P),!,mpred_trace_msg('    Withdrew: ~p',[P]).
@@ -2502,8 +2503,8 @@ mpred_eval_lhs_0(X,_):- mpred_warn("Unrecognized item found in trigger body, nam
 
 
 args_swapped(~P1,~P2):-!,args_swapped(P1,P2).
-args_swapped(P1,P2):- P1 =.. [F,Y,X], P2 =.. [F,X,Y].
-fxy_args_swapped(F,X,Y,P1,P2):- P1 =.. [F,X,Y], P2 =.. [F,Y,X].
+args_swapped(P1,P2):- P1  univ_safe  [F,Y,X], P2  univ_safe  [F,X,Y].
+fxy_args_swapped(F,X,Y,P1,P2):- P1  univ_safe  [F,X,Y], P2  univ_safe  [F,Y,X].
 
 
 %%  mpred_eval_rhs1(What,Support) is nondet.
@@ -2703,7 +2704,7 @@ call_u_mp(M,P1):- !,M:call(P1).
 %call_u_mp(M,P1):- predicate_property(M:P1,built_in),!, M:call(P1).
 %call_u_mp(M,P1):- predicate_property(M:P1,dynamic),!, M:call(P1).
 %call_u_mp(M,P1):- predicate_property(M:P1,defined),!, M:call(P1).
-call_u_mp(M,P):- functor(P,F,A), call_u_mp_fa(M,P,F,A).
+call_u_mp(M,P):- safe_functor(P,F,A), call_u_mp_fa(M,P,F,A).
 
 make_visible(R,M:F/A):- wdmsg(make_visible(R,M:F/A)),fail.
 make_visible(_,_):- !.
@@ -2830,12 +2831,12 @@ mpred_METACALL(How, Cut, (C1;C2)):-!,(mpred_METACALL(How, Cut, C1);mpred_METACAL
 
 mpred_METACALL(How, Cut, M):- fixed_syntax(M,O),!,mpred_METACALL(How, Cut, O).
 mpred_METACALL(How, Cut, U:X):-U==user,!,mpred_METACALL(How, Cut, X).
-% mpred_METACALL(How, Cut, t(A,B)):-(atom(A)->true;(no_repeats(arity(A,1)),atom(A))),ABC=..[A,B],mpred_METACALL(How, Cut, ABC).
-% mpred_METACALL(How, Cut, isa(B,A)):-(atom(A)->true;(no_repeats(tCol(A)),atom(A))),ABC=..[A,B],mpred_METACALL(How, Cut, ABC).
-%mpred_METACALL(How, Cut, t(A,B)):-!,(atom(A)->true;(no_repeats(arity(A,1)),atom(A))),ABC=..[A,B],mpred_METACALL(How, Cut, ABC).
-mpred_METACALL(How, Cut, t(A,B,C)):-!,(atom(A)->true;(no_repeats(arity(A,2)),atom(A))),ABC=..[A,B,C],mpred_METACALL(How, Cut, ABC).
-mpred_METACALL(How, Cut, t(A,B,C,D)):-!,(atom(A)->true;(no_repeats(arity(A,3)),atom(A))),ABC=..[A,B,C,D],mpred_METACALL(How, Cut, ABC).
-mpred_METACALL(How, Cut, t(A,B,C,D,E)):-!,(atom(A)->true;(no_repeats(arity(A,4)),atom(A))),ABC=..[A,B,C,D,E],mpred_METACALL(How, Cut, ABC).
+% mpred_METACALL(How, Cut, t(A,B)):-(atom(A)->true;(no_repeats(arity(A,1)),atom(A))),ABC univ_safe [A,B],mpred_METACALL(How, Cut, ABC).
+% mpred_METACALL(How, Cut, isa(B,A)):-(atom(A)->true;(no_repeats(tCol(A)),atom(A))),ABC univ_safe [A,B],mpred_METACALL(How, Cut, ABC).
+%mpred_METACALL(How, Cut, t(A,B)):-!,(atom(A)->true;(no_repeats(arity(A,1)),atom(A))),ABC univ_safe [A,B],mpred_METACALL(How, Cut, ABC).
+mpred_METACALL(How, Cut, t(A,B,C)):-!,(atom(A)->true;(no_repeats(arity(A,2)),atom(A))),ABC univ_safe [A,B,C],mpred_METACALL(How, Cut, ABC).
+mpred_METACALL(How, Cut, t(A,B,C,D)):-!,(atom(A)->true;(no_repeats(arity(A,3)),atom(A))),ABC univ_safe [A,B,C,D],mpred_METACALL(How, Cut, ABC).
+mpred_METACALL(How, Cut, t(A,B,C,D,E)):-!,(atom(A)->true;(no_repeats(arity(A,4)),atom(A))),ABC univ_safe [A,B,C,D,E],mpred_METACALL(How, Cut, ABC).
 mpred_METACALL(How, Cut, call(X)):- !, mpred_METACALL(How, Cut, X).
 mpred_METACALL(How, Cut, call_u(X)):- !, mpred_METACALL(How, Cut, X).
 mpred_METACALL(How, Cut, once(X)):- !, once(mpred_METACALL(How, Cut, X)).
@@ -2880,7 +2881,7 @@ mpred_METACALL(How, _SCut, P):- call(How,P).
 % an action is action_is_undoable if there exists a method for undoing it.
 %
 action_is_undoable(G):- lookup_u(do_and_undo(G,_)).
-action_is_undoable(G):- functor(G,F,_),lookup_u(do_and_undo(F,Undo)),atom(Undo).
+action_is_undoable(G):- safe_functor(G,F,_),lookup_u(do_and_undo(F,Undo)),atom(Undo).
 
 
 
@@ -3312,7 +3313,7 @@ check_never_assert(MPred):- strip_module(MPred,M,_Pred),
 check_db_sanity(Checker,CModule,Pred):- 
  (current_predicate(CModule:Checker/2)->Module=CModule;Module=baseKB),!,
  copy_term_and_varnames(Pred,Pred_2),
- CheckerCall =..[ Checker,Pred_2,_Why],
+ CheckerCall  univ_safe [ Checker,Pred_2,_Why],
  call_u_no_bc(Module:CheckerCall),
  sanity(variant_u(Pred,Pred_2)),
  trace_or_throw_ex(Module:CheckerCall).
@@ -3403,14 +3404,14 @@ really_mpred_mark(Sup,Type,F,A):-
   %with_no_mpred_trace_exec(with_fc_mode(direct,mpred_post1(MARK,(why_marked(Sup),ax)))).
   % with_no_mpred_trace_exec(with_fc_mode(direct,mpred_fwc1(MARK,(why_marked(Sup),ax)))),!.
 
-why_marked(M,_Sup,mfl(M,F,L)):- source_location(F,L),!.
+why_marked(M,_Sup,mfl4(VarNameZ,M,F,L)):- source_location(F,L),!,varnames_load_context(VarNameZ).
 why_marked(_,Sup,Sup).
 
 %% fa_to_p(+F, ?A, ?P) is semidet.
 %
 % Functor-arity Converted To Pred.
 %
-fa_to_p(F,A,P):-is_ftNameArity(F,A),functor(P,F,A),
+fa_to_p(F,A,P):-is_ftNameArity(F,A),safe_functor(P,F,A),
   ( P \= call_u_no_bc(_) ),( P \= '$VAR'(_)).
 
 
@@ -3431,7 +3432,7 @@ build_code_test(WS,rhs(Test),rhs(TestO)) :- !,build_code_test(WS,Test,TestO).
 build_code_test(WS,Test,TestO):- is_list(Test),must_maplist(build_code_test(WS),Test,TestO).
 build_code_test(_WS,(H:-B),clause_asserted_u(H,B)):- !.
 build_code_test(_WS,M:(H:-B),clause_asserted_u(M:H,B)):- !.
-build_code_test(WS,Test,TestO):- code_sentence_op(Test),Test=..[F|TestL],must_maplist(build_code_test(WS),TestL,TestLO),TestO=..[F|TestLO],!.
+build_code_test(WS,Test,TestO):- code_sentence_op(Test),Test univ_safe [F|TestL],must_maplist(build_code_test(WS),TestL,TestLO),TestO univ_safe [F|TestLO],!.
 build_code_test(WS,Test,Test):- must_ex(mpred_mark_as(WS,Test,pfcCallCodeAnte)),!.
 build_code_test(_,Test,Test).
 
@@ -3450,9 +3451,9 @@ mpred_compile_rhs_term_consquent(WS,Test,TestO):- is_list(Test),must_maplist(mpr
 mpred_compile_rhs_term_consquent(_WS,(H:-B),(H:-B)):-!.
 
 mpred_compile_rhs_term_consquent(WS,Test,TestO):-
-   code_sentence_op(Test),Test=..[F|TestL],
+   code_sentence_op(Test),Test univ_safe [F|TestL],
    must_maplist(mpred_compile_rhs_term_consquent(WS),TestL,TestLO),
-   TestO=..[F|TestLO],!.
+   TestO univ_safe [F|TestLO],!.
 
 mpred_compile_rhs_term_consquent(Sup,I,O):-
   % TODO replace the next line with  I=O,
@@ -3486,7 +3487,7 @@ code_sentence_op(Test):-
 %
 % All Closed.
 %
-all_closed(C):- \+is_ftCompound(C)->true;(functor(C,_,A),A>1,\+((arg(_,C,Arg),is_ftVar(Arg)))),!.
+all_closed(C):- \+is_ftCompound(C)->true;(safe_functor(C,_,A),A>1,\+((arg(_,C,Arg),is_ftVar(Arg)))),!.
 
 
 %head_to_functor_name(I,F):- is_ftCompound(I),get_head(I,H),is_ftCompound(I),get_functor_name(I,F).
@@ -3632,8 +3633,8 @@ mpred_reset_kb:- defaultAssertMt(Module),
 
 mpred_reset_kb_facts(Module):- nop(Module).
 
-mfl_module(mfl(M,_,_),Module):- Module==M,!.
-mfl_module(mfl(_,F,_),Module):- atom(F),
+mfl_module(mfl4(_VarNameZ,M,_,_),Module):- Module==M,!.
+mfl_module(mfl4(_VarNameZ,_,F,_),Module):- atom(F),
    module_property(M,file(F)),  
    \+ ((module_property(M2,file(F)),M\==M2)),
    Module==M.
@@ -3688,7 +3689,7 @@ mpred_database_item(Module,P):-
    current_module(Module),
   mpred_database_term(F,A,Type),
   Type\=debug,Type\=setting,
-  functor(H,F,A),
+  safe_functor(H,F,A),
   % H \= ~(_),  
   P = (H:-B),
   Module:clause(H,B,Ref),
@@ -3735,8 +3736,8 @@ mpred_fact(P):- mpred_fact(P,true).
 %
 
 mpred_fact(P,C):- mpred_fact0(P,C).
-mpred_fact(P,C):- compound(P),functor(P,F,2),clause_b(rtSymmetricBinaryPredicate(F)),args_swapped(P,Q),mpred_fact0(Q,C).
-mpred_fact(~P,C):- compound(P),functor(P,F,2),clause_b(rtSymmetricBinaryPredicate(F)),args_swapped(P,Q),mpred_fact0(~Q,C).
+mpred_fact(P,C):- compound(P),safe_functor(P,F,2),clause_b(rtSymmetricBinaryPredicate(F)),args_swapped(P,Q),mpred_fact0(Q,C).
+mpred_fact(~P,C):- compound(P),safe_functor(P,F,2),clause_b(rtSymmetricBinaryPredicate(F)),args_swapped(P,Q),mpred_fact0(~Q,C).
 mpred_fact0(P,C):-
   mpred_get_support(P,_),
   mpred_db_type(P,fact(_FT)),
@@ -4076,7 +4077,7 @@ pp_db_items(Var):-
   format("~N  ~p",[Var]).
 
 
-is_hidden_pft(_,(mfl(baseKB,_,_),ax)).
+is_hidden_pft(_,(mfl4(_VarNameZ,baseKB,_,_),ax)).
 is_hidden_pft(_,(why_marked(_),ax)).
 
 

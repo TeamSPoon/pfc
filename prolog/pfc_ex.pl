@@ -140,9 +140,9 @@ mpred_unload_file:- \+ call(call,prolog_load_context(reload,true)),!.
 mpred_unload_file:- source_location(File,_),mpred_unload_file(File).
 mpred_unload_file(File):-
   findall(
-    mpred_withdraw(Data,(mfl(Module, File, LineNum),AX)),
+    mpred_withdraw(Data,(mfl4(VarNameZ,Module, File, LineNum),AX)),
     % clause_u
-    call_u(spft(Data, mfl(Module, File, LineNum),AX)),
+    call_u(spft(Data, mfl4(VarNameZ,Module, File, LineNum),AX)),
                     ToDo),
      length(ToDo,Len),
      wdmsg(mpred_unload_file(File,Len)),
@@ -353,7 +353,7 @@ mpred_must(G):- must(mpred_test(G)).
 % Match Source Ref Secondary Helper.
 %
 match_source_ref1(ax):-!.
-match_source_ref1(mfl(_,_,_)).
+match_source_ref1(mfl4(VarNameZ,_,_,_)).
 
 %% make_uu_remove( :TermU) is semidet.
 %

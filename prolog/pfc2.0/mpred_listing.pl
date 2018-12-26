@@ -180,7 +180,7 @@ mpred_classify_facts([H|T],User,Pfc,[H|Rule]) :-
   mpred_classify_facts(T,User,Pfc,Rule).
 
 mpred_classify_facts([H|T],[H|User],Pfc,Rule) :-
-  mpred_get_support(H,(mfl(_,_,_),ax)),
+  mpred_get_support(H,(mfl4(VarNameZ,_,_,_),ax)),
   !,
   mpred_classify_facts(T,User,Pfc,Rule).
 
@@ -208,7 +208,7 @@ print_db_items(T, I):-
 %
 % Print Database Items.
 %
-print_db_items(F/A):-number(A),!,functor(P,F,A),!,print_db_items(P).
+print_db_items(F/A):-number(A),!,safe_functor(P,F,A),!,print_db_items(P).
 print_db_items(H):- bagof(H,clause_u(H,true),R1),pp_items((:),R1),R1\==[],!.
 print_db_items(H):- \+ current_predicate(_,H),!. 
 print_db_items(H):- catch( ('$find_predicate'(H,_),call_u(listing(H))),_,true),!,nl,nl.
@@ -259,7 +259,7 @@ pp_supports :-
 
 pp_filtered(P):-var(P),!,fail.
 pp_filtered(_:P):- !, pp_filtered(P).
-pp_filtered(P):- functor(P,F,A),F\==(/),!,pp_filtered(F/A).
+pp_filtered(P):- safe_functor(P,F,A),F\==(/),!,pp_filtered(F/A).
 pp_filtered(F/_):-F==mpred_prop.
 
 
@@ -292,7 +292,7 @@ show_pred_info(PI):-
    ((
        pi_to_head_l(PI,Head),      
        % doall(show_call(why,call_u(isa(Head,_)))),
-        functor(Head,F,_),
+        safe_functor(Head,F,_),
         doall(show_call(why,call_u(isa(F,_)))),
        ((current_predicate(_,M:Head), (\+ predicate_property(M:Head,imported_from(_))))
           -> show_pred_info_0(M:Head); 
@@ -441,10 +441,10 @@ mpred_list_triggers_1(~(What)):-var(What),!.
 mpred_list_triggers_1(~(_What)):-!.
 mpred_list_triggers_1(What):-var(What),!.
 mpred_list_triggers_1(What):- 
-   print_db_items('Supports User',spft_precanonical(P,mfl(_,_,_),ax),spft(P,mfl(_,_,_),ax),What),
+   print_db_items('Supports User',spft_precanonical(P,mfl4(VarNameZ,_,_,_),ax),spft(P,mfl4(VarNameZ,_,_,_),ax),What),
    print_db_items('Forward Facts',(nesc(F)),F,What),
    print_db_items('Forward Rules',(_==>_),What),
- ignore((What\= ~(_),functor(What,IWhat,_),
+ ignore((What\= ~(_),safe_functor(What,IWhat,_),
    print_db_items_and_neg('Instance Of',isa(IWhat,_),IWhat),
    print_db_items_and_neg('Instances: ',isa(_,IWhat),IWhat),
    print_db_items_and_neg('Subclass Of',genls(IWhat,_),IWhat),
@@ -483,7 +483,7 @@ mpred_list_triggers_1(What):-
    !.     
 
 
-pinfo(F/A):- listing(F/A),functor(P,F,A),findall(Prop,predicate_property(P,Prop),List),wdmsg(pinfo(F/A)==List),!.
+pinfo(F/A):- listing(F/A),safe_functor(P,F,A),findall(Prop,predicate_property(P,Prop),List),wdmsg(pinfo(F/A)==List),!.
 
 :- fixup_exports.
 

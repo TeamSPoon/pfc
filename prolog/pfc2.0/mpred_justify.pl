@@ -65,7 +65,7 @@ mpred_info(O):-
  dmsg("=======================================================================")))).
 
 mp_printAll(S,+(O)):- subst(O,v,V,CALL),CALL\==O,!,
-  subst(O,S,s,NAME),functor(O,F,_),!,
+  subst(O,S,s,NAME),safe_functor(O,F,_),!,
   nl,flush_output, fmt("=================="),wdmsg(NAME),wdmsg("---"),flush_output,!,
   doall(((flush_output,(CALL),flush_output)*->fmt9(V);(fail=F))),nl,fmt("=================="),nl,flush_output.
 mp_printAll(S,call(O)):- !,
@@ -73,10 +73,10 @@ mp_printAll(S,call(O)):- !,
   nl,flush_output,fmt("=================="),wdmsg(NAME),wdmsg("---"),flush_output,!,
   doall(((flush_output,deterministically_must(O),flush_output)*->true;wdmsg(false=NAME))),fmt("=================="),nl,flush_output.
 mp_printAll(S,(O)):- subst(O,v,V,CALL),CALL\==O,!,
-  subst(O,S,s,NAME),functor(O,F,_),
+  subst(O,S,s,NAME),safe_functor(O,F,_),
   nl,flush_output, fmt("=================="),wdmsg(NAME),wdmsg("---"),flush_output,!,
   doall(((flush_output,deterministically_must(CALL),flush_output)*->fmt9(V);(fail=F))),nl,fmt("=================="),nl,flush_output.
-mp_printAll(S,(O)):-  !,  functor(O,F,A),mp_nnvv(S,O,F,A),flush_output.
+mp_printAll(S,(O)):-  !,  safe_functor(O,F,A),mp_nnvv(S,O,F,A),flush_output.
 mp_nnvv(_,(O),F,1):- !, doall(((flush_output,deterministically_must(O),flush_output)*->wdmsg(+F);wdmsg(-F))).
 mp_nnvv(S,(O),_,_):- !, subst(O,S,s,NAME), !,
   doall(((flush_output,deterministically_must(O),flush_output)*->wdmsg(-NAME);wdmsg(+NAME))).
@@ -523,7 +523,7 @@ short_filename(F,FN):- atomic_list_concat([_,FN],'/pack/',F),!.
 short_filename(F,FN):- atomic_list_concat([_,FN],swipl,F),!.
 short_filename(F,FN):- F=FN,!.
 
-pfcShowSingleJust_MFL(MFL):- MFL=mfl(_M,F,L),atom(F),short_filename(F,FN),!,
+pfcShowSingleJust_MFL(MFL):- MFL=mfl4(VarNameZ,_M,F,L),atom(F),short_filename(F,FN),!,varnames_load_context(VarNameZ),
    ansi_format([hfg(black)]," % [~w:~w] ",[FN,L]).
 pfcShowSingleJust_MFL(MFL):- ansi_format([hfg(black)]," % [~w] ",[MFL]),!.
 
@@ -802,9 +802,10 @@ find_mfl(C,MFL):- unwrap_litr0(C,UC) -> C\==UC -> find_mfl(UC,MFL).
 find_mfl(C,MFL):- expand_to_hb(C,H,B),
    find_hb_mfl(H,B,_Ref,MFL)->true; (clause_match(H,B,Ref),find_hb_mfl(H,B,Ref,MFL)).
 
-find_hb_mfl(_H,_B,Ref,mfl(M,F,L)):- atomic(Ref),clause_property(Ref,line_count(L)),clause_property(Ref,file(F)),clause_property(Ref,module(M)). 
-find_hb_mfl(H,B,_,mfl(M,F,L)):- lookup_spft_match_first( (H:-B),mfl(M,F,L),_),!.
-find_hb_mfl(H,B,_Ref,mfl(M,F,L)):- lookup_spft_match_first(H,mfl(M,F,L),_),ground(B).
+find_hb_mfl(_H,_B,Ref,mfl4(VarNameZ,M,F,L)):- atomic(Ref),clause_property(Ref,line_count(L)),
+ clause_property(Ref,file(F)),clause_property(Ref,module(M)). 
+find_hb_mfl(H,B,_,mfl4(VarNameZ,M,F,L)):- lookup_spft_match_first( (H:-B),mfl4(VarNameZ,M,F,L),_),!.
+find_hb_mfl(H,B,_Ref,mfl4(VarNameZ,M,F,L)):- lookup_spft_match_first(H,mfl4(VarNameZ,M,F,L),_),ground(B).
 find_hb_mfl(H,_B,uses_call_only(H),MFL):- !,call_only_based_mfl(H,MFL).
 
 /*
@@ -823,16 +824,16 @@ clause_match1(H,B,Ref):- clause_match2(H,B,Ref).
 
 clause_match2(H,B,Ref):- current_module(M),clause(M:H,B,Ref),(clause_property(Ref, module(MM))->MM==M;true).
 
-find_mfl(C,MFL):-find_mfl0(C,MFL),compound(MFL),MFL=mfl(_,F,_),nonvar(F).
+find_mfl(C,MFL):-find_mfl0(C,MFL),compound(MFL),MFL=mfl4(VarNameZ,_,F,_),nonvar(F).
 find_mfl0(C,MFL):- lookup_spft_match(C,MFL,ax).
-% find_mfl0(mfl(M,F,L),mfl(M,F,L)):-!.
+% find_mfl0(mfl4(VarNameZ,M,F,L),mfl4(VarNameZ,M,F,L)):-!.
 find_mfl0(C,MFL):-expand_to_hb(C,H,B),
    find_hb_mfl(H,B,_Ref,MFL)->true; (clause_match(H,B,Ref),find_hb_mfl(H,B,Ref,MFL)).
 find_mfl0(C,MFL):-expand_to_hb(C,H,B),
    find_hb_mfl(H,B,_Ref,MFL)->true; (clause_match0(H,B,Ref),find_hb_mfl(H,B,Ref,MFL)).
 
 */
-call_only_based_mfl(H,mfl(M,F,L)):- 
+call_only_based_mfl(H,mfl4(VarNameZ,M,F,L)):- 
   ignore(predicate_property(H,imported_from(M));predicate_property(H,module(M))),
   ignore(predicate_property(H,line_count(L))),
   ignore(source_file(M:H,F);predicate_property(H,file(F));(predicate_property(H,foreign),F=foreign)).
@@ -843,7 +844,7 @@ axiomatic_supporter(clause_u(_)).
 axiomatic_supporter(U):- is_file_ref(U),!.
 axiomatic_supporter(ax):-!.
 
-is_file_ref(A):-compound(A),A=mfl(_,_,_).
+is_file_ref(A):-compound(A),A=mfl4(VarNameZ,_,_,_).
 
 triggerSupports(_,Var,[is_ftVar(Var)]):-is_ftVar(Var),!.
 triggerSupports(_,U,[]):- axiomatic_supporter(U),!.

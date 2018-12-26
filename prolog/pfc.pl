@@ -21,9 +21,14 @@
 :- if( \+ current_prolog_flag(xref,true)).
 
 
-:- if(\+ current_prolog_flag(lm_pfc_lean,_)).
+:- if(\+ current_prolog_flag(lm_no_autoload,_)).
 :- set_prolog_flag(lm_no_autoload,true).
+:- wdmsg("WARNING: PFC_NOAUTOLOAD").
+:- endif.
+
+:- if(\+ current_prolog_flag(lm_pfc_lean,_)).
 :- set_prolog_flag(lm_pfc_lean,true).
+:- wdmsg("WARNING: PFC_LEAN").
 :- endif.
 
 %:- set_prolog_flag(debug_on_error,true).
