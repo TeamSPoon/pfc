@@ -252,7 +252,7 @@ disable_yall:- multifile(yall:lambda_functor/1),
 % baseKB:startup_option(datalog,sanity). %  Run datalog sanity tests while starting
 % baseKB:startup_option(clif,sanity). %  Run datalog sanity tests while starting
 :- set_prolog_flag(fileerrors,false).
-:- set_prolog_flag(gc,false).
+%:- set_prolog_flag(gc,false).
 :- set_prolog_flag(gc,true).
 :- set_prolog_flag(optimise,false).
 :- set_prolog_flag(last_call_optimisation,false).
