@@ -802,7 +802,7 @@ find_mfl(C,MFL):- unwrap_litr0(C,UC) -> C\==UC -> find_mfl(UC,MFL).
 find_mfl(C,MFL):- expand_to_hb(C,H,B),
    find_hb_mfl(H,B,_Ref,MFL)->true; (clause_match(H,B,Ref),find_hb_mfl(H,B,Ref,MFL)).
 
-find_hb_mfl(_H,_B,Ref,mfl4(VarNameZ,M,F,L)):- atomic(Ref),clause_property(Ref,line_count(L)),
+find_hb_mfl(_H,_B,Ref,mfl4(_VarNameZ,M,F,L)):- atomic(Ref),clause_property(Ref,line_count(L)),
  clause_property(Ref,file(F)),clause_property(Ref,module(M)). 
 find_hb_mfl(H,B,_,mfl4(VarNameZ,M,F,L)):- lookup_spft_match_first( (H:-B),mfl4(VarNameZ,M,F,L),_),!.
 find_hb_mfl(H,B,_Ref,mfl4(VarNameZ,M,F,L)):- lookup_spft_match_first(H,mfl4(VarNameZ,M,F,L),_),ground(B).
@@ -833,7 +833,7 @@ find_mfl0(C,MFL):-expand_to_hb(C,H,B),
    find_hb_mfl(H,B,_Ref,MFL)->true; (clause_match0(H,B,Ref),find_hb_mfl(H,B,Ref,MFL)).
 
 */
-call_only_based_mfl(H,mfl4(VarNameZ,M,F,L)):- 
+call_only_based_mfl(H,mfl4(_VarNameZ,M,F,L)):- 
   ignore(predicate_property(H,imported_from(M));predicate_property(H,module(M))),
   ignore(predicate_property(H,line_count(L))),
   ignore(source_file(M:H,F);predicate_property(H,file(F));(predicate_property(H,foreign),F=foreign)).
