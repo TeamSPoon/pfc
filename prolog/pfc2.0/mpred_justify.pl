@@ -844,7 +844,7 @@ axiomatic_supporter(clause_u(_)).
 axiomatic_supporter(U):- is_file_ref(U),!.
 axiomatic_supporter(ax):-!.
 
-is_file_ref(A):-compound(A),A=mfl4(VarNameZ,_,_,_).
+is_file_ref(A):-compound(A),A=mfl4(_VarNameZ,_,_,_).
 
 triggerSupports(_,Var,[is_ftVar(Var)]):-is_ftVar(Var),!.
 triggerSupports(_,U,[]):- axiomatic_supporter(U),!.

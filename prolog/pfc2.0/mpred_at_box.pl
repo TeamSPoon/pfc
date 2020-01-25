@@ -351,7 +351,8 @@ ensure_abox(M):-
   must(ensure_abox_support(M,baseKB)),!.
 :- module_transparent((ensure_abox_support)/2).
 ensure_abox_support(M,TBox):- clause_b(M:defaultTBoxMt(TBox)),!.
-ensure_abox_support(M,TBox):- asserta(M:defaultTBoxMt(TBox)),
+ensure_abox_support(M,TBox):- 
+	% asserta(M:defaultTBoxMt(TBox)),
    set_prolog_flag(M:unknown,error),  
   must(forall(mpred_database_term(F,A,_Type),
            kb_shared(M:F/A))),
@@ -365,7 +366,8 @@ ensure_abox_support(M,TBox):-
        must(ignore(system:delete_import_module(M,system))),
        must(ignore(system:delete_import_module(M,baseKB))),
        system:add_import_module(M,system,end),
-       retractall(M:defaultTBoxMt(TBox)),throw(failed_ensure_abox_support(M,TBox)).
+       retractall(M:defaultTBoxMt(TBox)),
+       throw(failed_ensure_abox_support(M,TBox)).
 
 
    
