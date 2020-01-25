@@ -180,7 +180,7 @@ mpred_classify_facts([H|T],User,Pfc,[H|Rule]) :-
   mpred_classify_facts(T,User,Pfc,Rule).
 
 mpred_classify_facts([H|T],[H|User],Pfc,Rule) :-
-  mpred_get_support(H,(mfl4(VarNameZ,_,_,_),ax)),
+  mpred_get_support(H,(mfl4(_VarNameZ,_,_,_),ax)),
   !,
   mpred_classify_facts(T,User,Pfc,Rule).
 

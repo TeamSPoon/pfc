@@ -1,4 +1,4 @@
-:- module(system_base_lite,[]).
+%:- module(system_base_lite,[]).
 :- set_module(class(development)).
 %:- mpred_unload_file.
 %:- '$set_source_module'(baseKB).

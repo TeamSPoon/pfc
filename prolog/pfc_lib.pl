@@ -472,7 +472,7 @@ sub_atom(F,C):- sub_atom(F,_,_,_,C).
 only_expand(':-'(I), ':-'(M)):- !,in_dialect_pfc,fully_expand('==>'(I),M),!.
 only_expand(I,OO):- fail, quietly(must_pfc(I,M)),  
   % current_why(S),!,
-  S= mfl4(VarNameZ,Module, File, Line),source_location(File,Line),prolog_load_context(module,Module),
+  S= mfl4(_VarNameZ,Module, File, Line),source_location(File,Line),prolog_load_context(module,Module),
   conjuncts_to_list(M,O), !, %  [I]\=@=O,
   make_load_list(O,S,OO).
 
@@ -491,10 +491,11 @@ must_pfc_exp(P,PO):- (in_dialect_pfc;must_pfc_p(P)),fully_expand(P,PO),!.
 %must_pfc(IM,'==>'(IM)):- (in_dialect_pfc;must_pfc_p(IM)),!.
 must_pfc(IM,_):- is_never_pfc(IM),!,fail.
 must_pfc(SM:P,SM:'==>'(P)):- !, (in_dialect_pfc;must_pfc_p(P)),!.
-must_pfc(P,SM:'==>'(P)):- (in_dialect_pfc;must_pfc_p(P)),!,source_module(SM),!.
+must_pfc(P,SM:'==>'(SM:P)):- (in_dialect_pfc;must_pfc_p(P)),!,source_module(SM),!.
 
 must_pfc_p(F):- \+ compound(F),!,atom(F),must_pfc_fa(F,0),!.
 %must_pfc_p('-->'(_,_)):-!,fail.
+must_pfc_p(M:_):- M==system,!,fail.
 must_pfc_p(_:P):- !, must_pfc_p(P),!.
 must_pfc_p(':-'(_,(CWC,_))):- atom(CWC),arg(_,v(bwc,fwc,awc,zwc),CWC),!.
 must_pfc_p(':-'(_,(CWC,_))):- atom(CWC),arg(_,v(cwc),CWC),!,is_pfc_file.

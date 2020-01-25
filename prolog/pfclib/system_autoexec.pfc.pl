@@ -1,5 +1,5 @@
-:- if( current_prolog_flag(xref,true) ;  \+ current_prolog_flag(pfc_booted,false) ).
-:- module(system_autoexec,[]).
+:- if( current_prolog_flag(xref,true) ;  current_prolog_flag(pfc_booted,false) ).
+%:- module(system_autoexec,[]).
 :- else.
 :- pfc_lib:use_module(library(pfc_lib)).
 :- set_fileAssertMt(baseKB).
