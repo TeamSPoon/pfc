@@ -453,7 +453,7 @@ show_bool(G):- must(forall((G*->wdmsg(true=G);wdmsg(false=G)),true)).
 %
 show_load_context:- 
   must((
-  listing(baseKB:registered_mpred_file),
+  %listing(baseKB:registered_mpred_file),
   show_bool(mpred_may_expand),
   show_bool(in_mpred_kb_module),
   show_bool(mpred_expand_inside_file_anyways),
@@ -761,13 +761,13 @@ get_file_type(File,Type):-file_name_extension(_,Type,File).
 
 
 
-%% is_mpred_file(heads, ?F) is det.
+%% is_mpred_file(?F) is det.
 %
 % If Is A Managed Predicate File.
 %
 is_mpred_file(F):- get_how_virtualize_file(heads,F),!.
 is_mpred_file(F):- guess_if_mpred_file0(F),!,guess_if_mpred_file0(F),(set_how_virtualize_file(heads,F)),!.
-is_mpred_file(F):- var(F),!,quietly_must(loading_source_file(F)),F\==user,!, is_mpred_file(heads,F),!.
+is_mpred_file(F):- var(F),!,quietly_must(loading_source_file(F)),F\==user,!, guess_how_virtualize_file(heads,F),!.
 
 %% guess_if_mpred_file0( ?F) is det.
 %
@@ -1975,9 +1975,8 @@ ensure_mpred_file_loaded(M:F0,List):-
 :- meta_predicate(ensure_mpred_file_loaded(:)).
 
 ensure_mpred_file_loaded(MFileIn):- strip_module(MFileIn,M,_), 
- forall(must_locate_file(MFileIn,File),
-   set_how_virtualize_file(heads,File),
-   must_det_l((time_file(File,NewTime),!,
+ forall(must_locate_file(MFileIn,File),   
+   must_det_l((set_how_virtualize_file(heads,File),time_file(File,NewTime),!,
    get_last_time_file(File,_World,LastTime),
    (LastTime<NewTime -> force_reload_mpred_file(M:File) ; true)))).
 
