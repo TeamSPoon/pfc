@@ -281,7 +281,7 @@ baseKB:mpred_skipped_module(eggdrop).
 %:- system:reexport(library('pfc2.0/mpred_at_box.pl')).
 
 :- user:use_module(library('file_scope')).
-% :- virtualize_source_file.
+% :- set_how_virtualize_file(bodies).
 :- module_transparent(baseKB:prologBuiltin/1).
 :- multifile baseKB:prologBuiltin/1.
 :- discontiguous baseKB:prologBuiltin/1.
@@ -390,38 +390,19 @@ in_clause_expand(_).
 maybe_should_rename(O,O).
 
 
-:- multifile(baseKB:ignore_file_mpreds/1).
-:- dynamic(baseKB:ignore_file_mpreds/1).
-:- multifile(baseKB:expect_file_mpreds/1).
-:- dynamic(baseKB:expect_file_mpreds/1).
-
-% baseKB:expect_file_mpreds(File):- prolog_load_context(file,File),t_l:current_lang(pfc).
-% baseKB:expect_file_mpreds(File):- prolog_load_context(source,File),t_l:current_lang(pfc),source_location(SFile,_W), \+ baseKB:ignore_file_mpreds(SFile),!.
+% check_how_virtualize_file(heads,File):- prolog_load_context(file,File),t_l:current_lang(pfc).
+% check_how_virtualize_file(heads,File):- prolog_load_context(source,File),t_l:current_lang(pfc),source_location(SFile,_W), \+ check_how_virtualize_file(false,SFile),!.
 
 % file late late joiners
 :- if( \+ prolog_load_context(reload,true)).
-:- source_location(File, _)-> during_boot((asserta(baseKB:ignore_file_mpreds(File)))).
-:- doall((module_property(M,file(File)),module_property(M,class(CT)),memberchk(CT,[library,system]),asserta(baseKB:ignore_file_mpreds(File)))).
-%:- doall((source_file(File),asserta(baseKB:ignore_file_mpreds(File)))).
+:- source_location(File, _)-> during_boot(((set_how_virtualize_file(false,File)))).
+:- doall((module_property(M,file(File)),module_property(M,class(CT)),memberchk(CT,[library,system]),(set_how_virtualize_file(false,File)))).
+%:- doall((source_file(File),(set_how_virtualize_file(false,File)))).
 %base_kb_dynamic(F,A):- ain(mpred_prop(M,F,A,prologHybrid)),kb_shared(F/A).
 %:- doall((virtualize_ereq(F,A),base_kb_dynamic(F,A))).
 :- endif.
 
 :- discontiguous(baseKB:'$pldoc'/4).
-
-
-baseKB:ignore_file_mpreds(File):- atom(File),check_ignore_file_mpreds(File).
-
-check_ignore_file_mpreds(File):- baseKB:expect_file_mpreds(File),!,fail.
-check_ignore_file_mpreds(File):- ( atom_concat(_,'.pfc.pl',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.clif',File);atom_concat(_,'.pfc',File)),!,asserta(baseKB:expect_file_mpreds(File)),fail.
-check_ignore_file_mpreds(File):- baseKB:expect_file_mpreds(Stem),atom_concat(Stem,_,File),!,asserta(baseKB:expect_file_mpreds(File)),!,fail.
-check_ignore_file_mpreds(File):- baseKB:ignore_file_mpreds(Stem),atom_concat(Stem,_,File),!,asserta(baseKB:ignore_file_mpreds(File)).
-%check_ignore_file_mpreds(File):- module_property(M,file(File)),module_property(M,class(library)),asserta(baseKB:ignore_file_mpreds(File)),!.
-% check_ignore_file_mpreds(File):- baseKB:ignore_file_mpreds(File),!.
-% check_ignore_file_mpreds(File):- asserta(baseKB:expect_file_mpreds(File)),!,fail.
-
-cannot_expand_current_file:- prolog_load_context(module,M),module_property(M,class(library)),!.
-cannot_expand_current_file:- source_location(File,_)->baseKB:ignore_file_mpreds(File),!.
 
 
 in_dialect_pfc:- is_pfc_file. % \+ current_prolog_flag(dialect_pfc,cwc),!.
@@ -445,8 +426,8 @@ is_pfc_file0:- prolog_load_context(module, M),is_pfc_module(M),!.
 is_pfc_file(M:File):- is_pfc_file(M,File).
 is_pfc_file(_,File):- atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File),!.
 is_pfc_file(_,File):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
-is_pfc_file(_,File):- baseKB:ignore_file_mpreds(File),!,fail.
-is_pfc_file(_,File):- baseKB:expect_file_mpreds(File),!.
+is_pfc_file(_,File):- check_how_virtualize_file(false,File),!,fail.
+is_pfc_file(_,File):- check_how_virtualize_file(heads,File),!.
 is_pfc_file(M,Other):- prolog_load_context(source, File),Other\==File,!,is_pfc_file(M,File).
 %is_pfc_file(M,_):- prolog_load_context(module, SM), SM\==M,!, is_pfc_module(SM).
 %is_pfc_file(M,_):- is_pfc_module(M).
@@ -561,7 +542,7 @@ maybe_builtin(I) :- nonvar(I),get_unnegated_functor(I,F,A),
 
 */
 
-:- sanity((clause(baseKB:ignore_file_mpreds(_),B),compound(B))).
+:- sanity((clause(check_how_virtualize_file(false,_),B),compound(B))).
 
 :- if(false).
 %:- autoload([verbose(false)]).
