@@ -278,9 +278,8 @@ mpred_unload_file(File):-
 %:- dynamic(registered_module_type/2).        
 
 
-:- multifile((baseKB:registered_mpred_file/1,baseKB:ignore_file_mpreds/1,baseKB:registered_module_type/2)).
-:-   dynamic((baseKB:registered_mpred_file/1,baseKB:ignore_file_mpreds/1,
-   baseKB:registered_module_type/2)).
+:- multifile((baseKB:registered_module_type/2)).
+:-   dynamic((baseKB:registered_module_type/2)).
 
 
 
@@ -296,6 +295,8 @@ mpred_load(In):- is_stream(In),!,
 
 mpred_load(PLNAME):- % unload_file(PLNAME),
    open(PLNAME, read, In, []),
+   absolute_file_name(PLNAME,Disk),
+   set_how_virtualize_file(heads,Disk),
    mpred_load(In).
 
 mpred_reload(PLNAME):- mpred_unload_file(PLNAME),mpred_load(PLNAME).
@@ -328,7 +329,7 @@ mpred_loader_module_transparent(F/A):-!, module_transparent(F/A).
 % Managed Predicate Prolog Only File.
 %
 mpred_prolog_only_file(File):- var(File),!,fail.
-mpred_prolog_only_file(File):- baseKB:ignore_file_mpreds(File),!.
+mpred_prolog_only_file(File):- get_how_virtualize_file(false,File),!.
 mpred_prolog_only_file(File):- lmcache:mpred_directive_value(File,language,pl),!.
 mpred_prolog_only_file(File):- file_name_extension(File,_,pfc),!,fail.
 mpred_prolog_only_file(File):- lmcache:mpred_directive_value(File,language,pfc),!,fail.
@@ -683,7 +684,7 @@ do_term_expansions:- source_context_module(CM), (do_term_expansions(CM)).
 do_term_expansions(_):- thread_self(ID),baseKB:always_expand_on_thread(ID),!.
 %do_term_expansions(_):- always_transform_heads,not(prevent_transform_mpreds),!.
 do_term_expansions(_):- is_compiling_clause.
-do_term_expansions(CM):- baseKB:registered_mpred_file(CM),!, not(ended_transform_mpreds), not(prevent_transform_mpreds).
+do_term_expansions(CM):- check_how_virtualize_file(heads,CM),!, not(ended_transform_mpreds), not(prevent_transform_mpreds).
 
 check_term_expansions:- not(do_term_expansions).
 */
@@ -760,15 +761,13 @@ get_file_type(File,Type):-file_name_extension(_,Type,File).
 
 
 
-%% is_mpred_file( ?F) is det.
+%% is_mpred_file(heads, ?F) is det.
 %
 % If Is A Managed Predicate File.
 %
-is_mpred_file(F):- var(F),!,quietly_must(loading_source_file(F)),F\==user,!, is_mpred_file(F),!.
-is_mpred_file(F):- baseKB:registered_mpred_file(F),!.
-is_mpred_file(F):- baseKB:ignore_file_mpreds(F),!,fail.
-is_mpred_file(F):- guess_if_mpred_file0(F),!,guess_if_mpred_file0(F),asserta(baseKB:registered_mpred_file(F)),!.
-%is_mpred_file(F):- asserta(baseKB:ignore_file_mpreds(F)),!,fail.
+is_mpred_file(F):- get_how_virtualize_file(heads,F),!.
+is_mpred_file(F):- guess_if_mpred_file0(F),!,guess_if_mpred_file0(F),(set_how_virtualize_file(heads,F)),!.
+is_mpred_file(F):- var(F),!,quietly_must(loading_source_file(F)),F\==user,!, is_mpred_file(heads,F),!.
 
 %% guess_if_mpred_file0( ?F) is det.
 %
@@ -788,8 +787,7 @@ guess_if_mpred_file0(F):- atom(F),exists_file(F), file_name_extension(_,WAS,F),W
 % Decache File Type.
 %
 decache_file_type(F):-
-  forall(clause(baseKB:registered_mpred_file(F),true,Ref),erase(Ref)),
-  forall(clause(baseKB:ignore_file_mpreds(F),true,Ref),erase(Ref)),!.
+  forall(clause(baseKB:how_virtualize_file(_,F),true,Ref),erase(Ref)).
 
 
 
@@ -838,7 +836,7 @@ mpred_may_expand:-quietly_must(loading_module(M)),mpred_may_expand_module(M),!,m
 % Managed Predicate May Expand Module.
 %
 mpred_may_expand_module(M):-baseKB:mpred_skipped_module(M),!,fail.
-mpred_may_expand_module(M):-module_property(M,file(F)),is_mpred_file(F).
+mpred_may_expand_module(M):-module_property(M,file(F)),check_how_virtualize_file(heads,F).
 mpred_may_expand_module(M):- t_l:mpred_module_expansion(M),!.
 mpred_may_expand_module(_):- t_l:mpred_module_expansion(*),!.
 
@@ -859,9 +857,10 @@ mpred_expand_inside_file_anyways:- loading_source_file(F),!,mpred_expand_inside_
 % Managed Predicate Expand Inside File Anyways.
 %
 mpred_expand_inside_file_anyways(F):- var(F),!,loading_source_file(F),nonvar(F),mpred_expand_inside_file_anyways(F).
+mpred_expand_inside_file_anyways(F):- check_how_virtualize_file(heads,F), !.
 mpred_expand_inside_file_anyways(F):- t_l:loading_mpred_file(_,F),!.
-mpred_expand_inside_file_anyways(F):- baseKB:registered_mpred_file(F).
-mpred_expand_inside_file_anyways(F):- is_mpred_file(F),quietly_must(loading_module(M);source_module(M)), (M=user; \+ baseKB:mpred_skipped_module(M)),!.
+mpred_expand_inside_file_anyways(F):- check_how_virtualize_file(heads,F),quietly_must(loading_module(M);source_module(M)), 
+  (M=user; \+ baseKB:mpred_skipped_module(M)),!.
 
 
 
@@ -1102,7 +1101,7 @@ checked_clause_count((_ ==> _)).
 checked_clause_count((_ <==> _)).
 %checked_clause_count(spft(_,_,ax)).
 checked_clause_count(agent_command(_,_)).
-checked_clause_count(ignore_file_mpreds(_)).
+checked_clause_count(how_virtualize_file(false,_)).
 
 
 :- dynamic(lmcache:last_clause_count/2).
@@ -1230,13 +1229,13 @@ begin_pfc:-
 set_file_lang(W):- 
    source_location(File,_Line),
    assert_if_new(lmcache:mpred_directive_value(File,language,W)),
-   (W==pfc-> assert_if_new(baseKB:expect_file_mpreds(File)) ; true),!,
+   (W==pfc-> (set_how_virtualize_file(heads,File)) ; true),!,
   set_lang(W).
 set_file_lang(W):-
   forall((prolog_load_context(file,Source);which_file(Source);prolog_load_context(source,Source)),
   ignore((  % \+ lmcache:mpred_directive_value(Source,language,W),
   source_location(File,Line),
-  (W==pfc-> ain(baseKB:expect_file_mpreds(File)) ; true),
+  (W==pfc-> (set_how_virtualize_file(heads,File)) ; true),
   prolog_load_context(module,Module),
   INFO = source_location_lang(Module,File,Line,Source,W),
   asserta(lmconf:INFO),
@@ -1283,7 +1282,7 @@ get_lang0(W) :- prolog_load_context(file,Source)->lmcache:mpred_directive_value(
 get_lang0(W) :- prolog_load_context(source,Source)->lmcache:mpred_directive_value(Source,language,W).
 get_lang0(W) :- loading_source_file(Source)->lmcache:mpred_directive_value(Source,language,W).
 get_lang0(W):- current_prolog_flag(dialect_pfc,W).
-get_lang0(pfc):- loading_source_file(F)->is_mpred_file(F),!.
+get_lang0(pfc):- loading_source_file(F)->check_how_virtualize_file(heads,F),!.
 get_lang0(pl).
 
 
@@ -1731,7 +1730,7 @@ make_dynamic_ilc(C):- % trace_or_throw_ex(make_dynamic_ilc(C)),
 %:- user:use_module(library(shlib)).
 %:- user:use_module(library(operators)).
 
-:- source_location(F,_),asserta(baseKB:ignore_file_mpreds(F)).
+:- source_location(F,_),(set_how_virtualize_file(false,F)).
 
 % filetypes 
 %
@@ -1801,7 +1800,7 @@ with_mpred_expansions(Goal):-
 % Ensure Loaded No Managed Predicates.
 %
 ensure_loaded_no_mpreds(M:F):- 
-  with_delayed_chaining(forall(must_locate_file(F,L),(asserta(baseKB:ignore_file_mpreds(L)),M:ensure_loaded(M:L)))).
+  with_delayed_chaining(forall(must_locate_file(F,L),((set_how_virtualize_file(false,L)),M:ensure_loaded(M:L)))).
 
 :- meta_predicate(with_delayed_chaining(:)).
 %% with_delayed_chaining( :Goal) is det.
@@ -1884,7 +1883,7 @@ end_module_type(CM,Type):-retractall(baseKB:registered_module_type(CM,Type)).
 % Declare Load Dbase.
 %
 declare_load_dbase(Spec):- forall(no_repeats(File,must_locate_file(Spec,File)),
-  show_call(why,asserta_if_new(baseKB:registered_mpred_file(File)))).
+  show_call(why,(set_how_virtualize_file(heads,File)))).
 
 % :-  /**/ export((is_compiling_sourcecode/1)).
 
@@ -1906,7 +1905,7 @@ is_compiling_sourcecode:-compiling,dmsg(system_compiling),!.
 %
 % Load Managed Predicate Files.
 %
-load_mpred_files :- forall(baseKB:registered_mpred_file(File),ensure_mpred_file_loaded(File)).
+load_mpred_files :- forall(baseKB:how_virtualize_file(heads,File),ensure_mpred_file_loaded(File)).
 
 
 % =======================================================
@@ -1977,6 +1976,7 @@ ensure_mpred_file_loaded(M:F0,List):-
 
 ensure_mpred_file_loaded(MFileIn):- strip_module(MFileIn,M,_), 
  forall(must_locate_file(MFileIn,File),
+   set_how_virtualize_file(heads,File),
    must_det_l((time_file(File,NewTime),!,
    get_last_time_file(File,_World,LastTime),
    (LastTime<NewTime -> force_reload_mpred_file(M:File) ; true)))).
@@ -2053,13 +2053,12 @@ force_reload_mpred_file2(WorldIn,MFileIn):-
  % NewModule:ensure_loaded(logicmoo(mpred/mpred_userkb)),
  forall(must_locate_file(MFileIn,File),
    must_det_l((
-   % must((atom(File),ignore(retract(baseKB:ignore_file_mpreds(File):-true)))),
-   sanity(\+ baseKB:ignore_file_mpreds(File) ),
+   sanity(\+ check_how_virtualize_file(false,File) ),
    once(show_success(prolog_load_file,defaultAssertMt(DBASE));DBASE=NewModule),
    sanity(exists_file(File)),
    sanity((true,defaultAssertMt(World))),
    nop(mpred_remove_file_support(File)),
-   assert_if_new(baseKB:registered_mpred_file(File)),
+   (set_how_virtualize_file(heads,File)),
    quietly_must(time_file(File,NewTime)),
    retractall(baseKB:loaded_file_world_time(File,World,_)),
    system:assert(baseKB:loaded_file_world_time(File,World,NewTime)),    DBASE = DBASE,
