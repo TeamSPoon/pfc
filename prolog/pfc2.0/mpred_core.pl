@@ -1046,10 +1046,11 @@ mpred_add(P):- mpred_ain(P).
 %  asserts P into the dataBase with support from S.
 %
 
-decl_assertable_module(AM):- must_ex(dynamic(AM:spft/3)).
+decl_assertable_module(AM):- nop((must_ex(dynamic(AM:spft/3)))).
 
 % mpred_ain_cm(SM:(==>(AM:P)),P,AM,SM):- SM\==AM, current_predicate(SM:spft/3),!,decl_assertable_module(SM).
 mpred_ain_cm(SM:(==>(AM:P)),==>P,AM,SM):- AM==SM,!,decl_assertable_module(AM).
+mpred_ain_cm(SM:(==>(_:(AM:P :- B))),==>(AM:P :- SM:B),AM,SM):- nonvar(P), decl_assertable_module(AM).
 mpred_ain_cm(SM:(==>(AM:P)),==>P,AM,AM):- decl_assertable_module(AM),!,decl_assertable_module(SM).
 mpred_ain_cm((==>(AM:P)),==>P,AM,AM):- decl_assertable_module(AM),!.
 mpred_ain_cm((==>(P)),==>P,AM,SM):- get_assert_to(AM), guess_pos_source_to(SM),!.
@@ -1093,6 +1094,7 @@ get_query_from(baseKB).
 
 is_code_module(system).
 is_code_module(user).
+is_code_module(baseKB):-!,fail.
 is_code_module(mpred_core).
 is_code_module(M):- clause_b(mtProlog(M)),!,fail.
 is_code_module(M):- module_property(M,class(system)).
@@ -2673,10 +2675,11 @@ call_u_mp(M,'{}'(P1)):-!, call_u_mp(M,P1).
 call_u_mp(M,ttExpressionType(P)):-!,clause_b(M:ttExpressionType(P)).
 call_u_mp(M,mtHybrid(P)):-!,clause_b(M:mtHybrid(P)).
 %call_u_mp(_,is_string(P)):- !, logicmoo_util_bugger:is_string(P).
-
-
 call_u_mp(M,call(O,P1)):- append_term(O,P1,P),!,call_u_mp(M,P).
 call_u_mp(M,call(P1)):- !, call_u_mp(M,P1).
+call_u_mp(M,call_u(P1)):- !, call_u_mp(M,P1).
+% call_u_mp(MaseKB,call_u_no_bc(P)):- !, call_u_mp(MaseKB,P).
+
 
 /*
 call_u_mp(M,call_u(X)):- !, call_u_mp(M,X).
@@ -2705,6 +2708,7 @@ call_u_mp(M,P1):- !,M:call(P1).
 %call_u_mp(M,P1):- predicate_property(M:P1,built_in),!, M:call(P1).
 %call_u_mp(M,P1):- predicate_property(M:P1,dynamic),!, M:call(P1).
 %call_u_mp(M,P1):- predicate_property(M:P1,defined),!, M:call(P1).
+% NEVER GETS HERE 
 call_u_mp(M,P):- safe_functor(P,F,A), call_u_mp_fa(M,P,F,A).
 
 make_visible(R,M:F/A):- wdmsg(make_visible(R,M:F/A)),fail.
