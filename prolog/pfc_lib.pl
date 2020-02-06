@@ -423,17 +423,18 @@ is_pfc_file:- quietly(is_pfc_file0),!.
 :- system:import(pfc_lib:is_pfc_file/0).
 %:- header_sane:import(is_pfc_file/0).
 
-is_pfc_file0:- (prolog_load_context(file,File);source_location(File,_W)),!,prolog_load_context(source, SFile)-> is_pfc_filename(File,SFile).
+is_pfc_file0:- (prolog_load_context(file,File);source_location(File,_W)),!,prolog_load_context(source, SFile)-> 
+ is_pfc_filename(File,SFile).
 is_pfc_file0:- notrace(current_source_file(FileL)),(FileL=File:_->is_pfc_file(File)).
  %is_pfc_file0:- \+ , prolog_load_context(module, M),M\==baseKB,is_pfc_module(M),!,clause_b(mtHybrid(M)).
 :- system:import(pfc_lib:is_pfc_file0/0).
 
 is_pfc_file(File):- is_pfc_filename(File,File).
 % First checks to confirm there is nothing inhibiting
-is_pfc_filename(File,_):- check_how_virtualize_file(false,File),!,fail.
 is_pfc_filename(File,_):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
 is_pfc_filename(File,_):- atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File),!.
-is_pfc_filename(File,_):- \+ check_how_virtualize_file(false,File)->check_how_virtualize_file(heads,File),!.
+%is_pfc_filename(File,_):- check_how_virtualize_file(false,File),!,fail.
+is_pfc_filename(File,_):- baseKB:how_virtualize_file(heads,File),!.
 is_pfc_filename(File,File):-!,fail.
 is_pfc_filename(_,File):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
 is_pfc_filename(_,File):- check_how_virtualize_file(heads,File),!.

@@ -765,9 +765,8 @@ get_file_type(File,Type):-file_name_extension(_,Type,File).
 %
 % If Is A Managed Predicate File.
 %
-is_mpred_file(F):- get_how_virtualize_file(heads,F),!.
+is_mpred_file(F):- var(F),!,quietly_must(loading_source_file(F)),F\==user,!, baseKB:how_virtualize_file(heads,F),!.
 is_mpred_file(F):- guess_if_mpred_file0(F),!,guess_if_mpred_file0(F),(set_how_virtualize_file(heads,F)),!.
-is_mpred_file(F):- var(F),!,quietly_must(loading_source_file(F)),F\==user,!, guess_how_virtualize_file(heads,F),!.
 
 %% guess_if_mpred_file0( ?F) is det.
 %
