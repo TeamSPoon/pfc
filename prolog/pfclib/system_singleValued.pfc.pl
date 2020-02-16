@@ -57,7 +57,8 @@ singleValuedInArg(singleValuedInArgDefault,3).
   ((( P,{P_SLOT\=isMissing, 
         call(dif:dif(Q_SLOT,P_SLOT)),call_u(Q),ground(Q)},Q)
         ==> (\+ Q, P)))).
-  
+
+
 unused ==> 
 ((singleValuedInArgAX(F,A,N), 
    {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)})

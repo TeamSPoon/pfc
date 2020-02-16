@@ -200,7 +200,9 @@ push_current_choice/1,
 
 :- include('mpred_header.pi').
 :- current_prolog_flag(mpred_pfc_silent,false)-> true ; set_prolog_flag(mpred_pfc_silent,true).
-                                                       
+
+:- dynamic(lmcache:mpred_is_spying_pred/2).
+
 :- use_module(library(pfc_test)).
 %:- endif.
 :- use_module(library(logicmoo_common)).
@@ -249,11 +251,14 @@ push_current_choice/1,
 :- dynamic(baseKB:safe_wrap/4).
 
 
+:- op(700,xfx,('univ_safe')).
+
+
 :- system:use_module(library(lists)).
 
 :- module_transparent lookup_u/1,lookup_u/2,mpred_unfwc_check_triggers0/1,mpred_unfwc1/1,mpred_why1/1,mpred_blast/1.
 
-must_ex(G):- (G*->true;(wdmsg(must_ex(G)),ignore(rtrace(G)),wdmsg(must_ex(G)),break)).
+must_ex(G):- (G*->true;(wdmsg(must_ex(G)),if_interactive((ignore(rtrace(G)),wdmsg(must_ex(G)), break)))).
 
 must_notrace_pfc(G):- must_ex((G)).
 
@@ -281,7 +286,6 @@ with_each_item(P,H,S) :- apply(P,[H|S]).
 :- meta_predicate on_x_rtrace(*).
 on_x_rtrace(G):-on_x_debug(G).
 
-:- dynamic(baseKB:mpred_is_spying_pred/2).
 
 
 %% mpred_database_term(:PI, -TYPE) is nondet.
@@ -295,15 +299,28 @@ on_x_rtrace(G):-on_x_debug(G).
 :- kb_global(baseKB:mpred_database_term/3).
 
 % mined from program database
-
 /*
-:- dynamic(baseKB:pm/1).
-:- dynamic(baseKB:spft/3).
 :- dynamic(baseKB:pt/2).                   
-:- dynamic(baseKB:nt/3).
-:- dynamic(baseKB:bt/2).
+:- system:import(baseKB:pt/2).
+
+:- dynamic(baseKB:pm/1).                   
+:- system:import(baseKB:pm/1).
+
+:- dynamic(baseKB:nt/3).                   
+:- system:import(baseKB:nt/3).
+
+:- dynamic(baseKB:spft/3).                   
+:- system:import(baseKB:spft/3).
+
+:- dynamic(baseKB:bt/2).                   
+:- system:import(baseKB:bt/2).
+
 :- dynamic(baseKB:do_and_undo/2).
-:- dynamic(baseKB:tms/1).
+:- system:import(baseKB:do_and_undo/2).
+
+:- dynamic(baseKB:tms/1).                   
+:- system:import(baseKB:tms/1).
+
 */
 
 /*
@@ -349,7 +366,7 @@ mpred_core_database_term(pm,1,setting).
 
 % debug settings
 mpred_core_database_term(mpred_is_tracing_exec,0,debug).
-mpred_core_database_term(mpred_is_spying_pred,2,debug).
+%mpred_core_database_term(lmcache:mpred_is_spying_pred,2,debug).
 mpred_core_database_term(mpred_warnings,1,debug).
 % mpred_core_database_term(t_l:whybuffer,2,debug).
 
@@ -359,6 +376,10 @@ mpred_core_database_term(predicateConventionMt,2,fact(_)).
 % mpred_core_database_term(genlMt,2,fact(_)).
 %mpred_core_database_term(arity,2,fact(_)).
 %mpred_core_database_term(rtArgsVerbatum,1,fact(_)).
+
+
+:- forall(baseKB:mpred_database_term(F,A,_),
+    (dynamic(baseKB:F/A),system:import(baseKB:F/A))).
 
 :- thread_local(t_l:whybuffer/2).
 % :- dynamic(baseKB:que/2).
@@ -382,7 +403,7 @@ show_mpred_success(Type,G):- G*->mpred_trace_msg(success(Type,G)) ; fail.
 decl_rt(RT) :- 
  '@'(((
    sanity(atom(RT)),
-   Head univ_safe [RT,FP],
+   univ_safe(Head , [RT,FP]),
    AIN = ((Head :- cwc, /* dmsg(warn(call(Head))), */ mpred_prop(M,FP,_,RT))),
    (clause_asserted(AIN) -> 
     (nop(listing(RT)),
@@ -437,6 +458,33 @@ setup_mpred_ops:-
 :- setup_mpred_ops.
 
 
+% :- mpred_ain_in_thread.
+% :- current_thread_pool(ain_pool)->true;thread_pool_create(ain_pool,20,[]).
+:- multifile thread_pool:create_pool/1.
+thread_pool:create_pool(ain_pool) :-
+    thread_pool_create(ain_pool, 30, [detached(true)] ).
+
+:- use_module(library(thread_pool)).
+
+is_ain_pool_empty:- thread_pool_property(ain_pool,running(N)),!,N==0.
+is_ain_pool_empty.
+
+show_ain_pool:- forall(thread_pool_property(ain_pool,PP),fmt(show_ain_pool(PP))).
+
+await_ain_pool:- is_ain_pool_empty->true;(repeat, sleep(0.005), is_ain_pool_empty).
+
+ain_in_thread(MAIN):- strip_module(MAIN,M,AIN), call_in_thread(M:ain(AIN)).
+
+call_in_thread(MG):- strip_module(MG,M,G), copy_term(M:G,GG,_),numbervars(GG,0,_),term_to_atom(GG,TN), call_in_thread(TN,M,G).
+
+call_in_thread(TN,M,G):- thread_property(_,alias(TN)),!,dmsg(already_queued(M,G)).
+call_in_thread(TN,M,G):- current_why(Why), thread_create_in_pool(ain_pool,call_in_thread_code(M,G,Why,TN),_Id,[alias(TN)]).
+
+call_in_thread_code(M,G,Why,TN):- 
+ with_only_current_why(Why,
+   catch(( M:G-> nop(dmsg(suceeded(exit,TN)));dmsg(failed(exit,TN))),E,dmsg(error(exit,TN,G-->E)))).
+       
+% why_dmsg(Why,Msg):- with_current_why(Why,dmsg(Msg)).
 
 u_to_uu(U,(U,ax)):- var(U),!.
 u_to_uu(U,U):- nonvar(U),U=(_,_),!.
@@ -489,7 +537,7 @@ get_first_user_reason0(_,(M,ax)):-get_source_mfl(M).
 
 :- module_transparent((get_source_mfl)/1).
 get_source_mfl(M):- current_why(M), nonvar(M) , M =mfl4(_VarNameZ,_,_,_).
-get_source_mfl(mfl4(VarNameZ,M,F,L)):- defaultAssertMt(M), source_location(F,L),varnames_load_context(VarNameZ).
+get_source_mfl(mfl4(VarNameZ,M,F,L)):- defaultAssertMt(M), current_source_location(F,L),varnames_load_context(VarNameZ).
 
 get_source_mfl(mfl4(VarNameZ,M,F,L)):- defaultAssertMt(M), current_source_file(F:L),varnames_load_context(VarNameZ).
 get_source_mfl(mfl4(VarNameZ,M,F,_L)):- defaultAssertMt(M), current_source_file(F),varnames_load_context(VarNameZ).
@@ -528,9 +576,10 @@ fix_mp(Why,G,M,GOO):-
 meta_split(PQ,P,OP,Q):-PQ  univ_safe [OP,P,Q],arg(_,v('<-','==>','<==>','==>',(','),(';')),OP).
 
 fix_mp0(Nonvar,Var,ABox,VarO):- sanity(nonvar(Nonvar)), is_ftVar(Var),!,Var=VarO,defaultAssertMt(ABox),!.
-fix_mp0(Why, '~'(G0), M, '~'(CALL)):-nonvar(G0),!,fix_mp0(Why,G0,M,CALL).
-fix_mp0(Why,'?-'(G0),M, '?-'(CALL)):-nonvar(G0),!,fix_mp0(Why,G0,M,CALL).
-fix_mp0(Why,':-'(G0),M, ':-'(CALL)):-nonvar(G0),!,fix_mp0(Why,G0,M,CALL).
+fix_mp0(Why, '~'(G), M, '~'(GO)):-nonvar(G),!,fix_mp0(Why,G,M,GO).
+fix_mp0(Why,'?-'(G),M, '?-'(GO)):-nonvar(G),!,fix_mp0(Why,G,M,GO).
+fix_mp0(Why,':-'(G),M, ':-'(GO)):-nonvar(G),!,fix_mp0(Why,G,M,GO).
+fix_mp0(Why,(:- G),M,(:- GO)):- !, fix_mp0(Why,G,M,GO).
 fix_mp0(Why,(G :- B),M,( GO :- B)):- !, fix_mp0(Why,G,M,GO).
 % fix_mp0(Why,(G <- B),M,( GO <- B)):- !, fix_mp0(Why,G,M,GO).
 fix_mp0(Why,CM:(G :- B),M,( GO :- B)):- !, CM:fix_mp0(Why,G,M,GO).
@@ -582,6 +631,9 @@ mpred_truth_value(_Call,vUnknown,vFailed).
 
 convention_to_mt(From,Why,F,A,RealMt):-convention_to_symbolic_mt_ec(From,Why,F,A,Mt),to_real_mt(Why,Mt,RealMt).
 
+get_unnegated_mfa(M:G,M,F,A):-!,get_unnegated_functor(G,F,A).
+get_unnegated_mfa(G,M,F,A):- strip_module(G,M0,_),get_unnegated_functor(G,F,A),
+                 convention_to_mt(M0,get_unnegated_mfa(G,M,F,A),F,A,M).
 
 get_unnegated_functor(G,F,A):- strip_module(G,_,GO),
    get_assertion_head_unnegated(GO,Unwrap),
@@ -673,7 +725,9 @@ convention_to_symbolic_mt(_From,_Why,F,A,abox):- mpred_database_term(F,A,_).
 convention_to_symbolic_mt(_From,_Why,F,A,abox):- clause_b(safe_wrap(_M,F,A,ereq)).
 
 
-convention_to_symbolic_mt(From,Why,F,A,Error):- bad_head_pred(F),!,dumpST,dmsg(bad_head_pred(F)),break,trace_or_throw_ex(error_convention_to_symbolic_mt(From,Why,F,A,Error)).
+convention_to_symbolic_mt(From,Why,F,A,Error):- bad_head_pred(F),!,Error = From,
+  if_interactive((
+   dumpST,dmsg(bad_head_pred(F)),break,trace_or_throw_ex(error_convention_to_symbolic_mt(From,Why,F,A,Error)))).
 
 
 % convention_to_symbolic_mt(_From,_Why,_,_,M):- atom(M),!.
@@ -726,7 +780,7 @@ listing_i(MP):- % strip_module(MP,M,P),!,
    listing_mpi(MP,MM:PI)). 
 
 :- reconsult(library(listing)).
-:- use_module(library(logicmoo/xlisting)).
+%:- system:reexport(library(xlisting)).
 
 %listing_mpi(_MP,MMPI):-  (predicate_property(MMPI,number_of_clauses(NC))->NC==0;true),!,
 %  unify_listing_header(MMPI),prolog_listing_list_clauses(MMPI, none),!.
@@ -881,6 +935,8 @@ lookup_kb(MM,MHB):- strip_module(MHB,M,HB),
 % lookup_u/cheaply_u/call_u/clause_b
 lookup_m(SPFT):- callable(SPFT),!,clause_b(SPFT).
 lookup_m(SPFT):- callable(SPFT),!,baseKB:on_x_rtrace(SPFT).
+
+
 lookup_u(SPFT):- callable(SPFT),on_x_rtrace(SPFT).
 % baseKB:SPFT:- current_prolog_flag(unsafe_speedups , true) , !,baseKB:mtHybrid(MT),call(MT:SPFT).
 % lookup_u(H):-lookup_u(H,_).
@@ -1560,7 +1616,7 @@ assert_u_confirmed_was_missing(P):-
 
 assert_u_confirmed_was_missing(P):-
  copy_term_vn(P,PP),
- dtrace,must_ex(assert_u_no_dep(P)),!,
+ must_ex(assert_u_no_dep(P)),!,dtrace,
 (nonvar(PP) -> true ; must_ex((P=@=PP,clause_asserted_u(PP),P=@=PP))),!.
 
 assert_to_mu(P):-
@@ -1606,9 +1662,16 @@ mpred_unique_u(P):- \+ clause_asserted_u(P).
 %
 % return Mode to forward assertion P in the prolog db.
 %
-get_fc_mode(_P,_S,Mode):- t_l:mpred_fc_mode(Mode),!.
-get_fc_mode(_P,_S,Mode):- lookup_m(pm(Mode)),!.
-get_fc_mode(_P,_S,Mode):- must_ex(Mode=direct),!.
+
+%get_fc_mode(_P,_S,direct):-!.
+get_fc_mode(P,_S,Mode):- get_unnegated_mfa(P,M,F,A),mpred_prop(M,F,A,Mode),is_fwc_mode(Mode),!.
+get_fc_mode(mpred_prop(_,_,_,_),_S,direct).
+get_fc_mode(P,_S,direct):- compound(P),functor(P,_,1).
+get_fc_mode(_P,_S,Mode):- get_fc_mode(Mode).
+
+get_fc_mode(Mode):- t_l:mpred_fc_mode(Mode),!.
+get_fc_mode(Mode):- lookup_m(pm(Mode)),!.
+get_fc_mode(Mode):- !, Mode=direct.
 
 
 :- thread_local(t_l:mpred_fc_mode/1).
@@ -1640,14 +1703,27 @@ mpred_enqueue(P,S):-
 
 mpred_enqueue_w_mode(S,Mode,P):-
     (Mode=direct  -> loop_check_term(mpred_fwc(P),mpred_enqueueing(P),true)) ;
+        Mode=thread  ->  mpred_enqueue_thread(S,P);
 	Mode=depth   -> mpred_asserta_w_support(que(P,S),S) ;
         Mode=paused   -> mpred_asserta_w_support(que(P,S),S) ;
 	Mode=breadth -> mpred_assertz_w_support(que(P,S),S) ;
         Mode=next   -> mpred_asserta_w_support(que(P,S),S) ;
         Mode=last -> mpred_assertz_w_support(que(P,S),S) ;
 	true         -> mpred_error("Unrecognized pm mode: ~p", Mode).
-     
 
+is_fwc_mode(direct).
+is_fwc_mode(thread).
+is_fwc_mode(depth).
+is_fwc_mode(paused).
+is_fwc_mode(breadth).
+is_fwc_mode(next).
+is_fwc_mode(last).
+
+mpred_enqueue_thread(S,P):- 
+      with_only_current_why(S,
+        call_in_thread(
+           with_fc_mode(direct, % maybe keep `thread` mode?
+               loop_check_term(mpred_fwc(P),mpred_enqueueing(P),true)))).
 
 %% mpred_remove_old_version( :TermIdentifier) is semidet.
 %
@@ -1676,7 +1752,7 @@ mpred_remove_old_version(_).
 %    direct -  mpred_fwc has already done the job.
 %    depth or breadth - use the queue mechanism.
                                                             
-mpred_run :- (get_fc_mode(_,_,Mode)->(Mode=direct;Mode=paused)),!.
+mpred_run :- get_fc_mode(Mode)->Mode=paused,!.
 % mpred_run :- repeat, \+ mpred_step, !.
 mpred_run:-
   mpred_step,
@@ -1703,7 +1779,7 @@ mpred_step:-
   get_next_fact(P),
   %asserta(t_l:busy(P)),
   ignore(mpred_fwc(P)),
- % ignore(retract(t_l:current_local_why(_,P))),
+ % ignore(retract(t_l:local_current_why(_,P))),
   %retractall(t_l:busy(P)),
   !.
 
@@ -1726,9 +1802,9 @@ remove_selection(P):-
 % select_next_fact(P) identifies the next fact to reason from.
 % It tries the user defined predicate first and, failing that,
 %  the default mechanism.
-
-select_next_fact(P):-
-  lookup_u(mpred_select_hook(P)),
+:- dynamic(baseKB:mpred_select_hook/1).
+select_next_fact(P):-  
+  lookup_u(baseKB:mpred_select_hook(P)),
   !.
 select_next_fact(P):-
   defaultmpred_select(P),
@@ -2729,7 +2805,7 @@ reserved_body(attr_bind(_,_)).
 reserved_body(B):-reserved_body_helper(B).
 
 reserved_body_helper(B):- \+ compound(B),!,fail.
-reserved_body_helper((ZAWC,_)):- atom(ZAWC),cwc(ZAWC).
+reserved_body_helper((ZAWC,_)):- atom(ZAWC),is_pfc_chained(ZAWC).
 %reserved_body_helper(inherit_above(_,_)).
 %reserved_body_helper(Body):- get_bc_clause(_Head,_Head2,BCBody),!,Body=BCBody.
 %reserved_body_helper((_,Body)):-!,reserved_body_helper(Body).
@@ -3803,7 +3879,7 @@ to_u(S,U):-S=(U),!.
 mpred_trace_maybe_break(Add,P0,_ZS):-
   get_head_term(P0,P),
    (
-  \+ call_u(mpred_is_spying_pred(P,Add)) -> true;
+  \+ call_u(lmcache:mpred_is_spying_pred(P,Add)) -> true;
    (wdmsg("~NBreaking on ~p(~p)",[Add,P]),
     break)).
 
@@ -3813,7 +3889,7 @@ mpred_trace_maybe_break(Add,P0,_ZS):-
 mpred_trace:- mpred_trace(_).
 
 mpred_trace(Form0):-  get_head_term(Form0,Form),
-  assert_u_no_dep(mpred_is_spying_pred(Form,print)).
+  assert_u_no_dep(lmcache:mpred_is_spying_pred(Form,print)).
 
 %% get_mpred_is_tracing(:PRED) is semidet.
 %
@@ -3821,10 +3897,10 @@ mpred_trace(Form0):-  get_head_term(Form0,Form),
 %
 get_mpred_is_tracing(_):-!,fail.
 get_mpred_is_tracing(Form0):- get_head_term(Form0,Form), t_l:hide_mpred_trace_exec,!,
-  \+ \+ ((quietly_ex(call_u(mpred_is_spying_pred(Form,print))))).
+  \+ \+ ((quietly_ex(call_u(lmcache:mpred_is_spying_pred(Form,print))))).
 get_mpred_is_tracing(Form0):- get_head_term(Form0,Form),
   once(t_l:mpred_debug_local ; tracing ; clause_asserted_u(mpred_is_tracing_exec) ;
-     call_u(mpred_is_spying_pred(Form,print))).
+     call_u(lmcache:mpred_is_spying_pred(Form,print))).
 
 
 %% mpred_trace(+Form, ?Condition) is semidet.
@@ -3832,7 +3908,7 @@ get_mpred_is_tracing(Form0):- get_head_term(Form0,Form),
 % PFC Trace.
 %
 mpred_trace(Form0,Condition):- get_head_term(Form0,Form),
-  assert_u_no_dep((mpred_is_spying_pred(Form,print):- Condition)).
+  assert_u_no_dep((lmcache:mpred_is_spying_pred(Form,print):- Condition)).
 
 mpred_spy(Form):- mpred_spy(Form,[add,rem],true).
 
@@ -3845,21 +3921,21 @@ mpred_spy(Form0,Mode,Condition):- get_head_term(Form0,Form),
   mpred_spy1(Condition,Form,Mode).
 
 mpred_spy1(Condition,Form0,Mode):- get_head_term(Form0,Form),
-  assert_u_no_dep((mpred_is_spying_pred(Form,Mode):- Condition)).
+  assert_u_no_dep((lmcache:mpred_is_spying_pred(Form,Mode):- Condition)).
 
 mpred_nospy:- mpred_nospy(_,_,_).
 
 mpred_nospy(Form):- mpred_nospy(Form,_,_).
 
 mpred_nospy(Form0,Mode,Condition):- get_head_term(Form0,Form),
-  clause_u(mpred_is_spying_pred(Form,Mode), Condition, Ref),
+  clause_u(lmcache:mpred_is_spying_pred(Form,Mode), Condition, Ref),
   erase(Ref),
   fail.
 mpred_nospy(_,_,_).
 
 mpred_notrace:- mpred_untrace.
 mpred_untrace:- mpred_untrace(_).
-mpred_untrace(Form0):- get_head_term(Form0,Form), retractall_u(mpred_is_spying_pred(Form,print)).
+mpred_untrace(Form0):- get_head_term(Form0,Form), retractall_u(lmcache:mpred_is_spying_pred(Form,print)).
 
 
 % not_not_ignore_quietly_ex(G):- ignore(quietly(\+ \+ G)).
@@ -3959,7 +4035,7 @@ show_if_debug(A):-  get_mpred_is_tracing(A) -> show_call(mpred_is_tracing,call_u
 % If Is A Silient.
 %
 mpred_is_silient :- t_l:hide_mpred_trace_exec,!, \+ tracing.
-mpred_is_silient :- quietly_ex(( \+ t_l:mpred_debug_local, \+ lookup_u(mpred_is_tracing_exec), \+ lookup_u(mpred_is_spying_pred(_,_)),
+mpred_is_silient :- quietly_ex(( \+ t_l:mpred_debug_local, \+ lookup_u(mpred_is_tracing_exec), \+ lookup_u(lmcache:mpred_is_spying_pred(_,_)),
   current_prolog_flag(debug,false), is_release)) ,!.
 
 oinfo(O):- xlisting((O, - spft, - ( ==> ), - pt , - nt , - bt , - mdefault, - lmcache)).
@@ -4151,13 +4227,14 @@ pp_db_supports(MM):-
 
 % :- '$current_source_module'(M),forall(mpred_database_term(F,A,_),(abolish(mpred_core:F/A),abolish(user:F/A),abolish(M:F/A))).
 % :- initialization(ensure_abox(baseKB)).
-% :- kb_shared(mpred_is_spying_pred/2).
 
 
 % % :- set_prolog_flag(mpred_pfc_file,true).
 % local_testing
 
 :- fixup_exports.
+
+% :- kb_shared(lmcache:mpred_is_spying_pred/2).
 
  
 end_of_file.
