@@ -4,6 +4,8 @@
 % Douglas Miles
 
 */
+:- throw(include(pfc)).
+
 :- if(( current_prolog_flag(xref,true) ;
    ('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'wusing_pfc'(M,CM,SM,pfc_mod))))).
 :- endif.
@@ -11,24 +13,8 @@
 :- if((prolog_load_context(source,File),prolog_load_context(file,File))).
 :- module(pfc_mod,[use_pfc_mod/0]).
 :- abolish(use_pfc_mod/0).
-:- prolog_load_context(file,File),unload_file(File).
+:- prolog_load_context(file,File),nop(unload_file(File)).
 :- asserta(use_pfc_mod).
-:- endif.
-
-% :- current_predicate(system:F/A),functor(PI,F,A),
-% \+ predicate_property(system:PI,imported_from(_)).
-
-:- if( \+ current_prolog_flag(xref,true)).
-
-
-:- if(\+ current_prolog_flag(lm_no_autoload,_)).
-:- set_prolog_flag(lm_no_autoload,true).
-:- print_message(informational,"WARNING: PFC_NOAUTOLOAD").
-:- endif.
-
-:- if(\+ current_prolog_flag(lm_pfc_lean,_)).
-:- set_prolog_flag(lm_pfc_lean,false).
-:- print_message(informational,"WARNING: NOT PFC_LEAN").
 :- endif.
 
 %:- set_prolog_flag(debug_on_error,true).

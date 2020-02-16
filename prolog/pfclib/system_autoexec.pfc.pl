@@ -129,9 +129,16 @@ first_std_provider/3)).
 
 :- set_fileAssertMt(baseKB).
 
+:- thread_local(t_l:disable_px/0).
+
+:- must(retractall( t_l:disable_px)).
+:- must(\+ t_l:disable_px).
+
+:- system:use_module(library(dif)).
 :- dynamic(mpred_unload_option/2).
 
 assert_if_newt(G):- (cwc,(clause_asserted_i(G)->true;call(assert,G))).
+
 :-if(exists_file(bkb_neever)).
 
 :- [bkb].
@@ -145,7 +152,7 @@ assert_if_newt(G):- (cwc,(clause_asserted_i(G)->true;call(assert,G))).
 :- prolog_load_context(file,F), ain(mpred_unload_option(F,never)).
 
 %:- mpred_notrace_exec.
-:- listing(mpred_unload_option/2).
+%:- listing(mpred_unload_option/2).
 
 
 :- baseKB:ensure_loaded('system_mdefault.pfc').

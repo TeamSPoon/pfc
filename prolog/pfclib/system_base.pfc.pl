@@ -8,6 +8,7 @@
 :- rdf_rewrite:import(baseKB:never_assert_u/1).
 :- rdf_rewrite:import(baseKB:never_assert_u/2).
 %:- use_module(library(rtrace)).
+:- dynamic(prologHybrid/1).
 :- pfc_lib:use_module(library(pfc_lib)).
 :- set_fileAssertMt(baseKB).
 %:- add_import_module(baseKB,pfc_lib,end).
@@ -554,7 +555,7 @@ without_depth_limit(G):-
 
 
 %:- rtrace,dtrace.
-%==>(prologBuiltin(mpred_select_hook/1)).
+% ==>(prologBuiltin(mpred_select_hook/1)).
 % :- nortrace,quietly.
 
 :- kb_shared(conflict/1).
@@ -564,7 +565,7 @@ conflict(C) ==> {must(with_mpred_trace_exec((resolveConflict(C),\+conflict(C))))
 
 % meta rules to schedule inferencing.
 % resolve conflicts asap
-mpred_select_hook(conflict(X)) :- cwc, que(conflict(X),_Why).
+baseKB:mpred_select_hook(conflict(X)) :- cwc, que(conflict(X),_Why).
 
 
 %tPred(t,prologDynamic).

@@ -780,14 +780,60 @@ ain_minfo_2(How,G):-ain_minfo(How,G).
 %
 % PFC If Is A Info.
 %
-mpred_is_info((CWC,Info)):- (atom(CWC),cwc(CWC));mpred_is_info(Info).
+mpred_is_info((CWC,Info)):- (atom(CWC),is_a_info(CWC));mpred_is_info(Info).
 mpred_is_info(mpred_bc_only(C)):-is_ftNonvar(C),!.
 mpred_is_info(infoF(C)):-is_ftNonvar(C),!.
 mpred_is_info(inherit_above(_,_)).
 
-cwc(awc).
-cwc(zwc).
-cwc(fail).
+
+is_a_info(fail).
+is_a_info(CWC):- is_pfc_chained(CWC).
+
+is_pfc_chained(cwc).
+is_pfc_chained(awc).
+is_pfc_chained(zwc).
+is_pfc_chained(fwc).
+is_pfc_chained(bwc).
+is_pfc_chained(wac).
+
+
+
+:- module_transparent(is_ain_clause/2).
+is_ain_clause( _, Var):- var(Var),!, fail.
+is_ain_clause( M,(:- Body)):- !, is_ain_body(M,Body),!.
+is_ain_clause( M,(P:- Body)):- !,(is_ain_head(M,P);is_ain_body(M,Body)),!.
+is_ain_clause( M,(P)):- !, is_ain_head(M, P).
+
+:- module_transparent(is_ain_head/2).
+is_ain_head(_, P):- var(P),!.
+is_ain_head(_,(_,_)):- !.
+is_ain_head(_,(_;_)):- !.
+is_ain_head(_,not(_)):- !.
+is_ain_head(_,\+(_)):- !.
+is_ain_head(M, P):- is_ain_body(M, P),!.
+is_ain_head(_,==>(_)):- !.
+is_ain_head(_,==>(_,_)):- !.
+is_ain_head(_,<==>(_,_)):- !.
+is_ain_head(_,<==(_)):- !.
+is_ain_head(_,<==(_,_)):- !.
+is_ain_head(_,'::::'(_,_)):- !.
+is_ain_head(baseKB,_).
+is_ain_head(_,=>(_)):- !.
+is_ain_head(_,=>(_,_)):- !.
+is_ain_head(_,_):- get_how_virtualize_file(Lang),!,Lang=heads.
+
+:- module_transparent(is_ain_body/2).
+is_ain_body(_, P):- var(P),!,fail.
+is_ain_body(M, (P,_)):- !, nonvar(P), is_ain_body(M, P).
+is_ain_body(_, CWC):- atom(CWC),  is_pfc_chained(CWC).
+is_ain_body(M, P):- functor(P,F,A), \+ \+ mpred_prop(M,F,A,_), !,
+  \+ (mpred_prop(M,F,A,Prop), is_pfc_prolog_only_prop(Prop)).
+is_ain_body(M, MP):- strip_module(MP,M2,P), M2\==M, !,is_ain_body(M2,P).
+
+is_pfc_prolog_only_prop(prologOnly).
+is_pfc_prolog_only_prop(prologBuiltin).
+
+
 %cwc(Call):- callable(Call),Call.
 
 %:- was_dynamic(not_not/1).
@@ -796,7 +842,7 @@ cwc(fail).
 %
 % PFC Rewrap Head.
 %
-mpred_rewrap_h(A,A):-is_ftNonvar(A),\+ is_static_predicate(A).
+mpred_rewrap_h(A,A):- is_ftNonvar(A),\+ is_static_predicate(A).
 mpred_rewrap_h(A,F):- functor(A,F,_),\+ is_static_predicate(F),!.
 %mpred_rewrap_h(A,not_not(A)):-!.
 

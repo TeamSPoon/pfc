@@ -16,7 +16,7 @@
           set_file_lang/1,
           mpred_te/6,
           pfc_dcg/0,
-          get_original_term_source/1,
+          get_original_term_src/1,
 
           set_lang/1,
            simplify_language_name/2,
@@ -208,7 +208,7 @@
 :- multifile(prolog:make_hook/2).
 :- dynamic(prolog:make_hook/2).
 
-:- asserta_if_new((prolog:make_hook(BA, C):- wdmsg(prolog:make_hook(BA, C)),fail)).
+% :- asserta_if_new((prolog:make_hook(BA, C):- wdmsg(prolog:make_hook(BA, C)),fail)).
 % prolog:make_hook(before, FileS):- maplist(mpred_loader:mpred_unload_file,FileS).
 
 % Avoid Warning: mpred_loader:prolog_load_context(reload,true), which is called from
@@ -362,7 +362,7 @@ dont_term_expansion(Type,I):-
    (prolog_load_context(directory,Dir), baseKB:mpred_loader_dir(Dir));
    I= '$si$':'$was_imported_kb_content$'(_,_); 
    (Type \== term , Type \= _:term ) ; 
-   t_l:disable_px.
+   (t_l:disable_px, false ).
 
 
 
@@ -390,10 +390,10 @@ mpred_file_term_expansion0(Type,LoaderMod,I,O):-
   call_u(baseKB:mtHybrid(MT1)),
   must((proper_source_mod([LoaderMod,MF,MT1],AM))),
   (((nb_current('$source_term',TermWas), TermWas == I);
-    (b_getval('$term',TermWas), TermWas == I))),
+    (b_getval('$term',TermWas), TermWas == I))),  
   call_cleanup(
         locally(t_l:current_why_source(mfl4(VarNameZ,AM,F,L)),
-        (( get_original_term_source(Orig), 
+        (( get_original_term_src(Orig), 
            b_setval('$orig_term',Orig),
            b_setval('$term',[]),
            (O= (:- must(mpred_ain(I,(mfl4(VarNameZ,AM,F,L),ax)))))))),
@@ -765,8 +765,8 @@ get_file_type(File,Type):-file_name_extension(_,Type,File).
 %
 % If Is A Managed Predicate File.
 %
-is_mpred_file(F):- var(F),!,quietly_must(loading_source_file(F)),F\==user,!, baseKB:how_virtualize_file(heads,F),!.
-is_mpred_file(F):- guess_if_mpred_file0(F),!,guess_if_mpred_file0(F),(set_how_virtualize_file(heads,F)),!.
+is_mpred_file(F):- var(F),!,quietly_must(loading_source_file(F)),F\==user,!, baseKB:how_virtualize_file(heads,0,F),!.
+is_mpred_file(F):- guess_if_mpred_file0(F),!,guess_if_mpred_file0(F),(set_how_virtualize_file(heads,0,F)),!.
 
 %% guess_if_mpred_file0( ?F) is det.
 %
@@ -914,16 +914,16 @@ cl_assert(_Code,P):- !, show_if_debug(ain(P)).
 %call_file_command(_,cl_assert(pl,OO),OO,_):-!,show_interesting_cl(pl,OO).
 
 
-get_original_term_source(Orig):- nb_current('$orig_term',Orig),!. 
-get_original_term_source(Orig):- nb_current('$term',Orig),Orig\==[],!. 
-get_original_term_source(true).
+get_original_term_src(Orig):- nb_current('$orig_term',Orig),!. 
+get_original_term_src(Orig):- nb_current('$term',Orig),Orig\==[],!. 
+get_original_term_src(true).
 
 make_file_command(IN,(:- CALL),OUT):- nonvar(CALL),!, must(make_file_command(IN,CALL,OUT)).
 
 make_file_command(_IN,cl_assert(pfc(WHY),PFC),(NEWSOURCE:-true)):- 
   current_why(CY),
   CMD = mpred_ain(PFC,(CY,ax)),
-  get_original_term_source(Orig),
+  get_original_term_src(Orig),
   was_exported_content(Orig,WHY,NEWSOURCE),!,
   show_call(quietly_must((CMD))).
 
@@ -931,13 +931,13 @@ make_file_command(_IN,cl_assert(pfc(WHY),PFC),(NEWSOURCE:-true)):-
 make_file_command(_IN,cl_assert(pfc(WHY),PFC),[(:- CMD), NEWSOURCE]):- 
   current_why(CY),
   CMD = ain(PFC,CY),
-  get_original_term_source(Orig),
+  get_original_term_src(Orig),
   was_exported_content(Orig,WHY,NEWSOURCE),!.
   
 
 make_file_command(IN,cl_assert(WHY,NEWISH),OUT):- get_lang(kif),if_defined(is_kif_clause(NEWISH)),!,must(make_file_command(IN,cl_assert(kif(WHY),NEWISH),OUT)).
 make_file_command(_IN,cl_assert(WHY,CMD2),SET):- 
-  get_original_term_source(Orig),
+  get_original_term_src(Orig),
   was_exported_content(Orig,WHY,NEWSOURCE),list_to_set([(:- cl_assert(WHY,CMD2)), NEWSOURCE],SET).
  
 make_file_command(IN,cl_assert(WHY,CMD2),[CMD2, (:- cl_assert(WHY,CMD2)), NEWSOURCE ]):- was_exported_content(WHY,IN,NEWSOURCE),!.
@@ -1100,7 +1100,7 @@ checked_clause_count((_ ==> _)).
 checked_clause_count((_ <==> _)).
 %checked_clause_count(spft(_,_,ax)).
 checked_clause_count(agent_command(_,_)).
-checked_clause_count(how_virtualize_file(false,_)).
+checked_clause_count(how_virtualize_file(_,_,_)).
 
 
 :- dynamic(lmcache:last_clause_count/2).
@@ -1156,7 +1156,7 @@ dyn_end:-file_end(dyn).
 %
 enable_mpred_expansion :- 
     set_prolog_flag(mpred_te,true),
-     (( \+ t_l:disable_px) -> true ;
+     (( \+ (t_l:disable_px, false )) -> true ;
                  (retractall(t_l:disable_px),
                  call_on_eof(asserta_if_new(t_l:disable_px)))).
 

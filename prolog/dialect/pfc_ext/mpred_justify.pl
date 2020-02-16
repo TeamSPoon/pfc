@@ -779,11 +779,17 @@ memberchk_variant(X, [Y|Ys]) :-
    ;   memberchk_variant(X, Ys)
    ).
 
+:- module_transparent(supporters_list0/2).
 supporters_list0(Var,[is_ftVar(Var)]):-is_ftVar(Var),!.
-supporters_list0(F,OUT):- 
-  with_quiet_vars_lock((((mpred_get_support_why(F,(Fact,Trigger)),
-    triggerSupports(Fact,Trigger,MoreFacts)))*-> OUT=[Fact|MoreFacts] ; supporters_list1(F,OUT))).
+supporters_list0(F,OUT):-  
+ pfc_with_quiet_vars_lock(supporters_list00(F,OUT)).
 
+:- module_transparent(supporters_list00/2).
+supporters_list00(F,OUT):-
+ ((mpred_get_support_why(F,(Fact,Trigger)),triggerSupports(Fact,Trigger,MoreFacts)) 
+   *-> OUT=[Fact|MoreFacts] ; supporters_list1(F,OUT)).
+
+:- module_transparent(supporters_list1/2).
 supporters_list1(Var,[is_ftVar(Var)]):-is_ftVar(Var),!.
 supporters_list1(U,[]):- axiomatic_supporter(U),!.
 supporters_list1((H:-B),[MFL]):- !, clause_match(H,B,Ref),find_hb_mfl(H,B,Ref,MFL).
@@ -871,7 +877,6 @@ triggerSupports1(_,X,[X]):- \+ mpred_db_type(X,trigger(_)).
 
 % :- '$current_source_module'(M),forall(mpred_database_term(F,A,_),(abolish(mpred_core:F/A),abolish(user:F/A),abolish(M:F/A))).
 % :- initialization(ensure_abox(baseKB)).
-% :- kb_shared(mpred_is_spying_pred/2).
 
 
 % % :- set_prolog_flag(mpred_pfc_file,true).
