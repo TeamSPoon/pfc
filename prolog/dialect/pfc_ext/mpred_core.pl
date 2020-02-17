@@ -258,7 +258,7 @@ push_current_choice/1,
 
 :- module_transparent lookup_u/1,lookup_u/2,mpred_unfwc_check_triggers0/1,mpred_unfwc1/1,mpred_why1/1,mpred_blast/1.
 
-must_ex(G):- (G*->true;(wdmsg(must_ex(G)),if_interactive((ignore(rtrace(G)),wdmsg(must_ex(G)), break)))).
+must_ex(G):- (G*->true;(wdmsg_pretty(must_ex(G)),if_interactive((ignore(rtrace(G)),wdmsg_pretty(must_ex(G)), break)))).
 
 must_notrace_pfc(G):- must_ex((G)).
 
@@ -404,7 +404,7 @@ decl_rt(RT) :-
  '@'(((
    sanity(atom(RT)),
    univ_safe(Head , [RT,FP]),
-   AIN = ((Head :- cwc, /* dmsg(warn(call(Head))), */ mpred_prop(M,FP,_,RT))),
+   AIN = ((Head :- cwc, /* dmsg_pretty(warn(call(Head))), */ mpred_prop(M,FP,_,RT))),
    (clause_asserted(AIN) -> 
     (nop(listing(RT)),
      sanity((predicate_property(RHead,number_of_clauses(CL)),predicate_property(RHead,number_of_rules(RL)),CL=RL)));
@@ -477,14 +477,14 @@ ain_in_thread(MAIN):- strip_module(MAIN,M,AIN), call_in_thread(M:ain(AIN)).
 
 call_in_thread(MG):- strip_module(MG,M,G), copy_term(M:G,GG,_),numbervars(GG,0,_),term_to_atom(GG,TN), call_in_thread(TN,M,G).
 
-call_in_thread(TN,M,G):- thread_property(_,alias(TN)),!,dmsg(already_queued(M,G)).
+call_in_thread(TN,M,G):- thread_property(_,alias(TN)),!,dmsg_pretty(already_queued(M,G)).
 call_in_thread(TN,M,G):- current_why(Why), thread_create_in_pool(ain_pool,call_in_thread_code(M,G,Why,TN),_Id,[alias(TN)]).
 
 call_in_thread_code(M,G,Why,TN):- 
  with_only_current_why(Why,
-   catch(( M:G-> nop(dmsg(suceeded(exit,TN)));dmsg(failed(exit,TN))),E,dmsg(error(exit,TN,G-->E)))).
+   catch(( M:G-> nop(dmsg_pretty(suceeded(exit,TN)));dmsg_pretty(failed(exit,TN))),E,dmsg_pretty(error(exit,TN,G-->E)))).
        
-% why_dmsg(Why,Msg):- with_current_why(Why,dmsg(Msg)).
+% why_dmsg(Why,Msg):- with_current_why(Why,dmsg_pretty(Msg)).
 
 u_to_uu(U,(U,ax)):- var(U),!.
 u_to_uu(U,U):- nonvar(U),U=(_,_),!.
@@ -713,7 +713,7 @@ convention_to_symbolic_mt(_From,_Why,F,A,M):- lmcache:already_decl(kb_global,M,F
 
 
 
-% convention_to_symbolic_mt(From,Why,F,A,Error):- bad_head_pred(F),!,dumpST,dmsg(bad_head_pred(F)),break,trace_or_throw_ex(error_convention_to_symbolic_mt(From,Why,F,A,Error)).
+% convention_to_symbolic_mt(From,Why,F,A,Error):- bad_head_pred(F),!,dumpST,dmsg_pretty(bad_head_pred(F)),break,trace_or_throw_ex(error_convention_to_symbolic_mt(From,Why,F,A,Error)).
 convention_to_symbolic_mt(_From,_Why,F,A,M):- lmcache:already_decl(kb_global,M,F,A),!.
 convention_to_symbolic_mt(_From,_Why,F,A,abox):- mpred_database_term_syntax(F,A,_).
 convention_to_symbolic_mt(_From,_Why,F,A,abox):- lmcache:already_decl(kb_shared,_,F,A),!.
@@ -727,7 +727,7 @@ convention_to_symbolic_mt(_From,_Why,F,A,abox):- clause_b(safe_wrap(_M,F,A,ereq)
 
 convention_to_symbolic_mt(From,Why,F,A,Error):- bad_head_pred(F),!,Error = From,
   if_interactive((
-   dumpST,dmsg(bad_head_pred(F)),break,trace_or_throw_ex(error_convention_to_symbolic_mt(From,Why,F,A,Error)))).
+   dumpST,dmsg_pretty(bad_head_pred(F)),break,trace_or_throw_ex(error_convention_to_symbolic_mt(From,Why,F,A,Error)))).
 
 
 % convention_to_symbolic_mt(_From,_Why,_,_,M):- atom(M),!.
@@ -1347,7 +1347,7 @@ mpred_post12_negated( P,   S):- mpred_withdraw_fail_if_supported(P,S), show_call
 mpred_post12_negated( P,   S):- mpred_remove2(P,S), show_call( \+ mpred_supported(P)),!,show_call( mpred_post13(~P,S)),!.
 mpred_post12_negated( P,   S) :- mpred_get_support(P,S2), 
     color_line(magenta,2),
-    dmsg((mpred_post12( ~ P,   S) :- mpred_get_support(P,S2))),
+    dmsg_pretty((mpred_post12( ~ P,   S) :- mpred_get_support(P,S2))),
     color_line(magenta,1),color_line(green,1),color_line(yellow,1),
     color_line(magenta,1),color_line(green,1),color_line(yellow,1),
     color_line(magenta,1),color_line(green,1),color_line(yellow,1),
@@ -1360,7 +1360,7 @@ mpred_post12_negated( P,   S) :- mpred_get_support(P,S2),
 
 
 mpred_post12(P, _):- (must_be(nonvar,P)),P==true,!.
-% mpred_post12(P, S):- quietly_ex((is_ftOpenSentence(P)->wdmsg((warn((var_mpred_post1(P, S))))))),fail.
+% mpred_post12(P, S):- quietly_ex((is_ftOpenSentence(P)->wdmsg_pretty((warn((var_mpred_post1(P, S))))))),fail.
 mpred_post12( \+  P,   S):- mpred_post12_withdraw( P,   S),!.
 mpred_post12(  ~  P,   S):- mpred_post12_negated( P,   S),!.
 
@@ -1533,7 +1533,7 @@ reduce_to_mfl((MFL,_),MFLO):- !,reduce_to_mfl(MFL,MFLO).
 mpred_post_update4(Was,P,S,What):-
   not_not_ignore_quietly_ex(( (get_mpred_is_tracing(P);get_mpred_is_tracing(S)),
   fix_mp(change(assert,post),P,M,PP),
-  must_ex(S=(F,T)),wdmsg(call_mpred_post4:- (Was,post1=M:PP,fact=F,trig=T,What)))),
+  must_ex(S=(F,T)),wdmsg_pretty(call_mpred_post4:- (Was,post1=M:PP,fact=F,trig=T,What)))),
   fail.
 
 mpred_post_update4(identical,_P,_S,exact):-!.
@@ -1557,7 +1557,7 @@ mpred_post_update4(identical,P,S,simular(_)):- !,mpred_add_support_fast(P,S).
 mpred_post_update4(Was,P,S,What):-
   not_not_ignore_quietly_ex(( \+ (get_mpred_is_tracing(P);get_mpred_is_tracing(S)),
   fix_mp(change(assert,post),P,M,PP),
-  must_ex(S=(F,T)),wdmsg(mpred_post_update4:- (Was,post1=M:PP,fact=F,trig=T,What)))),
+  must_ex(S=(F,T)),wdmsg_pretty(mpred_post_update4:- (Was,post1=M:PP,fact=F,trig=T,What)))),
   fail.
 */
 
@@ -1594,7 +1594,7 @@ mpred_post_update4(unique,P,S,simular(_)):-!,
   mpred_enqueue(P,S).
 
 
-mpred_post_update4(Was,P,S,What):-dmsg(mpred_post_update4(Was,P,S,What)),dtrace,fail.
+mpred_post_update4(Was,P,S,What):-dmsg_pretty(mpred_post_update4(Was,P,S,What)),dtrace,fail.
 
 mpred_post_update4(Was,P,S,What):-!,trace_or_throw_ex(mpred_post_update4(Was,P,S,What)).
 
@@ -1693,7 +1693,7 @@ mpred_enqueue(P):- mpred_enqueue(P,_S).
 
 mpred_enqueue(P,_):- show_mpred_success(que,lookup_m(que(P,_))),!.
 %mpred_enqueue(P,_):- nb_current('$current_why',wp(_,P)),!,trace_or_throw_ex(why(P)).
-%mpred_enqueue(P,_):- t_l:busy(P),!,nop(dmsg(t_l:busy(P))).
+%mpred_enqueue(P,_):- t_l:busy(P),!,nop(dmsg_pretty(t_l:busy(P))).
 %mpred_enqueue(P,S):- locally_each(t_l:busy(P),mpred_enqueue2(P,S)).
 mpred_enqueue(P,S):-
  (var(S)->current_why(S);true),
@@ -1825,8 +1825,8 @@ mpred_halt(Now):-
      ; assert_u_no_dep(hs(Now))).
 
 
-% stop_trace(Info):- quietly_ex((tracing,leash(+all),dtrace(dmsg(Info)))),!,rtrace.
-stop_trace(Info):- dtrace(dmsg(Info)).
+% stop_trace(Info):- quietly_ex((tracing,leash(+all),dtrace(dmsg_pretty(Info)))),!,rtrace.
+stop_trace(Info):- dtrace(dmsg_pretty(Info)).
 
 %% mpred_ain_trigger_reprop(+Trigger,+Support) is nondet.
 %
@@ -1998,13 +1998,13 @@ mpred_withdraw(P,S) :-
   % pfcDebug(format("~Nremoving support ~p from ~p",[SS,P])),
   (mpred_trace_msg('\n    Removing support: ~p~n',[SS]),
   mpred_trace_msg('     Which was for: ~p~n',[P])); 
-    nop(dmsg(mpred_withdraw(P,S)))),
+    nop(dmsg_pretty(mpred_withdraw(P,S)))),
   ignore(mpred_withdraw_fail_if_supported(P,S)).
 
 mpred_withdraw_fail_if_supported(mfl4(_VarNameZ,_,_,_),_):-!.
 mpred_withdraw_fail_if_supported(P,S):-
   maybe_user_support(P,S,SS),
-  (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg(found(mpred_rem_support1(P,S))))
+  (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg_pretty(found(mpred_rem_support1(P,S))))
      -> (remove_if_unsupported(P),retractall(t_l:busy(_)))
       ; ((mpred_withdraw_fail_if_supported_maybe_warn(SS,P),
             \+ show_still_supported(P))))).
@@ -2015,13 +2015,13 @@ mpred_withdraw_fail_if_supported_maybe_warn(_,P):- P= prologSingleValued(_Arity)
 mpred_withdraw_fail_if_supported_maybe_warn(unKnown_suppoRt,P):- 
   maybe_user_support(P,S,SS),
         (((lookup_spft(P,F,T), S= (F,T), call(mpred_rem_support(P,S)),
-           nop(dmsg(found(mpred_rem_support2(P,S)))))
+           nop(dmsg_pretty(found(mpred_rem_support2(P,S)))))
            -> (remove_if_unsupported(P),retractall(t_l:busy(_)))
             ; (( nop(mpred_withdraw_fail_if_supported_maybe_warn(SS,P)),
                   \+ show_still_supported(P))))).
 mpred_withdraw_fail_if_supported_maybe_warn(S,P):- 
   mpred_get_support(P,S),SS=S,
-        (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg(found(mpred_rem_support3(P,S))))
+        (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg_pretty(found(mpred_rem_support3(P,S))))
            -> (remove_if_unsupported(P),retractall(t_l:busy(_)))
             ; (( nop(mpred_withdraw_fail_if_supported_maybe_warn(SS,P)),
                   \+ show_still_supported(P))))).
@@ -2168,7 +2168,7 @@ mpred_undo1(nt(Head,Condition,Body)):-
   !,
   (
    show_mpred_success(mpred_undo1_nt_unfwc,(nt(Head,Condition,Body),
-       dmsg(mpred_undo1(nt(Head,Condition,Body))),retract_u(nt(Head,Condition,Body))))
+       dmsg_pretty(mpred_undo1(nt(Head,Condition,Body))),retract_u(nt(Head,Condition,Body))))
     -> (mpred_unfwc(nt(Head,Condition,Body))->true;show_call(assert_u(nt(Head,Condition,Body))))
      ; mpred_trace_msg("WARNING?? Trigger not found to undo: ~p",[nt(Head,Condition,Body)])).
 
@@ -2216,7 +2216,7 @@ mpred_unfwc_check_triggers0(F):-
 
 mpred_unfwc_check_triggers0(F):-
   mpred_db_type(F,FT),
-  dmsg(unknown_rule_type(mpred_db_type(F,FT))),!.
+  dmsg_pretty(unknown_rule_type(mpred_db_type(F,FT))),!.
 
 
 
@@ -2320,7 +2320,7 @@ mpred_fwc1(Prop):-'$current_source_module'(Sm),mpred_m_fwc1(Sm,Prop).
 :-thread_local(t_l:busy_s/1).
 
 mpred_m_fwc1(Sm,Prop):- fixed_syntax(Prop,After),!,mpred_m_fwc1(Sm,After).
-mpred_m_fwc1(Sm,Prop):- clause_asserted(t_l:busy_s(Prop)),dmsg(Sm:warn(busy_mpred_m_fwc1(Prop))),!.
+mpred_m_fwc1(Sm,Prop):- clause_asserted(t_l:busy_s(Prop)),dmsg_pretty(Sm:warn(busy_mpred_m_fwc1(Prop))),!.
 mpred_m_fwc1(Sm,Prop):- clause_asserted(t_l:busy_f(Prop)),!,
    setup_call_cleanup(
      asserta(t_l:busy_s(Prop),R),
@@ -2380,7 +2380,7 @@ mpred_do_hb_catchup(_H, B):- compound(B), \+ \+ reserved_body_helper(B),!.
 
 % prolog_clause mpred_do_rule VAR_H
 mpred_do_hb_catchup(H,B):- sanity(nonvar(B)),
-  var(H),!,dmsg(warn(is_VAR_H((H:-B)))),
+  var(H),!,dmsg_pretty(warn(is_VAR_H((H:-B)))),
   trace,   % THe body needs to sanify (bind) the Head
   forall(call_u(B),
      (sanity(nonvar(H)),mpred_ain(H))),!.
@@ -2424,7 +2424,7 @@ mpred_do_clause0(H,B):-
   F = (H :- B),  B\=(cwc,_),!,
   copy_term(F,Fact),
   % check positive triggers
-  loop_check(mpred_do_fcpt(Fact,F),true), % dmsg(trace_or_throw_ex(mpred_do_clause(Fact)))),
+  loop_check(mpred_do_fcpt(Fact,F),true), % dmsg_pretty(trace_or_throw_ex(mpred_do_clause(Fact)))),
   % check negative triggers
   mpred_do_fcnt(Fact,F),
   mpred_do_hb_catchup(H,B).
@@ -2441,7 +2441,7 @@ mpred_do_fact(Fact):-
 mpred_do_fact(Fact):-
   copy_term_vn(Fact,F),
   % check positive triggers
-  loop_check(mpred_do_fcpt(Fact,F),true), % dmsg(trace_or_throw_ex(mpred_do_rule(Fact)))),
+  loop_check(mpred_do_fcpt(Fact,F),true), % dmsg_pretty(trace_or_throw_ex(mpred_do_rule(Fact)))),
   % check negative triggers
   mpred_do_fcnt(Fact,F),
   nop(mpred_do_clause(F,true)).
@@ -2787,12 +2787,12 @@ call_u_mp(M,P1):- !,M:call(P1).
 % NEVER GETS HERE 
 call_u_mp(M,P):- safe_functor(P,F,A), call_u_mp_fa(M,P,F,A).
 
-make_visible(R,M:F/A):- wdmsg(make_visible(R,M:F/A)),fail.
+make_visible(R,M:F/A):- wdmsg_pretty(make_visible(R,M:F/A)),fail.
 make_visible(_,_):- !.
 make_visible(M,M:F/A):- quietly_ex(M:export(M:F/A)).
 make_visible(R,M:F/A):- must_det_l((M:export(M:F/A),R:import(M:F/A),R:export(M:F/A))).
 
-make_visible(R,M,F,A):- wdmsg(make_visible(R,M,F,A)),fail.
+make_visible(R,M,F,A):- wdmsg_pretty(make_visible(R,M,F,A)),fail.
 make_visible(system,M,F,A):- trace_or_throw_ex(unexpected(make_visible(system,M,F,A))).
 make_visible(user,M,F,A):- trace_or_throw_ex(unexpected(make_visible(user,M,F,A))).
 make_visible(TM,M,F,A):- 
@@ -2817,8 +2817,8 @@ call_u_mp_fa(_,P,F,_):- (F==t; ( \+ clause_b(prologBuiltin(F)),
 call_u_mp_fa(M,P,F,A):- loop_check(call_u_mp_lc(M,P,F,A)).
 
 %call_u_mp_lc(mpred_core,P,F,A):-!, call_u_mp_lc(baseKB,P,F,A).
-%call_u_mp_lc(M,P,F,A):- current_predicate(M:F/A),!,throw(current_predicate(M:F/A)),catch(M:P,E,(wdmsg(call_u_mp(M,P)),wdmsg(E),dtrace)).
-% call_u_mp_lc(baseKB,P,F,A):- kb_shared(F/A),dmsg(kb_shared(F/A)),!, call(P).
+%call_u_mp_lc(M,P,F,A):- current_predicate(M:F/A),!,throw(current_predicate(M:F/A)),catch(M:P,E,(wdmsg_pretty(call_u_mp(M,P)),wdmsg_pretty(E),dtrace)).
+% call_u_mp_lc(baseKB,P,F,A):- kb_shared(F/A),dmsg_pretty(kb_shared(F/A)),!, call(P).
 
 call_u_mp_lc(M,P,_,_):- !, M:call_u_mp(M,P).
 call_u_mp_lc(M,P,_,_):- !, M:call(P).
@@ -2827,16 +2827,16 @@ call_u_mp_lc(M,P,_,_):- !, M:call(P).
 call_u_mp_lc(M,P,_,_):- predicate_property(M:P,file(_)),!,call(M:P).
 call_u_mp_lc(M,P,_,_):- source_file(M:P,_),!,call(M:P).
 call_u_mp_lc(R,P,F,A):- source_file(M:P,_),!,make_visible(R,M:F/A),call(R:P).
-call_u_mp_lc(R,P,F,A):- find_module(R:P,M),dmsg(find_module(R:P,M)),make_visible(R,M:F/A),!,catch(R:call(P),E,(wdmsg(call_u_mp(R,M:P)),wdmsg(E),dtrace)).
+call_u_mp_lc(R,P,F,A):- find_module(R:P,M),dmsg_pretty(find_module(R:P,M)),make_visible(R,M:F/A),!,catch(R:call(P),E,(wdmsg_pretty(call_u_mp(R,M:P)),wdmsg_pretty(E),dtrace)).
 %call_u_mp_lc(M,P):- \+ clause_b(mtHybrid(M)),!,clause_b(mtHybrid(MT)),call_u_mp(MT,P).
-call_u_mp_lc(M,P,F,A):- wdmsg(dynamic(M:P)),must_det_l((dynamic(M:F/A),make_visible(user,M:F/A),multifile(M:F/A))),!,fail.
+call_u_mp_lc(M,P,F,A):- wdmsg_pretty(dynamic(M:P)),must_det_l((dynamic(M:F/A),make_visible(user,M:F/A),multifile(M:F/A))),!,fail.
 */
 /*       
 Next
 call_u_mp(_G,M,P):- var(P),!,call((baseKB:mtExact(M)->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
 % call_u_mp(mtHybrid(P),_,mtHybrid(P)):-!,baseKB:mtHybrid(P).
-call_u_mp((P),M,(P)):-!,catch(call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
-% call_u_mp(P,M,P):- !,catch(M:call(P),E,(wdmsg(M:call_u_mp(P)),wdmsg(E),dtrace)).
+call_u_mp((P),M,(P)):-!,catch(call(P),E,(wdmsg_pretty(M:call_u_mp(P)),wdmsg_pretty(E),dtrace)).
+% call_u_mp(P,M,P):- !,catch(M:call(P),E,(wdmsg_pretty(M:call_u_mp(P)),wdmsg_pretty(E),dtrace)).
 call_u_mp(_G,M,P):- call((baseKB:mtExact(M)->M:call(P);call(P))).
 */
 
@@ -2995,7 +2995,7 @@ mpred_nf1(P,[P]):- is_ftVar(P), !.
 % these next two rules are here for upward compatibility and will go
 % away eventually when the P/Condition form is no longer used anywhere.
 
-mpred_nf1(P/Cond,[(\+P)/Cond]):- mpred_negated_literal(P), !, dmsg(warn(mpred_nf1(P/Cond,[(\+P)/Cond]))).
+mpred_nf1(P/Cond,[(\+P)/Cond]):- mpred_negated_literal(P), !, dmsg_pretty(warn(mpred_nf1(P/Cond,[(\+P)/Cond]))).
 
 mpred_nf1(P/Cond,[P/Cond]):- var(P),!.
 mpred_nf1(P/Cond,[P/Cond]):- ((mpred_db_type(P,trigger(_));mpred_literal_nonvar(P))), !.
@@ -3038,13 +3038,13 @@ mpred_nf1((H :- B)  , [(H :- B)]):-
 mpred_nf1((H :- B)  ,[P]):-   
   mpred_positive_literal(H),
   P={clause(H , B)},
-  dmsg(warn(mpred_nf1((H :- B)  ,[P]))),!.
+  dmsg_pretty(warn(mpred_nf1((H :- B)  ,[P]))),!.
 
 % prolog_clause mpred_nf1 COMMENTED
 mpred_nf1((H :- B)  ,[P]):-   
   mpred_positive_literal(H),
   P={clause(H , B)},
-  dmsg(warn(mpred_nf1((H :- B)  ,[P]))),!.
+  dmsg_pretty(warn(mpred_nf1((H :- B)  ,[P]))),!.
 */
 
 %  handle a random literal.
@@ -3062,7 +3062,7 @@ mpred_nf1(Term,[Term]):-
   mpred_warn("mpred_nf doesn't know how to normalize ~p",[Term]),dtrace,!,fail.
 
 notiffy_p(P,\+(P)):- var(P),!. % prevents next line from binding
-notiffy_p(\+(P),P):- dmsg(notiffy_p(\+(P),P)), !.
+notiffy_p(\+(P),P):- dmsg_pretty(notiffy_p(\+(P),P)), !.
 notiffy_p(P,\+(P)).
 
 %% mpred_nf1_negation(+P, ?NF) is semidet.
@@ -3750,7 +3750,7 @@ mpred_reseted_kb_check(Module):- with_exact_kb(Module,mpred_reseted_kb_check_0(M
 mpred_reseted_kb_check_0(Module):- \+ mpred_database_item(Module,_),!,mpred_trace_msg("Reset DB complete for ~p",[Module]).
 mpred_reseted_kb_check_0(Module):- mpred_trace_msg("Couldn't full mpred_reseted_kb_check(~w).~n",[Module]),
   pp_DB,mpred_database_item(Module,T),
-  wdmsg(mpred_database_item(Module,T)),!.
+  wdmsg_pretty(mpred_database_item(Module,T)),!.
   %mpred_warn("Pfc database [~w] not empty: ~p.~n",[Module,T]),!,
   %mpred_error("Pfc database [~w] not empty: ~p.~n",[Module,T]),!.
   
@@ -3868,8 +3868,8 @@ mpred_trace_maybe_print(Add,P,S):-
   \+ get_mpred_is_tracing(P) -> true;
   (
    ((to_u(S,U),atom(U))
-       -> wdmsg("~NOP: ~p (~p) ~p",[Add,U,P])
-        ; wdmsg("~NOP: ~p (:) ~p~N\tSupported By: ~q",[Add,P,S]))))),!.
+       -> wdmsg_pretty("~NOP: ~p (~p) ~p",[Add,U,P])
+        ; wdmsg_pretty("~NOP: ~p (:) ~p~N\tSupported By: ~q",[Add,P,S]))))),!.
 
 to_u(S,U):-S=(U,ax),!.
 to_u(S,U):-S=(U,_),!.
@@ -3880,7 +3880,7 @@ mpred_trace_maybe_break(Add,P0,_ZS):-
   get_head_term(P0,P),
    (
   \+ call_u(lmcache:mpred_is_spying_pred(P,Add)) -> true;
-   (wdmsg("~NBreaking on ~p(~p)",[Add,P]),
+   (wdmsg_pretty("~NBreaking on ~p(~p)",[Add,P]),
     break)).
 
 
@@ -3962,8 +3962,8 @@ with_no_breaks(G):- locally_tl(no_breaks,G).
 break_ex:- quietly((log_failure_red,dumpST,log_failure_red)),
   (t_l:no_breaks -> ansifmt(red,"NO__________________DUMP_BREAK/0") ;dbreak).
 
-maybe_mpred_break(Info):- (t_l:no_breaks->true;(debugging(logicmoo(pfc))->dtrace(dmsg(Info));(dmsg(Info)))),break_ex.
-maybe_mpred_break(Info):- (t_l:no_breaks->true;(debugging(logicmoo(pfc))->dtrace(dmsg(Info));(dmsg(Info)))),break_ex.
+maybe_mpred_break(Info):- (t_l:no_breaks->true;(debugging(logicmoo(pfc))->dtrace(dmsg_pretty(Info));(dmsg_pretty(Info)))),break_ex.
+%maybe_mpred_break(Info):- (t_l:no_breaks->true;(debugging(logicmoo(pfc))->dtrace(dmsg_pretty(Info));(dmsg_pretty(Info)))),break_ex.
 
 % if the correct flag is set, dtrace exection of Pfc
 mpred_trace_msg(_):- current_prolog_flag(mpred_pfc_silent,true).
@@ -3971,16 +3971,16 @@ mpred_trace_msg(Info):- not_not_ignore_quietly_ex(((((clause_asserted_u(mpred_is
 mpred_trace_msg(Format,Args):- not_not_ignore_quietly_ex((((clause_asserted_u(mpred_is_tracing_exec);tracing)-> (show_wdmsg(Format,Args))))),!.
 % mpred_trace_msg(Format,Args):- not_not_ignore_quietly_ex((((format_to_message(Format,Args,Info),mpred_trace_msg(Info))))).
 
-show_wdmsg(A,B):- current_prolog_flag(mpred_pfc_silent,true)-> true; wdmsg(A,B).
-show_wdmsg(A):- current_prolog_flag(mpred_pfc_silent,true)-> true; wdmsg(A).
+show_wdmsg(A,B):- current_prolog_flag(mpred_pfc_silent,true)-> true; wdmsg_pretty(A,B).
+show_wdmsg(A):- current_prolog_flag(mpred_pfc_silent,true)-> true; wdmsg_pretty(A).
 
 mpred_warn(Info):- not_not_ignore_quietly_ex((((color_line(red,1), lookup_u(mpred_warnings(true));tracing) ->
-  wdmsg(warn(logicmoo(pfc),Info)) ; mpred_trace_msg('WARNING/PFC:  ~p ',[Info])),
+  wdmsg_pretty(warn(logicmoo(pfc),Info)) ; mpred_trace_msg('WARNING/PFC:  ~p ',[Info])),
   nop(maybe_mpred_break(Info)))).
 
 mpred_warn(Format,Args):- not_not_ignore_quietly_ex((((format_to_message(Format,Args,Info),mpred_warn(Info))))).
 
-mpred_error(Info):- not_not_ignore_quietly_ex(((tracing -> wdmsg(error(logicmoo(pfc),Info)) ; mpred_warn(error(Info))))).
+mpred_error(Info):- not_not_ignore_quietly_ex(((tracing -> wdmsg_pretty(error(logicmoo(pfc),Info)) ; mpred_warn(error(Info))))).
 mpred_error(Format,Args):- not_not_ignore_quietly_ex((((format_to_message(Format,Args,Info),mpred_error(Info))))).
 
 mpred_pfc_silent(TF):-set_prolog_flag(mpred_pfc_silent,TF).
