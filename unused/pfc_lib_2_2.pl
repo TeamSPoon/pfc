@@ -70,15 +70,15 @@ kb_global_w(M:F/A):-
 :- kb_shared(baseKB:never_retract_u/2).
 :- kb_shared(baseKB:mpred_prop/4).
 :- kb_shared(baseKB:do_and_undo/2).
-:- kb_shared(baseKB:spft/3).
-:- kb_shared(baseKB:bt/2).
+:- kb_shared(baseKB:spft/4).
+:- kb_shared(baseKB:bkct/2).
 :- kb_shared(baseKB:hs/1).
-:- kb_shared(baseKB:nt/3).
+:- kb_shared(baseKB:negt/3).
 :- kb_shared(baseKB:pk/3).
-:- kb_shared(baseKB:pt/2).
+:- kb_shared(baseKB:pozt/2).
 :- kb_shared(baseKB:que/2).
 :- kb_shared(baseKB:pm/1).
-:- kb_shared(baseKB:spft/3).
+:- kb_shared(baseKB:spft/4).
 :- kb_shared(baseKB:tms/1).
 
 
@@ -187,8 +187,8 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg(visit_pfc_non_file_r
 
 :- intern_predicate(system,intern_predicate/2).
 
-'?='(ConsqIn):- fully_expand(ConsqIn,Consq),call_u(Consq),forall(mpred_why(Consq,Ante),wdmsg(Ante)).
-'?=>'(AnteIn):- fully_expand(AnteIn,Ante),call_u(Ante),forall(mpred_why(Consq,Ante),wdmsg(Consq)).
+'?='(ConsqIn):- fully_expand(ConsqIn,Consq),call_u(Consq),forall(mpred_why(MZ,Consq,Ante),wdmsg(Ante)).
+'?=>'(AnteIn):- fully_expand(AnteIn,Ante),call_u(Ante),forall(mpred_why(MZ,Consq,Ante),wdmsg(Consq)).
 
 :- lock_predicate(pfc:'?='/1).
 :- lock_predicate(pfc:'?=>'/1).
@@ -199,14 +199,14 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg(visit_pfc_non_file_r
 
 /*
 :- nop(kb_shared((
-   bt/2, %basePFC
+   bkct/2, %basePFC
    hs/1, %basePFC
-   nt/3, %basePFC
+   negt/3, %basePFC
    pk/3, %basePFC
-   pt/2, %basePFC
+   pozt/2, %basePFC
    que/1, %basePFC
    pm/1, %basePFC
-   spft/3, %basePFC
+   spft/4, %basePFC
    tms/1 %basePFC
    ))).
 :- nop(kb_shared( ('~') /1)).
@@ -443,8 +443,8 @@ only_expand(I,OO):- fail, quietly(must_pfc(I,M)),
   conjuncts_to_list(M,O), !, %  [I]\=@=O,
   make_load_list(O,S,OO).
 
-make_load_list([C|O],S,[baseKB:spft(C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):- clause_asserted(C),!, make_load_list(O,S,OO).
-make_load_list([C|O],S,[C, baseKB:spft(C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):-  is_loadin(C),!,make_load_list(O,S,OO).
+make_load_list([C|O],S,[baseKB:spft(MZ,C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):- clause_asserted(C),!, make_load_list(O,S,OO).
+make_load_list([C|O],S,[C, baseKB:spft(MZ,C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):-  is_loadin(C),!,make_load_list(O,S,OO).
 make_load_list(_,_,[]):-!.  
 
 is_loadin(C):- strip_module(C,M,CC),is_loadin(M,CC).

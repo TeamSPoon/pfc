@@ -196,7 +196,7 @@
           ]).
 
 :- include('mpred_header.pi').
-%:- use_module(library(dictoo_lib)).
+:- use_module(library(dictoo_lib)).
 
 :- endif.
 
@@ -765,8 +765,8 @@ get_file_type(File,Type):-file_name_extension(_,Type,File).
 %
 % If Is A Managed Predicate File.
 %
-is_mpred_file(F):- var(F),!,quietly_must(loading_source_file(F)),F\==user,!, baseKB:how_virtualize_file(heads,0,F),!.
-is_mpred_file(F):- guess_if_mpred_file0(F),!,guess_if_mpred_file0(F),(set_how_virtualize_file(heads,0,F)),!.
+is_mpred_file(F):- var(F),!,quietly_must(loading_source_file(F)),F\==user,!, baseKB:how_virtualize_file(heads,F,0),!.
+is_mpred_file(F):- guess_if_mpred_file0(F),!,guess_if_mpred_file0(F),(set_how_virtualize_file(heads,F,0)),!.
 
 %% guess_if_mpred_file0( ?F) is det.
 %
@@ -786,7 +786,7 @@ guess_if_mpred_file0(F):- atom(F),exists_file(F), file_name_extension(_,WAS,F),W
 % Decache File Type.
 %
 decache_file_type(F):-
-  forall(clause(baseKB:how_virtualize_file(_,F),true,Ref),erase(Ref)).
+  forall(clause(baseKB:how_virtualize_file(_,F,_),true,Ref),erase(Ref)).
 
 
 
@@ -1904,7 +1904,7 @@ is_compiling_sourcecode:-compiling,dmsg(system_compiling),!.
 %
 % Load Managed Predicate Files.
 %
-load_mpred_files :- forall(baseKB:how_virtualize_file(heads,File),ensure_mpred_file_loaded(File)).
+load_mpred_files :- forall(baseKB:how_virtualize_file(heads,File,_),ensure_mpred_file_loaded(File)).
 
 
 % =======================================================
