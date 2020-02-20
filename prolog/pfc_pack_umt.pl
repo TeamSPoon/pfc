@@ -170,12 +170,12 @@ pfcTraced/1,
 pfcSpied/2,
 pfcTraceExecution/0,
 pfcWarnings/1,
-     'pt'/2,
-     'nt'/3,
-     'bt'/2,
+     'pozt'/2,
+     'negt'/3,
+     'bkct'/2,
 t_l:whybuffer/2,
      fcUndoMethod/2,
-     spft/3,
+     spft/4,
      fcAction/2,
      fcTmsMode/1,
      pfcQueue/1,
@@ -313,7 +313,7 @@ update_single_valued_arg(M,P,N):-
   same_functors(P,Q),
   % get_source_ref1(U),
   must_det_l((
-     % rtrace(attvar_op(assert_if_new,M:spft(P,U,ax))),
+     % rtrace(attvar_op(assert_if_new,M:spft(MZ,P,U,ax))),
      % (umt(P)->true;(op_dir_mu(assert,assertz,P))),
      op_dir_mu(assert,assertz,M,P),
      doall((
@@ -345,16 +345,16 @@ is_user_reason((_,U)):-atomic(U).
 
 is_user_fact(P):-get_first_user_reason(P,UU),is_user_reason(UU).
 
-lookup_spft(P,F,T):- umt(spft(P,F,T)).
+lookup_spft(MZ,P,F,T):- umt(spft(MZ,P,F,T)).
 
 get_first_real_user_reason(P,UU):- nonvar(P), UU=(F,T),
-  quietly_ex((  ((((lookup_spft(P,F,T))),is_user_reason(UU))*-> true;
-    ((((lookup_spft(P,F,T))), \+ is_user_reason(UU))*-> (!,fail) ; fail)))).
+  quietly_ex((  ((((lookup_spft(MZ,P,F,T))),is_user_reason(UU))*-> true;
+    ((((lookup_spft(MZ,P,F,T))), \+ is_user_reason(UU))*-> (!,fail) ; fail)))).
 
 get_first_user_reason(P,(F,T)):-
   UU=(F,T),
-  ((((lookup_spft(P,F,T))),is_user_reason(UU))*-> true;
-    ((((lookup_spft(P,F,T))), \+ is_user_reason(UU))*-> (!,fail) ;
+  ((((lookup_spft(MZ,P,F,T))),is_user_reason(UU))*-> true;
+    ((((lookup_spft(MZ,P,F,T))), \+ is_user_reason(UU))*-> (!,fail) ;
        (clause_asserted_u(P),get_source_ref(UU),is_user_reason(UU)))),!.
 get_first_user_reason(_,UU):-get_source_ref_stack(UU),is_user_reason(UU),!.
 get_first_user_reason(_,UU):- get_source_ref_stack(UU),!.
@@ -522,7 +522,7 @@ pfc_with_chaining(Goal):- locally(- t_l:no_attempt_side_effects,call(Goal)).
 % Op(Assert/Retract) in Ordered in Module Unit.
 %
 :- module_transparent(op_dir_mu/4).
-op_dir_mu(Op,Type,M,spft(P,mfl4(VarNameZ,KB,F,L),T)):-M\==KB,!,op_dir_mu(Op,Type,KB,spft(P,mfl4(VarNameZ,KB,F,L),T)).
+op_dir_mu(Op,Type,M,spft(MZ,P,mfl4(VarNameZ,KB,F,L),T)):-M\==KB,!,op_dir_mu(Op,Type,KB,spft(MZ,P,mfl4(VarNameZ,KB,F,L),T)).
 op_dir_mu(Op,Type,M,X):- correct_module(M,X,T),T\==M,!,op_dir_mu(Op,Type,T,X).
 op_dir_mu(Op,Type,M,M2:Pred):- sanity(M == M2),!, op_dir_mu(Op,Type,M,Pred).
 op_dir_mu(Op,Type,M,X):- 
