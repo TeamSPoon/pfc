@@ -296,7 +296,7 @@ show_pred_info(PI):-
         doall(show_call(why,call_u(isa(F,_)))),
        ((current_predicate(_,M:Head), (\+ predicate_property(M:Head,imported_from(_))))
           -> show_pred_info_0(M:Head); 
-             wdmsg(cannot_show_pred_info(Head))))),!.
+             wdmsg_pretty(cannot_show_pred_info(Head))))),!.
 
 
 %= 	 	 
@@ -483,7 +483,7 @@ mpred_list_triggers_1(What):-
    !.     
 
 
-pinfo(F/A):- listing(F/A),safe_functor(P,F,A),findall(Prop,predicate_property(P,Prop),List),wdmsg(pinfo(F/A)==List),!.
+pinfo(F/A):- listing(F/A),safe_functor(P,F,A),findall(Prop,predicate_property(P,Prop),List),wdmsg_pretty(pinfo(F/A)==List),!.
 
 :- fixup_exports.
 

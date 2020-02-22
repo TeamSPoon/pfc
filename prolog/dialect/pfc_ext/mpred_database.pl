@@ -58,7 +58,7 @@ ensure_arity(F,A):- one_must(arity_no_bc(F,A),one_must((current_predicate(F/A),
 %
 
 assert_arity(F,A):- sanity(\+ ((bad_arity(F,A), trace_or_throw_ex(assert_arity(F,A))))), arity_no_bc(F,A),!.
-assert_arity(F,A):- arity_no_bc(F,AA), A\=AA,dmsg(assert_additional_arity(F,AA->A)),!,ain_fast(arity(F,A)).
+assert_arity(F,A):- arity_no_bc(F,AA), A\=AA,dmsg_pretty(assert_additional_arity(F,AA->A)),!,ain_fast(arity(F,A)).
 assert_arity(F,A):- ain_fast(arity(F,A)),!.
 
 bad_arity(F,_):- \+ atom(F).
@@ -1641,7 +1641,7 @@ ruleBackward(R,Condition):- call_u(( ruleBackward0(R,Condition),functor(Conditio
 %
 ruleBackward0(F,Condition):- call_u((  '<-'(F,Condition),\+ (is_true(Condition);mpred_is_info(Condition)) )).
 
-%{X}:-dmsg(legacy({X})),call_u(X).
+%{X}:-dmsg_pretty(legacy({X})),call_u(X).
 */
 
 
@@ -1669,14 +1669,14 @@ mpred_why_all(Call):- !,
       doall((
         lookup_u(Call),
         ignore(show_failure(mpred_why(Call))),
-        dmsg(result=Call),nl)),
+        dmsg_pretty(result=Call),nl)),
    forall(Call,ignore(show_failure(mpred_why(Call)))).
 
 mpred_why_all(Call):-
       doall((
         call_u(Call),
         ignore(show_failure(mpred_why(Call))),
-        dmsg(result=Call),nl)).
+        dmsg_pretty(result=Call),nl)).
 
 
 
@@ -1961,11 +1961,11 @@ no_side_effects(P):-  (\+ is_side_effect_disabled->true;(get_functor(P,F,_),a(pr
 %
 compute_resolve(NewerP,OlderQ,SU,SU,(mpred_blast(OlderQ),mpred_ain(NewerP,S),mpred_withdraw(conflict(NewerP)))):-
   must(correctify_support(SU,S)),
-  wdmsg(compute_resolve(newer(NewerP-S)>older(OlderQ-S))).
+  wdmsg_pretty(compute_resolve(newer(NewerP-S)>older(OlderQ-S))).
 compute_resolve(NewerP,OlderQ,S1,[U],Resolve):-compute_resolve(OlderQ,NewerP,[U2],S1,Resolve),match_source_ref1(U),match_source_ref1(U2),!.
 compute_resolve(NewerP,OlderQ,SU,S2,(mpred_blast(OlderQ),mpred_ain(NewerP,S1),mpred_withdraw(conflict(NewerP)))):-
   must(correctify_support(SU,S1)),
-  wdmsg(compute_resolve((NewerP-S1)>(OlderQ-S2))).
+  wdmsg_pretty(compute_resolve((NewerP-S1)>(OlderQ-S2))).
 
 
 
@@ -2166,7 +2166,7 @@ repropagate(P):-  \+ predicate_property(P,_),'$find_predicate'(P,PP),PP\=[],!,fo
 repropagate(F/A):- is_ftNameArity(F,A),!,functor(P,F,A),!,repropagate(P).
 repropagate(F/A):- atom(F),is_ftVar(A),!,repropagate(F).
 
-repropagate(P):-  \+ predicate_property(_:P,_),dmsg(undefined_repropagate(P)),dumpST,dtrace,!,fail.
+repropagate(P):-  \+ predicate_property(_:P,_),dmsg_pretty(undefined_repropagate(P)),dumpST,dtrace,!,fail.
 repropagate(P):-  call_u(repropagate_0(P)).
 
 

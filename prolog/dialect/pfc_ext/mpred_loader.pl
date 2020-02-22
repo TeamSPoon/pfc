@@ -208,7 +208,7 @@
 :- multifile(prolog:make_hook/2).
 :- dynamic(prolog:make_hook/2).
 
-% :- asserta_if_new((prolog:make_hook(BA, C):- wdmsg(prolog:make_hook(BA, C)),fail)).
+% :- asserta_if_new((prolog:make_hook(BA, C):- dmsg_pretty(prolog:make_hook(BA, C)),fail)).
 % prolog:make_hook(before, FileS):- maplist(mpred_loader:mpred_unload_file,FileS).
 
 % Avoid Warning: mpred_loader:prolog_load_context(reload,true), which is called from
@@ -221,7 +221,7 @@ mpred_unload_file(File):-
     call_u(spft(Data, mfl4(VarNameZ,Module, File, LineNum),AX)),
                     ToDo),
      length(ToDo,Len),
-     wdmsg(mpred_unload_file(File,Len)),
+     dmsg_pretty(mpred_unload_file(File,Len)),
      maplist(call,ToDo),!.
 
 
@@ -288,7 +288,7 @@ mpred_load(In):- is_stream(In),!,
    line_count(In,_Lineno),
    % double_quotes(_DQBool)
    Options = [variables(_Vars),variable_names(VarNames),singletons(_Singletons),comment(_Comment)],
-   catchv((read_term(In,Term,[syntax_errors(error)|Options])),E,(dmsg(E),fail)),
+   catchv((read_term(In,Term,[syntax_errors(error)|Options])),E,(dmsg_pretty(E),fail)),
    set_varname_list(VarNames),expand_term(Term,TermO),mpred_load_term(TermO),
    Term==end_of_file,
    close(In).
@@ -397,7 +397,7 @@ mpred_file_term_expansion0(Type,LoaderMod,I,O):-
            b_setval('$orig_term',Orig),
            b_setval('$term',[]),
            (O= (:- must(mpred_ain(I,(mfl4(VarNameZ,AM,F,L),ax)))))))),
-    b_setval('$term',TermWas)),!, wdmsg(I-->O).
+    b_setval('$term',TermWas)),!, dmsg_pretty(I-->O).
 
 
 proper_source_mod(List,AM):- member(AM,List),call_u(mtHybrid(AM)),!.
@@ -425,11 +425,11 @@ mpred_expand_file_module_clause(_,M,I,O):- mpred_expander_now_physically(M,I,O).
 mpred_expander_now_physically(M,I,OO):- 
  '$set_source_module'(Old,M),
  call_cleanup(M:((
-   quietly_must((source_context_module(CM),CM\==mpred_core,CM\==mpred_loader)),
+   quietly_must((source_context_module(CM),CM\==pfc_lib,CM\==mpred_loader)),
    quietly_must(loop_check(expand_term_to_load_calls(I,O),trace_or_throw_ex(in_loop(expand_term_to_load_calls(I,O))))),!,
    quietly_must(I\=@=O),
   (((t_l:mpred_term_expansion_ok;mpred_expand_inside_file_anyways)-> true ; 
-    ((show_load_context,wdmsg(warning,wanted_mpred_term_expansion(I,O))),fail)),
+    ((show_load_context,dmsg_pretty(warning,wanted_mpred_term_expansion(I,O))),fail)),
    ((O=(:-(CALL))) ->  quietly_must((M:call_file_command(I,CALL,OO,O))); 
         (OO = O))))),'$set_source_module'(Old)).
 
@@ -442,7 +442,7 @@ mpred_expander_now_physically(M,I,OO):-
 %
 % Show Bool.
 %
-show_bool(G):- must(forall((G*->wdmsg(true=G);wdmsg(false=G)),true)).
+show_bool(G):- must(forall((G*->dmsg_pretty(true=G);dmsg_pretty(false=G)),true)).
 
 
 
@@ -496,7 +496,7 @@ add_from_file(Term):-
 %
 % My Debug Whenever Error.
 %
-myDebugOnError(Term):-catch(once(quietly_must((Term))),E,(dmsg(error(E,start_myDebugOnError(Term))),dumpST,dtrace,rtrace((Term)),dmsginfo(stop_myDebugOnError(E=Term)),dtrace,Term)).
+myDebugOnError(Term):-catch(once(quietly_must((Term))),E,(dmsg_pretty(error(E,start_myDebugOnError(Term))),dumpST,dtrace,rtrace((Term)),dmsginfo(stop_myDebugOnError(E=Term)),dtrace,Term)).
          
 
 
@@ -505,7 +505,7 @@ myDebugOnError(Term):-catch(once(quietly_must((Term))),E,(dmsg(error(E,start_myD
 %
 % Read One Term.
 %
-read_one_term(Term,Vs):- catch(once(( read_term(Term,[double_quotes(string),variable_names(Vs)]))),E,(Term=error(E),dmsg(error(E,read_one_term(Term))))).
+read_one_term(Term,Vs):- catch(once(( read_term(Term,[double_quotes(string),variable_names(Vs)]))),E,(Term=error(E),dmsg_pretty(error(E,read_one_term(Term))))).
 
 
 
@@ -513,7 +513,7 @@ read_one_term(Term,Vs):- catch(once(( read_term(Term,[double_quotes(string),vari
 %
 % Read One Term.
 %
-read_one_term(Stream,Term,Vs):- catch(once(( read_term(Stream,Term,[double_quotes(string),variable_names(Vs)]))),E,(Term=error(E),dmsg(error(E,read_one_term(Term))))).
+read_one_term(Stream,Term,Vs):- catch(once(( read_term(Stream,Term,[double_quotes(string),variable_names(Vs)]))),E,(Term=error(E),dmsg_pretty(error(E,read_one_term(Term))))).
 
 % rescan_mpred_stubs:- doall((mpred_prop(M,F,A,prologHybrid),arity(F,A),A>0,warnOnError(declare_mpred_local_dynamic(moo,F,A)))).
 
@@ -895,7 +895,7 @@ baseKB:mpred_provide_clauses(_H,_B,_What):- fail.
 %
 show_interesting_cl(_Dir,_).
 show_interesting_cl(Dir,P):- loading_source_file(File),get_file_type(File,Type),
-  ((nonvar(Dir),functor(Dir,Type,_))->true;dmsg(Type:cl_assert(Dir,P))).
+  ((nonvar(Dir),functor(Dir,Type,_))->true;dmsg_pretty(Type:cl_assert(Dir,P))).
 
 :- meta_predicate(cl_assert(?,?)).
 
@@ -949,7 +949,7 @@ make_file_command(_IN,'$si$':'$was_imported_kb_content$'(IN2,WHY),'$si$':'$was_i
 %
 % Call File Command.
 %
-call_file_command(I,CALL,OO,O):- call_file_command0(I,CALL,OO,O),wdmsg(call_file_command(I,CALL,OO,O)).
+call_file_command(I,CALL,OO,O):- call_file_command0(I,CALL,OO,O),dmsg_pretty(call_file_command(I,CALL,OO,O)).
 
 call_file_command0(I,cl_assert(OTHER,OO),OO,I):- get_lang(kif),if_defined(is_kif_clause(OO)),!,call_file_command(I,cl_assert(kif(OTHER),OO),OO,I).
 call_file_command0(I,CALL,[(:- quietly_must(CALL2)),(:- quietly_must(CALL)),OO],(:-CALL2)):- CALL2\=@=CALL, 
@@ -1114,7 +1114,7 @@ check_clause_count(MMask):- swc,
      (Diff ==0 -> true;
      (Diff == -1 -> true;
      ((Diff<0 ,Change is N/abs(Diff ), Change>0.20)
-         -> trace_or_throw_ex(bad_count(Mask,(Was --> N))) ; dmsg(good_count(Mask,(Was --> N)))))).
+         -> trace_or_throw_ex(bad_count(Mask,(Was --> N))) ; dmsg_pretty(good_count(Mask,(Was --> N)))))).
 
 check_clause_counts:-!.
 check_clause_counts:- flag_call(runtime_speed==true),!.
@@ -1752,7 +1752,7 @@ make_dynamic_ilc(C):- % trace_or_throw_ex(make_dynamic_ilc(C)),
 %
 load_language_file(Name0):- 
  forall(filematch_ext('qlf',Name0,Name),
-  once((dmsg(load_language_file(Name0->Name)),
+  once((dmsg_pretty(load_language_file(Name0->Name)),
    locally([set_prolog_flag(subclause_expansion,false),
          set_prolog_flag(read_attvars,false),
          (t_l:disable_px),
@@ -1894,7 +1894,7 @@ declare_load_dbase(Spec):- forall(no_repeats(File,must_locate_file(Spec,File)),
 %
 is_compiling_sourcecode:-is_compiling,!.
 is_compiling_sourcecode:-compiling, current_input(X),not((stream_property(X,file_no(0)))),prolog_load_context(source,F),\+((t_l:loading_mpred_file(_,_))),F=user,!.
-is_compiling_sourcecode:-compiling,dmsg(system_compiling),!.
+is_compiling_sourcecode:-compiling,dmsg_pretty(system_compiling),!.
 
 :-  /**/ export(load_mpred_files/0).
 
@@ -2071,7 +2071,7 @@ force_reload_mpred_file3(File,World):-
    catch((locally(t_l:loading_mpred_file(World,File),     
       load_mpred_on_file_end(World,File))),
     Error,
-    (wdmsg(error(Error,File)),retractall(baseKB:loaded_mpred_file(World,File)),
+    (dmsg_pretty(error(Error,File)),retractall(baseKB:loaded_mpred_file(World,File)),
      retractall(baseKB:loaded_file_world_time(File,World,_AnyTime)))).
 
 
@@ -2264,7 +2264,7 @@ convert_side_effect_0c(OpData,Reproduce):- trace_or_throw_ex(unknown_convert_sid
 convert_side_effect_buggy(erase(clause(H,B,_Ref)), (e(HB))):- convert_side_effect_0a((H:-B),HB).
 convert_side_effect_buggy(retract(Data), (r(DataR))):-convert_side_effect_0a(Data,DataR).
 convert_side_effect_buggy(retractall(Data), (c(DataR))):-convert_side_effect_0a(Data,DataR).
-convert_side_effect_buggy(OpData,( (  error_op(OpData)))):-dmsg(unknown_convert_side_effect(OpData)).
+convert_side_effect_buggy(OpData,( (  error_op(OpData)))):-dmsg_pretty(unknown_convert_side_effect(OpData)).
 
 
 

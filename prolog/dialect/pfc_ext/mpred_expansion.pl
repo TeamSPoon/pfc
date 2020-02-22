@@ -832,7 +832,7 @@ fully_expand_real(Op,Sent,SentO):-
   (Sent=@=SentO-> true ; 
     (dumpST,show_expansion("~N<!--BREAK-ERROR--->",Op,Sent,SentO),nop(break))).
 
-show_expansion(Prefix,Op,Sent,SentO):-dmsg(Prefix),dmsg(-->(Op)),dmsg(Sent),dmsg(-->),dmsg(SentO),!.
+show_expansion(Prefix,Op,Sent,SentO):-dmsg_pretty(Prefix),dmsg_pretty(-->(Op)),dmsg_pretty(Sent),dmsg_pretty(-->),dmsg_pretty(SentO),!.
 
 fully_expand_real_2(Op,Sent,SentO):- has_skolem_attrvars(Sent),!,
    gripe_time(0.2,
@@ -1266,7 +1266,7 @@ db_expand_final(Op, CMP,    O  ):- compound(CMP),meta_argtypes(Args)=CMP,
     (Pred=t->  (fully_expand_head(Op, Args,ArgsO),O=meta_argtypes(ArgsO)) ; 
       (assert_arity(Pred,A),O=meta_argtypes(Args))).
 
-db_expand_final(_,NC,NCO):- string_to_mws(NC,NCO),!.
+% db_expand_final(_,NC,NCO):- string_to_mws(NC,NCO),!.
 
 %db_expand_final(_ ,NC,NCO):- atom(NC),do_renames_expansion(NC,NCO),!.
 db_expand_final(_ ,NC,NC):- atomic(NC),!.
@@ -1456,7 +1456,7 @@ db_expand_0(_Op,P,PO):- fail,
 % prolog_clause db_expand_0
 % db_expand_0(_Op,(H:-B),(H:-B)):- !.
 db_expand_0(Op,(H:-B),OUT):- fully_expand_clause(Op,(H:-B),OUT),!,  
-                         (((H:-B)=@=OUT)->true;dmsg(warn(db_expand_0(Op,(H:-B),OUT)))).
+                         (((H:-B)=@=OUT)->true;dmsg_pretty(warn(db_expand_0(Op,(H:-B),OUT)))).
 % prolog_clause db_expand_0
 % db_expand_0(Op,(H:-B),OUT):- temp_comp(H,B,db_expand_0(Op),OUT),!.
 db_expand_0(Op,(:-(CALL)),(:-(CALLO))):-with_assert_op_override(Op,db_expand_0(Op,CALL,CALLO)).
@@ -1628,7 +1628,7 @@ db_expand_0(Op,typeProps(A,F),EXP):-expand_props(_Prefix,Op,props(I,F),OO),!,ful
 % covered db_expand_0(_,arity(F,A),arity(F,A)):-atom(F),!.
 db_expand_0(Op,IN,OUT):- 
    cnas(IN,F,Args),
-   % wdmsg(db_expand_0(Op,IN)),
+   % wdmsg_pretty(db_expand_0(Op,IN)),
    sanity(F \== isa),
    must_maplist(db_expand_0(Op),Args,ArgsO),
    map_f(F,FO),OUT  univ_safe  [FO|ArgsO].
@@ -1961,7 +1961,7 @@ into_mpred_form6(_X,H,P,_N,A,O):-a(is_holds_false,H),(atom(P)->(G  univ_safe  [P
 into_mpred_form6(_X,H,P,_N,A,O):-a(is_holds_true,H),(atom(P)->O  univ_safe  [P|A];O  univ_safe  [t,P|A]).
 into_mpred_form6(G,F,_,_,_,G):-a(prologHybrid,F),!.
 into_mpred_form6(G,F,_,_,_,G):-a(prologDynamic,F),!.
-into_mpred_form6(G,F,_,_,_,G):-nop(dmsg(warn(unknown_mpred_type(F,G)))).
+into_mpred_form6(G,F,_,_,_,G):-nop(dmsg_pretty(warn(unknown_mpred_type(F,G)))).
 
 % ========================================
 % acceptable_xform/2 (when the form is a isa/2, do a validity check)
@@ -1985,7 +1985,7 @@ acceptable_xform(From,To):- From \=@= To,  (To = isa(I,C) -> was_isa_ex(From,I,C
 %
 % Transform Holds.
 %
-transform_holds(H,In,Out):- once(transform_holds_3(H,In,Out)),!,ignore((In\=Out,fail,dmsg(transform_holds(H,In,Out)))).
+transform_holds(H,In,Out):- once(transform_holds_3(H,In,Out)),!,ignore((In\=Out,fail,dmsg_pretty(transform_holds(H,In,Out)))).
 
 
 % foreach_arg/7 
@@ -2029,7 +2029,7 @@ transform_holds_3(HFDS,M:Term,M:OUT):-atom(M),!,transform_holds_3(HFDS,Term,OUT)
 transform_holds_3(HFDS,[P,A|ARGS],DBASE):- is_ftVar(P),!,DBASE  univ_safe  [HFDS,P,A|ARGS].
 transform_holds_3(HFDS, ['[|]'|ARGS],DBASE):- trace_or_throw_ex(list_transform_holds_3(HFDS,['[|]'|ARGS],DBASE)).
 transform_holds_3(Op,[SVOFunctor,Obj,Prop|ARGS],OUT):- if_defined(is_svo_functor(SVOFunctor)),!,transform_holds_3(Op,[Prop,Obj|ARGS],OUT).
-transform_holds_3(Op,[P|ARGS],[P|ARGS]):- not(atom(P)),!,dmsg(transform_holds_3),trace_or_throw_ex(transform_holds_3(Op,[P|ARGS],[P|ARGS])).
+transform_holds_3(Op,[P|ARGS],[P|ARGS]):- not(atom(P)),!,dmsg_pretty(transform_holds_3),trace_or_throw_ex(transform_holds_3(Op,[P|ARGS],[P|ARGS])).
 transform_holds_3(HFDS,[HOFDS,P,A|ARGS],OUT):- a(is_holds_true,HOFDS),!,transform_holds_3(HFDS,[P,A|ARGS],OUT).
 transform_holds_3(HFDS,[HOFDS,P,A|ARGS],OUT):- HFDS==HOFDS, !, transform_holds_3(HFDS,[P,A|ARGS],OUT).
 transform_holds_3(_,HOFDS,isa(I,C)) :- was_isa_ex(HOFDS,I,C),!.
@@ -2149,7 +2149,7 @@ db_reop_l(Op,DATA):-no_loop_check(db_op0(Op,DATA)).
 %
 expand_goal_correct_argIsa(A,B):- expand_goal(A,B).
 
-% db_op_simpler(query(HLDS,_),MODULE:C0,call_u(call,MODULE:C0)):- atom(MODULE), is_ftNonvar(C0),not(not(predicate_property(C0,_PP))),!. % , functor_catch(C0,F,A), dmsg(todo(unmodulize(F/A))), %trace_or_throw_ex(module_form(MODULE:C0)), %   db_op(Op,C0).
+% db_op_simpler(query(HLDS,_),MODULE:C0,call_u(call,MODULE:C0)):- atom(MODULE), is_ftNonvar(C0),not(not(predicate_property(C0,_PP))),!. % , functor_catch(C0,F,A), dmsg_pretty(todo(unmodulize(F/A))), %trace_or_throw_ex(module_form(MODULE:C0)), %   db_op(Op,C0).
 
 %= 	 	 
 
@@ -2332,7 +2332,7 @@ exact_args_f(install_converter).
 exact_args_f(installed_converter).
 exact_args_f(actn).
 exact_args_f(wid).
-exact_args_f(wdmsg).
+exact_args_f(wdmsg_pretty).
 exact_args_f(fol_to_pkif).
 exact_args_f(ftListFn).
 exact_args_f(vtActionTemplate).
@@ -2353,7 +2353,7 @@ exact_args_f(meta_argtypes).
 exact_args_f(ignore).
 exact_args_f(format).
 exact_args_f(dynamic).
-exact_args_f(dmsg).
+exact_args_f(dmsg_pretty).
 exact_args_f(call_u).
 exact_args_f(say).
 exact_args_f(call).

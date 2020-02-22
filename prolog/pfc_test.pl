@@ -27,7 +27,7 @@ test_red_lined(Failed):- quietly((
 %
 % PFC Test.
 %
-mpred_test(G):-var(G),!,dmsg(var_mpred_test(G)),trace_or_throw(var_mpred_test(G)).
+mpred_test(G):-var(G),!,dmsg_pretty(var_mpred_test(G)),trace_or_throw(var_mpred_test(G)).
 %mpred_test((G1;G2)):- !,call_u(G1);mpred_test(G2).
 mpred_test(_):- quietly_ex((compiling; current_prolog_flag(xref,true))),!.
 mpred_test(G):- quietly_ex(mpred_is_silient),!, with_no_mpred_trace_exec(must(mpred_test_fok(G))),!.
@@ -41,12 +41,12 @@ mpred_why2(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(pfcWhy(PFC))*->tr
 
 why_was_true((A,B)):- !,mpred_why(A),mpred_why(B).
 why_was_true(P):- mpred_why(P),!.
-why_was_true(P):- dmsg(justfied_true(P)),!.
+why_was_true(P):- dmsg_pretty(justfied_true(P)),!.
 
 mpred_test_fok(G):- source_file(_,_),!,mpred_test_fok0(G),!.
 mpred_test_fok(G):- mpred_test_fok0(G),!.
 
-mpred_test_fok0(\+ G):-!, ( \+ call_u(G) -> wdmsg(passed_mpred_test(\+ G)) ; (log_failure(failed_mpred_test(\+ G)),!,ignore(why_was_true(G)),!,fail)).
+mpred_test_fok0(\+ G):-!, ( \+ call_u(G) -> wdmsg_pretty(passed_mpred_test(\+ G)) ; (log_failure(failed_mpred_test(\+ G)),!,ignore(why_was_true(G)),!,fail)).
 % mpred_test_fok(G):- (call_u(G) -> ignore(sanity(why_was_true(G))) ; (log_failure(failed_mpred_test(G))),!,fail).
 mpred_test_fok0(G):- (call_u(G) *-> ignore(must(why_was_true(G))) ; (log_failure(failed_mpred_test(G))),!,fail).
 
@@ -73,7 +73,7 @@ pfc_test_feature(Feature,Test):- pfc_feature(Feature)*-> mpred_test(Test) ; true
 :- baseKB:export(pfc_test_feature/2).
 
 
-warn_fail_TODO(G):- dmsg(:-warn_fail_TODO(G)).
+warn_fail_TODO(G):- dmsg_pretty(:-warn_fail_TODO(G)).
 
 
 
@@ -121,19 +121,19 @@ inform_message_hook(error(existence_error(procedure,'$toplevel':_),_),error,_).
 
 inform_message_hook(T,Type,Warn):- atom(Type),
   memberchk(Type,[error,warning]),!,
-  once((dmsg(message_hook_type(Type)),dmsg(message_hook(T,Type,Warn)),
-  ignore((source_location(File,Line),dmsg(source_location(File,Line)))),
+  once((dmsg_pretty(message_hook_type(Type)),dmsg_pretty(message_hook(T,Type,Warn)),
+  ignore((source_location(File,Line),dmsg_pretty(source_location(File,Line)))),
   assertz(system:test_results(File:Line/T,Type,Warn)),nop(dumpST),
-  nop(dmsg(message_hook(File:Line:T,Type,Warn))))),   
+  nop(dmsg_pretty(message_hook(File:Line:T,Type,Warn))))),   
   fail.
 inform_message_hook(T,Type,Warn):-
   ignore(source_location(File,Line)),
-  once((nl,dmsg(message_hook(T,Type,Warn)),nl,
+  once((nl,dmsg_pretty(message_hook(T,Type,Warn)),nl,
   assertz(system:test_results(File:Line/T,Type,Warn)),
-  dumpST,nl,dmsg(message_hook(File:Line:T,Type,Warn)),nl)),
+  dumpST,nl,dmsg_pretty(message_hook(File:Line:T,Type,Warn)),nl)),
   fail.
 
-inform_message_hook(T,Type,Warn):- dmsg(message_hook(T,Type,Warn)),dumpST,dmsg(message_hook(T,Type,Warn)),!,fail.
+inform_message_hook(T,Type,Warn):- dmsg_pretty(message_hook(T,Type,Warn)),dumpST,dmsg_pretty(message_hook(T,Type,Warn)),!,fail.
 inform_message_hook(_,error,_):- current_prolog_flag(runtime_debug, N),N>2,break.
 inform_message_hook(_,warning,_):- current_prolog_flag(runtime_debug, N),N>2,break.
 
@@ -146,7 +146,7 @@ system:test_repl:-  assertz(system:test_results(need_retake,warn,need_retake)).
 system:test_completed:- listing(system:test_results/3),test_completed_exit_maybe(7).
 system:test_retake:- listing(system:test_results/3),test_completed_exit_maybe(3).
 
-test_completed_exit(N):- dmsg(test_completed_exit(N)),fail.
+test_completed_exit(N):- dmsg_pretty(test_completed_exit(N)),fail.
 test_completed_exit(7):- halt(7).
 test_completed_exit(4):- halt(4).
 test_completed_exit(5):- halt(5).

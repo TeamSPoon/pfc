@@ -36,7 +36,7 @@ term_expansion(MIn,Pos,Out,PosOut):- nonvar(Pos), nonvar(MIn),
    show_failure(baseKB:used_ain_syntax(File,Start,Ln,VZ,M,In,Out)), % 
    show_failure(Ln>=Start),!,
    must(get_current_clause(MIn)),
-   dmsg(Out), PosOut=Pos,!.
+   dmsg_pretty(Out), PosOut=Pos,!.
 
 */
 
