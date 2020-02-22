@@ -296,10 +296,8 @@ on_x_rtrace(G):-on_x_debug(G).
 
 :- nodebug(logicmoo(pfc)).
 
-:- kb_global(baseKB:mpred_database_term/3).
-
 % mined from program database
-/*
+
 :- dynamic(baseKB:pt/2).                   
 :- system:import(baseKB:pt/2).
 
@@ -321,7 +319,7 @@ on_x_rtrace(G):-on_x_debug(G).
 :- dynamic(baseKB:tms/1).                   
 :- system:import(baseKB:tms/1).
 
-*/
+
 
 /*
 */
@@ -1148,6 +1146,7 @@ get_assert_to(ABox):- (var(ABox)->guess_pos_assert_to(ABox);(guess_pos_assert_to
 get_query_from(SM):- guess_pos_assert_to(SM), \+ is_code_module(SM),!.
 get_query_from(baseKB).
 
+:- baseKB:import(is_code_module/1).
 is_code_module(system).
 is_code_module(user).
 is_code_module(baseKB):-!,fail.

@@ -47,11 +47,11 @@ mpred_why_2(Conseq,Ante):- justifications(Conseq,Ante).
 
 mpred_info(O):-
  with_output_to(user_error,
- ((dmsg("======================================================================="),
+ ((dmsg_pretty("======================================================================="),
   listing(O),
-  dmsg("======================================================================="),
+  dmsg_pretty("======================================================================="),
   quietly(call_with_inference_limit(ignore(on_xf_cont(deterministically_must(mpred_why_1(O)))),4000,_)),
-  dmsg("======================================================================="),
+  dmsg_pretty("======================================================================="),
   maplist(mp_printAll(O),
   [   mpred_db_type(O,v),  
       +(mpred_child(O,v)),
@@ -62,24 +62,24 @@ mpred_info(O):-
       mpred_supported(cycles,O),
       mpred_assumption(O),
       get_mpred_is_tracing(O)]),
- dmsg("=======================================================================")))).
+ dmsg_pretty("=======================================================================")))).
 
 mp_printAll(S,+(O)):- subst(O,v,V,CALL),CALL\==O,!,
   subst(O,S,s,NAME),safe_functor(O,F,_),!,
-  nl,flush_output, fmt("=================="),wdmsg(NAME),wdmsg("---"),flush_output,!,
+  nl,flush_output, fmt("=================="),wdmsg_pretty(NAME),wdmsg_pretty("---"),flush_output,!,
   doall(((flush_output,(CALL),flush_output)*->fmt9(V);(fail=F))),nl,fmt("=================="),nl,flush_output.
 mp_printAll(S,call(O)):- !,
   subst(O,S,s,NAME),
-  nl,flush_output,fmt("=================="),wdmsg(NAME),wdmsg("---"),flush_output,!,
-  doall(((flush_output,deterministically_must(O),flush_output)*->true;wdmsg(false=NAME))),fmt("=================="),nl,flush_output.
+  nl,flush_output,fmt("=================="),wdmsg_pretty(NAME),wdmsg_pretty("---"),flush_output,!,
+  doall(((flush_output,deterministically_must(O),flush_output)*->true;wdmsg_pretty(false=NAME))),fmt("=================="),nl,flush_output.
 mp_printAll(S,(O)):- subst(O,v,V,CALL),CALL\==O,!,
   subst(O,S,s,NAME),safe_functor(O,F,_),
-  nl,flush_output, fmt("=================="),wdmsg(NAME),wdmsg("---"),flush_output,!,
+  nl,flush_output, fmt("=================="),wdmsg_pretty(NAME),wdmsg_pretty("---"),flush_output,!,
   doall(((flush_output,deterministically_must(CALL),flush_output)*->fmt9(V);(fail=F))),nl,fmt("=================="),nl,flush_output.
 mp_printAll(S,(O)):-  !,  safe_functor(O,F,A),mp_nnvv(S,O,F,A),flush_output.
-mp_nnvv(_,(O),F,1):- !, doall(((flush_output,deterministically_must(O),flush_output)*->wdmsg(+F);wdmsg(-F))).
+mp_nnvv(_,(O),F,1):- !, doall(((flush_output,deterministically_must(O),flush_output)*->wdmsg_pretty(+F);wdmsg_pretty(-F))).
 mp_nnvv(S,(O),_,_):- !, subst(O,S,s,NAME), !,
-  doall(((flush_output,deterministically_must(O),flush_output)*->wdmsg(-NAME);wdmsg(+NAME))).
+  doall(((flush_output,deterministically_must(O),flush_output)*->wdmsg_pretty(-NAME);wdmsg_pretty(+NAME))).
 
 
 
@@ -548,7 +548,7 @@ mpred_why_maybe(F,P):-wdmsgl(F:-P),!.
 mpred_why_maybe(_,P):-ignore(mpred_why_1(P)).
 
 mpred_why_sub(P):- trace, loop_check(mpred_why_sub0(P),true).
-mpred_why_sub0(P):- mpred_why_2(P,Why),!,wdmsg(:-mpred_why_1(P)),wdmsgl(mpred_why_maybe(P),Why).
+mpred_why_sub0(P):- mpred_why_2(P,Why),!,wdmsg_pretty(:-mpred_why_1(P)),wdmsgl(mpred_why_maybe(P),Why).
 mpred_why_sub0(P):-loop_check(mpred_why_sub_lc(P),trace_or_throw_ex(mpred_why_sub_lc(P)))-> \+ \+ call(t_l:whybuffer(_,_)),!.
 mpred_why_sub_lc(P):- 
   justifications(P,Js),
@@ -562,7 +562,7 @@ mpred_why_sub_sub(P):-
   justifications(P,Js),
   clear_proofs,
   % retractall_u(t_l:whybuffer(_,_)),
-  (nb_hasval('$last_printed',P)-> dmsg(hasVal(P)) ;
+  (nb_hasval('$last_printed',P)-> dmsg_pretty(hasVal(P)) ;
    ((
   assertz(t_l:whybuffer(P,Js)),
    nb_getval('$last_printed',LP),
@@ -635,7 +635,7 @@ mpred_pp_db_justification1(Prefix,[J|Js],N):-
 mpred_pp_db_justifications2(_Prefix,[],_,_).
 
 mpred_pp_db_justifications2(Prefix,[C|Rest],JustNo,StepNo):-
-(nb_hasval('$last_printed',C)-> dmsg(chasVal(C)) ;
+(nb_hasval('$last_printed',C)-> dmsg_pretty(chasVal(C)) ;
 (
  (StepNo==1->fmt('~N~n',[]);true),
   sformat(LP,' ~w.~p.~p',[Prefix,JustNo,StepNo]),

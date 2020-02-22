@@ -17,12 +17,12 @@ use_pfc.
 
 :- if(\+ current_prolog_flag(lm_no_autoload,_)).
 :- set_prolog_flag(lm_no_autoload,false).
-:- wdmsg("WARNING: PFC_AUTOLOAD").
+:- wdmsg_pretty("WARNING: PFC_AUTOLOAD").
 :- endif.
 
 :- if(\+ current_prolog_flag(lm_pfc_lean,_)).
 :- set_prolog_flag(lm_pfc_lean,false).
-:- wdmsg("WARNING: PFC_NOT_LEAN").
+:- wdmsg_pretty("WARNING: PFC_NOT_LEAN").
 :- endif.
 
 :- reexport(pfc_lib).     
@@ -36,5 +36,5 @@ use_pfc.
    assert(baseKB:'using_pfc'(M,CM,SM,pfc_toplevel)),
    (M==SM -> 
      (ensure_abox(SM),nop((M:ain(genlMt(SM,baseKB)))));
-     wdmsg(baseKB:'lusing_pfc'(M,CM,SM,pfc_toplevel))).
+     wdmsg_pretty(baseKB:'lusing_pfc'(M,CM,SM,pfc_toplevel))).
 

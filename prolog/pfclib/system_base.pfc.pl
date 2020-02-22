@@ -10,6 +10,8 @@
 %:- use_module(library(rtrace)).
 :- dynamic(prologHybrid/1).
 :- pfc_lib:use_module(library(pfc_lib)).
+:- use_module(library(ctypes)).
+
 :- set_fileAssertMt(baseKB).
 %:- add_import_module(baseKB,pfc_lib,end).
 :- initialization(fix_baseKB_imports,now).
@@ -58,18 +60,20 @@
 
 :- if((current_prolog_flag(runtime_debug,D),D>1)).
 :- endif.
-:- '$def_modules'([clause_expansion/2],O),dmsg('$def_modules'([clause_expansion/2],O)),nl.
+%:- '$def_modules'([clause_expansion/2],O),dmsg_pretty('$def_modules'([clause_expansion/2],O)),nl.
 
 :- sanity(is_pfc_file).
 
 :- dynamic(pfcSanityA/0).
 :- dynamic(pfcSanityB/0).
+
 %:- trace.
-pfcSanityA==>pfcSanityB.
+pfcSanityA ==> pfcSanityB.
 %:- \+ clause(pfcSanityB,true).
 pfcSanityA.
+:- listing(pfcSanityA).
+:- listing(pfcSanityB).
 :- clause(pfcSanityB,true).
-
 % :- kb_shared( ('~') /1).
 :- kb_shared(mtExact/1).
 % :- kb_shared(arity/2).
@@ -140,7 +144,7 @@ pfcSanityA.
 :- kb_shared(do_import_modules/0).
 
 
-((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C),(C==user->dmsg(warn(mtHybrid(C)));true)}).
+((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C),(C==user->dmsg_pretty(warn(mtHybrid(C)));true)}).
 
 predicateTriggerType(kb_local).
 predicateTriggerType(kb_shared).
@@ -154,7 +158,7 @@ predicateTriggerType(kbi_define).
 
 predicateTriggerType(Type) ==>
 (( mpred_prop(M,F,A,Type),genlMt(C,M)/(C\=baseKB)) ==> {
- ( nop(dmsg(C:call(Type,C:F/A))),
+ ( nop(dmsg_pretty(C:call(Type,C:F/A))),
    show_failure(on_x_fail(C:call(Type,C:F/A))))}).
 
 
@@ -164,10 +168,10 @@ predicateTriggerType(Type) ==>
 (genlMt(C,P)/(C\=baseKB)) ==> {doall(((pred_decl_kb_mfa_type(P,F,A,Type)),C:call(Type,C:F/A)))}.
 :- endif.
 
-(genlMt(C,P)/(is_ftNonvar(C),is_ftNonvar(P),P\==baseKB,(mtProlog(C);mtProlog(P))) ==> {P\==user,catch(nop(add_import_module(C,P,end)),error(_,_),dmsg(error(add_import_module(C,P,end))))}).
+(genlMt(C,P)/(is_ftNonvar(C),is_ftNonvar(P),P\==baseKB,(mtProlog(C);mtProlog(P))) ==> {P\==user,catch(nop(add_import_module(C,P,end)),error(_,_),dmsg_pretty(error(add_import_module(C,P,end))))}).
 
-%(do_import_modules,genlMt(C,P),mtHybrid(C),mtProlog(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}.
-%(do_import_modules,genlMt(C,P),mtProlog(C),mtHybrid(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg(error(add_import_module(C,P,end))))}.
+%(do_import_modules,genlMt(C,P),mtHybrid(C),mtProlog(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg_pretty(error(add_import_module(C,P,end))))}.
+%(do_import_modules,genlMt(C,P),mtProlog(C),mtHybrid(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg_pretty(error(add_import_module(C,P,end))))}.
 %((mtHybrid(C),{is_ftNonvar(C)},{ensure_abox(C)}, \+ mtProlog(C)) <==> (genlMt(C,baseKB),{is_ftNonvar(C)}, \+ mtProlog(C))).
 
 %
@@ -357,7 +361,7 @@ genlPreds(prologSideEffects,rtNotForUnboundPredicates).
 :- kb_shared(warningsAbout/2).
 
 ==>prologHybrid(warningsAbout/2,rtArgsVerbatum).
-warningsAbout(Msg,Why)==>{wdmsg(error(warningsAbout(Msg,Why))),break}.
+warningsAbout(Msg,Why)==>{wdmsg_pretty(error(warningsAbout(Msg,Why))),break}.
 
 %% t( ?CALL) is semidet.
 %
@@ -634,8 +638,8 @@ preventedWhen(P,{Cond})/mpred_positive_fact(P)==> ((~P) :- cwc, Cond).
 
 %:- mpred_trace_exec.
 %  can this ever happen?
-% (( \+ P, P) ==> {dumpST,dmsg(warn(weak_conflict(P)))}).
-% TAKEN CARE OF ( (~ P/mpred_positive_fact(P)), P) ==> ({dmsg(warn(conflict(P)))}).
+% (( \+ P, P) ==> {dumpST,dmsg_pretty(warn(weak_conflict(P)))}).
+% TAKEN CARE OF ( (~ P/mpred_positive_fact(P)), P) ==> ({dmsg_pretty(warn(conflict(P)))}).
 % (\+ P, P) => conflict(P).
 
 %% ~( ?VALUE1) is semidet.
