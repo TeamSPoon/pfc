@@ -1041,6 +1041,8 @@ fully_expand_clause(Op, HB, OUT):-
          reduce_clause(Op,(H:-BB),OUT))))).
 
 
+:- thread_local(t_l:into_form_code/0).
+
 %% fully_expand_goal( ?Op, ^ Sent, -- SentO) is det.
 %
 % Fully Expand Goal.
@@ -1048,7 +1050,7 @@ fully_expand_clause(Op, HB, OUT):-
 fully_expand_goal(change(assert,_),Sent,SentO):- var(Sent),!,SentO=call_u(Sent).
 fully_expand_goal(Op,Sent,SentO):- 
  must((
-  locally_tl(into_goal_code,locally_tl(into_form_code,fully_expand_head(Op,Sent,SentM))),
+  locally_tl(into_goal_code,locally(t_l:into_form_code,fully_expand_head(Op,Sent,SentM))),
     recommify(SentM,SentO))).
 
 /*
@@ -1948,7 +1950,7 @@ into_mpred_form_ilc(G,O):- safe_functor(G,F,A),G  univ_safe  [F,P|ARGS],!,into_m
 % Converted To Managed Predicate Form6.
 %
 into_mpred_form6(C,_,_,2,_,C):-!.
-% into_mpred_form6(H,_,_,_,_,G0):- once(locally_tl(into_form_code,(expand_term( (H :- true) , C ), reduce_clause(assert,C,G)))),expanded_different(H,G),!,into_mpred_form(G,G0),!.
+% into_mpred_form6(H,_,_,_,_,G0):- once(locally(t_l:into_form_code,(expand_term( (H :- true) , C ), reduce_clause(assert,C,G)))),expanded_different(H,G),!,into_mpred_form(G,G0),!.
 into_mpred_form6(_,F,_,1,[C],O):-alt_calls(F),!,into_mpred_form(C,O),!.
 into_mpred_form6(_,':-',C,1,_,':-'(O)):-!,into_mpred_form_ilc(C,O).
 into_mpred_form6(_,not,C,1,_,not(O)):-into_mpred_form(C,O),!.

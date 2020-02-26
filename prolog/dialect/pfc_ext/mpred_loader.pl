@@ -255,10 +255,9 @@ mpred_unload_file(File):-
         %with_delayed_chaining(0),
         mpred_loader_module_transparent(?),       
         baseKB:loaded_file_world_time(+, +, +).
-:- multifile((t_l:into_form_code/0, t_l:mpred_module_expansion/1, user:term_expansion/2)).
+:- multifile(( user:term_expansion/2)).
 :- (dynamic   user:term_expansion/2).
 % :- (module_transparent add_from_file/1, add_term/2
- 
 %  begin_pfc/0, call_file_command/4, 
 % call_from_module/2, with_source_module/2, can_be_dynamic/1, cl_assert/2, clear_predicates/1, collect_expansions/3, compile_clause/1,
 %  mpred_term_expansion_by_storage_type/3, convert_side_effect/2, convert_side_effect/3, convert_side_effect_0a/2, convert_side_effect_0b/2, convert_side_effect_0c/2, 
@@ -271,7 +270,9 @@ mpred_unload_file(File):-
             mpred_ops/0.
             %setup_module_ops/1.
 
-:- (thread_local t_l:into_form_code/0, t_l:mpred_module_expansion/1).
+:- thread_local(t_l:into_form_code/0).
+:- thread_local(t_l:mpred_module_expansion/1).
+
 %:- (volatile t_l:into_form_code/0, t_l:mpred_module_expansion/1).
 %:-  /**/ export((convert_side_effect_0a/2, convert_side_effect_0b/2, convert_side_effect_0c/2, guess_if_mpred_file0/1, expand_term_to_load_calls/2, load_file_term_to_command_1/3, load_file_term_to_command_1b/3, mpred_term_expansion_by_pred_class/3, mpred_process_input_1/1, must_expand_term_to_command/2, pl_to_mpred_syntax0/2, process_this_script0/1, prolog_load_file_loop_checked_0/2, prolog_load_file_nlc_0/2, transform_opers_0/2, transform_opers_1/2, xfile_module_term_expansion_pass_3/7)).
 %:- dynamic((registered_module_type/2, current_op_alias/2, baseKB:mpred_skipped_module/1, prolog_load_file_loop_checked/2, lmcache:mpred_directive_value/3, defaultAssertMt/1, baseKB:loaded_file_world_time/3, baseKB:never_reload_file/1, always_expand_on_thread/1, t_l:current_lang/1, current_op_alias/2, defaultAssertMt/1, baseKB:loaded_file_world_time/3, mpred_directive_value/3, baseKB:mpred_skipped_module/1, never_reload_file/1, prolog_load_file_loop_checked/2, registered_module_type/2,  user:prolog_load_file/2, user:term_expansion/2)).
