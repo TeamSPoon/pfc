@@ -447,7 +447,7 @@ in_dialect_pfc:- is_pfc_file. % \+ current_prolog_flag(dialect_pfc,cwc),!.
 is_pfc_module(SM):- clause_b(mtHybrid(SM)).
 
 
-
+:- pfc_lib:export(pfc_lib:is_pfc_file/0).
 is_pfc_file:- current_prolog_flag(expect_pfc_file,always),!,must_or_rtrace(is_pfc_file0).
 is_pfc_file:- current_prolog_flag(expect_pfc_file,never),!,must_or_rtrace(\+ is_pfc_file0).
 is_pfc_file:- quietly(is_pfc_file0),!.
@@ -455,6 +455,7 @@ is_pfc_file:- quietly(is_pfc_file0),!.
 :- system:import(pfc_lib:is_pfc_file/0).
 %:- header_sane:import(is_pfc_file/0).
 
+:- pfc_lib:export(pfc_lib:is_pfc_file0/0).
 is_pfc_file0:- (prolog_load_context(file,File);source_location(File,_W)),!,prolog_load_context(source, SFile)-> 
  is_pfc_filename(File,SFile).
 is_pfc_file0:- notrace(current_source_file(FileL)),(FileL=File:_->is_pfc_file(File)).
