@@ -112,19 +112,24 @@ user:term_expansion/2,user:goal_expansion/2,system:term_expansion/2,system:goal_
 :- thread_local(t_l:in_dynamic_reader/1).
 :- thread_local(t_l:in_prolog_source_code/0).
 :- thread_local(t_l:infAssertedOnly/1).
+:- thread_local(t_l:infForward).
 :- thread_local(t_l:infInstanceOnly/1).
 :- thread_local(t_l:infMustArgIsa/0).
 :- thread_local(t_l:infSecondOrder/0).
 :- thread_local(t_l:infSkipArgIsa/0).
 :- thread_local(t_l:infSkipFullExpand/0).
+:- thread_local(t_l:infSupertypeName/0).
 :- thread_local(t_l:infThirdOrder/0).
 :- thread_local(t_l:into_form_code/0).
 :- thread_local(t_l:inVoProp/0).
 :- thread_local(t_l:is_calling/0).
-:- thread_local(t_l:mpred_loads_file/0).
+:- thread_local(t_l:loading_mpred_file/2).
 :- thread_local(t_l:mpred_ain_loaded/0).
+:- thread_local(t_l:mpred_loads_file/0).
 :- thread_local(t_l:mpred_opcall/2).
+:- thread_local(t_l:mpred_run_paused/0).
 :- thread_local(t_l:no_arg_type_error_checking/0).
+:- thread_local(t_l:no_kif_var_coroutines/1).
 :- thread_local(t_l:noDBaseHOOKS/1).
 :- thread_local(t_l:noDBaseMODs/1).
 :- thread_local(t_l:noRandomValues/1).
@@ -138,12 +143,6 @@ user:term_expansion/2,user:goal_expansion/2,system:term_expansion/2,system:goal_
 :- thread_local(t_l:usePlTalk/0).
 :- thread_local(t_l:verify_side_effect_buffer/0).
 :- thread_local(t_l:with_callMPred/1).
-:- thread_local(t_l:infForward).
-:- thread_local(t_l:into_form_code/0).
-:- thread_local(t_l:infSupertypeName/0).
-:- thread_local(t_l:loading_mpred_file/2).
-:- thread_local(t_l:mpred_run_paused/0).
-:- thread_local(t_l:no_kif_var_coroutines/1).
 
 end_of_file.
 
