@@ -2003,7 +2003,7 @@ mpred_withdraw(P,S) :-
 mpred_withdraw_fail_if_supported(mfl4(_VarNameZ,_,_,_),_):-!.
 mpred_withdraw_fail_if_supported(P,S):-
   maybe_user_support(P,S,SS),
-  (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S),dmsg_pretty(found(mpred_rem_support1(P,S))))
+  (((lookup_spft(P,F,T), S= (F,T), mpred_rem_support(P,S), nop(dmsg_pretty(found(mpred_rem_support1(P,S)))))
      -> (remove_if_unsupported(P),retractall(t_l:busy(_)))
       ; ((mpred_withdraw_fail_if_supported_maybe_warn(SS,P),
             \+ show_still_supported(P))))).
@@ -2994,7 +2994,8 @@ mpred_nf1(P,[P]):- is_ftVar(P), !.
 % these next two rules are here for upward compatibility and will go
 % away eventually when the P/Condition form is no longer used anywhere.
 
-mpred_nf1(P/Cond,[(\+P)/Cond]):- mpred_negated_literal(P), !, dmsg_pretty(warn(mpred_nf1(P/Cond,[(\+P)/Cond]))).
+mpred_nf1(P/Cond,[(\+P)/Cond]):- mpred_negated_literal(P), !, 
+  nop(dmsg_pretty(warn(mpred_nf1(P/Cond,[(\+P)/Cond])))).
 
 mpred_nf1(P/Cond,[P/Cond]):- var(P),!.
 mpred_nf1(P/Cond,[P/Cond]):- ((mpred_db_type(P,trigger(_));mpred_literal_nonvar(P))), !.
