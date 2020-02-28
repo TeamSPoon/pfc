@@ -460,7 +460,7 @@ setup_mpred_ops:-
 % :- current_thread_pool(ain_pool)->true;thread_pool_create(ain_pool,20,[]).
 :- multifile thread_pool:create_pool/1.
 thread_pool:create_pool(ain_pool) :-
-    thread_pool_create(ain_pool, 30, [detached(true)] ).
+    thread_pool_create(ain_pool, 50, [detached(true)] ).
 
 :- use_module(library(thread_pool)).
 
@@ -480,7 +480,7 @@ call_in_thread(TN,M,G):- current_why(Why), thread_create_in_pool(ain_pool,call_i
 
 call_in_thread_code(M,G,Why,TN):- 
  with_only_current_why(Why,
-   catch(( M:G-> nop(dmsg_pretty(suceeded(exit,TN)));dmsg_pretty(failed(exit,TN))),E,dmsg_pretty(error(exit,TN,G-->E)))).
+   catch(( M:G-> nop(dmsg_pretty(suceeded(exit,TN)));dmsg_pretty(failed(exit,TN))),E,dmsg_pretty(error(E-->TN)))).
        
 % why_dmsg(Why,Msg):- with_current_why(Why,dmsg_pretty(Msg)).
 
@@ -1718,11 +1718,25 @@ is_fwc_mode(breadth).
 is_fwc_mode(next).
 is_fwc_mode(last).
 
+/*
 mpred_enqueue_thread(S,P):- 
       with_only_current_why(S,
         call_in_thread(
            with_fc_mode(direct, % maybe keep `thread` mode?
                loop_check_term(mpred_fwc(P),mpred_enqueueing(P),true)))).
+
+*/
+
+mpred_enqueue_thread(S,P):- 
+      with_only_current_why(S,
+        call_in_thread(fwc_wlc(P))).
+
+fwc_wlc(P):- in_fc_call(loop_check_term(mpred_fwc(P),mpred_enqueueing(P),true)).
+
+% maybe keep `thread` mode?
+in_fc_call(Goal):- with_fc_mode( thread, Goal).
+% in_fc_call(Goal):- with_fc_mode( direct, Goal).
+% in_fc_call(Goal):- !, call(Goal).
 
 %% mpred_remove_old_version( :TermIdentifier) is semidet.
 %
@@ -3885,6 +3899,7 @@ mpred_trace_maybe_break(Add,P0,_ZS):-
 
 
 
+pfc_hide(P):-call(P).
 
 mpred_trace:- mpred_trace(_).
 
