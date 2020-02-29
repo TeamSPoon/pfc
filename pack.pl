@@ -1,6 +1,6 @@
 name(pfc).
 title('Pfc -- a package for forward chaining in Prolog').
-version('1.3.111').
+version('1.4.111').
 download('https://github.com/TeamSPoon/pfc/releases/*.zip').
 author( 'Douglas R. Miles', 'logicmoo@gmail.com' ).
 packager( 'TeamSPoon/LogicMoo', 'https://github.com/TeamSPoon/' ).
