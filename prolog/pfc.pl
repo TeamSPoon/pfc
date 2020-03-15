@@ -4,14 +4,13 @@
 % Douglas Miles
 
 */
-:- throw(include(pfc)).
-
 :- if(( current_prolog_flag(xref,true) ;
    ('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'wusing_pfc'(M,CM,SM,pfc_mod))))).
 :- endif.
 
 :- if((prolog_load_context(source,File),prolog_load_context(file,File))).
 :- module(pfc_mod,[use_pfc_mod/0]).
+:- throw(include(pfc)).
 :- abolish(use_pfc_mod/0).
 :- prolog_load_context(file,File),nop(unload_file(File)).
 :- asserta(use_pfc_mod).

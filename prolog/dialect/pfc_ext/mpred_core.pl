@@ -459,9 +459,11 @@ setup_mpred_ops:-
 % :- mpred_ain_in_thread.
 % :- current_thread_pool(ain_pool)->true;thread_pool_create(ain_pool,20,[]).
 :- multifile thread_pool:create_pool/1.
+:- dynamic thread_pool:create_pool/1.
 thread_pool:create_pool(ain_pool) :-
     thread_pool_create(ain_pool, 50, [detached(true)] ).
 
+:- use_module(library(http/thread_httpd)).
 :- use_module(library(thread_pool)).
 
 is_ain_pool_empty:- thread_pool_property(ain_pool,running(N)),!,N==0.
