@@ -1173,7 +1173,7 @@ mpred_ain_now4(SM0,AM0,PIn,S):- SM0==AM0, is_code_module(AM0),!,
   get_assert_to(AM),get_query_from(SM),!,mpred_ain_now4(SM,AM,PIn,S).
   
 mpred_ain_now4(SM,AM,PIn,S):- % module_sanity_check(SM),
-  module_sanity_check(AM),
+  nop(module_sanity_check(AM)),
   call_from_module(AM, 
     with_source_module(SM,
       locally_tl(current_defaultAssertMt(AM), SM:mpred_ain_now(PIn,S)))).

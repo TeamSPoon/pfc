@@ -2235,7 +2235,8 @@ fix_syntax(P:-B,PP:-B):-!, fix_syntax(P,PP).
 % fix_syntax(I,O):- compound(I),linearize_headvar_dupes(I,PL,Cond)->Cond\==true,!,O= enabledWhen(PL,{Cond}).
 fix_syntax(P,P).
 
-
+sub_compound_of(I,Of):- compound(I),compound(Of),compound_name_arity(I,IN,IA),compound_name_arity(Of,ON,OA),
+   (IA\==OA ; IN\==ON),!,fail.  
 sub_compound_of(I,Of):- \+ \+ (numbervars(I,99,_,[attvar(bind)]),I=Of ), I = Of.
 
 fixed_negations(I,O):- compound(I), with_some_vars_locked(I,fix_negations(I,O))->I\=@=O.
