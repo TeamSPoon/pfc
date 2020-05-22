@@ -10,9 +10,9 @@
 
 :- if((prolog_load_context(source,File),prolog_load_context(file,File))).
 :- module(pfc_mod,[use_pfc_mod/0]).
-:- throw(include(pfc)).
+%:- throw(include(pfc)).
 :- abolish(use_pfc_mod/0).
-:- prolog_load_context(file,File),nop(unload_file(File)).
+:- prolog_load_context(file,File),unload_file(File).
 :- asserta(use_pfc_mod).
 :- endif.
 

@@ -71,8 +71,8 @@
 pfcSanityA ==> pfcSanityB.
 %:- \+ clause(pfcSanityB,true).
 pfcSanityA.
-:- listing(pfcSanityA).
-:- listing(pfcSanityB).
+%:- listing(pfcSanityA).
+%:- listing(pfcSanityB).
 :- clause(pfcSanityB,true).
 % :- kb_shared( ('~') /1).
 :- kb_shared(mtExact/1).
