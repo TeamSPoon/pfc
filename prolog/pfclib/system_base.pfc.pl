@@ -182,6 +182,7 @@ predicateTriggerType(Type) ==>
 predicateConventionMt(genlMt,baseKB).
 predicateConventionMt(mtHybrid,baseKB).
 predicateConventionMt(mtProlog,baseKB).
+
 % predicateConventionMt(mtNonAssertable,baseKB).
 (predicateConventionMt(F,MT),arity(F,A))==>{kb_global(MT:F/A)}.
 

@@ -50,14 +50,14 @@ singleValuedInArg(singleValuedInArgDefault,3).
 
 (singleValuedInArg(F, N),arity(F,A)) ==> singleValuedInArgAX(F,A,N).
 
-
+%:- rtrace.
 ((singleValuedInArgAX(F,A,N), 
    {functor(P,F,A),arg(N,P,P_SLOT),replace_arg(P,N,Q_SLOT,Q)})
        ==> 
   ((( P,{P_SLOT\=isMissing, 
         call(dif:dif(Q_SLOT,P_SLOT)),call_u(Q),ground(Q)},Q)
         ==> (\+ Q, P)))).
-
+%:- notrace,break.
 
 unused ==> 
 ((singleValuedInArgAX(F,A,N), 
