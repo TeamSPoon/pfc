@@ -32,5 +32,12 @@ a.
 % @TODO - fails here bc must_clause_asserted/1 needs love
 :- must_clause_asserted(a).
 
+:- mpred_reset.
+
+% @TODO decide if a/0 should become undefined ?
+:- sanity(\+ predicate_property(a,number_of_clauses(_))).
+%  Or is it should jsut delete the clauses ?
+% :- sanity(predicate_property(a,number_of_clauses(0))).
+
 
 
