@@ -34,6 +34,6 @@
 :- set_prolog_flag(retry_undefined, kb_shared).
 :- set_prolog_flag(pfc_ready, true).
 
-:- endif.
+%:- endif.
 %:- statistics.
 

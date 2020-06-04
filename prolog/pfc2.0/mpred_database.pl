@@ -871,6 +871,10 @@ bwc:-true.
 %
 wac:-true.
 
+awc:-true.
+zwc:-true.
+
+
 %% is_fc_body( +P) is semidet.
 %
 % If Is A Forward Chaining Body.

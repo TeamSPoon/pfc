@@ -24,12 +24,12 @@
 
 :- if(\+ current_prolog_flag(lm_no_autoload,_)).
 :- set_prolog_flag(lm_no_autoload,true).
-:- print_message(informational,"WARNING: PFC_NOAUTOLOAD").
+%:- print_message(informational,"WARNING: PFC_NOAUTOLOAD").
 :- endif.
 
 :- if(\+ current_prolog_flag(lm_pfc_lean,_)).
 :- set_prolog_flag(lm_pfc_lean,false).
-:- print_message(informational,"WARNING: NOT PFC_LEAN").
+%:- print_message(informational,"WARNING: NOT PFC_LEAN").
 :- endif.
 
 :- endif.
@@ -167,6 +167,7 @@ kb_global_base(FA):- kb_local(baseKB:FA).
 
 :- use_module(library(prolog_pack)).
 
+pfc_rescan_autoload_pack_packages_part_1:-!.
 pfc_rescan_autoload_pack_packages_part_1:- dmsg_pretty("SCAN AUTOLOADING PACKAGES..."),
  forall('$pack':pack(Pack, _),
   forall(((pack_property(Pack, directory(PackDir)),prolog_pack:pack_info_term(PackDir,autoload(true)))),
@@ -191,6 +192,7 @@ maybe_index_autoload_dir(PackDir):- fail,
   dmsg_pretty(post_install_autoload(PackDir,write)).  
 maybe_index_autoload_dir(PackDir):- asserta(user:library_directory(PackDir)), make_library_index(PackDir, ['*.pl']), dmsg_pretty(created_library_index_for(PackDir)).
 
+pfc_rescan_autoload_pack_packages_part_2 :- !.
 pfc_rescan_autoload_pack_packages_part_2 :- pack_autoload_packages(true).
 
 :- current_prolog_flag(lm_no_autoload,true) -> true; pfc_rescan_autoload_pack_packages_part_2.
