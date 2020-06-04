@@ -5,9 +5,13 @@
 
 :- include(test_header).
 :- set_file_abox_module(user).
+:- module(user).
+:- '$set_typein_module'(user).
+:- '$set_source_module'(user).
 :- file_begin(pfc).
 
-% :- rtrace(ain(((tType(COL)==>{kb_local(COL/2)},(t(COL,ext,X)<==>iza(X,COL)))))).
+%:- rtrace(ain(((tType(COL)==>{kb_local(COL/2)},(t(COL,ext,X)<==>iza(X,COL)))))).
+%:- break.
 
 (tType(COL)==>
  ({kb_local(COL/2)},

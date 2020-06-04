@@ -52,7 +52,7 @@ mpred_info(O):-
   dmsg_pretty("======================================================================="),
   quietly(call_with_inference_limit(ignore(on_xf_cont(deterministically_must(mpred_why_1(O)))),4000,_)),
   dmsg_pretty("======================================================================="),
-  maplist(mp_printAll(O),
+  must_maplist(mp_printAll(O),
   [   mpred_db_type(O,v),  
       +(mpred_child(O,v)),
       % mpred_fact(O),
