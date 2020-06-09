@@ -3,6 +3,14 @@
 
 :- if((prolog_load_context(source,File),prolog_load_context(file,File))).
 :- module(pfc_lib,[]).
+/*
+:- use_module(library(random)).
+:- use_module(library(error)).
+:- use_module(library(occurs)).
+:- use_module(library(threadutil)).
+:- use_module(library(edit)).
+:- autoload_all.
+*/
 :- endif.
 
 % :- set_prolog_flag(pfc_version,2.2).

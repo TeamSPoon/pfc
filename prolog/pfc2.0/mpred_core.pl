@@ -114,7 +114,7 @@
   mpred_database_item/1,
   % mpred_database_term/3,
   mpred_db_type/2,mpred_set_default/2,mpred_define_bc_rule/3,mpred_descendant/2,
-  mpred_descendants/2,mpred_enqueue/2,mpred_error/1,mpred_error/2,mpred_eval_lhs/2,mpred_eval_lhs_0/2,mpred_eval_rhs/2,mpred_fact/1,
+  mpred_descendants/2,mpred_enqueue/2,mpred_error/1,mpred_error/2,mpred_eval_lhs/2,mpred_eval_lhs_1/2,mpred_eval_rhs/2,mpred_fact/1,
   mpred_fact/2,mpred_facts/1,mpred_facts/2,mpred_facts/3,mpred_fwc/1,mpred_get_support/2,lookup_u/1,lookup_u/2,
   mpred_literal/1,mpred_load/1,mpred_make_supports/1,mpred_ain_object/1,mpred_aina/2,mpred_ainz/2,mpred_aina/1,mpred_ainz/1,
   mpred_negated_literal/1,mpred_unnegate/2,mpred_nf/2,mpred_nf1_negation/2,mpred_nf_negation/2,mpred_nf_negations/2,mpred_notrace/0,mpred_nowatch/0,
@@ -796,22 +796,24 @@ attvar_op_fully(What,MH):- !, attvar_op(What,MH).
 
 throw_depricated:- trace_or_throw_ex(throw_depricated).
 
+do_db_checks:- fail.
+
 assert_u(MH):- assert_u_no_dep(MH).
 
-assert_u_no_dep(X):- check_never_assert(X),fail.
+assert_u_no_dep(X):- do_db_checks, check_never_assert(X),fail.
 assert_u_no_dep(MH):- fix_mp(change(assert,assert_u),MH,MHA),
     attvar_op_fully(db_op_call(assert,assert_i), MHA),expire_tabled_list(MHA).
 
-asserta_u(X):-  check_never_assert(X),fail.
+asserta_u(X):-  do_db_checks, check_never_assert(X),fail.
 asserta_u(MH):- fix_mp(change(assert,asserta_u),MH,MHA),attvar_op_fully(db_op_call(asserta,asserta_i),MHA).
 
-assertz_u(X):- check_never_assert(X),fail.
+assertz_u(X):- do_db_checks, check_never_assert(X),fail.
 assertz_u(MH):- fix_mp(change(assert,assertz_u),MH,MHA),attvar_op_fully(db_op_call(asserta,assertz_i),MHA).
 
 % retract_u((H:-B)):- !, show_failure(retract((H:-B))).
 retract_u(H):- retract_u0(H) *-> true; ((fail,attvar_op_fully(db_op_call(retract,retract_u0),H))).
 
-retract_u0(X):- check_never_retract(X),fail.
+retract_u0(X):- do_db_checks, check_never_retract(X),fail.
 retract_u0(H0):- strip_module(H0,_,H),(H = ( \+ _ )),!,trace_or_throw_ex(mpred_warn(retract_u(H0))),expire_tabled_list(H).
 retract_u0(M:(H:-B)):- atom(M),!, M:clause_u(H,B,R),erase(R),expire_tabled_list(H).
 retract_u0(M:(H)):- atom(M),!, M:clause_u(H,true,R),erase(R),expire_tabled_list(H).
@@ -820,10 +822,10 @@ retract_u0(H):- clause_u(H,true,R),erase(R),expire_tabled_list(H).
 
 :- lmcache:import(retract_u0/1).
 
-retractall_u(X):- check_never_retract(X),fail.
+retractall_u(X):- do_db_checks, check_never_retract(X),fail.
 retractall_u(H):- attvar_op_fully(db_op_call(retractall,retractall_u0),H).
 
-retractall_u0(X):- check_never_retract(X),fail.
+retractall_u0(X):- do_db_checks, check_never_retract(X),fail.
 retractall_u0(H):- forall(clause_u(H,_,R),erase(R)),expire_tabled_list(H).
 
 
@@ -1239,9 +1241,9 @@ remove_negative_version(P):-
   once((get_why_uu(S),!,
   must_ex(mpred_ain(\+ (~(P)), S)))))),!.
 
-fwc1s_post1s(0,0):-!.
-/*
+%fwc1s_post1s(0,0):-!.
 fwc1s_post1s(1,2):-!.
+/*
 fwc1s_post1s(3,0):-!.
 fwc1s_post1s(3,0):-!.
 %fwc1s_post1s(1,2):- flag_call(unsafe_speedups == false) ,!.
@@ -1354,13 +1356,13 @@ mpred_post12_negated( P,   S) :- mpred_get_support(P,S2),
     color_line(magenta,1),color_line(green,1),color_line(yellow,1),
     mpred_trace_op(blast,P),
     mpred_why_1(P),
-    show_call(mpred_unfwc(P)),
-    show_call(mpred_post13(~P,S)),!.
+    must(mpred_unfwc(P)),
+    must(mpred_post13(~P,S)),!.
 
 
 
 
-mpred_post12(P, _):- (must_be(nonvar,P)),P==true,!.
+mpred_post12(P, _):- must_be(nonvar,P),P==true,!.
 % mpred_post12(P, S):- quietly_ex((is_ftOpenSentence(P)->wdmsg_pretty((warn((var_mpred_post1(P, S))))))),fail.
 mpred_post12( \+  P,   S):- mpred_post12_withdraw( P,   S),!.
 mpred_post12(  ~  P,   S):- mpred_post12_negated( P,   S),!.
@@ -1778,7 +1780,7 @@ mpred_run:- retractall(t_l:busy(_)).
 % mpred_step removes one entry from the queue and reasons from it.
 
 :-thread_local(t_l:busy/1).
-:-thread_local(t_l:busy_r/1).
+:-thread_local(t_l:busy_s/1).
 
 mpred_step:-
   % if hs/1 is true, reset it and fail, thereby stopping inferencing. (hs=halt_signal)
@@ -1847,32 +1849,32 @@ stop_trace(Info):- dtrace(dmsg_pretty(Info)).
 %
 %  Assert New Trigger and Propigate
 %
-mpred_ain_trigger_reprop(pt(Trigger,Body),Support):- !,
-  mpred_mark_as(Support,Trigger,pfcPosTrigger),
-  mpred_trace_msg('~N~n\tAdding positive~n\t\ttrigger: ~p~n\t\tbody: ~p~n\t Support: ~p~n',[Trigger,Body,Support]),
-  sanity(\+ string(Support)),sanity(\+ string(Trigger)),sanity(\+ string(Body)),
+mpred_ain_trigger_reprop(PT,Support):- PT = pt(Trigger,Body), !,
+   mpred_trace_msg('~N~n\tAdding positive~n\t\ttrigger: ~p~n\t\tbody: ~p~n\t Support: ~p~n',[Trigger,Body,Support]),!,
+   sanity(\+ string(Support)),sanity(\+ string(Trigger)),sanity(\+ string(Body)),
+   must(mpred_mark_as(Support,Trigger,pfcPosTrigger)),
+ must(((  
   %  (debugging(logicmoo(_))->dtrace;true),
-  PT = pt(Trigger,Body),
+  
   mpred_assert_w_support(PT,Support),
   copy_term(PT,Tcopy),!,
-  call_u_no_bc(Trigger),
-  mpred_eval_lhs(Body,(Trigger,Tcopy)),
-  fail.
+  forall(call_u_no_bc(Trigger), 
+   forall(mpred_eval_lhs(Body,(Trigger,Tcopy)),true))))),!.
+  
 
 
-mpred_ain_trigger_reprop(nt(Trigger,Test,Body),Support):-
-  copy_term_vn(Trigger,TriggerCopy),
-  NT = nt(TriggerCopy,Test,Body),!,
+mpred_ain_trigger_reprop(nt(Trigger,Test,Body),Support):- NT = nt(TriggerCopy,Test,Body),!,
+  copy_term_vn(Trigger,TriggerCopy),  
   mpred_mark_as(Support,Trigger,pfcNegTrigger),
   mpred_trace_msg('~N~n\tAdding negative~n\t\ttrigger: ~p~n\t\ttest: ~p~n\t\tbody: ~p~n\t Support: ~p~n',[Trigger,Test,Body,Support]),
   mpred_assert_w_support(NT,Support),
   %stop_trace(mpred_assert_w_support(NT,Support)),
   !,
-  \+ call_u_no_bc(Test),
-  mpred_eval_lhs(Body,((\+Trigger),NT)).
+  ignore((\+ call_u_no_bc(Test),
+  mpred_eval_lhs(Body,((\+Trigger),NT)))).
 
-mpred_ain_trigger_reprop(BT,Support):-
-  BT = bt(Trigger,Body),!,
+mpred_ain_trigger_reprop(BT,Support):- BT = bt(Trigger,Body),!,
+
   % UNEEDED Due to a trigger that creates it?
   % get_bc_clause(Trigger,Post),mpred_post1(Post),
   mpred_mark_as(Support,Trigger,pfcBcTrigger),
@@ -2331,17 +2333,18 @@ mpred_fwc1(mpred_unload_option(_,_)):-!.
 mpred_fwc1(Prop):-'$current_source_module'(Sm),mpred_m_fwc1(Sm,Prop).
 
 
-:-thread_local(t_l:busy_r/1).
+:-thread_local(t_l:busy_f/1).
 :-thread_local(t_l:busy_s/1).
 
-mpred_m_fwc1(Sm,Prop):- fixed_syntax(Prop,After),!,mpred_m_fwc1(Sm,After).
+mpred_m_fwc1(Sm,Prop):- fixed_syntax(Prop,After),!,must(Prop\=@=After),mpred_m_fwc1(Sm,After).
 mpred_m_fwc1(Sm,Prop):- clause_asserted(t_l:busy_s(Prop)),dmsg_pretty(Sm:warn(busy_mpred_m_fwc1(Prop))),!.
-mpred_m_fwc1(Sm,Prop):- clause_asserted(t_l:busy_f(Prop)),!,
+mpred_m_fwc1(Sm,Prop):- clause_asserted(t_l:busy_f(Prop)),dmsg_pretty(Sm:warn(busy_mpred_m_fwc1_f(Prop))),!.
+mpred_m_fwc1(Sm,Prop):- % clause_asserted(t_l:busy_f(Prop)),!,
    setup_call_cleanup(
      asserta(t_l:busy_s(Prop),R),
      ignore(mpred_m_fwc2(Sm,Prop)),
      ignore(catch(erase(R),_,fail))).
-mpred_m_fwc1(Sm,Prop):- mpred_m_fwc2(Sm,Prop).
+% mpred_m_fwc1(Sm,Prop):- mpred_m_fwc2(Sm,Prop).
 
 mpred_m_fwc2(Sm,Prop):-   
   mpred_trace_msg(Sm:mpred_fwc1(Prop)),
@@ -2435,13 +2438,13 @@ mpred_do_clause0(Var, B):- is_ftVar(Var),!,trace_or_throw(var_mpred_do_clause0(V
 mpred_do_clause0((=>(_,_)),_):-!.
 mpred_do_clause0((==>(_,_)),_):-!.
 mpred_do_clause0(H,B):-
-  % F = {clause(H,B)},
-  F = (H :- B),  B\=(cwc,_),!,
-  copy_term(F,Fact),
+  % Fact = {clause(H,B)},
+  Fact = (H :- B),  B\=(cwc,_),!,
+  copy_term(Fact,Copy),
   % check positive triggers
-  loop_check(mpred_do_fcpt(Fact,F),true), % dmsg_pretty(trace_or_throw_ex(mpred_do_clause(Fact)))),
+  loop_check(mpred_do_fcpt(Copy,Fact),true), % dmsg_pretty(trace_or_throw_ex(mpred_do_clause(Copy)))),
   % check negative triggers
-  mpred_do_fcnt(Fact,F),
+  mpred_do_fcnt(Copy,Fact),
   mpred_do_hb_catchup(H,B).
 
 
@@ -2454,12 +2457,12 @@ mpred_do_fact(Fact):-
   mpred_do_clause(H,B),!.
 
 mpred_do_fact(Fact):-
-  copy_term_vn(Fact,F),
+  copy_term_vn(Fact,Copy),
   % check positive triggers
-  loop_check(mpred_do_fcpt(Fact,F),true), % dmsg_pretty(trace_or_throw_ex(mpred_do_rule(Fact)))),
+  loop_check(mpred_do_fcpt(Copy,Fact),true), % dmsg_pretty(trace_or_throw_ex(mpred_do_rule(Copy)))),
   % check negative triggers
-  mpred_do_fcnt(Fact,F),
-  nop(mpred_do_clause(F,true)).
+  mpred_do_fcnt(Copy,Fact),
+  nop(mpred_do_clause(Fact,true)).
 
 lookup_spft_match(A,B,C):- copy_term(A,AA),lookup_spft(A,B,C),A=@=AA.
 
@@ -2491,28 +2494,27 @@ get_tms_mode(_P,Mode):- Mode=local.
 
 
 % do all positive triggers
-mpred_do_fcpt(mpred_prop(swish_help, index_json, 2, kb_shared),_):- break.
-mpred_do_fcpt(Fact,F):-
-  call_u(pt(F,Body)),
+mpred_do_fcpt(mpred_prop(swish_help, index_json, 2, kb_shared),_):- dumpST, break.
+mpred_do_fcpt(Copy,Trigger):-
+  forall((call_u(pt(Trigger,Body)),
   mpred_trace_msg('~N~n\tFound positive trigger: ~p~n\t\tbody: ~p~n',
-		[F,Body]),
-  mpred_eval_lhs(Body,(Fact,pt(F,Body))),
-  fail.
-
-%mpred_do_fcpt(Fact,F):-
+		[Trigger,Body])),
+    forall(mpred_eval_lhs_no_nc(Body,(Copy,pt(Trigger,Body))),
+     true)),!.
+  
+%mpred_do_fcpt(Trigger,F):-
 %  lookup_u(pt(presently(F),Body)),
 %  mpred_e val_lhs(Body,(presently(Fact),pt(presently(F),Body))),
 %  fail.
-
-mpred_do_fcpt(_,_).
+% mpred_do_fcpt(_,_).
 
 % do all negative triggers
-mpred_do_fcnt(_ZFact,F):-
-  NT = nt(F,Condition,Body),
+mpred_do_fcnt(_ZFact,Trigger):-
+  NT = nt(Trigger,Condition,Body),
   (call_u(NT)*-> lookup_spft(X,F1,NT) ; lookup_spft(X,F1,NT)),
   %clause(SPFT,true),
   mpred_trace_msg('~N~n\tFound negative trigger: ~p~n\t\tcond: ~p~n\t\tbody: ~p~n\tSupport: ~p~n',
-                 [F,Condition,Body,spft(X,F1,NT)]),  
+                 [Trigger,Condition,Body,spft(X,F1,NT)]),  
   call_u_no_bc(Condition),
   mpred_withdraw(X,(F2,NT)),
   sanity(F1=F2),
@@ -2555,7 +2557,7 @@ get_bc_clause(Head, Head, Body):-  % % :- is_ftNonvar(Head).
 :- thread_initialization(nb_setval('$pfc_current_choice',[])).
 
 push_current_choice:- current_prolog_flag(pfc_support_cut,false),!.
-push_current_choice:- prolog_current_choice(CP),push_current_choice(CP).
+push_current_choice:- prolog_current_choice(CP),push_current_choice(CP),!.
 push_current_choice(CP):- nb_current('$pfc_current_choice',Was)->b_setval('$pfc_current_choice',[CP|Was]);b_setval('$pfc_current_choice',[CP]).
 
 cut_c:- current_prolog_flag(pfc_support_cut,false),!.
@@ -2565,35 +2567,46 @@ cut_c:- must_ex(nb_current('$pfc_current_choice',[CP|_WAS])),prolog_cut_to(CP).
 %
 %  eval something on the LHS of a rule.
 %
+
+
 mpred_eval_lhs(X,S):-
    push_current_choice,
+   Loop = _,
    with_current_why(S,
-     loop_check(mpred_eval_lhs_0(X,S),fail)).
+     loop_check(mpred_eval_lhs_0(X,S),Loop=true)),
+   (nonvar(Loop)-> (fail,dumpST,break) ; true).
+
+mpred_eval_lhs_no_nc(X,S):- mpred_eval_lhs_0(X,S).
 
 
 %% mpred_eval_lhs_0(X,Support) is det.
 %
 %  Helper of evaling something on the LHS of a rule.
 %
-mpred_eval_lhs_0(Var,Support):- var(Var),!,trace_or_throw_ex(var_mpred_eval_lhs_0(Var,Support)).
-mpred_eval_lhs_0((Test *-> Body),Support):-  % Noncutted ->
-  !,
-  call_u_no_bc(Test),
-   mpred_eval_lhs_0(Body,Support).
+mpred_eval_lhs_0(rhs(X),Support):- !, mpred_eval_rhs(X,Support).
+mpred_eval_lhs_0(X,Support):- mpred_eval_lhs_1(X,Support).
 
-mpred_eval_lhs_0((Test -> Body),Support):- !,  % cutted ->
+
+%% mpred_eval_lhs_1(X,Support) is det.
+%
+%  Helper Secondary of evaling something on the LHS of a rule.
+%
+mpred_eval_lhs_1(Var,Support):- var(Var),!,trace_or_throw_ex(var_mpred_eval_lhs_0(Var,Support)).
+mpred_eval_lhs_1((Test *-> Body),Support):-  % Noncutted *->
+  !,
+  (call_u_no_bc(Test) *-> mpred_eval_lhs_0(Body,Support)).
+
+mpred_eval_lhs_1((Test -> Body),Support):- !,  % cutted ->
   call_u_no_bc(Test) -> mpred_eval_lhs_0(Body,Support).
 
-mpred_eval_lhs_0(rhs(X),Support):- !,
-   mpred_eval_rhs(X,Support).
 
-%mpred_eval_lhs_0(snip(X),Support):-
+%mpred_eval_lhs_1(snip(X),Support):-
 %  snip(Support),
-%  mpred_eval_lhs_0(X,Support).
+%  mpred_eval_lhs_1(X,Support).
 
-mpred_eval_lhs_0(X,Support):- mpred_db_type(X,trigger(_TT)), !, mpred_ain_trigger_reprop(X,Support).
+mpred_eval_lhs_1(X,Support):- mpred_db_type(X,trigger(_TT)),!,must(mpred_ain_trigger_reprop(X,Support)),!.
 
-mpred_eval_lhs_0(X,_):- mpred_warn("Unrecognized item found in trigger body, namely ~p.",[X]).
+mpred_eval_lhs_1(X,_):- mpred_warn("Unrecognized item found in trigger body, namely ~p.",[X]).
 
 
 args_swapped(~P1,~P2):-!,args_swapped(P1,P2).
@@ -3326,7 +3339,7 @@ process_rule0(Lhs,Rhs,Parent_rule):-
   copy_term(Parent_rule,Parent_ruleCopy),
   build_rhs(U,Rhs,Rhs2),
   foreach(mpred_nf(Lhs,Lhs2),
-          ignore(build_rule(Lhs2,rhs(Rhs2),(Parent_ruleCopy,U)))).
+    ignore(build_rule(Lhs2,rhs(Rhs2),(Parent_ruleCopy,U)))).
 
 
 %% build_rule(+Lhs, ?Rhs, ?Support) is semidet.
@@ -3338,7 +3351,7 @@ build_rule(Lhs,Rhs,Support):-
   mpred_mark_as(WS,Lhs,pfcLHS),
   build_trigger(WS,Lhs,Rhs,Trigger),
   cyclic_break((Lhs,Rhs,WS,Trigger)),
-  doall(mpred_eval_lhs(Trigger,Support)).
+  doall(mpred_eval_lhs_no_nc(Trigger,Support)).
 
 build_trigger(WS,[],Consequent,ConsequentO):-
    mpred_compile_rhs_term_consquent(WS,Consequent,ConsequentO).
