@@ -616,7 +616,6 @@ term_expansion_UNUSED(:-module(M,List),Pos,ExportList,Pos):- nonvar(Pos),
 
 
 
-:- module_transparent(pfc_clause_expansion/2).
 pfc_clause_expansion(I,O):- 
   nonvar(I), I\==end_of_file,  
   base_clause_expansion(I,M),!,I\=@=M,
@@ -625,6 +624,9 @@ pfc_clause_expansion(I,O):-
       ignore(( \+ same_expandsion(I,MO), dmsg_pretty(pfc_clause_expansion(I)-->MO))),
       maybe_directive_to_clauses(MO,O),
       ignore(( O\==MO , (dmsg_pretty(directive_to_clauses(I)-->O)))))),!.
+
+:- module_transparent(pfc_clause_expansion/2).
+:- system:import(pfc_lib:pfc_clause_expansion/2).
 
 %maybe_directive_to_clauses(:- ain(A),Clauses):- loader_side_effect_capture_only(ain(A),Clauses).
 %maybe_directive_to_clauses(:- ain(A),Clauses):- loader_side_effect_capture_only(ain(A),Clauses).
@@ -713,7 +715,6 @@ system:goal_expansion(I,P,O,PO):- pfc_goal_expansion(I,P,O,PO).
 
 :- multifile(system:clause_expansion/2).
 :- module_transparent(system:clause_expansion/2).
-:- system:import(pfc_clause_expansion/2).
 
 system:clause_expansion(I,O):-
  % ((in_dialect_pfc;prolog_load_context(module,M),pfc_may_see_module(M))),
