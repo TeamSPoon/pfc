@@ -331,23 +331,23 @@ baseKB:mpred_skipped_module(eggdrop).
 :- endif.
 
 
-%:- user:ensure_loaded(library('file_scope')).
+%:- user:pfc_lib:consult(library('file_scope')).
 % :- set_how_virtualize_file(bodies).
 :- module_transparent(baseKB:prologBuiltin/1).
 :- multifile baseKB:prologBuiltin/1.
 :- discontiguous baseKB:prologBuiltin/1.
 :- dynamic baseKB:prologBuiltin/1.
 
-:- ensure_loaded(library('pfc2.0/mpred_at_box.pl')).
-:- ensure_loaded(library('pfc2.0/mpred_justify.pl')).
-:- ensure_loaded(library('pfc2.0/mpred_core.pl')).
-:- ensure_loaded(library('pfc2.0/mpred_gvars.pl')).
-:- ensure_loaded(library('pfc2.0/mpred_expansion.pl')).
-:- ensure_loaded(library('pfc2.0/mpred_loader.pl')).
-:- ensure_loaded(library('pfc2.0/mpred_database.pl')).
-:- ensure_loaded(library('pfc2.0/mpred_listing.pl')).
-:- ensure_loaded(library('pfc2.0/mpred_prolog_file.pl')).
-:- ensure_loaded(library('pfc2.0/mpred_terms.pl')).
+:- pfc_lib:consult(library('pfc2.0/mpred_at_box.pl')).
+:- pfc_lib:consult(library('pfc2.0/mpred_justify.pl')).
+:- pfc_lib:consult(library('pfc2.0/mpred_core.pl')).
+:- pfc_lib:consult(library('pfc2.0/mpred_gvars.pl')).
+:- pfc_lib:consult(library('pfc2.0/mpred_expansion.pl')).
+:- pfc_lib:consult(library('pfc2.0/mpred_loader.pl')).
+:- pfc_lib:consult(library('pfc2.0/mpred_database.pl')).
+:- pfc_lib:consult(library('pfc2.0/mpred_listing.pl')).
+:- pfc_lib:consult(library('pfc2.0/mpred_prolog_file.pl')).
+:- pfc_lib:consult(library('pfc2.0/mpred_terms.pl')).
 
 
 %:- autoload([verbose(false)]).
@@ -698,7 +698,7 @@ pfc_may_see_module(M):-import_module(M,pfc_lib).
 
 
 :- if(exists_source(library(logicmoo/retry_undefined))).
-:- ensure_loaded(library(logicmoo/retry_undefined)).
+:- pfc_lib:consult(library(logicmoo/retry_undefined)).
 :- install_retry_undefined(baseKB,kb_shared).
 
 :- else.
@@ -735,7 +735,7 @@ system:clause_expansion(I,O):-
 :- set_prolog_flag(mpred_te,true).
 :- set_prolog_flag(retry_undefined, module).
 
-:- baseKB:ensure_loaded('pfclib/system_autoexec.pfc').
+:- baseKB:consult('pfclib/system_autoexec.pfc').
 :- set_prolog_flag(pfc_booted,true).
 
 :- set_prolog_flag(retry_undefined, kb_shared).

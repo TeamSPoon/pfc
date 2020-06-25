@@ -3,7 +3,7 @@
 % Tests Emulation of assertable attributed variables
 :- include(test_header).
 
-:- ensure_loaded(library(attvar_reader)).
+:- ensure_loaded(library(logicmoo/attvar_reader)).
 
 %:- pfc_test_feature(mt,must_not_be_pfc_file).
 

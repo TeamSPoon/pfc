@@ -50,7 +50,7 @@ never_load_special(_:library(make), [if(not_loaded)]):-!.
 % never_load_special(Module:Spec, Options) :- with_dmsg_to_main((dmsg_pretty(check_load(Module:Spec,Options)))),fail.
 never_load_special(_, Options) :- memberchk(must_be_module(true),Options),!.
 never_load_special(_, Options) :- memberchk(autoload(true),Options),!.
-never_load_special(_Module:_Spec, Options) :- member(if(not_loaded),Options),member(imports([_/_]),Options).   
+never_load_special(_Module:_Spec, Options) :- memberchk(if(not_loaded),Options),memberchk(imports([_/_]),Options),!.   
 
 
 % :- use_module(library(logicmoo/util/logicmoo_util_filesystem)).

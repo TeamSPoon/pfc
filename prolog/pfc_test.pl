@@ -30,23 +30,25 @@ test_red_lined(Failed):- quietly((
 mpred_test(G):-var(G),!,dmsg_pretty(var_mpred_test(G)),trace_or_throw(var_mpred_test(G)).
 %mpred_test((G1;G2)):- !,call_u(G1);mpred_test(G2).
 mpred_test(_):- quietly_ex((compiling; current_prolog_flag(xref,true))),!.
-mpred_test(G):- quietly_ex(mpred_is_silient),!, with_no_mpred_trace_exec(must(mpred_test_fok(G))),!.
+mpred_test(G):- quietly_ex(mpred_is_silent),!, with_no_mpred_trace_exec(must(mpred_test_fok(G))),!.
+mpred_test(G):- dmsg_pretty(:-mpred_test(G)),fail.
 mpred_test(G):- current_prolog_flag(runtime_debug,D),D<1,!,with_no_mpred_trace_exec(must((G))),!.
 mpred_test(G):- with_no_breaks(with_mpred_trace_exec(must(mpred_test_fok(G)))),!.
 :- if(false).
 mpred_test(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(umt(PFC))*->true;(pfc_call(PFC)*->mpred_why2(MPRED);test_red_lined(mpred_test(MPRED)),!,fail)).
-mpred_why2(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(pfcWhy(PFC))*->true;(test_red_lined(mpred_why(MPRED)),!,fail)).
+mpred_why2(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(mpred_why(PFC))*->true;(test_red_lined(mpred_why(MPRED)),!,fail)).
 :- endif.
 
 
 why_was_true((A,B)):- !,mpred_why(A),mpred_why(B).
-why_was_true(P):- mpred_why(P),!.
+why_was_true(P):- predicate_property(P,dynamic),mpred_why(P),!.
 why_was_true(P):- dmsg_pretty(justfied_true(P)),!.
 
 mpred_test_fok(G):- source_file(_,_),!,mpred_test_fok0(G),!.
 mpred_test_fok(G):- mpred_test_fok0(G),!.
 
-mpred_test_fok0(\+ G):-!, ( \+ call_u(G) -> wdmsg_pretty(passed_mpred_test(\+ G)) ; (log_failure(failed_mpred_test(\+ G)),!,ignore(why_was_true(G)),!,fail)).
+mpred_test_fok0(\+ G):-!, ( \+ call_u(G) -> wdmsg_pretty(passed_mpred_test(\+ G)) ; (log_failure(failed_mpred_test(\+ G)),!,
+  ignore(why_was_true(G)),!,fail)).
 % mpred_test_fok(G):- (call_u(G) -> ignore(sanity(why_was_true(G))) ; (log_failure(failed_mpred_test(G))),!,fail).
 mpred_test_fok0(G):- (call_u(G) *-> ignore(must(why_was_true(G))) ; (log_failure(failed_mpred_test(G))),!,fail).
 

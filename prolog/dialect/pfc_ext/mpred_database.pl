@@ -1,4 +1,5 @@
-/* 
+/*  
+
 % File used as storage place for all predicates which change as
 % the world is run.
 %
@@ -13,7 +14,7 @@
 */
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_kb_ops.pl
 %:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
-:- module(mpred_kb_ops,[]).
+hide_this_mpred_kb_ops :- fail, nop( module(mpred_kb_ops,[])).
 
 
 :- include('mpred_header.pi').
@@ -119,7 +120,7 @@ functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_d
 
 %:- endif.
 % :- ensure_loaded(library('logicmoo/util/logicmoo_util_bugger.pl')).
-:- use_module(mpred_core).
+%:- ensure_loaded(pfc_lib).
 %:- use_module(mpred_type_isa).
 %:- use_module(library(util_varnames)).
 

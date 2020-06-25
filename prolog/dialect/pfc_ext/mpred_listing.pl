@@ -12,7 +12,7 @@
 % =======================================================
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_list_triggers.pl
 :- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
-:- module(mpred_listing,
+mpred_listing_module:- nop( module(mpred_listing,
           [ draw_line/0,
             loop_check_just/1,
             pinfo/1,
@@ -46,7 +46,7 @@
             show_pred_info/1,
             show_pred_info_0/1,
             mpred_listing_file/0
-          ]).
+          ])).
 
 :- include('mpred_header.pi').
 

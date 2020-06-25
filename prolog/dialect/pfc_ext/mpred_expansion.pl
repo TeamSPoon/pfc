@@ -54,7 +54,7 @@
 %
 */
 % :- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
-:- module(mpred_expansion,
+module_mpred_expansion:- fail, nop(module(mpred_expansion,
           [ a/2,
             acceptable_xform/2,
             additiveOp/1,
@@ -167,7 +167,7 @@
          % expand_kif_string/3,
          is_elist_functor/1
           
-          ]).
+          ])).
 
 :- include('mpred_header.pi').
 
@@ -275,7 +275,7 @@ Writing in Prolog is actually really easy for a MUD is when X is chosen
 % Douglas Miles
 */
 
-%:-use_module(mpred_core).
+%:-use_module(pfc_lib).
 %:-use_module(mpred_type_wff).
 
 

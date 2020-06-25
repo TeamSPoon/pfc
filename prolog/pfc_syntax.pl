@@ -11,7 +11,7 @@
 % ===================================================================
 */
 
-:- use_module(library(pfc_lib)).
+:- use_module('./pfc_lib').
 
 :- dynamic(baseKB:used_ain_syntax/8).
 :- prolog_load_context(source,File),stream_property(Source,file_name(File)),
