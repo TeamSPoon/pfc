@@ -8,8 +8,10 @@
 % :- set_prolog_flag(lm_pfc_lean,true).
 % :- use_module(library(pfc)).
 
+mpred_test_cf(P):- dmsg_pretty((:- mpred_test(P))),mpred_test_fok(P).
 
 % never_assert_u(early_aa_H(Var),var):- cwc, is_ftVar(Var).
+foo.                   
 
 :- kb_local(aa/1).
 :- kb_local(zz/1).
@@ -41,59 +43,64 @@ aa(N):- member(N,[4,5]).
 
 zz(1):- foo.
 ( zz(N):- _B ) ==> late_zz_H(N). 
-:- mpred_test(\+ clause_asserted(late_zz_H(_))).
+:- mpred_test_cf(\+ clause_asserted(late_zz_H(_))).
 
 
 ( yy(N):- _B ) ==> early_yy_H(N). 
 yy(1):- foo.
-:- mpred_test(\+ clause_asserted(early_yy_H(_))).
+:- mpred_test_cf(\+ clause_asserted(early_yy_H(_))).
+:- mpred_test_cf(clause_asserted(early_yy_H(1))).
+
+:- break.
 
 
-:- mpred_test(early_aa(1)).
-:- mpred_test(early_aa(2)).
-:- mpred_test(early_aa(3)).
-:- mpred_test(early_aa(4)).
-:- mpred_test(early_aa(5)).
+:- mpred_test_cf(early_aa(1)).
+:- mpred_test_cf(early_aa(2)).
+:- mpred_test_cf(early_aa(3)).
+:- mpred_test_cf(early_aa(4)).
+:- mpred_test_cf(early_aa(5)).
 
-:- mpred_test(late_aa(1)).
-:- mpred_test(late_aa(2)).
-:- mpred_test(late_aa(3)).
-:- mpred_test(late_aa(4)).
-:- mpred_test(late_aa(5)).
+:- mpred_test_cf(late_aa(1)).
+:- mpred_test_cf(late_aa(2)).
+:- mpred_test_cf(late_aa(3)).
+:- mpred_test_cf(late_aa(4)).
+:- mpred_test_cf(late_aa(5)).
 
-:- mpred_test(late_aa_HB(A, member(A, [4, 5]))).
-:- mpred_test(late_aa_HB(3, true)).
-:- mpred_test(late_aa_HB(2, true)).
-:- mpred_test(late_aa_HB(1, writeln(1+1))).
+:- mpred_test_cf(late_aa_HB(A, member(A, [4, 5]))).
+:- mpred_test_cf(late_aa_HB(3, true)).
+:- mpred_test_cf(late_aa_HB(2, true)).
+:- mpred_test_cf(late_aa_HB(1, writeln(1+1))).
 
 
-:- mpred_test(early_aa_HB(A, member(A, [4, 5]))).
+:- mpred_test_cf(early_aa_HB(A, member(A, [4, 5]))).
 :- warn_fail_TODO(early_aa_HB(3, true)).
 :- warn_fail_TODO(early_aa_HB(2, true)).
-:- mpred_test(early_aa_HB(1, writeln(1+1))).
+:- mpred_test_cf(early_aa_HB(1, writeln(1+1))).
 
 
 
-:- mpred_test(late_aa_H(1)).
-:- mpred_test(late_aa_H(2)).
-:- mpred_test(late_aa_H(3)).
-:- mpred_test(late_aa_H(_)).
-:- mpred_test(clause_asserted(late_aa_H(_))).
+:- mpred_test_cf(late_aa_H(1)).
+:- mpred_test_cf(late_aa_H(2)).
+:- mpred_test_cf(late_aa_H(3)).
+:- mpred_test_cf(late_aa_H(_)).
 
+%:- rtrace.
+:- mpred_test_cf(clause_asserted(late_aa_H(_))).
+:- nortrace.
 
-:- mpred_test(early_aa_H(1)).
-:- mpred_test(early_aa_H(2)).
-:- mpred_test(early_aa_H(3)).
-:- mpred_test(early_aa_H(_)).
-:- mpred_test(clause_asserted(early_aa_H(_))).
+:- mpred_test_cf(early_aa_H(1)).
+:- mpred_test_cf(early_aa_H(2)).
+:- mpred_test_cf(early_aa_H(3)).
+:- mpred_test_cf(early_aa_H(_)).
+:- mpred_test_cf(clause_asserted(early_aa_H(_))).
 
 
 /*
 
-:- mpred_test(\+ clause_asserted(late_aa_H(4))).
-:- mpred_test(\+ clause_asserted(late_aa_H(5))).
-:- mpred_test(\+ clause_asserted(early_aa_H(4))).
-:- mpred_test(\+ clause_asserted(early_aa_H(5))).
+:- mpred_test_cf(\+ clause_asserted(late_aa_H(4))).
+:- mpred_test_cf(\+ clause_asserted(late_aa_H(5))).
+:- mpred_test_cf(\+ clause_asserted(early_aa_H(4))).
+:- mpred_test_cf(\+ clause_asserted(early_aa_H(5))).
 
 
 */

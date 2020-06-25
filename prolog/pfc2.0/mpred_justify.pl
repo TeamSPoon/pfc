@@ -13,7 +13,7 @@
 
 %:- throw(module(pfcumt,[umt/1])).
 
-:- module(mpred_justify, []).
+%:- module(mpred_justify, []).
 
 %:- use_module(mpred_kb_ops).
 %:- use_module(library(util_varnames)).
@@ -247,11 +247,13 @@ mpred_add_support_fast(P,(Fact,Trigger)):-
                                                                 
 :- meta_predicate(mpred_get_support(*,-)).
 
-mpred_get_support((H:-B),(Fact,Trigger)):- lookup_u(spft((H <- B),_,_),Ref),clause(spft(HH<-BB,Fact,Trigger),true,Ref),
+mpred_get_support((H:-B),(Fact,Trigger)):- 
+   lookup_u(spft((H <- B),_,_),Ref),
+   clause(spft(HH<-BB,Fact,Trigger),true,Ref),
    clause_ref_module(Ref),   
    H=@=HH,B=@=BB.
 mpred_get_support(P,(Fact,Trigger)):-
-      lookup_spft(P,Fact,Trigger).
+  lookup_spft(P,Fact,Trigger).
 
 
 mpred_get_support_why(P,FT):-
@@ -259,14 +261,44 @@ mpred_get_support_why(P,FT):-
    (mpred_get_support_deeper(P,FT))).
 
 mpred_get_support_perfect(P,(Fact,Trigger)):-
-    lookup_spft_match_first(P,Fact,Trigger).
+   lookup_spft_match_first(P,Fact,Trigger).
 
-mpred_get_support_deeper((H:-B),(Fact,Trigger)):- !,
+mpred_get_support_deeper((H:-B),(Fact,Trigger)):- (nonvar(H) -> ! ; true),
  lookup_u(spft((H <- B),_,_),Ref),
-  clause(spft(HH<-BB,Fact,Trigger),true,Ref),H=@=HH,B=@=BB.
+  clause(spft(HH<-BB,Fact,Trigger),true,Ref),
+  H=@=HH,B=@=BB.
+
 mpred_get_support_deeper(P,(Fact,Trigger)):-
     lookup_spft_match_deeper(P,Fact,Trigger).
 
+lookup_spft_match(A,B,C):- copy_term(A,AA),lookup_spft(A,B,C),A=@=AA.
+
+lookup_spft_match_deeper(H,Fact,Trigger):- 
+  copy_term(H,HH),
+  lookup_spft((H:- _B),Fact,Trigger),
+  H=@=HH.
+
+lookup_spft_match_first(A,B,C):- nonvar(A),!, 
+  no_repeats(((lookup_spft_match(A,B,C);lookup_spft(A,B,C)))).
+
+lookup_spft_match_first(A,B,C):- lookup_spft(A,B,C).
+
+
+lookup_spft(A,B,C):- !, lookup_u(spft(A,B,C)).
+% cutted above
+/*
+lookup_spft(A,B,C):- nonvar(A),!,lookup_spft_p(A,B,C).
+lookup_spft(A,B,C):- var(B),!,lookup_spft_t(A,B,C).
+lookup_spft(A,B,C):- lookup_spft_f(A,B,C).
+
+lookup_spft_p(A,B,C):- with_some_vars_locked(A,lookup_u(spft(A,B,C))).
+% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_p(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,show_mpred_success(baseKB:spft(AA,B,C)).
+
+lookup_spft_f(A,B,C):- with_some_vars_locked(B,lookup_u(spft(A,B,C))).
+% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_f(A,B,C):- full_transform(lookup,B,BB),!,B\=@=BB,!,show_mpred_success(baseKB:spft(A,BB,C)).
+
+lookup_spft_t(A,B,C):- lookup_u(spft(A,B,C)).
+*/
 /*
 %  TODO MAYBE
 mpred_get_support(F,J):-
@@ -333,27 +365,44 @@ clear_proofs:- retractall(t_l:whybuffer(_P,_Js)).
 
 mpred_why(P):- must(mpred_why_1(P)).
 
+mpred_why_1(M:P):-  atom(M),!,call_from_module(M,mpred_why_1(P)).
 mpred_why_1(\+ P):- mpred_why_1(~P)*->true;(call_u(\+ P),wdmsgl(why:- \+ P)),!.
-mpred_why_1(M:P):- atom(M),!,call_from_module(M,mpred_why_1(P)).
-mpred_why_1(P):-  
-  quietly_ex((must_ex((
-  color_line(green,2),!,
-  findall(Js,((no_repeats(P-Js,deterministically_must(justifications(P,Js))),
-    ((color_line(yellow,1),
-      pfcShowJustifications(P,Js))))),Count),
-  (Count==[]-> format("~N No justifications for ~p. ~n~n",[P]) ; true),
-  color_line(green,2)
-  )))),!.
+mpred_why_1(NX):- number(NX),!, trace, pfcWhy0(NX),!.
+mpred_why_1(P):- is_list(P), !, maplist(mpred_why_1, P).
+mpred_why_1(P):- ((callable(P), quietly((must_ex((mpred_why_justs(P))))))) *-> true ; mpred_why_1_fallback(P).
 
-mpred_why_1(NX):- 
+mpred_why_1_fallback(NX):-  
   (number(NX)-> true ; retractall(t_l:whybuffer(_,_))),
   trace,
   pfcWhy0(NX),!.
-
-mpred_why_1(P):- mpred_why_sub(P).
+mpred_why_1_fallback(P):- mpred_why_sub(P).
 
 % mpred_why_1(N):- number(N),!, call(t_l:whybuffer(P,Js)), mpred_handle_why_command(N,P,Js).
 
+mpred_why_justs(P):- mpred_why_justs_1(P)*->true;forall(mpred_why_justs_each(P),true).
+
+mpred_why_justs_each(P) :- term_variables(P,VarsPC), 
+  ((call_u_no_bc(P),mpred_why_justs_1(P))*-> 
+  (term_variables(P,VarsAC),(VarsPC==VarsAC->!;true));
+   mpred_why_justs_1(P)).
+  
+mpred_why_justs_1(P) :-    
+  color_line(green,2),!,
+  findall(Js,((no_repeats(P-Js,(justifications(P,Js))),
+    must((color_line(yellow,1),
+      ignore(pfcShowJustifications(P,Js)))))),Count),
+  (Count==[]-> format("~N No justifications for ~p. ~n~n",[P]) ; true),
+  color_line(green,2).
+
+/*
+mpred_why_justs_2(P) :-    
+  color_line(green,2),!,
+  findall(Js,((no_repeats(P-Js,deterministically_must(justifications(P,Js))),
+    must((color_line(yellow,1),
+      ignore(pfcShowJustifications(P,Js)))))),Count),
+  (Count==[]-> format("~N No justifications for ~p. ~n~n",[P]) ; true),
+  color_line(green,2).
+*/
 /*
 
 mpred_why_1(P):- loop_check(quietly_ex((must_ex(mpred_why_try_each(P)),color_line(green,2))),true).
@@ -482,6 +531,11 @@ pfcShowSingleJust(JustNo,StepNo,(P,F,T)):-!,
 pfcShowSingleJust(JustNo,StepNo,(P*->T)):-!, 
   pfcShowSingleJust1(JustNo,StepNo,P),format('      *-> ',[]),
   pfcShowSingleJust1(JustNo,StepNo,T).
+
+pfcShowSingleJust(JustNo,StepNo,(P:-T)):-!, 
+  pfcShowSingleJust1(JustNo,StepNo,P),format(':- ~p.',[T]).
+ 
+
 pfcShowSingleJust(JustNo,StepNo,(P:-T)):-!, 
   pfcShowSingleJust1(JustNo,StepNo,P),format('      :- ',[]),
   pfcShowSingleJust(JustNo,StepNo,T).
@@ -785,16 +839,21 @@ supporters_list0(F,OUT):-
  pfc_with_quiet_vars_lock(supporters_list00(F,OUT)).
 
 :- module_transparent(supporters_list00/2).
-supporters_list00(F,OUT):-
- ((mpred_get_support_why(F,(Fact,Trigger)),triggerSupports(Fact,Trigger,MoreFacts)) 
-   *-> OUT=[Fact|MoreFacts] ; supporters_list1(F,OUT)).
+supporters_list00(F,OUT):- supporters_list1a(F,OUT) *-> true; supporters_list1b(F,OUT).
 
-:- module_transparent(supporters_list1/2).
-supporters_list1(Var,[is_ftVar(Var)]):-is_ftVar(Var),!.
-supporters_list1(U,[]):- axiomatic_supporter(U),!.
-supporters_list1((H:-B),[MFL]):- !, clause_match(H,B,Ref),find_hb_mfl(H,B,Ref,MFL).
-supporters_list1(\+ P, HOW):- supporters_list0(~ P,HOW),!.
-supporters_list1((H),[((H:-B))]):- clause_match(H,B,_Ref).
+:- module_transparent(supporters_list1a/2).
+
+supporters_list1a(F,[Fact|MoreFacts]):-
+  mpred_get_support_why(F,(Fact,Trigger)),
+  triggerSupports(Fact,Trigger,MoreFacts).
+   
+
+:- module_transparent(supporters_list1b/2).
+supporters_list1b(Var,[is_ftVar(Var)]):- is_ftVar(Var),!.
+supporters_list1b(U,[]):- axiomatic_supporter(U),!.
+supporters_list1b((H:-B),[MFL]):- !, clause_match(H,B,Ref),find_hb_mfl(H,B,Ref,MFL).
+supporters_list1b(\+ P, HOW):- supporters_list00(~ P,HOW),!.
+supporters_list1b((H),[((H:-B))]):- clause_match(H,B,_Ref).
 
 uses_call_only(H):- predicate_property(H,foreign),!.
 uses_call_only(H):- predicate_property(H,_), \+ predicate_property(H,interpreted),!.
@@ -875,7 +934,7 @@ triggerSupports1(_,X,[X]):- \+ mpred_db_type(X,trigger(_)).
 :-module_transparent(mpred_ainz/1).
 */
 
-% :- '$current_source_module'(M),forall(mpred_database_term(F,A,_),(abolish(mpred_core:F/A),abolish(user:F/A),abolish(M:F/A))).
+% :- '$current_source_module'(M),forall(mpred_database_term(F,A,_),(abolish(pfc_lib:F/A),abolish(user:F/A),abolish(M:F/A))).
 % :- initialization(ensure_abox(baseKB)).
 
 

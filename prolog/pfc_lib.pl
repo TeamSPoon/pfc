@@ -3,10 +3,10 @@
 
 :- if((prolog_load_context(source,File),prolog_load_context(file,File))).
 :- module(pfc_lib,[]).
+:- occurs:use_module(library(occurs),[sub_term/2]).
 /*
 :- use_module(library(random)).
 :- use_module(library(error)).
-:- use_module(library(occurs)).
 :- use_module(library(threadutil)).
 :- use_module(library(edit)).
 :- autoload_all.

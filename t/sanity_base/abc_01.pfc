@@ -21,6 +21,8 @@
 
 :- mpred_test(\+ b(2)).
 
+% :- rtrace.
+
 
 
  

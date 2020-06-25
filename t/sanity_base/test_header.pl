@@ -14,6 +14,8 @@
   set_prolog_flag(runtime_testing_module,test_header)).
 :- endif.
 
+
+
 :- if(( \+ current_prolog_flag(test_header,_),set_prolog_flag(test_header,loaded))).
 
 
@@ -30,6 +32,18 @@ test_header_include.
 :- set_prolog_flag(logicmoo_message_hook,dumpst).
 
 :- endif.
+
+:- if(\+ exists_source(library(logicmoo_utils_all))).
+:-  prolog_load_context(directory,X),absolute_file_name('../../..',O,[relative_to(X),file_type(directory)]),
+    attach_packs(O).
+:- endif.
+
+:- if(\+ exists_source(library(pfc_lib))).
+:-  prolog_load_context(directory,X),absolute_file_name('../../prolog',O,[relative_to(X),file_type(directory)]),
+    asserta(user:file_search_path(library,O)).
+:- endif.
+
+
 
 :- if(exists_source(library(editline))).
 :- use_module(library(editline)).

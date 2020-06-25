@@ -16,7 +16,7 @@
 % Douglas Miles
 */
 %:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
-:- module(mpred_at_box,[
+hide_this_mpred_at_box :- fail, nop( module(mpred_at_box,[
          assert_setting01/1,
          make_module_name_local/2,
          make_module_name_local0/2,
@@ -68,7 +68,7 @@
 
 
          which_file/1
-    ]).
+    ])).
 
 
 
@@ -210,7 +210,7 @@ mtCanAssert(user):-  is_user_pfc.
 mtCanAssert(Module):-  module_property(Module,file(_)),!,fail.
 mtCanAssert(Module):- (loading_source_file(File),get_file_type_local(File,pfc),prolog_load_context(module,Module)).
 mtCanAssert(Module):- clause_b(mtProlog(Module)),!,fail.
-mtCanAssert(Module):- \+ mpred_core:is_code_module(Module),!.
+mtCanAssert(Module):- \+ pfc_lib:is_code_module(Module),!.
 
 is_user_pfc:- clause_b(mtHybrid(user)).
 

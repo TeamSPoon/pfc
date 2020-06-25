@@ -277,7 +277,7 @@ baseKB:mpred_skipped_module(eggdrop).
 :- endif.
 
 :- use_module(library(subclause_expansion)).
-%:- reexport(library('pfc2.0/mpred_core.pl')).
+%:- ensure_loaded(library('pfc2.0/mpred_core.pl')).
 %:- system:reexport(library('pfc2.0/mpred_at_box.pl')).
 
 :- user:use_module(library('file_scope')).

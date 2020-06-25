@@ -15,7 +15,7 @@
 
 %:- throw(module(pfcumt,[umt/1])).
 
-:- module(mpred_core, [
+hide_this:- nop(module(pfc_lib, [
     /*
   get_startup_uu/1,
   call_u_no_bc/1,%fix_mp/3,
@@ -163,7 +163,7 @@ pp_why/0,
 get_unnegated_functor/3,
 is_user_reason/1,
 mpred_retract_i_or_warn_1/1,
-mpred_is_silient/0,
+mpred_is_silent/0,
 pp_why/1,
 bad_head_pred/1,
 get_mpred_current_db/1,
@@ -192,7 +192,7 @@ push_current_choice/1,
   mpred_unfwc_check_triggers0/1,mpred_unfwc1/1,mpred_why1/1,mpred_blast/1
   % trigger_trigger1/2  , trigger_trigger/3,
   */
-  ]).
+  ])).
 
 %:- use_module(mpred_kb_ops).
 %:- use_module(library(util_varnames)).
@@ -531,9 +531,9 @@ get_first_user_reason0(_,(M,ax)):-get_source_mfl(M).
 
 %get_first_user_reason(_,UU):- get_source_uu(UU),\+is_user_reason(UU). % ignore(get_source_uu(UU)).
 
-:- mpred_at_box:export(mpred_at_box:defaultAssertMt/1).
-:- system:import(mpred_at_box:defaultAssertMt/1).
-:- mpred_core:import(mpred_at_box:defaultAssertMt/1).
+%:- export(mpred_at_box:defaultAssertMt/1).
+%:- system:import(defaultAssertMt/1).
+%:- pfc_lib:import(mpred_at_box:defaultAssertMt/1).
 
 :- module_transparent((get_source_mfl)/1).
 get_source_mfl(M):- current_why(M), nonvar(M) , M =mfl4(_VarNameZ,_,_,_).
@@ -694,7 +694,7 @@ bad_head_pred_neg('~').
 % bad_head_pred('==>').
 % Probably bad_head_pred('==>').
 
-% the next line transforms to mpred_core:convention_to_symbolic_mt(_From,_Why,A, _, B) :- call(ereq, predicateConventionMt(A, B)), !.
+% the next line transforms to pfc_lib:convention_to_symbolic_mt(_From,_Why,A, _, B) :- call(ereq, predicateConventionMt(A, B)), !.
 
 convention_to_symbolic_mt_ec(From,Why,F,A,Mt):-convention_to_symbolic_mt(From,Why,F,A,Mt).
 
@@ -1038,7 +1038,7 @@ each_E(P,H,S) :- apply(P,[H|S]).
 
 pp_qu:- call_u_no_bc(listing(que/1)).
 
-%   File   : mpred_core.pl
+%   File   : pfc_lib.pl
 %   Author : Tim Finin, finin@prc.unisys.com
 %   Updated: 10/11/87, ...
 %            4/2/91 by R. McEntire: added calls to valid_dbref as a
@@ -1154,7 +1154,7 @@ get_query_from(baseKB).
 is_code_module(system).
 is_code_module(user).
 is_code_module(baseKB):-!,fail.
-is_code_module(mpred_core).
+is_code_module(pfc_lib).
 is_code_module(M):- clause_b(mtProlog(M)),!,fail.
 is_code_module(M):- module_property(M,class(system)).
 is_code_module(M):- module_property(M,class(library)).
@@ -1242,7 +1242,8 @@ remove_negative_version(P):-
   must_ex(mpred_ain(\+ (~(P)), S)))))),!.
 
 %fwc1s_post1s(0,0):-!.
-fwc1s_post1s(1,2):-!.
+fwc1s_post1s(1,1):-!.
+%fwc1s_post1s(1,2):-!.
 /*
 fwc1s_post1s(3,0):-!.
 fwc1s_post1s(3,0):-!.
@@ -1499,7 +1500,7 @@ get_mpred_support_status(_P,_S, PP,(F,T),Was):-
 get_mpred_support_status(P,_S, PP,(FF,TT),Was):-
   Simular=simular(none),
   copy_term(PP,PPP),
-  ((((lookup_spft_p(PPP,F,T),variant_u(P,PP))) *->
+  ((((lookup_spft(PPP,F,T),variant_u(P,PP))) *->
      ((variant_u(TT,T),same_file_facts0(F,FF)) -> (Was = exact , ! ) ; 
       (nb_setarg(1,Simular,(F,T)),!,fail))
     ; Was = none) -> true ; ignore(Was=Simular)),!.
@@ -2279,7 +2280,7 @@ mpred_fwc(Ps):- each_E(mpred_fwc0,Ps,[]).
 %
 % this line filters sequential (and secondary) dupes
  % mpred_fwc0(genls(_,_)):-!.
-mpred_fwc0(Fact):- quietly_ex(ground(Fact)),
+mpred_fwc0(Fact):- fail, quietly_ex(ground(Fact)),
    \+ t_l:is_repropagating(_),
    quietly_ex((once(((fwc1s_post1s(_One,Two),Six is Two * 1))))), 
    show_mpred_success(filter_buffer_n_test,(filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact))),!.
@@ -2464,30 +2465,6 @@ mpred_do_fact(Fact):-
   mpred_do_fcnt(Copy,Fact),
   nop(mpred_do_clause(Fact,true)).
 
-lookup_spft_match(A,B,C):- copy_term(A,AA),lookup_spft(A,B,C),A=@=AA.
-
-lookup_spft_match_deeper(H,Fact,Trigger):- fail,
-  copy_term(H,HH),
-  lookup_spft((H:- _B),Fact,Trigger),
-  H=@=HH.
-
-lookup_spft_match_first(A,B,C):- nonvar(A),!, 
-  no_repeats(((lookup_spft_match(A,B,C);lookup_spft(A,B,C)))).
-lookup_spft_match_first(A,B,C):- lookup_spft(A,B,C).
-
-
-
-lookup_spft(A,B,C):- nonvar(A),!,lookup_spft_p(A,B,C).
-lookup_spft(A,B,C):- var(B),!,lookup_spft_t(A,B,C).
-lookup_spft(A,B,C):- lookup_spft_f(A,B,C).
-
-lookup_spft_p(A,B,C):- with_some_vars_locked(A,lookup_u(spft(A,B,C))).
-% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_p(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,show_mpred_success(baseKB:spft(AA,B,C)).
-
-lookup_spft_f(A,B,C):- with_some_vars_locked(B,lookup_u(spft(A,B,C))).
-% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_f(A,B,C):- full_transform(lookup,B,BB),!,B\=@=BB,!,show_mpred_success(baseKB:spft(A,BB,C)).
-
-lookup_spft_t(A,B,C):- lookup_u(spft(A,B,C)).
 
 get_tms_mode(_P,Mode):- lookup_m(tms(ModeO)),!,ModeO=Mode.
 get_tms_mode(_P,Mode):- Mode=local.
@@ -2760,7 +2737,7 @@ get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.
 
 
 
-call_u_mp(mpred_core, P1 ):- break_ex,'$current_source_module'(SM),SM\==mpred_core,!,  call_u_mp(SM,P1).
+call_u_mp(pfc_lib, P1 ):- break_ex,'$current_source_module'(SM),SM\==pfc_lib,!,  call_u_mp(SM,P1).
 call_u_mp(query, P1 ):- !, must(get_query_from(SM)),call_u_mp(SM,P1).
 call_u_mp(assert, P1 ):- !, must(get_assert_to(SM)),call_u_mp(SM,P1).
 call_u_mp(System, P1 ):-  is_code_module(System),!, call_u_mp(query,P1).
@@ -2844,7 +2821,7 @@ call_u_mp_fa(_,P,F,_):- (F==t; ( \+ clause_b(prologBuiltin(F)),
   F \= isT,F \= isTT, \+ predicate_property(P,file(_)))),if_defined(t_ify0(P,TGaf),fail), if_defined(isT(TGaf),false).
 call_u_mp_fa(M,P,F,A):- loop_check(call_u_mp_lc(M,P,F,A)).
 
-%call_u_mp_lc(mpred_core,P,F,A):-!, call_u_mp_lc(baseKB,P,F,A).
+%call_u_mp_lc(pfc_lib,P,F,A):-!, call_u_mp_lc(baseKB,P,F,A).
 %call_u_mp_lc(M,P,F,A):- current_predicate(M:F/A),!,throw(current_predicate(M:F/A)),catch(M:P,E,(wdmsg_pretty(call_u_mp(M,P)),wdmsg_pretty(E),dtrace)).
 % call_u_mp_lc(baseKB,P,F,A):- kb_shared(F/A),dmsg_pretty(kb_shared(F/A)),!, call(P).
 
@@ -3417,6 +3394,7 @@ build_neg_test(WS,T,Testin,Testout):-
 %
 
 %check_never_assert(_Pred):-!.
+%:-dumpST.
 check_never_assert(MPred):- strip_module(MPred,M,_Pred),
   quietly_ex(ignore((check_db_sanity(never_assert_u,M,MPred)))).
 
@@ -4060,12 +4038,12 @@ show_if_debug(A):-  get_mpred_is_tracing(A) -> show_call(mpred_is_tracing,call_u
 
 :- thread_local(t_l:mpred_debug_local/0).
 
-%% mpred_is_silient is det.
+%% mpred_is_silent is det.
 %
 % If Is A Silient.
 %
-mpred_is_silient :- t_l:hide_mpred_trace_exec,!, \+ tracing.
-mpred_is_silient :- quietly_ex(( \+ t_l:mpred_debug_local, \+ lookup_u(mpred_is_tracing_exec), \+ lookup_u(lmcache:mpred_is_spying_pred(_,_)),
+mpred_is_silent :- t_l:hide_mpred_trace_exec,!, \+ tracing.
+mpred_is_silent :- quietly_ex(( \+ t_l:mpred_debug_local, \+ lookup_u(mpred_is_tracing_exec), \+ lookup_u(lmcache:mpred_is_spying_pred(_,_)),
   current_prolog_flag(debug,false), is_release)) ,!.
 
 oinfo(O):- xlisting((O, - spft, - ( ==> ), - pt , - nt , - bt , - mdefault, - lmcache)).
@@ -4255,7 +4233,7 @@ pp_db_supports(MM):-
 :-module_transparent(mpred_ainz/1).
 */
 
-% :- '$current_source_module'(M),forall(mpred_database_term(F,A,_),(abolish(mpred_core:F/A),abolish(user:F/A),abolish(M:F/A))).
+% :- '$current_source_module'(M),forall(mpred_database_term(F,A,_),(abolish(pfc_lib:F/A),abolish(user:F/A),abolish(M:F/A))).
 % :- initialization(ensure_abox(baseKB)).
 
 

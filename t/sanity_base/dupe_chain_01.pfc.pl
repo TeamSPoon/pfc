@@ -1,4 +1,14 @@
 
+:- if(\+ exists_source(library(logicmoo_utils_all))).
+:-  prolog_load_context(directory,X),absolute_file_name('../../..',O,[relative_to(X),file_type(directory)]),
+    attach_packs(O).
+:- endif.
+
+:- if(\+ exists_source(library(pfc_lib))).
+:-  prolog_load_context(directory,X),absolute_file_name('../../prolog',O,[relative_to(X),file_type(directory)]),
+    asserta(user:file_search_path(library,O)).
+:- endif.
+
 
 :- module(baseKB).
 :- use_module(library(pfc)).
