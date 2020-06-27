@@ -251,7 +251,6 @@ compilerDirective(F)==>{kb_shared(F/0)}.
                   pfcCreates,   % pfc asserts 
 
                   pfcCallCode,  % called as prolog
-                  pfcCallCodeAnte,   % called as prolog
 
                   pfcNegTrigger,
                   pfcPosTrigger,
@@ -342,7 +341,7 @@ mpred_prop(M,F,A,pfcRHS)==> mpred_prop(M,F,A,pfcCreates).
 mpred_prop(M,F,A,pfcCallCode)/predicate_is_undefined_fa(F,A)
     ==> mpred_prop(M,F,A,needsDefined).
 /*
-mpred_prop(M,F,A,pfcCallCodeAnte)/predicate_is_undefined_fa(F,A)
+mpred_prop(M,F,A,pfcCallCode)/predicate_is_undefined_fa(F,A)
     ==> mpred_prop(M,F,A,pfcWatches).
 */
 
@@ -523,7 +522,7 @@ genlPreds(pfcMustFC, pfcControlled).
 % pfcControlled(C)==>prologHybrid(C).
 genlPreds(pfcControlled, prologHybrid).
 
-((genlPreds(R1,R2),mpred_prop(M,F,A,R1))==>mpred_prop(M,F,A,R2)).
+((mpred_prop(M,F,A,R1),genlPreds(R1,R2))==>mpred_prop(M,F,A,R2)).
 
 do_and_undo(mpred_post_exactly,mpred_remove_exactly).
 
@@ -648,7 +647,7 @@ preventedWhen(P,{Cond})/mpred_positive_fact(P)==> ((~P) :- cwc, Cond).
 %
 
 %:- rtrace.
-:- call(assertz,(((~(G):-  (cwc, neg_in_code(G)))))).
+:- call(assertz_if_new,(((~(G):-  (cwc, neg_in_code(G)))))).
 
 % :- pfcNoWatch.
 

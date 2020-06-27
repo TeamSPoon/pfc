@@ -47,8 +47,13 @@ arity_no_bc(F,A):- suggest_m(M),clause_b(mpred_prop(M,F,AA,_)),nonvar(AA),A=AA.
 %
 % Ensure Arity.
 %
-ensure_arity(F,A):- one_must(arity_no_bc(F,A),one_must((current_predicate(F/A),
-    (A>0),assert_arity(F,A)),(ground(F:A),(A>0),assert_arity(F,A)))),!.
+ensure_arity(F,A):- 
+ one_must(
+   arity_no_bc(F,A),
+   one_must(
+    (current_predicate(F/A),(A>0),assert_arity(F,A)),
+    (ground(F:A),(A>0),assert_arity(F,A)))),
+  !.
 
 
 %=
@@ -1437,7 +1442,7 @@ neg_in_code0(G):- loop_check(neg_may_naf(G)), \+ loop_check(G),!.
 % Negated May Negation-by-faliure.
 %
 neg_may_naf(P):- mpred_non_neg_literal(P),get_functor(P,F),clause_u(prologNegByFailure(F),true),!.
-neg_may_naf(P):- is_ftCompound(P),predicate_property(P,static).
+neg_may_naf(P):- is_ftCompound(P),is_never_pfc(P).
 
 
 %% call_u_req( +G) is semidet.

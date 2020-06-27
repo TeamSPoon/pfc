@@ -37,7 +37,10 @@ justification(F,J):- supporters_list(F,J).
 
 justifications(F,Js):- bagof_nr(J,justification(F,J),Js).
 
+:- set_prolog_flag(expect_pfc_file,never).
+
 mpred_why(M:Conseq,Ante):- atom(M),!,M:mpred_why_2(Conseq,Ante).
+
 mpred_why(Conseq,Ante):- mpred_why_2(Conseq,Ante).
 
 mpred_why_2(Conseq,Ante):- var(Conseq),!,mpred_children(Ante,Conseq).
@@ -356,43 +359,46 @@ mpred_why:-
 
 pp_why(A):-mpred_why_1(A).
 
-clear_proofs:- retractall(t_l:whybuffer(_P,_Js)).
+clear_proofs:- retractall(t_l:whybuffer(_P,_Js)),color_line(cyan,1).
 
 
 :- thread_local(t_l:shown_why/1).
 
 % see pfc_why
 
-mpred_why(P):- must(mpred_why_1(P)).
+:- export(with_no_english/1).
+:- meta_predicate(with_no_english(*)).
+with_no_english(Goal):- setup_call_cleanup(flag('english', Was, 0),Goal,flag('english', _, Was )).
+
+mpred_why(P):- clear_proofs,!,with_no_english((must(mpred_why_1(P)))).
 
 mpred_why_1(M:P):-  atom(M),!,call_from_module(M,mpred_why_1(P)).
-mpred_why_1(\+ P):- mpred_why_1(~P)*->true;(call_u(\+ P),wdmsgl(why:- \+ P)),!.
 mpred_why_1(NX):- number(NX),!, trace, pfcWhy0(NX),!.
 mpred_why_1(P):- is_list(P), !, maplist(mpred_why_1, P).
-mpred_why_1(P):- ((callable(P), quietly((must_ex((mpred_why_justs(P))))))) *-> true ; mpred_why_1_fallback(P).
+mpred_why_1(P):- ((callable(P), ((must_ex((mpred_why_justs(P))))))) *-> true ; mpred_why_1_fallback(P).
 
 mpred_why_1_fallback(NX):-  
-  (number(NX)-> true ; retractall(t_l:whybuffer(_,_))),
+  (number(NX)-> true ; clear_proofs),
   trace,
   pfcWhy0(NX),!.
 mpred_why_1_fallback(P):- mpred_why_sub(P).
 
 % mpred_why_1(N):- number(N),!, call(t_l:whybuffer(P,Js)), mpred_handle_why_command(N,P,Js).
 
-mpred_why_justs(P):- mpred_why_justs_1(P)*->true;forall(mpred_why_justs_each(P),true).
-
-mpred_why_justs_each(P) :- term_variables(P,VarsPC), 
-  ((call_u_no_bc(P),mpred_why_justs_1(P))*-> 
-  (term_variables(P,VarsAC),(VarsPC==VarsAC->!;true));
-   mpred_why_justs_1(P)).
+mpred_why_justs(P):- mpred_why_justs_1a(P)*->true;forall(mpred_why_justs_1b(P),true).
   
-mpred_why_justs_1(P) :-    
+mpred_why_justs_1a(P) :-    
   color_line(green,2),!,
   findall(Js,((no_repeats(P-Js,(justifications(P,Js))),
     must((color_line(yellow,1),
       ignore(pfcShowJustifications(P,Js)))))),Count),
   (Count==[]-> format("~N No justifications for ~p. ~n~n",[P]) ; true),
   color_line(green,2).
+
+mpred_why_justs_1b(P) :- term_variables(P,VarsPC), 
+  ((call_u_no_bc(P),mpred_why_justs_1a(P))*-> 
+  (term_variables(P,VarsAC),(VarsPC==VarsAC->!;true));
+   mpred_why_justs_1a(P)).
 
 /*
 mpred_why_justs_2(P) :-    
@@ -501,19 +507,27 @@ pfcWhyCommand0(N,_,_) :-
 pfcWhyCommand0(X,_,_) :-
  format("~n~w is an unrecognized command, enter h. for help.",[X]),
  fail.
+
+reset_shown_justs:- retractall(t_l:shown_why(_)),color_line(red,1).
   
 pfcShowJustifications(P,Js) :-
   show_current_source_location,
+  reset_shown_justs,
+  color_line(yellow,1),
   format("~N~nJustifications for ~p:~n",[P]),  
+
   pfcShowJustification1(Js,1),!.
 
 pfcShowJustification1([],_):-!.
 pfcShowJustification1([J|Js],N) :- !,
-  % show one justification and recurse.  
-  retractall(t_l:shown_why(_)), % nl,
+  % show one justification and recurse.    
+  reset_shown_justs,
   pfcShowSingleJust(N,step(1),J),!,
-  N2 is N+1,pfcShowJustification1(Js,N2).
-pfcShowJustification1(J,N) :- retractall(t_l:shown_why(_)), % nl,
+  N2 is N+1,  
+  pfcShowJustification1(Js,N2).
+
+pfcShowJustification1(J,N) :- 
+  reset_shown_justs, % nl,
   pfcShowSingleJust(N,step(1),J),!.
 
 incrStep(StepNo,Step):-arg(1,StepNo,Step),X is Step+1,nb_setarg(1,StepNo,X).
@@ -535,19 +549,23 @@ pfcShowSingleJust(JustNo,StepNo,(P*->T)):-!,
 pfcShowSingleJust(JustNo,StepNo,(P:-T)):-!, 
   pfcShowSingleJust1(JustNo,StepNo,P),format(':- ~p.',[T]).
  
-
-pfcShowSingleJust(JustNo,StepNo,(P:-T)):-!, 
+pfcShowSingleJust(JustNo,StepNo,(P : -T)):-!, 
   pfcShowSingleJust1(JustNo,StepNo,P),format('      :- ',[]),
   pfcShowSingleJust(JustNo,StepNo,T).
+
+pfcShowSingleJust(JustNo,StepNo,(P :- T) ):- !, 
+  pfcShowSingleJust1(JustNo,StepNo,call(T)),  
+  pfcShowSingleJust1(JustNo,StepNo,P).
+
+
 pfcShowSingleJust(JustNo,StepNo,[P|T]):-!, 
   pfcShowSingleJust(JustNo,StepNo,P),
   pfcShowSingleJust(JustNo,StepNo,T).
+
 pfcShowSingleJust(JustNo,StepNo,pt(P,Body)):- !, 
   pfcShowSingleJust1(JustNo,StepNo,pt(P)),  
   pfcShowSingleJust(JustNo,StepNo,Body).
-pfcShowSingleJust(JustNo,StepNo,:- (P,Body) ):- !, 
-  pfcShowSingleJust1(JustNo,StepNo,call(Body)),  
-  pfcShowSingleJust1(JustNo,StepNo,P).
+
 pfcShowSingleJust(JustNo,StepNo,C):- 
  pfcShowSingleJust1(JustNo,StepNo,C).
 
@@ -607,7 +625,7 @@ mpred_why_sub0(P):-loop_check(mpred_why_sub_lc(P),trace_or_throw_ex(mpred_why_su
 mpred_why_sub_lc(P):- 
   justifications(P,Js),
   nb_setval('$last_printed',[]),
-  retractall(t_l:whybuffer(_,_)),
+  clear_proofs,
   assertz(t_l:whybuffer(P,Js)),
   mpred_whyBrouse(P,Js).
   
@@ -681,8 +699,9 @@ mpred_pp_db_justification1(_Prefix,[],_).
 
 mpred_pp_db_justification1(Prefix,[J|Js],N):-
   % show one justification and recurse.
-  nl,
+  nl,  
   mpred_pp_db_justifications2(Prefix,J,N,1),
+  reset_shown_justs,
   N2 is N+1,
   mpred_pp_db_justification1(Prefix,Js,N2).
 
@@ -768,12 +787,11 @@ well_founded_list([X|Rest],L):-
 % together allow one to deduce F.  One of the facts will typically be a rule.
 % The supports for a user-defined fact are: [ax].
 %
-
 supporters_list(F,ListO):- no_repeats_cmp(same_sets,ListO,supporters_list_each(F,ListO)).
 
 same_sets(X,Y):-
-  flatten(X,FX),sort(FX,XS),
-  flatten(Y,FY),sort(FY,YS),!,
+  flatten([X],FX),sort(FX,XS),
+  flatten([Y],FY),sort(FY,YS),!,
   YS=@=XS.
 
 supporters_list_each(F,ListO):-   
@@ -852,8 +870,10 @@ supporters_list1a(F,[Fact|MoreFacts]):-
 supporters_list1b(Var,[is_ftVar(Var)]):- is_ftVar(Var),!.
 supporters_list1b(U,[]):- axiomatic_supporter(U),!.
 supporters_list1b((H:-B),[MFL]):- !, clause_match(H,B,Ref),find_hb_mfl(H,B,Ref,MFL).
-supporters_list1b(\+ P, HOW):- supporters_list00(~ P,HOW),!.
-supporters_list1b((H),[((H:-B))]):- clause_match(H,B,_Ref).
+supporters_list1b(\+ P, HOW):- !, supporters_list00(~ P,HOW),!.
+supporters_list1b((H),[((H:-B))]):- may_cheat, clause_match(H,B,_Ref).
+
+may_cheat:- fail.
 
 uses_call_only(H):- predicate_property(H,foreign),!.
 uses_call_only(H):- predicate_property(H,_), \+ predicate_property(H,interpreted),!.
@@ -918,7 +938,7 @@ triggerSupports(FactIn,Trigger,OUT):-
   (triggerSupports(Fact,AnotherTrigger,MoreFacts),OUT=[Fact|MoreFacts]);
   triggerSupports1(FactIn,Trigger,OUT).
 
-triggerSupports1(_,X,[X]).
+triggerSupports1(_,X,[X]):- may_cheat.
 /*
 triggerSupports1(_,X,_):- mpred_db_type(X,trigger(_)),!,fail.
 triggerSupports1(_,uWas(_),[]):-!.
@@ -943,4 +963,5 @@ triggerSupports1(_,X,[X]):- \+ mpred_db_type(X,trigger(_)).
 
 :- fixup_exports.
 
+:- set_prolog_flag(expect_pfc_file,unknown).
 
