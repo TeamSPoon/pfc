@@ -485,6 +485,120 @@ mpred_list_triggers_1(What):-
 
 pinfo(F/A):- listing(F/A),safe_functor(P,F,A),findall(Prop,predicate_property(P,Prop),List),wdmsg_pretty(pinfo(F/A)==List),!.
 
+
+
+%% pp_DB is semidet.
+%
+% Pretty Print All.
+%
+%pp_DB:- defaultAssertMt(M),clause_b(mtHybrid(M)),!,pp_DB(M).
+%pp_DB:- forall(clause_b(mtHybrid(M)),pp_DB(M)).
+
+pp_DB:- defaultAssertMt(M),pp_DB(M).
+ 
+
+pp_DB(M):-
+ with_exact_kb(M,
+ M:must_det_l((
+  pp_db_facts,
+  pp_db_rules,
+  pp_db_triggers,
+  pp_db_supports))).
+
+pp_db_facts:- context_module(M), pp_db_facts(M).
+pp_db_rules:- context_module(M), pp_db_rules(M).
+pp_db_triggers:- context_module(M), pp_db_triggers(M).
+pp_db_supports:- context_module(M), pp_db_supports(M).
+
+
+:- system:import(pp_DB/0).
+:- system:export(pp_DB/0).
+
+%  pp_db_facts ...
+
+pp_db_facts(MM):- ignore(pp_db_facts(MM,_,true)).
+
+pp_db_facts(MM,Pattern):- pp_db_facts(MM,Pattern,true).
+
+pp_db_facts(MM,P,C):-
+  mpred_facts_in_kb(MM,P,C,L),
+  mpred_classifyFacts(L,User,Pfc,_ZRule),
+  length(User,UserSize),length(Pfc,PfcSize),
+  format("~N~nUser added facts in [~w]: ~w",[MM,UserSize]),
+  pp_db_items(User),
+  format("~N~nSystem added facts in [~w]: ~w",[MM,PfcSize]),
+  pp_db_items(Pfc).
+
+%  printitems clobbers it''s arguments - beware!
+
+
+pp_db_items(Var):-var(Var),!,format("~N  ~p",[Var]).
+pp_db_items([]):-!.
+pp_db_items([H|T]):- !,
+  % numbervars(H,0,_),
+  format("~N  ~p",[H]),
+  nonvar(T),pp_db_items(T).
+
+pp_db_items((P >= FT)):- is_hidden_pft(P,FT),!.
+  
+pp_db_items(Var):-
+  format("~N  ~p",[Var]).
+
+
+is_hidden_pft(_,(mfl4(_VarNameZ,baseKB,_,_),ax)).
+is_hidden_pft(_,(why_marked(_),ax)).
+
+
+pp_mask(Type,MM,Mask):-   
+  bagof_or_nil(Mask,lookup_kb(MM,Mask),Nts),
+  list_to_set_variant(Nts,NtsSet),!,
+  pp_mask_list(Type,MM,NtsSet).
+
+pp_mask_list(Type,MM,[]):- !,
+  format("~N~nNo ~ws in [~w]...~n",[Type,MM]).
+pp_mask_list(Type,MM,NtsSet):- length(NtsSet,Size), !,
+  format("~N~n~ws (~w) in [~w]...~n",[Type,Size,MM]),
+  pp_db_items(NtsSet).
+
+mpred_classifyFacts([],[],[],[]).
+
+mpred_classifyFacts([H|T],User,Pfc,[H|Rule]):-
+  mpred_db_type(H,rule(_)),
+  !,
+  mpred_classifyFacts(T,User,Pfc,Rule).
+
+mpred_classifyFacts([H|T],[H|User],Pfc,Rule):-
+  % get_source_uu(UU),
+  get_first_user_reason(H,_UU),
+  !,
+  mpred_classifyFacts(T,User,Pfc,Rule).
+
+mpred_classifyFacts([H|T],User,[H|Pfc],Rule):-
+  mpred_classifyFacts(T,User,Pfc,Rule).
+
+
+pp_db_rules(MM):- 
+ pp_mask("Forward Rule",MM,==>(_,_)),
+ pp_mask("Bi-conditional Rule",MM,<==>(_,_)),
+ pp_mask("Backward Rule",MM,<-(_,_)),
+ % pp_mask("Prolog Rule",MM,:-(_,_)),
+ !.
+
+
+pp_db_triggers(MM):- 
+ pp_mask("Positive trigger",MM,pt(_,_)),
+ pp_mask("Negative trigger",MM,nt(_,_,_)),
+ pp_mask("Goal trigger",MM,bt(_,_)),!.
+
+pp_db_supports(MM):-
+  % temporary hack.
+  format("~N~nSupports in [~w]...~n",[MM]),
+  with_exact_kb(MM, bagof_or_nil((P >= S), mpred_get_support(P,S),L)),
+  list_to_set_variant(L,LS),
+  pp_db_items(LS),!.
+
+
+
 :- fixup_exports.
 
 mpred_listing_file.

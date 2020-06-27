@@ -203,6 +203,9 @@ push_current_choice/1,
 
 :- dynamic(lmcache:mpred_is_spying_pred/2).
 
+:- system:use_module(library(ordsets)).
+:- system:use_module(library(oset)).
+
 :- use_module(library(pfc_test)).
 %:- endif.
 :- use_module(library(logicmoo_common)).
@@ -1347,8 +1350,8 @@ mpred_post12_withdraw( P,   S):- show_call(mpred_withdraw(P,S)), \+ mpred_suppor
 %mpred_post12_withdraw( P,   S):- is_user_reason(S),!, (mpred_withdraw_fail_if_supported(P,S) -> true ;  show_call(mpred_remove2(P,S))).
 mpred_post12_withdraw( P,   S):- ignore(show_call(mpred_withdraw_fail_if_supported(P,S))),!.
 
-mpred_post12_negated( P,   S):- mpred_withdraw_fail_if_supported(P,S), show_call( mpred_post13(~P,S)),!.
-mpred_post12_negated( P,   S):- mpred_remove2(P,S), show_call( \+ mpred_supported(P)),!,show_call( mpred_post13(~P,S)),!.
+mpred_post12_negated( P,   S):- mpred_withdraw_fail_if_supported(P,S), mpred_post13(~P,S),!.
+mpred_post12_negated( P,   S):- mpred_remove2(P,S), show_call( \+ mpred_supported(P)),!, show_call((nop(2), mpred_post13(~P,S))),!.
 mpred_post12_negated( P,   S) :- mpred_get_support(P,S2), 
     color_line(magenta,2),
     dmsg_pretty((mpred_post12( ~ P,   S) :- mpred_get_support(P,S2))),
@@ -2149,8 +2152,7 @@ mpred_remove_supports_quietly(_).
 %
 
 mpred_undo(P):- mpred_reduced_chain(mpred_undo,P),!.
-
-mpred_undo(X):- show_success(mpred_undo1(X)),!.
+mpred_undo(X):- mpred_undo1(X),!.
 
 
 % maybe still un-forward chain?
@@ -3450,9 +3452,9 @@ mpred_mark_as(Sup,~(P),Type):- !,mpred_mark_as(Sup,P,Type).
 mpred_mark_as(Sup,-(P),Type):- !,mpred_mark_as(Sup,P,Type).
 mpred_mark_as(Sup,not(P),Type):- !,mpred_mark_as(Sup,P,Type).
 mpred_mark_as(Sup,[P|PL],Type):- is_list(PL), !,must_maplist(mpred_mark_as_ml(Sup,Type),[P|PL]).
-mpred_mark_as(Sup,( P / CC ),Type):- !, mpred_mark_as(Sup,P,Type),mpred_mark_as(Sup,( CC ),pfcCallCodeAnte).
-mpred_mark_as(Sup,( P :- _CC), Type):- !, mpred_mark_as(Sup,P, Type) /* , mpred_mark_as(Sup, ( CC ), pfcCallCodeBody) */ .
-mpred_mark_as(Sup,'{}'(  CC ), _Type):- mpred_mark_as(Sup,( CC ),pfcCallCodeBody).
+mpred_mark_as(Sup,( P / CC ),Type):- !, mpred_mark_as(Sup,P,Type),mpred_mark_as(Sup,( CC ),pfcCallCode).
+mpred_mark_as(Sup,( P :- _CC), Type):- !, mpred_mark_as(Sup,P, Type) /* , mpred_mark_as(Sup, ( CC ), pfcCallCode) */ .
+mpred_mark_as(Sup,'{}'(  CC ), _Type):- mpred_mark_as(Sup,( CC ),pfcCallCode).
 mpred_mark_as(Sup,( A , B), Type):- !, mpred_mark_as(Sup,A, Type),mpred_mark_as(Sup,B, Type).
 mpred_mark_as(Sup,( A ; B), Type):- !, mpred_mark_as(Sup,A, Type),mpred_mark_as(Sup,B, Type).
 mpred_mark_as(Sup,( A ==> B), Type):- !, mpred_mark_as(Sup,A, Type),mpred_mark_as(Sup,B, pfcRHS).
@@ -3469,8 +3471,7 @@ mpred_mark_as(Sup,P,Type):-get_functor(P,F,A),ignore(mpred_mark_fa_as(Sup,P,F,A,
 % BREAKS SIMPLE CASES
 % mpred_mark_fa_as(_Sup,_P,_,_,Type):- Type \== pfcLHS, Type \== pfcRHS, current_prolog_flag(unsafe_speedups , true) ,!.
 mpred_mark_fa_as(_Sup,_P,isa,_,_):- !.
-%mpred_mark_fa_as(_Sup,_P,_,_,pfcCallCodeBody):- !.
-%mpred_mark_fa_as(_Sup,_P,_,_,pfcCallCodeAnte):- !.
+%mpred_mark_fa_as(_Sup,_P,_,_,pfcCallCode):- !.
 mpred_mark_fa_as(_Sup,_P,t,_,_):- !.
 mpred_mark_fa_as(_Sup,_P,argIsa,N,_):- !,must_ex(N=3).
 mpred_mark_fa_as(_Sup,_P,arity,N,_):- !,must_ex(N=2).
@@ -3521,7 +3522,7 @@ build_code_test(WS,Test,TestO):- is_list(Test),must_maplist(build_code_test(WS),
 build_code_test(_WS,(H:-B),clause_asserted_u(H,B)):- !.
 build_code_test(_WS,M:(H:-B),clause_asserted_u(M:H,B)):- !.
 build_code_test(WS,Test,TestO):- code_sentence_op(Test),Test univ_safe [F|TestL],must_maplist(build_code_test(WS),TestL,TestLO),TestO univ_safe [F|TestLO],!.
-build_code_test(WS,Test,Test):- must_ex(mpred_mark_as(WS,Test,pfcCallCodeAnte)),!.
+build_code_test(WS,Test,Test):- must_ex(mpred_mark_as(WS,Test,pfcCallCode)),!.
 build_code_test(_,Test,Test).
 
 
@@ -4107,120 +4108,6 @@ mpred_trigger_key(chart(Concept,_ZL),Concept):- !.
 mpred_trigger_key(X,X).
 
 
-
-%% pp_DB is semidet.
-%
-% Pretty Print All.
-%
-%pp_DB:- defaultAssertMt(M),clause_b(mtHybrid(M)),!,pp_DB(M).
-%pp_DB:- forall(clause_b(mtHybrid(M)),pp_DB(M)).
-
-pp_DB:- defaultAssertMt(M),pp_DB(M).
- 
-
-pp_DB(M):-
- with_exact_kb(M,
- M:must_det_l((
-  pp_db_facts,
-  pp_db_rules,
-  pp_db_triggers,
-  pp_db_supports))).
-
-pp_db_facts:- context_module(M), pp_db_facts(M).
-pp_db_rules:- context_module(M), pp_db_rules(M).
-pp_db_triggers:- context_module(M), pp_db_triggers(M).
-pp_db_supports:- context_module(M), pp_db_supports(M).
-
-
-:- system:import(pp_DB/0).
-:- system:export(pp_DB/0).
-
-%  pp_db_facts ...
-
-pp_db_facts(MM):- ignore(pp_db_facts(MM,_,true)).
-
-pp_db_facts(MM,Pattern):- pp_db_facts(MM,Pattern,true).
-
-pp_db_facts(MM,P,C):-
-  mpred_facts_in_kb(MM,P,C,L),
-  mpred_classifyFacts(L,User,Pfc,_ZRule),
-  length(User,UserSize),length(Pfc,PfcSize),
-  format("~N~nUser added facts in [~w]: ~w",[MM,UserSize]),
-  pp_db_items(User),
-  format("~N~nSystem added facts in [~w]: ~w",[MM,PfcSize]),
-  pp_db_items(Pfc).
-
-%  printitems clobbers it''s arguments - beware!
-
-
-pp_db_items(Var):-var(Var),!,format("~N  ~p",[Var]).
-pp_db_items([]):-!.
-pp_db_items([H|T]):- !,
-  % numbervars(H,0,_),
-  format("~N  ~p",[H]),
-  nonvar(T),pp_db_items(T).
-
-pp_db_items((P >= FT)):- is_hidden_pft(P,FT),!.
-  
-pp_db_items(Var):-
-  format("~N  ~p",[Var]).
-
-
-is_hidden_pft(_,(mfl4(_VarNameZ,baseKB,_,_),ax)).
-is_hidden_pft(_,(why_marked(_),ax)).
-
-
-pp_mask(Type,MM,Mask):-   
-  bagof_or_nil(Mask,lookup_kb(MM,Mask),Nts),
-  list_to_set_variant(Nts,NtsSet),!,
-  pp_mask_list(Type,MM,NtsSet).
-
-pp_mask_list(Type,MM,[]):- !,
-  format("~N~nNo ~ws in [~w]...~n",[Type,MM]).
-pp_mask_list(Type,MM,NtsSet):- length(NtsSet,Size), !,
-  format("~N~n~ws (~w) in [~w]...~n",[Type,Size,MM]),
-  pp_db_items(NtsSet).
-
-mpred_classifyFacts([],[],[],[]).
-
-mpred_classifyFacts([H|T],User,Pfc,[H|Rule]):-
-  mpred_db_type(H,rule(_)),
-  !,
-  mpred_classifyFacts(T,User,Pfc,Rule).
-
-mpred_classifyFacts([H|T],[H|User],Pfc,Rule):-
-  % get_source_uu(UU),
-  get_first_user_reason(H,_UU),
-  !,
-  mpred_classifyFacts(T,User,Pfc,Rule).
-
-mpred_classifyFacts([H|T],User,[H|Pfc],Rule):-
-  mpred_classifyFacts(T,User,Pfc,Rule).
-
-
-pp_db_rules(MM):- 
- pp_mask("Forward Rule",MM,==>(_,_)),
- pp_mask("Bi-conditional Rule",MM,<==>(_,_)),
- pp_mask("Backward Rule",MM,<-(_,_)),
- % pp_mask("Prolog Rule",MM,:-(_,_)),
- !.
-
-
-pp_db_triggers(MM):- 
- pp_mask("Positive trigger",MM,pt(_,_)),
- pp_mask("Negative trigger",MM,nt(_,_,_)),
- pp_mask("Goal trigger",MM,bt(_,_)),!.
-
-pp_db_supports(MM):-
-  % temporary hack.
-  format("~N~nSupports in [~w]...~n",[MM]),
-  with_exact_kb(MM, bagof_or_nil((P >= S), mpred_get_support(P,S),L)),
-  list_to_set_variant(L,LS),
-  pp_db_items(LS),!.
-
-
-
-
 :-module_transparent(mpred_ain/1).
 :-module_transparent(mpred_aina/1).
 :-module_transparent(mpred_ainz/1).
@@ -4239,6 +4126,8 @@ pp_db_supports(MM):-
 
 % % :- set_prolog_flag(mpred_pfc_file,true).
 % local_testing
+
+:- set_prolog_flag(expect_pfc_file,never).
 
 :- fixup_exports.
 
