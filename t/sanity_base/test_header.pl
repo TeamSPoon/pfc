@@ -77,7 +77,7 @@ test_header_include.
 
 
 :- set_prolog_flag(debug, true).
-:- set_prolog_flag(gc, false).
+%:- set_prolog_flag(gc, false).
 
 :- '$current_source_module'(W), '$set_typein_module'(W).
 

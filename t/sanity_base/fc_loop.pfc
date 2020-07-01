@@ -256,7 +256,9 @@ bc_p(b).
 
 default_01a((P ==> Q))/mpred_literal(Q) ==> (P, \+( ~Q) ==> Q).
 
-:- set_prolog_flag(gc,false).
+:- break.
+:- dumpST.
+:- throw(set_prolog_flag(gc,false_fc_loop)).
 
 % birds fly by default_01a.
 :- (ain(( default_01a((bird(X) ==> fly(X)))))).

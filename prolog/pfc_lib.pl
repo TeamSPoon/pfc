@@ -244,6 +244,7 @@ scan_missed_source:-
   prolog_load_context(source,SFile),!,
   (SFile==File-> true; scan_missed_source(SFile)).
 
+:- export(pfc_lib:scan_missed_source/0).
 :- system:import(pfc_lib:scan_missed_source/0).
 
 scan_missed_source(SFile):-prolog_load_context(module,M),
@@ -291,6 +292,10 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg_pretty(visit_pfc_non
 :- if( \+ current_predicate(each_call_cleanup/3)).
 :- use_module(library(each_call_cleanup)).
 :- endif.
+
+:- abolish(system:time,1).
+:- system:use_module(library(statistics)).
+:- system:use_module(library(make)).
 
 /*
 % Make YALL require ">>" syntax (the problem was it autoloads when its sees PFC code containing "/" and gripes all the time)
@@ -456,7 +461,7 @@ maybe_should_rename(O,O).
 
 % file late late joiners
 :- if( \+ prolog_load_context(reload,true)).
-:- source_location(File, _)-> during_boot(((set_how_virtualize_file(false,File)))).
+:- source_location(File, _)-> before_boot(((set_how_virtualize_file(false,File)))).
 :- doall((module_property(M,file(File)),module_property(M,class(CT)),memberchk(CT,[library,system]),(set_how_virtualize_file(false,File)))).
 %:- doall((source_file(File),(set_how_virtualize_file(false,File)))).
 %base_kb_dynamic(F,A):- ain(mpred_prop(M,F,A,prologHybrid)),kb_shared(F/A).
@@ -517,11 +522,13 @@ only_expand(I,OO):- quietly(must_pfc(I,M)),
 make_load_list([C|O],S,[baseKB:spft(C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):- clause_asserted(C),!, make_load_list(O,S,OO).
 make_load_list([C|O],S,[C, baseKB:spft(C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):-  is_loadin(C),!,make_load_list(O,S,OO).
 make_load_list(_,_,[]):-!.  
-                 
+
+cna_functor_safe(P,F,A):- compound(P) -> compound_name_arity(P,F,A) ; functor(P,F,A).
+
 is_loadin(C):- strip_module(C,M,CC),is_loadin(M,CC).
 is_loadin(_,CC):- must_pfc_p(CC),!.
 is_loadin(_,(_:-_)):-!.
-is_loadin(M,CC):- functor(CC,F,A),show_call(kb_local(M:F/A)),break.
+is_loadin(M,CC):- cna_functor_safe(CC,F,A),show_call(kb_local(M:F/A)),break.
 
 
 %must_pfc_exp(P,PO):- (in_dialect_pfc;must_pfc_p(P)),fully_expand(P,PO),!.
@@ -536,10 +543,11 @@ must_pfc(P,P):- must_pfc_checked(P),!. % ,source_module(SM),!.
 
 
 must_pfc_checked(F):- must_pfc_p(F),
-  sanity(ignore((current_prolog_flag(expect_pfc_file,never),nop(dumpST,rtrace(must_pfc_p(F)),break)))).
+  sanity(ignore((current_prolog_flag(expect_pfc_file,never),nop(((dumpST,rtrace(must_pfc_p(F)),break)))))).
 
-p_to_mfa(M:P,M,F,A):- !, functor(P,F,A).
-p_to_mfa(P,M,F,A):- functor(P,F,A), freeze(M,ignore(M=baseKIB)).
+
+p_to_mfa(M:P,M,F,A):- !, cna_functor_safe(P,F,A).
+p_to_mfa(P,M,F,A):- cna_functor_safe(P,F,A), freeze(M,ignore(M=baseKIB)).
 
 
 %must_pfc_p('-->'(_,_)):-!,fail.
@@ -551,8 +559,8 @@ must_pfc_p(':-'(Head,_)):- !, must_pfc_p(Head).
 must_pfc_p('->'(_,_)).
 % must_pfc_p('=>'(_,_)).
 must_pfc_p(M:_):- M==system,!,fail.
-must_pfc_p(M:P):- !,nonvar(P),functor(P,F,A),must_pfc_mfa(M,F,A).
-must_pfc_p(P):- functor(P,F,A), must_pfc_mfa(_,F,A).
+must_pfc_p(M:P):- !,nonvar(P),cna_functor_safe(P,F,A),must_pfc_mfa(M,F,A).
+must_pfc_p(P):- cna_functor_safe(P,F,A), must_pfc_mfa(_,F,A).
 
 must_pfc_mfa(M,F,A):- always_pfc_mfa(M,F,A),!.
 must_pfc_mfa(M,F,A):- is_pfc_file_notrace, maybe_pfc_mfa(M,F,A),!,ignore(M=baseKB),!,ain(mpred_prop(M,F,A,prologHybrid)).
@@ -562,8 +570,8 @@ maybe_pfc_mfa(M,F,A):- clause_b(mpred_prop(M,F,A,PFC_TYPE)),pfc_hybrid_type(PFC_
 maybe_pfc_mfa(_,F,2):- sub_atom(F,'='),  (atom_concat(_,'>',F);atom_concat('<',_,F)).
 
 
-always_pfc_p(M:P):- !,nonvar(P),functor(P,F,A),always_pfc_mfa(M,F,A).
-always_pfc_p(P):- functor(P,F,A), always_pfc_mfa(_,F,A).
+always_pfc_p(M:P):- !,nonvar(P),cna_functor_safe(P,F,A),always_pfc_mfa(M,F,A).
+always_pfc_p(P):- cna_functor_safe(P,F,A), always_pfc_mfa(_,F,A).
 
 always_pfc_mfa(M,F,A):- clause_b(mpred_prop(M,F,A,prologHybrid)).
 always_pfc_mfa(_,F,A):- mpred_database_term(F,A,_).
@@ -596,7 +604,7 @@ is_never_pfc(P):- always_pfc_p(P),!,fail.
 %is_never_pfc(_):- prolog_load_context(file,F),\+ prolog_load_context(source,F),atom_concat(_,'.pl',F),\+ atom_concat(_,'pfc.pl',F).
 is_never_pfc(':-'(_)).
 is_never_pfc(':-'(C,_)):- !, is_never_pfc(C).
-is_never_pfc(M:P):- functor(P,F,A),clause_b(mpred_prop(M,F,A,prologBuiltin)),!.
+is_never_pfc(M:P):- cna_functor_safe(P,F,A),clause_b(mpred_prop(M,F,A,prologBuiltin)),!.
 is_never_pfc(M:_):- M==system,!.
 is_never_pfc(_:C):- !, is_never_pfc(C).
 
@@ -614,7 +622,7 @@ is_never_pfc(P):- is_never_pfc_sys(P), (\+ is_pfc_file_notrace->true;rtrace(is_n
 
 is_never_pfc_sys(P):- notrace(predicate_property(P,static)),predicate_property(P,static).
 %is_never_pfc_sys(P):- predicate_property(P,built_in).
-is_never_pfc_sys(P):- predicate_property(P,system),functor(P,F,2),current_op(Pri,xfx,F),Pri<1000.
+is_never_pfc_sys(P):- predicate_property(P,system),cna_functor_safe(P,F,2),current_op(Pri,xfx,F),Pri<1000.
 
 % TODO Maybe find a better spot?  see t/sanity_base/hard_mt_04a.pfc
 /*is_never_pfc(M:C):- \+ is_never_pfc(C), \+ current_module(M),
@@ -700,12 +708,14 @@ pfc_clause_expansion(I,O):-
       ignore(( O\==MO , (dmsg_pretty(directive_to_clauses(I)-->O)))))),!.
 
 :- module_transparent(pfc_clause_expansion/2).
+:- pfc_lib:export(pfc_lib:pfc_clause_expansion/2).
 :- system:import(pfc_lib:pfc_clause_expansion/2).
 
 %maybe_directive_to_clauses(:- ain(A),Clauses):- loader_side_effect_capture_only(ain(A),Clauses).
 %maybe_directive_to_clauses(:- ain(A),Clauses):- loader_side_effect_capture_only(ain(A),Clauses).
 maybe_directive_to_clauses(O,O):-!.
 
+:- pfc_lib:export(pfc_lib:same_expandsion/2).
 :- system:import(pfc_lib:same_expandsion/2).
 same_expandsion(I,O):- (var(I);var(O)),!,I==O.
 same_expandsion(I,O):- reduce_to_data(I,II),reduce_to_data(O,OO),!,II=@=OO.
@@ -795,7 +805,7 @@ system:clause_expansion(I,O):-
  % ((in_dialect_pfc;prolog_load_context(module,M),pfc_may_see_module(M))),
   pfc_clause_expansion(I,O).
 
-% :- current_predicate(system:F/A),functor(PI,F,A),
+% :- current_predicate(system:F/A),cna_functor_safe(PI,F,A),
 % \+ predicate_property(system:PI,imported_from(_)).
 
 

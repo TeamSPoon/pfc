@@ -228,19 +228,26 @@ load_file_some_type(M:File,Options):- call_from_module(M,must(load_files(M:File,
 % Prolog Load File.
 %
 
-user:prolog_load_file(Module:Spec, Options):-
+maybe_load_pfc_files(Module:Spec, Options):- 
    \+ exists_source(Spec),
-   \+ \+ (logicmoo_util_filesystem:(filematch(Module:Spec,O)),exists_file(O)),
-  doall((logicmoo_util_filesystem:(filematch(Module:Spec,SpecO)),load_files(Module:SpecO, Options))),!.
+   findall(SpecO,(logicmoo_util_filesystem:filematch(Module:Spec,SpecO),exists_file(SpecO)),SpecOList),!,
+   SpecOList\==[], !, 
+   forall(member(SpecO,SpecOList),load_files(Module:SpecO, Options)),!.
 
 
-user:prolog_load_file(Module:Spec, Options):- fail,
+maybe_load_pfc_files(Module:Spec, Options):- fail,
   Spec \== 'MKINDEX.pl',
    catch(find_and_call(prolog_load_file_loop_checked(Module:Spec, Options)),
     E,
      ((wdmsg_pretty(E),dtrace,find_and_call(prolog_load_file_loop_checked(Module:Spec, Options)),throw(E)))),!.
 %user:prolog_load_file(_,_):- get_lang(pl),!,fail.
 %user:prolog_load_file(_,_):- set_file_lang(pl),set_lang(pl),fail.
-   
+
+
 :- fixup_exports.
+
+:- module_transparent(user:prolog_load_file/1).
+
+user:prolog_load_file(ModuleSpec, Options):- maybe_load_pfc_files(ModuleSpec, Options),!.
+
 
