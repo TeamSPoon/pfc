@@ -143,8 +143,13 @@ pfcSanityA.
 % :- kb_shared(genlMt/2).
 :- kb_shared(do_import_modules/0).
 
-
+:- baseKB:export(baseKB:ttRelationType/1).
+:- rtrace:import(baseKB:ttRelationType/1).
+:- baseKB:export(baseKB:prologOrdered/1).
+:- rtrace:import(baseKB:prologOrdered/1).
 ((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C),(C==user->dmsg_pretty(warn(mtHybrid(C)));true)}).
+
+:- wdmsg(loading_system_base()).
 
 predicateTriggerType(kb_local).
 predicateTriggerType(kb_shared).

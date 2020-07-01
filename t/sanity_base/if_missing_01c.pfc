@@ -32,11 +32,11 @@ if_missing(Missing,Create) ==>
  ==> Create).
 
    % prevents segfaults
-:- set_prolog_flag(gc,true).
+%:- set_prolog_flag(gc,true).
 
 :- mpred_test(foob(a)).
 
-:- set_prolog_flag(gc,false).
+%:- set_prolog_flag(gc,false).
 
 :- ain(foob(b)).
 

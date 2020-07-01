@@ -203,6 +203,7 @@ push_current_choice/1,
 
 :- dynamic(lmcache:mpred_is_spying_pred/2).
 
+:- system:use_module(library(edinburgh)).
 :- system:use_module(library(ordsets)).
 :- system:use_module(library(oset)).
 
@@ -286,8 +287,6 @@ with_each_item(P,[H|T],S) :- !, apply(P,[H|S]), with_each_item(P,T,S).
 with_each_item(P,(H,T),S) :- !, with_each_item(P,H,S), with_each_item(P,T,S).
 with_each_item(P,H,S) :- apply(P,[H|S]).
 
-:- meta_predicate on_x_rtrace(*).
-on_x_rtrace(G):-on_x_debug(G).
 
 
 
@@ -326,8 +325,8 @@ on_x_rtrace(G):-on_x_debug(G).
 
 /*
 */
-%:- dynamic(baseKB:mpred_is_tracing_exec/0).
-%:- export(baseKB:mpred_is_tracing_exec/0).
+:- dynamic(baseKB:mpred_is_tracing_exec/0).
+:- export(baseKB:mpred_is_tracing_exec/0).
 
 mpred_database_term_syntax(do_and_undo,2,rule(_)).
 
@@ -341,8 +340,8 @@ mpred_database_term_syntax((==>),1,fact(_)).
 mpred_database_term_syntax((~),1,fact(_)).
 
 
-baseKB:mpred_database_term(F,A,syntaxic(T)):- mpred_database_term_syntax(F,A,T).
-baseKB:mpred_database_term(F,A,T):- mpred_core_database_term(F,A,T).
+baseKB:mpred_database_term(F,A,syntaxic(T)):- pfc_lib:mpred_database_term_syntax(F,A,T).
+baseKB:mpred_database_term(F,A,T):- pfc_lib:mpred_core_database_term(F,A,T).
 
 mpred_core_database_term(genlPreds,2,fact(_)).
 % mpred_core_database_term(rtArgsVerbatum,1,fact(_)).
@@ -378,9 +377,12 @@ mpred_core_database_term(predicateConventionMt,2,fact(_)).
 %mpred_core_database_term(arity,2,fact(_)).
 %mpred_core_database_term(rtArgsVerbatum,1,fact(_)).
 
-
-:- forall(baseKB:mpred_database_term(F,A,_),
-    (dynamic(baseKB:F/A),system:import(baseKB:F/A))).
+                         
+import_everywhere:- 
+  forall(baseKB:mpred_database_term(F,A,_),
+    (dynamic(baseKB:F/A),baseKB:export(baseKB:F/A),
+     system:import(baseKB:F/A))).
+:- import_everywhere.
 
 :- thread_local(t_l:whybuffer/2).
 % :- dynamic(baseKB:que/2).
@@ -1709,14 +1711,14 @@ mpred_enqueue(P,S):-
    ; mpred_error("No pm mode")).
 
 mpred_enqueue_w_mode(S,Mode,P):-
-    (Mode=direct  -> loop_check_term(mpred_fwc(P),mpred_enqueueing(P),true)) ;
-        Mode=thread  ->  mpred_enqueue_thread(S,P);
+       (Mode=direct  -> mpred_enqueue_direct(S,P) ;
+        Mode=thread  -> mpred_enqueue_thread(S,P) ;
 	Mode=depth   -> mpred_asserta_w_support(que(P,S),S) ;
-        Mode=paused   -> mpred_asserta_w_support(que(P,S),S) ;
+        Mode=paused  -> mpred_asserta_w_support(que(P,S),S) ;
 	Mode=breadth -> mpred_assertz_w_support(que(P,S),S) ;
         Mode=next   -> mpred_asserta_w_support(que(P,S),S) ;
         Mode=last -> mpred_assertz_w_support(que(P,S),S) ;
-	true         -> mpred_error("Unrecognized pm mode: ~p", Mode).
+	true     -> mpred_error("Unrecognized pm mode: ~p", Mode)).
 
 is_fwc_mode(direct).
 is_fwc_mode(thread).
@@ -1725,6 +1727,19 @@ is_fwc_mode(paused).
 is_fwc_mode(breadth).
 is_fwc_mode(next).
 is_fwc_mode(last).
+
+
+get_support_module(mfl4(_,Module,_,_), Module).
+get_support_module((S1,S2),Module):- !, (get_support_module(S1,Module);get_support_module(S2,Module)).
+get_support_module((S2:S1),Module):- !, (get_support_module(S1,Module);get_support_module(S2,Module)).
+
+of_queue_module(_, M:_, M):- atom(M), !.
+of_queue_module(S, _, Module):- get_support_module(S, Module), !.
+of_queue_module(_, _, Module):- get_query_from(Module), !.
+
+mpred_enqueue_direct(S,P):-
+  of_queue_module(S,P,Module),
+  loop_check_term(Module:mpred_fwc(P),mpred_enqueueing(P),true).
 
 /*
 mpred_enqueue_thread(S,P):- 
@@ -1742,8 +1757,8 @@ mpred_enqueue_thread(S,P):-
 fwc_wlc(P):- in_fc_call(loop_check_term(mpred_fwc(P),mpred_enqueueing(P),true)).
 
 % maybe keep `thread` mode?
-in_fc_call(Goal):- with_fc_mode( thread, Goal).
-% in_fc_call(Goal):- with_fc_mode( direct, Goal).
+% in_fc_call(Goal):- with_fc_mode( thread, Goal).
+in_fc_call(Goal):- with_fc_mode( direct, Goal).
 % in_fc_call(Goal):- !, call(Goal).
 
 %% mpred_remove_old_version( :TermIdentifier) is semidet.
@@ -2450,14 +2465,18 @@ mpred_do_clause0(H,B):-
   mpred_do_fcnt(Copy,Fact),
   mpred_do_hb_catchup(H,B).
 
-
+:- dynamic(baseKB:todo_later/1).
+is_cutted(Cutted):- contains_var(!,Cutted).
+do_later(mpred_do_clause(_,Cutted)):- is_cutted(Cutted),!.
+do_later(mpred_do_clause(~_H,_B)):- !.
+do_later(G):- assertz(baseKB:todo_later(G)),nop(dmsg(do_later(G))).
 
 % prolog_clause mpred_do_fact (_ :- _)
 mpred_do_fact(Fact):-
   Fact = (_:-_), 
   copy_term_vn(Fact,(H:-B)),
   B\=(cwc,_),!,
-  mpred_do_clause(H,B),!.
+  do_later(mpred_do_clause(H,B)),!.
 
 mpred_do_fact(Fact):-
   copy_term_vn(Fact,Copy),
@@ -2738,9 +2757,9 @@ get_var_or_functor(H,F):- compound(H)->get_functor(H,F);H=F.
 %call_u(G):- strip_module(G,M,P), no_repeats(gripe_time(5.3,on_x_rtrace(call_u_mp(M,P)))).
 
 
-
-call_u_mp(pfc_lib, P1 ):- break_ex,'$current_source_module'(SM),SM\==pfc_lib,!,  call_u_mp(SM,P1).
-call_u_mp(query, P1 ):- !, must(get_query_from(SM)),call_u_mp(SM,P1).
+call_u_mp(pfc_lib, P1 ):- !, call_u_mp(query, P1 ).
+% call_u_mp(pfc_lib, P1 ):- !, break_ex,'$current_source_module'(SM),SM\==pfc_lib,!,  call_u_mp(SM,P1).
+call_u_mp(query, P1 ):- !, must(get_query_from(SM)),sanity(pfc_lib\==SM),call_u_mp(SM,P1).
 call_u_mp(assert, P1 ):- !, must(get_assert_to(SM)),call_u_mp(SM,P1).
 call_u_mp(System, P1 ):-  is_code_module(System),!, call_u_mp(query,P1).
 call_u_mp(M,P):- var(P),!,call((clause_b(mtExact(M))->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
@@ -3208,7 +3227,7 @@ mpred_compile_rhs_term(Sup,I,O):- mpred_compile_rhs_term_consquent(Sup,I,O).
        !.
 
      mpred_positive_fact(X):-  mpred_positive_literal(X), X \= ~(_), 
-     mpred_db_type(X,fact(_FT)), \+ mpred_db_type(X,trigger).
+        mpred_db_type(X,fact(_FT)), \+ mpred_db_type(X,trigger).
 
      mpred_is_trigger(X):-   mpred_db_type(X,trigger(_)).
 
