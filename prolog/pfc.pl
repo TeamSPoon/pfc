@@ -7,41 +7,22 @@
 :- if(( current_prolog_flag(xref,true) ;
    ('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'wusing_pfc'(M,CM,SM,pfc_mod))))).
 :- endif.
-
 :- if((prolog_load_context(source,File),prolog_load_context(file,File))).
-:- module(pfc_mod,[use_pfc_mod/0]).
-
-%:- throw(include(pfc)).
-:- abolish(use_pfc_mod/0).
+:- module(pfc_mod,[]).
 :- prolog_load_context(file,File),unload_file(File).
-:- asserta(use_pfc_mod).
 :- endif.
-
-
-%:- set_prolog_flag(debug_on_error,true).
-%:- set_prolog_flag(report_error,true).
-%:- baseKB:'wusing_pfc'(_M,_CM,SM,pfc_mod),SM:use_module(pfc_lib).
-:- baseKB:'wusing_pfc'(_M,_CM,_SM,pfc_mod),pfc_lib:use_module(pfc_lib).
-%:- baseKB:'wusing_pfc'(_M,_CM,SM,pfc_mod),SM:reexport(pfc_lib).
-:- set_prolog_flag(mpred_te,true).
-
-
-
-
+:- pfc_lib:use_module(pfc_lib).
+:- if( \+  current_prolog_flag(xref,true)).
 :- must(retract(baseKB:'wusing_pfc'(M,CM,SM,pfc_mod))),
    show_wdmsg(baseKB:'chusing_pfc'(M,CM,SM,pfc_mod)),
    (M==SM -> 
      (maybe_ensure_abox(SM),nop((M:ain(genlMt(SM,baseKB)))));
      show_wdmsg(baseKB:'lusing_pfc'(M,CM,SM,pfc_mod))),   
-   assert(baseKB:'using_pfc'(M,CM,SM,pfc_mod)).
+   assert(baseKB:'$using_pfc'(M,CM,SM,pfc_mod)),
+   asserta(SM:'$does_use_pfc_mod'(M,CM,SM,pfc_mod)).
+   %backtrace(200).
    
-%:- baseKB:ensure_loaded('pfclib/system_autoexec.pfc').
-:- set_prolog_flag(pfc_booted,true).
-
-:- set_prolog_flag(retry_undefined, kb_shared).
-:- set_prolog_flag(pfc_ready, true).
+%:- set_prolog_flag(retry_undefined, kb_shared).
+%:- set_prolog_flag(pfc_ready, true).
 :- set_prolog_flag(expect_pfc_file,unknown).
-
-%:- endif.
-%:- statistics.
-
+:- endif.
