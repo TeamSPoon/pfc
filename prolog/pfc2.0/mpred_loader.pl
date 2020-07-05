@@ -546,7 +546,7 @@ etrace:-leash(+all),leash(+exception),dtrace.
 %
 % Gload.
 %
-gload:- ensure_mpred_file_loaded(logicmoo('rooms/startrek.all.pfc.pl')).
+gload:- baseKB:ensure_mpred_file_loaded(logicmoo('rooms/startrek.all.pfc.pl')).
 
 %:-meta_predicate(savedb/0).
 
@@ -1080,7 +1080,7 @@ clause_count(Mask,N):-
          flag(clause_count,X,X+Count),fail)),flag(clause_count,N,0),!.
 
 
-:- dynamic(checked_clause_count/2).
+:- dynamic(checked_clause_count/1).
 
 checked_clause_count(isa(_,_)).
 checked_clause_count(~(_)).
@@ -1905,7 +1905,9 @@ is_compiling_sourcecode:-compiling,dmsg_pretty(system_compiling),!.
 %
 % Load Managed Predicate Files.
 %
-load_mpred_files :- forall(baseKB:how_virtualize_file(heads,File,_),ensure_mpred_file_loaded(File)).
+load_mpred_files :- 
+   forall((baseKB:how_virtualize_file(Heads,File,_),false\==Heads,bodies\==Heads), 
+     baseKB:ensure_mpred_file_loaded(File)).
 
 
 % =======================================================
@@ -1974,6 +1976,7 @@ ensure_mpred_file_loaded(M:F0,List):-
 %
 :- meta_predicate(ensure_mpred_file_loaded(:)).
 
+ensure_mpred_file_loaded(MFileIn):- baseKB:ensure_loaded(MFileIn),!.
 ensure_mpred_file_loaded(MFileIn):- strip_module(MFileIn,M,_), 
  forall(must_locate_file(MFileIn,File),   
    must_det_l((set_how_virtualize_file(heads,File),time_file(File,NewTime),!,
@@ -2093,7 +2096,9 @@ load_mpred_on_file_end(World,File):-
 %
 % Finish Processing World.
 %
-finish_processing_world :- load_mpred_files, loop_check(locally(t_l:agenda_slow_op_do_prereqs,doall(finish_processing_dbase)),true).
+finish_processing_world :- 
+  load_mpred_files, 
+  loop_check(locally(t_l:agenda_slow_op_do_prereqs,doall(finish_processing_dbase)),true).
 
 
 
