@@ -14,7 +14,7 @@
 
 :- set_fileAssertMt(baseKB).
 %:- add_import_module(baseKB,pfc_lib,end).
-:- initialization(fix_baseKB_imports,now).
+:- fix_baseKB_imports.
 %:- use_module(library(no_repeats)).
 %:- use_module(library(dictoo)).
 % ensure this file does not get unloaded with mpred_reset
