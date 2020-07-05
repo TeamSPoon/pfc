@@ -339,7 +339,7 @@ is_pfc_module_file(M):- is_pfc_module_file(M,F,TF),!, (F \== (-)), TF = true.
 is_pfc_module_file(M,F,TF):- (module_property(M,file(F)),pfc_lib:is_pfc_file(F)) *-> TF=true ; 
   (module_property(M,file(F))*->TF=false ; (F= (-), TF=false)).
 
-maybe_ensure_abox(M):- is_pfc_module_file(M,F,_), (F \== (-)), !, 
+maybe_ensure_abox(M):- is_pfc_module_file(M,F,_), (F \== (-)), !,   
   (pfc_lib:is_pfc_file(F)->show_call(pfc_lib:is_pfc_file(F),ensure_abox(M));dmsg_pretty(not_is_pfc_module_file(M,F))).
 maybe_ensure_abox(M):- show_call(not_is_pfc_file,ensure_abox(M)).
 

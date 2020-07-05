@@ -212,8 +212,9 @@ mpred_loader_module:- fail, nop(module(mpred_loader,
 % prolog:make_hook(before, FileS):- maplist(mpred_loader:mpred_unload_file,FileS).
 
 % Avoid Warning: mpred_loader:prolog_load_context(reload,true), which is called from
-mpred_unload_file:- \+ call(call,prolog_load_context(reload,true)),!.
+mpred_unload_file:- prolog_load_context(reload,true),!.
 mpred_unload_file:- source_location(File,_),mpred_unload_file(File).
+mpred_unload_file(File):- dmsg(nop(mpred_unload_file(File))),!.
 mpred_unload_file(File):-
   findall(
     mpred_withdraw(Data,(mfl4(VarNameZ,Module, File, LineNum),AX)),
@@ -242,7 +243,7 @@ mpred_unload_file(File):-
         ensure_mpred_file_loaded(+, :),
         force_reload_mpred_file(?),
         force_reload_mpred_file2(+,+),
-        get_last_time_file(+, +, +),
+        get_last_time_file(+, +, -),
         expand_term_to_load_calls(?, ?),
         mpred_expander_now_physically(?, ?, ?),
         load_init_world(+, :),
@@ -1765,7 +1766,7 @@ load_language_file(Name0):-
          (system:term_expansion(_,_,_,_):-!,fail),
          (system:goal_expansion(_,_,_,_):-!,fail),
          (system:goal_expansion(_,_):-!,fail)],
-     gripe_time(1,(baseKB:load_files([Name],[qcompile(part),register(false),if(not_loaded)])))
+     gripe_time(1,(baseKB:load_files([Name],[qcompile(part),if(not_loaded)])))
        ->asserta(baseKB:never_reload_file(Name));retract(baseKB:never_reload_file(Name)))))),!.
  
 
@@ -1926,10 +1927,10 @@ show_load_call(C):- must(on_x_debug(show_call(why,C))).
 %
 % Get Last Time File.
 %
-get_last_time_file(FileIn,World,LastTime):- absolute_file_name(FileIn,File),baseKB:loaded_file_world_time(File,World,LastTime),!.
-get_last_time_file(_,_,0).
-
-
+get_last_time_file(FileIn,World,LastTime):- absolute_file_name(FileIn,File),FileIn\==File,!,get_last_time_file(File,World,LastTime).
+get_last_time_file(File,World,LastTime):- baseKB:loaded_file_world_time(File,World,LastTime),!.
+get_last_time_file(File,_, LoadTime):- source_file_property(File, modified(LoadTime)).
+get_last_time_file(_,_,0.0).
 
 :- meta_predicate(load_init_world(+,:)).
 
@@ -1976,12 +1977,36 @@ ensure_mpred_file_loaded(M:F0,List):-
 %
 :- meta_predicate(ensure_mpred_file_loaded(:)).
 
-ensure_mpred_file_loaded(MFileIn):- baseKB:ensure_loaded(MFileIn),!.
-ensure_mpred_file_loaded(MFileIn):- strip_module(MFileIn,M,_), 
- forall(must_locate_file(MFileIn,File),   
-   must_det_l((set_how_virtualize_file(heads,File),time_file(File,NewTime),!,
-   get_last_time_file(File,_World,LastTime),
-   (LastTime<NewTime -> force_reload_mpred_file(M:File) ; true)))).
+% ensure_mpred_file_loaded(MFileIn):- baseKB:ensure_loaded(MFileIn),!.
+ensure_mpred_file_loaded(MFileIn):- strip_module(MFileIn,M,_),
+ forall((must_locate_file(MFileIn,File),
+   needs_load_or_reload_file(File)),   
+   (set_how_virtualize_file(heads,File),
+      force_reload_mpred_file(M:File))).
+
+needs_load_or_reload_file(File) :- \+ source_file_property(File, _),!.
+needs_load_or_reload_file(File) :-
+    source_file_property(Source, modified(Time)),
+    \+ source_file_property(Source, included_in(_,_)),
+    Time > 0.0,                     % See source_file/1
+    (   source_file_property(Source, derived_from(File, LoadTime))
+    ->  true
+    ;   File = Source,
+        LoadTime = Time
+    ),
+    (   catch(time_file(File, Modified), _, fail),
+        Modified - LoadTime > 0.001             % (*)
+    ->  true
+    ;   source_file_property(Source, includes(Included, IncLoadTime)),
+        catch(time_file(Included, Modified), _, fail),
+        Modified - IncLoadTime > 0.001          % (*)
+    ->  true
+    ).
+
+old_mpred_ensure_loaded(M,File):-
+   must_det_l((set_how_virtualize_file(heads,File),time_file(File,FileTime),!,
+   get_last_time_file(File,_World,LastLoadTime),
+   (FileTime \== LastLoadTime -> force_reload_mpred_file(M:File); M:ensure_loaded(File)))).
 
 :- meta_predicate(force_reload_mpred_file(?)).
 
