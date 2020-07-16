@@ -1,0 +1,7 @@
+:- include(library(pfc_header_3_0)).
+
+player(tim).
+player(janet).
+player(katie).
+player(peter).
+

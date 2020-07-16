@@ -1,6 +1,7 @@
 *.tar
 *.tar.*
 *.jar
+*.bak
 *.exe
 *.msi
 *.zip
