@@ -38,7 +38,7 @@ bagof_or_nil(T,G,L):- bagof(T,G,L)*->true;L=[].
 setof_or_nil(T,G,L):- setof(T,G,L)*->true;L=[].
 
 add(X):- pfcAdd(X).
-rem(X):- pfcRem_U(X).
+rem(X):- pfcWithdraw(X).
 rem2(X):- pfcBlast_U(X).
 remove(X):- pfcRemove(X).
 
@@ -185,7 +185,7 @@ termf_subst(Subst,F,F2):-member(F-F2,Subst)->true;F=F2.
 :- dynamic fcAction/2.
 :- dynamic fcTmsMode/1.
 :- dynamic pfcQueue/1.
-:- dynamic pfcDatabase/1.
+:- dynamic pfcCurrentDb/1.
 :- dynamic pfcHaltSignal/1.
 :- dynamic pfcDebugging/0.
 :- dynamic pfcSelect/1.
@@ -198,6 +198,13 @@ termf_subst(Subst,F,F2):-member(F-F2,Subst)->true;F=F2.
 :- dynamic pfcSupport3/3.
 
 %%% initialization of global assertons 
+
+pfcSetVal(Stuff):- 
+   duplicate_term(Stuff,DStuff),
+   functor(DStuff,_,N),
+   setarg(N,DStuff,_),
+   retractall(DStuff),
+   assert(Stuff).
 
 %% pfcDefault/1 initialized a global assertion.
 %%  pfcDefault(P,Q) - if there is any fact unifying with P, then do 
@@ -288,31 +295,6 @@ pfcUnique(_Type,(Head:-Tail)) :-
 pfcUnique(_Type, P) :-
   \+ clause(P,true).
 
-pfcSetVal(Stuff):- 
-   duplicate_term(Stuff,DStuff),
-   functor(DStuff,_,N),
-   setarg(N,DStuff,_),
-   retractall(DStuff),
-   assert(Stuff).
-
-
-%% with_fc_mode(+Mode,:Goal) is semidet.
-% 
-% Temporariliy changes to forward chaining propagation mode while running the Goal
-%
-with_fc_mode(Mode,Goal):- locally(t_l:pfcSearchTL(Mode),Goal).
-
-
-pfcThreadFwd(S,P):- 
-      with_only_current_why(S,
-       % maybe keep `thread` mode?
-        call_in_thread(with_fc_mode(thread, (pfcFwd(P))))).
-
-% in_fc_call(Goal):- with_fc_mode( thread, Goal).
-%in_fc_call(Goal):- with_fc_mode( direct, Goal).
-% in_fc_call(Goal):- !, pfcCallSystem(Goal).
-
-
 
 %% pfcEnqueue(P,Q) is det.
 % 
@@ -350,9 +332,27 @@ pfcRemoveOldVersion0((Identifier::::Body)) :-
   nonvar(Identifier),
   clause((Identifier::::OldBody),_),
   \+(Body=OldBody),
-  pfcRem_U((Identifier::::OldBody)),
+  pfcWithdraw((Identifier::::OldBody)),
   !.
 pfcRemoveOldVersion0(_).
+
+
+%% with_fc_mode(+Mode,:Goal) is semidet.
+% 
+% Temporariliy changes to forward chaining propagation mode while running the Goal
+%
+with_fc_mode(Mode,Goal):- locally(t_l:pfcSearchTL(Mode),Goal).
+
+
+pfcThreadFwd(S,P):- 
+      with_only_current_why(S,
+       % maybe keep `thread` mode?
+        call_in_thread(with_fc_mode(thread, (pfcFwd(P))))).
+
+% in_fc_call(Goal):- with_fc_mode( thread, Goal).
+%in_fc_call(Goal):- with_fc_mode( direct, Goal).
+% in_fc_call(Goal):- !, pfcCallSystem(Goal).
+
 
 
 
@@ -508,7 +508,7 @@ pfcRetractType(rule,X) :-
 
 pfcRetractType(trigger,X) :- 
   retract(X)
-    -> pfcUnFwd(X)
+    -> unFc(X)
      ; pfcWarn("Trigger not found to retract: ~p",[X]).
 
 pfcRetractType(action,X) :- pfcRemActionTrace(X).
@@ -523,11 +523,11 @@ pfcAddType1(X) :-
   % call the appropriate predicate.
   pfcAddType(Type,X2).
 
-pfcAddType(fact,X) :- 
-  pfcUnique(fact,X), 
+pfcAddType(fact(Type),X) :- 
+  pfcUnique(fact(Type),X), 
   assert(X),!.
-pfcAddType(rule,X) :- 
-  pfcUnique(rule,X), 
+pfcAddType(rule(Type),X) :- 
+  pfcUnique(rule(Type),X), 
   assert(X),!.
 pfcAddType(trigger,X) :- 
   pfcUnique(trigger,X) -> assert(X) ; 
@@ -538,11 +538,11 @@ pfcAddType(action,_Action) :- !.
 
  
 
-% pfcRem_U/1 is the user's interface - it withdraws user support for P.
-% If a list, iterate down the list of facts to be pfcRem_U'ed.
-pfcRem_U(P) :- 
+% pfcWithdraw/1 is the user's interface - it withdraws user support for P.
+% If a list, iterate down the list of facts to be pfcWithdraw'ed.
+pfcWithdraw(P) :- 
   is_list(P)
-  -> maplist(pfcRem_U,P)
+  -> maplist(pfcWithdraw,P)
   ;( matches_why_UU(UU),
   pfcRem_S(P,UU)).
 
@@ -559,11 +559,11 @@ pfcRem_S(P,S) :-
 
 % pfcBlast_U/1 is the user's interface - it withdraws user support for P.
 %
-% pfcBlast_U is like pfcRem_U, but if P is still in the DB after removing the
+% pfcBlast_U is like pfcWithdraw, but if P is still in the DB after removing the
 % user's support, it is retracted by more forceful means (e.g. pfcRemove).
 %
 pfcBlast_U(P) :-
-  pfcRem_U(P),
+  pfcWithdraw(P),
   pfc_call(P)
      -> pfcRemove(P) 
       ; true.
@@ -605,14 +605,14 @@ fcUndo(pt(/*Key,*/Head,Body)) :-
   %
   !,
   (retract(pt(/*Key,*/Head,Body))
-    -> pfcUnFwd(pt(Head,Body))
+    -> unFc(pt(Head,Body))
      ; pfcWarn("Trigger not found to retract: ~p",[pt(Head,Body)])).
 
 fcUndo(nt(Head,Condition,Body)) :-  
   % undo a negative trigger.
   !,
   (retract(nt(Head,Condition,Body))
-    -> pfcUnFwd(nt(Head,Condition,Body))
+    -> unFc(nt(Head,Condition,Body))
      ; pfcWarn("Trigger not found to retract: ~p",[nt(Head,Condition,Body)])).
 
 fcUndo(Fact) :-
@@ -622,15 +622,15 @@ fcUndo(Fact) :-
   unFc1(Fact).
   
 
-%% pfcUnFwd(P) is det.
+%% unFc(P) is det.
 %
-% pfcUnFwd(P) "un-forward-chains" from fact f.  That is, fact F has just
+% unFc(P) "un-forward-chains" from fact f.  That is, fact F has just
 % been removed from the database, so remove all support relations it
 % participates in and check the things that they support to see if they
 % should stayu in the database or should also be removed.
 
 
-pfcUnFwd(F) :- 
+unFc(F) :- 
   pfcRetractSupportRelations(F),
   unFc1(F).
 
@@ -641,7 +641,7 @@ unFc1(F) :-
 
 
 pfcUnFcCheckTriggers(F) :-
-  pfcType(F,fact),
+  pfcType(F,fact(_)),
   copy_term(F,Fcopy),
   pfcCallSystem(nt(Fcopy,Condition,Action)),
   (\+ pfcCallSystem(Condition)),
@@ -859,7 +859,7 @@ pfc_eval_rhs1(P,_Support) :-
  % predicate to remove.
  pfcNegatedLiteral(P),
  !,
- pfcRem_U(P).
+ pfcWithdraw(P).
 
 pfc_eval_rhs1([X|Xrest],Support) :-
  % embedded sublist.
@@ -909,12 +909,12 @@ trigger_trigger1(Trigger,Body) :-
   fail.
 
 
-
-%%
-%% pfc_call(F) is true iff F is a fact available for forward chaining.
-%% Note that this has the side effect of catching unsupported facts and
-%% assigning them support from God.
-%%
+%% pfc_call(F) is nondet.
+%
+% pfc_call(F) is true iff F is a fact available for forward chaining.
+% Note that this has the side effect of catching unsupported facts and
+% assigning them support from God.
+%
 
 pfc_call(F) :- var(F), !, pfc_call_var(F).
 pfc_call((A,B)) :-!, pfc_call(A),pfc_call(B).
@@ -1009,7 +1009,7 @@ pfc_nf1((P,Q),NF) :-
 
 %% handle a random atom.
 
-pfc_nf1(P,[P]) :- 
+pfc_nf1(P,[P]) :-
   pfcLiteral(P), 
   !.
 
@@ -1051,7 +1051,9 @@ pfc_nf_negations([H1|T1],[H2|T2]) :-
   pfc_nf_negation(H1,H2),
   pfc_nf_negations(T1,T2).
 
-pfc_nf_negation(Form,{\+ X}) :- % \+ tilded_negation,
+% Maybe \+ tilded_negation ?
+
+pfc_nf_negation(Form,{\+ X}) :-
   nonvar(Form),
   Form=(~({X})),
   !.
@@ -1065,32 +1067,6 @@ pfc_nf_negation(Form,{\+ X}) :- tilded_negation,
   !.
 pfc_nf_negation(X,X).
 
-
-
-
-     is_simple_lhs(ActN):- is_ftVar(ActN),!,fail.
-     is_simple_lhs( \+ _ ):-!,fail.
-     is_simple_lhs( ~ _ ):-!,fail.
-     is_simple_lhs( _  / _ ):-!,fail.
-     is_simple_lhs((Lhs1,Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
-     is_simple_lhs((Lhs1;Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
-     is_simple_lhs(ActN):- is_active_lhs(ActN),!,fail.
-     is_simple_lhs((Lhs1/Lhs2)):- !,fail, is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
-     is_simple_lhs(_).
-
-
-     is_active_lhs(ActN):- var(ActN),!,fail.
-     is_active_lhs(!).
-     is_active_lhs(cut_c).
-     is_active_lhs(actn(_Act)).
-     is_active_lhs('{}'(_Act)).
-     is_active_lhs((Lhs1/Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
-     is_active_lhs((Lhs1,Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
-     is_active_lhs((Lhs1;Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
-
-
-     add_lhs_cond(Lhs1/Cond,Lhs2,Lhs1/(Cond,Lhs2)):-!.
-     add_lhs_cond(Lhs1,Lhs2,Lhs1/Lhs2).
 
 
      %% constrain_meta(+Lhs, ?Guard) is semidet.
@@ -1120,28 +1096,31 @@ pfc_nf_negation(X,X).
 
 
 
-%% mpred_db_type(+VALUE1, ?Type) is semidet.
-%
-% PFC Database Type.
-%
-%  simple typeing for Pfc objects
-%
-mpred_db_type(Var,Type):- var(Var),!, Type=fact(_FT).
-mpred_db_type(_:X,Type):- !, mpred_db_type(X,Type).
-mpred_db_type(~_,Type):- !, Type=fact(_FT).
-mpred_db_type(('==>'(_,_)),Type):- !, Type=rule(fwd).
-mpred_db_type(('==>'(_,_)),Type):- !, Type=rule(==>).
-mpred_db_type(('<-'(_,_)),Type):- !, Type=rule(bwc).
-mpred_db_type((':-'(_,_)),Type):- !, Type=rule(cwc).
-mpred_db_type(pt(_,_,_),Type):- !, Type=trigger.
-mpred_db_type(pt(_,_),Type):- !, Type=trigger.
-mpred_db_type(nt(_,_,_),Type):- !,  Type=trigger.
-mpred_db_type(bt(_,_),Type):- !,  Type=trigger.
-mpred_db_type(actn(_),Type):- !, Type=action.
-mpred_db_type((('::::'(_,X))),Type):- !, mpred_db_type(X,Type).
-mpred_db_type(_,fact(_FT)):-
-  %  if it''s not one of the above, it must_ex be a fact!
-  !.
+
+
+     is_simple_lhs(ActN):- is_ftVar(ActN),!,fail.
+     is_simple_lhs( \+ _ ):-!,fail.
+     is_simple_lhs( ~ _ ):-!,fail.
+     is_simple_lhs( _  / _ ):-!,fail.
+     is_simple_lhs((Lhs1,Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
+     is_simple_lhs((Lhs1;Lhs2)):- !,is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
+     is_simple_lhs(ActN):- is_active_lhs(ActN),!,fail.
+     is_simple_lhs((Lhs1/Lhs2)):- !,fail, is_simple_lhs(Lhs1),is_simple_lhs(Lhs2).
+     is_simple_lhs(_).
+
+
+     is_active_lhs(ActN):- var(ActN),!,fail.
+     is_active_lhs(!).
+     is_active_lhs(cut_c).
+     is_active_lhs(actn(_Act)).
+     is_active_lhs('{}'(_Act)).
+     is_active_lhs((Lhs1/Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+     is_active_lhs((Lhs1,Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+     is_active_lhs((Lhs1;Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
+
+
+     add_lhs_cond(Lhs1/Cond,Lhs2,Lhs1/(Cond,Lhs2)):-!.
+     add_lhs_cond(Lhs1,Lhs2,Lhs1/Lhs2).
 
 
 
@@ -1175,6 +1154,7 @@ pfc_unnegate((-P),P).
 pfc_unnegate((\+(P)),P).
 
 pfcNegatedLiteral(P) :- 
+  callable(P),
   pfc_unnegate(P,Q),
   pfcPositiveLiteral(Q).
 
@@ -1274,20 +1254,29 @@ buildTest(Test,Test).
 %%
 
 
+%% pfcType(+VALUE1, ?Type) is semidet.
+%
+% PFC Database Type.
+%
+%  simple typeing for Pfc objects
+%
 
-%% simple typeing for pfc objects
 
-pfcType(('==>'(_,_)),Type) :- !, Type=rule.
-pfcType(('<==>'(_,_)),Type) :- !, Type=rule.
-pfcType(('<-'(_,_)),Type) :- !, Type=rule.
-pfcType(pt(_,_,_),Type) :- !, Type=trigger.
-pfcType(pt(_,_),Type) :- !, Type=trigger.
-pfcType(nt(_,_,_),Type) :- !,  Type=trigger.
-pfcType(bt(_,_),Type) :- !,  Type=trigger.
-pfcType(pfcAction(_),Type) :- !, Type=action.
-pfcType((('::::'(_,X))),Type) :- !, pfcType(X,Type).
-pfcType(_,fact) :-
-  %% if it's not one of the above, it must be a fact!
+pfcType(Var,Type):- var(Var),!, Type=fact(_FT).
+pfcType(_:X,Type):- !, pfcType(X,Type).
+pfcType(~_,Type):- !, Type=fact(_FT).
+pfcType(('==>'(_,_)),Type):- !, Type=rule(fwd).
+pfcType(('==>'(_,_)),Type):- !, Type=rule(==>).
+pfcType(('<-'(_,_)),Type):- !, Type=rule(bwc).
+pfcType((':-'(_,_)),Type):- !, Type=rule(cwc).
+pfcType(pt(_,_,_),Type):- !, Type=trigger.
+pfcType(pt(_,_),Type):- !, Type=trigger.
+pfcType(nt(_,_,_),Type):- !,  Type=trigger.
+pfcType(bt(_,_),Type):- !,  Type=trigger.
+pfcType(pfcAction(_),Type):- !, Type=action.
+pfcType((('::::'(_,X))),Type):- !, pfcType(X,Type).
+pfcType(_,fact(_FT)):-
+  %  if it''s not one of the above, it must_ex be a fact!
   !.
 
 pfcAssert(P,Support) :- 
@@ -1500,7 +1489,7 @@ pfcFact(P) :- pfcFact(P,true).
 
 pfcFact(P,C) :- 
   pfcGetSupport(P,_),
-  pfcType(P,fact),
+  pfcType(P,fact(_)),
   pfcCallSystem(C).
 
 %% pfcFacts(-ListofPfcFacts) returns a list of facts added.
