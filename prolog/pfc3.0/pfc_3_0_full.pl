@@ -796,7 +796,7 @@ fcnt(_,_).
 pfcDefineBcRule(Head,_Body,ParentRule) :-
   (\+ pfcLiteral(Head)),
   pfcWarn("Malformed backward chaining rule.  ~p not atomic.",[Head]),
-  pfcWarn("rule: ~p",[ParentRule]),
+  pfc_error("caused by rule: ~p",[Parent_rule]),
   !,
   fail.
 
@@ -807,7 +807,23 @@ pfcDefineBcRule(Head,Body,ParentRule) :-
   pfcForEach(pfc_nf(Body,Lhs),
           (buildTrigger(Lhs,rhs(Rhs),Trigger),
            pfcAdd(bt(Head,Trigger),(ParentRuleCopy,USER)))).
+get_bc_clause(Head,(HeadC:- BodyC)):- get_bc_clause(Head,HeadC,BodyC).
+
+get_bc_clause(HeadIn, ~HeadC, Body):- compound(HeadIn), HeadIn = ~Head,!,
+     Body = ( awc, 
+            ( nonvar(HeadC)-> (HeadC = Head,!) ; (HeadC = Head)), 
+              pfc_bc_and_with_pfc(~Head)).
+get_bc_clause(Head, Head, Body):-  % % :- is_ftNonvar(Head).
+     Body = ( awc, !, pfc_bc_and_with_pfc(Head)).
+
+:- thread_initialization(nb_setval('$pfc_current_choice',[])).
+
+push_current_choice:- current_prolog_flag(pfc_support_cut,false),!.
+push_current_choice:- prolog_current_choice(CP),push_current_choice(CP),!.
+push_current_choice(CP):- nb_current('$pfc_current_choice',Was)->b_setval('$pfc_current_choice',[CP|Was]);b_setval('$pfc_current_choice',[CP]).
  
+cut_c:- current_prolog_flag(pfc_support_cut,false),!.
+cut_c:- must_ex(nb_current('$pfc_current_choice',[CP|_WAS])),prolog_cut_to(CP).
 
 
 %%
@@ -820,6 +836,10 @@ fcEvalLHS((Test->Body),Support) :-
   !, 
   (pfcCallSystem(Test) -> fcEvalLHS(Body,Support)),
   !.
+
+fcEvalLHS((Test*->Body),Support) :-  
+  !, 
+  (pfcCallSystem(Test) *-> fcEvalLHS(Body,Support)).
 
 fcEvalLHS(rhs(X),Support) :-
   !,
@@ -1650,14 +1670,14 @@ nopfcWarn :-
   retractall(pfcWarnings(_)),
   assert(pfcWarnings(false)).
  
-pfcWarn(Msg) :-  pfcWarn(Msg,[]).
+pfcWarn(Msg) :-  pfcWarn('~p',[Msg]).
 
 pfcWarn(Msg,Args) :- 
   pfcWarnings(true),
   !,
-  format("~N==============WARNING/Pfc================~n",[]),
-  format(Msg,Args),
-  format("~N=========================================~n",[]),!.
+  ansi_format([underline,fg(red)],"~N==============WARNING/Pfc================~n",[]),
+  ansi_format([fg(yellow)],Msg,Args),
+  ansi_format([underline],"~N=========================================~n",[]),!.
 pfcWarn(_,_).
 
 %%
@@ -1680,14 +1700,14 @@ pfcNoWarnings :-
 %   Status: more or less working.
 %   Bugs:
 
-%% *** predicates for exploring supports of a fact *****
+%= *** predicates for exploring supports of a fact *****
 
 
 :- use_module(library(lists)).
 
 justification(F,J) :- supports(F,J).
 
-justifications(F,Js) :- bagof_or_nil(J,justification(F,J),Js).
+justifications(F,Js) :- bagof(J,justification(F,J),Js).
 
 
 

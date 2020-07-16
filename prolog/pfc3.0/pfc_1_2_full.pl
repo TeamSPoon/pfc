@@ -1382,7 +1382,7 @@ nopfcWarn :-
   retractall(pfcWarnings(_)),
   assert(pfcWarnings(false)).
  
-pfcWarn(Msg) :-  pfcWarn(Msg,[]).
+pfcWarn(Msg) :-  pfcWarn('~p',[Msg]).
 
 pfcWarn(Msg,Args) :- 
   pfcWarnings(true),
@@ -1411,7 +1411,7 @@ pfcNoWarnings :-
 %   Status: more or less working.
 %   Bugs:
 
-%% *** predicates for exploring supports of a fact *****
+%= *** predicates for exploring supports of a fact *****
 
 
 :- use_module(library(lists)).
