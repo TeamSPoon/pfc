@@ -537,10 +537,11 @@ in_dialect_pfc:- is_pfc_file. % \+ current_prolog_flag(dialect_pfc,cwc),!.
 %is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_mod)),!,baseKB:mtCanAssert(SM).
 is_pfc_module(SM):- clause_b(mtHybrid(SM)).
 
+can_extreme_debug :- \+ in_pengines.
 
 :- pfc_lib:export(pfc_lib:is_pfc_file/0).
-is_pfc_file:- current_prolog_flag(expect_pfc_file,always),!,(is_pfc_file_notrace  ; (nop((dumpST,sleep(1),break,rtrace(is_pfc_file_notrace),break)),fail)),!.
-is_pfc_file:- current_prolog_flag(expect_pfc_file,never),!,(\+is_pfc_file_notrace->fail;nop((dumpST,sleep(1),break,rtrace(\+is_pfc_file_notrace),break))),!.
+is_pfc_file:- can_extreme_debug, current_prolog_flag(expect_pfc_file,always),!,(is_pfc_file_notrace  ; (nop((dumpST,sleep(1),break,rtrace(is_pfc_file_notrace),break)),fail)),!.
+is_pfc_file:- can_extreme_debug, current_prolog_flag(expect_pfc_file,never),!,(\+is_pfc_file_notrace->fail;nop((dumpST,sleep(1),break,rtrace(\+is_pfc_file_notrace),break))),!.
 is_pfc_file:- quietly(is_pfc_file_notrace),!.
 
 :- system:import(pfc_lib:is_pfc_file/0).
@@ -680,7 +681,7 @@ is_never_pfc('-->'(_,_)):-!.
 is_never_pfc('==>>'(_,_)):-!.
 is_never_pfc(attr_unify_hook(_,_)):-!.
 
-is_never_pfc(P):- is_never_pfc_sys(P), (\+ is_pfc_file_notrace->true;(dumpST,rtrace(is_never_pfc_sys(P)))),!.
+is_never_pfc(P):- is_never_pfc_sys(P), (\+ can_extreme_debug -> true ;  (\+ is_pfc_file_notrace->true;(dumpST,rtrace(is_never_pfc_sys(P))))), !.
 
 is_never_pfc_sys(P):- notrace(predicate_property(P,static)),predicate_property(P,static).
 %is_never_pfc_sys(P):- predicate_property(P,built_in).

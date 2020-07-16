@@ -1,0 +1,14 @@
+:- include(library(pfc_header_3_0)).
+
+
+not(P),P ==> contrradiction.
+
+bird(X), ~not(fly(X)) ==> fly(X).
+
+penguin(X) ==> bird(X).
+
+penguin(X) ==> not(fly(X)).
+
+bird(X), injured(X) ==> not(fly(X)).
+
+bird(X), dead(X) ==> not(fly(X)).
