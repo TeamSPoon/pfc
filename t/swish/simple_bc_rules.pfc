@@ -39,8 +39,7 @@ fiba(N, F) <-
 
 :- listing([fiba/2]).
 
-:- listing(pfctmp:knows_will_table_as).
-:- break.
+% :- break.
 
 
 
@@ -78,6 +77,8 @@ M = 121393.
 
 
 */
+
+
 :- table fibt/2.
 
 fibt(0, 1) :- !.
@@ -146,4 +147,6 @@ fibe(N, F) <-
         fibe(N2, F2),
         {F is F1+F2}.
 
+
+:- listing(pfctmp:knows_will_table_as).
 

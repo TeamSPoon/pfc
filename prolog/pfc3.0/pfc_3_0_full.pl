@@ -32,12 +32,15 @@
 :- endif.
 
 
+==>(_).
+
 tilded_negation.
 
 bagof_or_nil(T,G,L):- bagof(T,G,L)*->true;L=[].
 setof_or_nil(T,G,L):- setof(T,G,L)*->true;L=[].
 
 add(X):- pfcAdd(X).
+pfcAtom(X):- pfcLiteral(X).
 rem(X):- pfcWithdraw(X).
 rem2(X):- pfcBlast_U(X).
 remove(X):- pfcRemove(X).
@@ -82,6 +85,7 @@ call_in_thread_code(M,G,Why,TN):-
 
 pfcVersion(3.0).
 
+/*
 pfcFile('pfcsyntax').	% operator declarations.
 pfcFile('pfccore').	% core of Pfc.
 pfcFile('pfcsupport').	% support maintenance
@@ -92,24 +96,25 @@ pfcFile('pfcwhy').	% interactive exploration of justifications.
 
 pfcLoad :- pfcFile(F), ensure_loaded(F), fail.
 pfcLoad.
+*/
 
-pfcFcompile :- pfcFile(F), qcompile(F), fail.
-pfcFcompile.
+%pfcFcompile :- pfcFile(F), compile(F), fail.
+%pfcFcompile.
 
-:- pfcLoad.
+%:- pfcLoad.
 
 %   File   : pfccompile.pl
 %   Author : Tim Finin, finin@prc.unisys.com
 %   Updated: 10/11/87, ...
 %   Purpose: compile system file for Pfc
-
+/*
 :- compile(pfcsyntax).
 :- compile(pfccore).
 :- compile(pfcdb).
 :- compile(pfcjust).
 :- compile(pfcwhy).
 :- compile(pfcdebug).
-
+*/
 
 %   File   : pfcsyntax.pl
 %   Author : Tim Finin, finin@prc.unisys.com
@@ -132,14 +137,25 @@ will_table_as(Stuff,As):- assert(pfctmp:knows_will_table_as(Stuff,As)),
 
 react_tabling(Stuff,_):- dynamic(Stuff).
 
-term_expansion((:- table Stuff as Type), [:- pfcAdd(tabled_as(Stuff,Type)),(:- table Stuff as Type)]):- \+ will_table_as(Stuff, Type).
-term_expansion((:- table Stuff ), [:- pfcAdd(tabled_as(Stuff,incremental)),(:- table Stuff as incremental)]):- \+ will_table_as(Stuff,incremental).
-term_expansion((P==>Q),(:- pfcAdd((P==>Q)))).
+:- dynamic(lmconf:is_treated_like_pfc_file/1).
+:- dynamic(lmconf:is_pfc_module/1).
+if_pfc_indicated :- source_location(F,_),(sub_string(F, _, _, _, '.pfc')->true;lmconf:is_treated_like_pfc_file(F)),!.
+if_pfc_indicated :- prolog_load_context(module, M),lmconf:is_pfc_module(M),!.
+
+pfc_term_expansion((:- table Stuff as Type), [:- pfcAdd(tabled_as(Stuff,Type)),(:- table Stuff as Type)]):- !, if_pfc_indicated, \+ will_table_as(Stuff, Type).
+pfc_term_expansion((:- table Stuff ), [:- pfcAdd(tabled_as(Stuff,incremental)),(:- table Stuff as incremental)]):- if_pfc_indicated, \+ will_table_as(Stuff,incremental).
+pfc_term_expansion((:- _),_):- !, fail.
+pfc_term_expansion((P==>Q),(:- pfcAdd((P==>Q)))).
 %term_expansion((P==>Q),(:- pfcAdd(('<-'(Q,P))))).  % speed-up attempt
-term_expansion(('<-'(P,Q)),(:- pfcAdd(('<-'(P,Q))))).
-term_expansion((P<==>Q),(:- pfcAdd((P<==>Q)))).
-term_expansion((RuleName :::: Rule),(:- pfcAdd((RuleName :::: Rule)))).
-term_expansion((==>P),(:- pfcAdd(P))).
+pfc_term_expansion(('<-'(P,Q)),(:- pfcAdd(('<-'(P,Q))))).
+pfc_term_expansion((P<==>Q),(:- pfcAdd((P<==>Q)))).
+pfc_term_expansion((RuleName :::: Rule),(:- pfcAdd((RuleName :::: Rule)))).
+pfc_term_expansion((==>P),(:- pfcAdd(P))).
+pfc_term_expansion(I,I):- I == end_of_file,!.
+pfc_term_expansion( P ,(:- pfcAdd(P))):- if_pfc_indicated.
+
+system:term_expansion(I,S0,O,S1):- prolog_load_context(term,T)->T==I->pfc_term_expansion(I,O)->I\=@=O->S0=S1.
+
 
 term_subst(P,O):- term_subst(clause,P,O),!.
 
@@ -175,7 +191,12 @@ termf_subst(Subst,F,F2):-member(F-F2,Subst)->true;F=F2.
 :- dynamic ('<-')/2.
 :- discontiguous(('<-')/2).
 
+
 :- multifile ('==>')/2.
+:- dynamic ('==>')/2.
+:- discontiguous(('==>')/2).
+
+%:- multifile ('==>')/2.
 :- dynamic ('::::')/2.
 %:- dynamic '<==>'/2.
 :- dynamic 'pt'/2.
@@ -482,8 +503,8 @@ pfcAddActionTrace(Action,Support) :-
   pfcAddSupport(pfcAction(Action),Support).
 
 pfcRemActionTrace(pfcAction(A)) :-
-  fcUndoMethod(A,M),
-  M,
+  fcUndoMethod(A,UndoMethod),
+  pfcCallSystem(UndoMethod),
   !.
 
 
@@ -498,11 +519,11 @@ pfcRetract(X) :-
   pfcRetractType(Type,X),
   !.                       
 
-pfcRetractType(fact,X) :-   
+pfcRetractType(fact(_),X) :-   
   %% db 
   pfcAddDbToHead(X,X2)-> retract(X2) ; retract(X).
 
-pfcRetractType(rule,X) :- 
+pfcRetractType(rule(_),X) :- 
   %% db  
   pfcAddDbToHead(X,X2) ->  retract(X2) ; retract(X).
 
@@ -788,15 +809,16 @@ fcnt(_Fact,F) :-
 fcnt(_,_).
 
 
-%%
-%% pfcDefineBcRule(+Head,+Body,+ParentRule) - defines a backeard
-%% chaining rule and adds the corresponding bt triggers to the database.
-%%
+%% pfcDefineBcRule(+Head,+Body,+ParentRule) 
+%
+% defines a backward
+% chaining rule and adds the corresponding bt triggers to the database.
+%
 
 pfcDefineBcRule(Head,_Body,ParentRule) :-
   (\+ pfcLiteral(Head)),
-  pfcWarn("Malformed backward chaining rule.  ~p not atomic.",[Head]),
-  pfc_error("caused by rule: ~p",[Parent_rule]),
+  pfcWarn("Malformed backward chaining rule.  ~p not atomic literal.",[Head]),
+  pfcError("caused by rule: ~p",[ParentRule]),
   !,
   fail.
 
@@ -823,7 +845,7 @@ push_current_choice:- prolog_current_choice(CP),push_current_choice(CP),!.
 push_current_choice(CP):- nb_current('$pfc_current_choice',Was)->b_setval('$pfc_current_choice',[CP|Was]);b_setval('$pfc_current_choice',[CP]).
  
 cut_c:- current_prolog_flag(pfc_support_cut,false),!.
-cut_c:- must_ex(nb_current('$pfc_current_choice',[CP|_WAS])),prolog_cut_to(CP).
+cut_c:- must(nb_current('$pfc_current_choice',[CP|_WAS])),prolog_cut_to(CP).
 
 
 %%
@@ -1286,7 +1308,8 @@ pfcType(Var,Type):- var(Var),!, Type=fact(_FT).
 pfcType(_:X,Type):- !, pfcType(X,Type).
 pfcType(~_,Type):- !, Type=fact(_FT).
 pfcType(('==>'(_,_)),Type):- !, Type=rule(fwd).
-pfcType(('==>'(_,_)),Type):- !, Type=rule(==>).
+pfcType( '==>'(X),Type):- !, pfcType(X,Type), pfcWarn(pfcType( '==>'(X), Type)).
+pfcType(('<==>'(_,_)),Type):- !, Type=rule(<==>).
 pfcType(('<-'(_,_)),Type):- !, Type=rule(bwc).
 pfcType((':-'(_,_)),Type):- !, Type=rule(cwc).
 pfcType(pt(_,_,_),Type):- !, Type=trigger.
@@ -1439,9 +1462,9 @@ pfcPrintFacts(Pattern) :- pfcPrintFacts(Pattern,true).
 pfcPrintFacts(P,C) :-
   pfcFacts(P,C,L),
   pfcClassifyFacts(L,User,Pfc,_Rule),
-  pfcPrintf("User added facts:",[]),
+  pfcPrintf("User added facts:~n",[]),
   pfcPrintitems(User),
-  pfcPrintf("Pfc added facts:",[]),
+  pfcPrintf("Pfc added facts:~n",[]),
   pfcPrintitems(Pfc).
 
 
@@ -1627,7 +1650,7 @@ pfcUntrace(Form) :- retractall(pfcTraced(Form)).
 
 pfcTraceMsg(Msg):- pfcTraceMsg('~p',[Msg]).
 pfcTraceMsg(Msg,Args) :-
-    pfcTraceExecution,
+    %pfcTraceExecution,
     !,
     pfcPrintf(user_output, Msg, Args).
 pfcTraceMsg(_Msg,_Args).
@@ -1890,9 +1913,18 @@ pfc_trigger_key(X,X).
 
 :- dynamic(pfctmp:whymemory/2).
 
+
+
 pfcWhy :- 
   pfctmp:whymemory(P,_),
   pfcWhy(P).
+
+pfcTF(P):- pfc_call(P)*->foreach(pfcTF1(P),true);pfcTF1(P).
+pfcTF1(P):- 
+   ansi_format([underline],"~N=========================================",[]),
+   ignore(pfcWhy(P)),
+   ignore(pfcWhy(~P)),
+   ansi_format([underline],"~N=========================================~n",[]).
 
 pfcWhy(N) :-
   number(N),
