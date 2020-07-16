@@ -938,7 +938,7 @@ get_source_mfl(mfl4(VarNameZ,M,_F,_L)):- defaultAssertMt(M), varnames_load_conte
 get_source_mfl(M):- fail,dtrace,
  ((defaultAssertMt(M) -> !;
  (atom(M)->(module_property(M,class(_)),!);
-    pfc_error(no_source_ref(M))))).
+    pfcError(no_source_ref(M))))).
 
 is_source_ref1(_).
 
@@ -2095,7 +2095,7 @@ pfc_enqueue(P,S):-
  (var(S)->current_why(S);true),
  (must_ex(get_fc_mode(P,S,Mode)) 
   -> pfc_enqueue_w_mode(S,Mode,P)
-   ; pfc_error("No pm mode")).
+   ; pfcError("No pm mode")).
 
 pfc_enqueue_w_mode(S,Mode,P):-
        (Mode=direct  -> pfc_enqueue_direct(S,P) ;
@@ -2105,7 +2105,7 @@ pfc_enqueue_w_mode(S,Mode,P):-
 	Mode=breadth -> pfc_assertz_w_support(que(P,S),S) ;
         Mode=next   -> pfc_asserta_w_support(que(P,S),S) ;
         Mode=last -> pfc_assertz_w_support(que(P,S),S) ;
-	true     -> pfc_error("Unrecognized pm mode: ~p", Mode)).
+	true     -> pfcError("Unrecognized pm mode: ~p", Mode)).
 
 is_fwc_mode(direct).
 is_fwc_mode(thread).
@@ -2915,7 +2915,7 @@ pfc_do_fcnt(_,_).
 pfcDefineBcRule(Head,_ZBody,Parent_rule):-
   (\+ pfcLiteral_nonvar(Head)),
   pfcWarn("Malformed backward chaining rule.  ~p not atomic.",[Head]),
-  pfc_error("caused by rule: ~p",[Parent_rule]),
+  pfcError("caused by rule: ~p",[Parent_rule]),
   !,
   fail.
 
@@ -2991,7 +2991,8 @@ fcEvalLHS((Test -> Body),Support):- !,  % cutted ->
 
 fcEvalLHS(X,Support):- pfc_db_type(X,trigger(_TT)),!,must(pfc_ain_trigger_reprop(X,Support)),!.
 
-fcEvalLHS(X,_):- pfcWarn("Unrecognized item found in trigger body, namely ~p.",[X]).
+fcEvalLHS(X,_):- 
+    pfcWarn("Unrecognized item found in trigger body, namely ~p.",[X]).
 
 
 args_swapped(~P1,~P2):-!,args_swapped(P1,P2).
@@ -4166,7 +4167,7 @@ pfc_reseted_kb_check_0(Module):- pfc_trace_msg("Couldn't full pfc_reseted_kb_che
   pp_DB,pfc_database_item(Module,T),
   wdmsg_pretty(pfc_database_item(Module,T)),!.
   %pfcWarn("Pfc database [~w] not empty: ~p.~n",[Module,T]),!,
-  %pfc_error("Pfc database [~w] not empty: ~p.~n",[Module,T]),!.
+  %pfcError("Pfc database [~w] not empty: ~p.~n",[Module,T]),!.
   
 pfc_reset_mp(Module,P):- P \= ( _:-_ ), pfc_retract(Module:P),!.
 pfc_reset_mp(Module,P):-
@@ -4395,8 +4396,8 @@ pfcWarn(Info):- not_not_ignore_quietly_ex((((color_line(red,1), lookup_u(pfcWarn
 
 pfcWarn(Format,Args):- not_not_ignore_quietly_ex((((format_to_message(Format,Args,Info),pfcWarn(Info))))).
 
-pfc_error(Info):- not_not_ignore_quietly_ex(((tracing -> wdmsg_pretty(error(logicmoo(pfc),Info)) ; pfcWarn(error(Info))))).
-pfc_error(Format,Args):- not_not_ignore_quietly_ex((((format_to_message(Format,Args,Info),pfc_error(Info))))).
+pfcError(Info):- not_not_ignore_quietly_ex(((tracing -> wdmsg_pretty(error(logicmoo(pfc),Info)) ; pfcWarn(error(Info))))).
+pfcError(Format,Args):- not_not_ignore_quietly_ex((((format_to_message(Format,Args,Info),pfcError(Info))))).
 
 pfc_pfc_silent(TF):-set_prolog_flag(pfc_pfc_silent,TF).
 
