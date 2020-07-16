@@ -18,7 +18,7 @@
 :- must(retract(baseKB:'wusing_pfc'(M,CM,SM,pfc_header))),
    wdmsg(baseKB:'chusing_pfc'(M,CM,SM,pfc_header)),
    (M==SM -> 
-     (SM:consult('pfc3.0/pfc_rt'),nop(maybe_ensure_abox(SM)),nop((M:ain(genlMt(SM,baseKB)))));
+     (SM:consult('pfc3.0/pfc_3_0_full'),nop(maybe_ensure_abox(SM)),nop((M:ain(genlMt(SM,baseKB)))));
      wdmsg(baseKB:'lusing_pfc'(M,CM,SM,pfc_header))),   
    assert(baseKB:'$using_pfc'(M,CM,SM,pfc_header)),
    asserta(SM:'$does_use_pfc_mod'(M,CM,SM,pfc_header)).

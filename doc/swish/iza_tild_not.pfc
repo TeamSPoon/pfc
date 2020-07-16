@@ -5,26 +5,26 @@
 :- dynamic(fly/1).
 
 % -*-Prolog-*-
-% here is an example which defines default facts and rules.  Will it work?
+% here is an example which defines default facts and rules.  Will it work?  Yes!
 
-(default(P)/pfcAtom(P))  ==>  (\+ ~(P) ==> P).
+(default(P)/pfcLiteral(P))  ==>  (\+ ~(P) ==> P).
 
-default((P ==> Q))/pfcAtom(Q) ==> (P, \+ ~(Q) ==> Q).
+default((P ==> Q))/pfcLiteral(Q) ==> (P, \+ ~(Q) ==> Q).
 
 % birds fly by default.
 ==> default((bird(X) ==> fly(X))).
 
-% here's one way to do an genlz hierarchy.
-% genlz = subclass.
+% here's one way to do an subclass hierarchy.
+% subclass = subclass.
 
-genlz(C1,C2) ==>
+subclass(C1,C2) ==>
   {P1 =.. [C1,X],
     P2 =.. [C2,X],
     dynamic(C1/1),dynamic(C2/1)},
   (P1 ==> P2).
 
-==> genlz(canary,bird).
-==> genlz(penguin,bird).
+==> subclass(canary,bird).
+==> subclass(penguin,bird).
 
 % penguins do not fly.
 penguin(X) ==> ~(fly(X)).
@@ -35,3 +35,11 @@ penguin(X) ==> ~(fly(X)).
 
 % tweety is a canary.
 ==> canary(tweety).
+
+binfo:- 
+ pfcTF(bird(tweety)),
+ pfcTF(fly(tweety)),
+ pfcTF(bird(chilly)),
+ pfcTF(fly(chilly)),!.
+
+:- binfo.
