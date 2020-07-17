@@ -181,10 +181,10 @@ set_fileAssertMt(M):-
   assert_setting(baseKB:file_to_module(File,M)),
   assert_setting(lmcache:pfc_directive_value(File,module,M)),
   asserta_until_eof(t_l:current_defaultAssertMt(M)),!,
-  ((pfc_lib:is_pfc_file) -> must(set_current_modules_until_eof(M)) ; true).
+  ((pfc_lib:is_mpred_file) -> must(set_current_modules_until_eof(M)) ; true).
 
 
-%:- import(pfc_lib:is_pfc_file/0).
+%:- import(pfc_lib:is_mpred_file/0).
 % :- '$hide'(set_fileAssertMt(_)).
 
 
@@ -267,12 +267,12 @@ makeConstant(_Mt).
 
 is_pfc_module_file(M):- is_pfc_module_file(M,F,TF),!, (F \== (-)), TF = true.
 
-is_pfc_module_file(M,F,TF):- (module_property(M,file(F)),pfc_lib:is_pfc_file(F)) *-> TF=true ; 
+is_pfc_module_file(M,F,TF):- (module_property(M,file(F)),pfc_lib:is_mpred_file(F)) *-> TF=true ; 
   (module_property(M,file(F))*->TF=false ; (F= (-), TF=false)).
 
 maybe_ensure_abox(M):- is_pfc_module_file(M,F,_), (F \== (-)), !,   
-  (pfc_lib:is_pfc_file(F)->show_call(pfc_lib:is_pfc_file(F),ensure_abox(M));dmsg_pretty(not_is_pfc_module_file(M,F))).
-maybe_ensure_abox(M):- show_call(not_is_pfc_file,ensure_abox(M)).
+  (pfc_lib:is_mpred_file(F)->show_call(pfc_lib:is_mpred_file(F),ensure_abox(M));dmsg_pretty(not_is_pfc_module_file(M,F))).
+maybe_ensure_abox(M):- show_call(not_is_mpred_file,ensure_abox(M)).
 
 
 :- module_transparent((ensure_abox)/1).
@@ -741,13 +741,13 @@ pfc_core_database_term(pt,2,trigger(nt)).
 pfc_core_database_term(bt,2,trigger(bt)).
 
 % transient state
-pfc_core_database_term(actn,1,state).
+pfc_core_database_term(pfcAction,1,state).
 pfc_core_database_term(que,2,state).
 pfc_core_database_term(hs,1,state).
 
 % forward,backward settings
 pfc_core_database_term(pfc_current_db,1,setting).
-pfc_core_database_term(pfc_select_hook,1,setting).
+pfc_core_database_term(pfcSelect,1,setting).
 pfc_core_database_term(tms,1,setting).
 pfc_core_database_term(pm,1,setting).
 
@@ -1528,13 +1528,13 @@ guess_pos_source_to0(ToMt):- t_l:current_defaultAssertMt(ToMt).
 guess_pos_source_to0(ToMt):- '$current_source_module'(ToMt).
 guess_pos_source_to0(ToMt):- context_module(ToMt).
 guess_pos_source_to0(ToMt):- '$current_typein_module'(ToMt).
-guess_pos_source_to0(ToMt):- guess_pfc_file(File),module_property(ToMt,file(File)),File\==ToMt.
+guess_pos_source_to0(ToMt):- guess_mpred_file(File),module_property(ToMt,file(File)),File\==ToMt.
 guess_pos_source_to0(ToMt):- prolog_load_context(module,ToMt).
 guess_pos_source_to0(ToMt):- defaultAssertMt(ToMt).
 guess_pos_source_to0(baseKB).
 
-guess_pfc_file(File):- which_file(File).
-guess_pfc_file(File):- loading_source_file(File),get_file_type_local(File,pfc).
+guess_mpred_file(File):- which_file(File).
+guess_mpred_file(File):- loading_source_file(File),get_file_type_local(File,pfc).
 
 get_assert_to(ABox):- (var(ABox)->guess_pos_assert_to(ABox);(guess_pos_assert_to(ABoxVar),ABox=ABoxVar)),!.
 
@@ -1576,7 +1576,7 @@ pfc_ain_now(PIn,S):-
   PIn=P, % must_ex(add_eachRulePreconditional(PIn,P)),  
   must_ex(full_transform(ain,P,P0)),!, % P=P0,  
   must_ex(ain_fast(P0,S)),!,
-  nop(ignore((P\=@=P0, pfc_db_type(P,fact(_)),show_failure(pfc_fwc(P))))).
+  nop(ignore((P\=@=P0, pfc_db_type(P,fact(_)),show_failure(mpred_fwc(P))))).
 
 pfc_ain_now(P,S):- pfcWarn("pfc_ain(~p,~p) failed",[P,S]),!,fail.
 
@@ -1591,7 +1591,7 @@ ain_fast(P,S):- quietly_ex((maybe_updated_value(P,RP,OLD),subst(S,P,RP,RS))),!,a
 ain_fast(P,S):-
   %retractall(t_l:busy(_)),
   fwc1s_post1s(One,Two),
-  filter_buffer_trim('$last_pfc_fwc1s',One),
+  filter_buffer_trim('$last_mpred_fwc1s',One),
   filter_buffer_trim('$last_pfc_post1s',Two),
   each_E(pfc_post1,P,[S]),!,
   pfc_run.
@@ -1656,7 +1656,7 @@ plus_fwc('==>'(_,_)):-!.
 plus_fwc(P):- gripe_time(0.6,
   (plus_fwc
     ->
-      loop_check_term(must_ex(pfc_fwc(P)),plus_fwc(P),true);true)),!.
+      loop_check_term(must_ex(mpred_fwc(P)),plus_fwc(P),true);true)),!.
 
 
 maybe_updated_value(UP,R,OLD):- % \+ current_prolog_flag(unsafe_speedups , true) ,
@@ -1772,8 +1772,8 @@ pfc_post12( ~ P,   S):- fail, (must_be(nonvar,P)), sanity((ignore(show_failure(\
 pfc_post12(P,S):- quietly_ex((maybe_updated_value(P,RP,OLD))),!,subst(S,P,RP,RS),pfc_post13(RP,RS),ignore(pfc_retract_i(OLD)).
 
 %  TODO MAYBE 
-pfc_post12(actn(P),S):- !, 
-  with_current_why(S,call(P)), pfc_post13(actn(P),S).
+pfc_post12(pfcAction(P),S):- !, 
+  with_current_why(S,call(P)), pfc_post13(pfcAction(P),S).
 
 pfc_post12(P,S):- pfc_post13(P,S).
 
@@ -2065,20 +2065,20 @@ get_fc_mode(pfc_prop(_,_,_,_),_S,direct).
 get_fc_mode(P,_S,direct):- compound(P),functor(P,_,1).
 get_fc_mode(_P,_S,Mode):- get_fc_mode(Mode).
 
-get_fc_mode(Mode):- t_l:pfc_fc_mode(Mode),!.
+get_fc_mode(Mode):- t_l:mpred_fc_mode(Mode),!.
 get_fc_mode(Mode):- lookup_m(pm(Mode)),!.
 get_fc_mode(Mode):- !, Mode=direct.
 
 
-:- thread_local(t_l:pfc_fc_mode/1).
+:- thread_local(t_l:mpred_fc_mode/1).
 
 %% with_fc_mode(+Mode,:Goal) is semidet.
 %
 % Temporariliy changes to forward chaining propagation mode while running the Goal
 %
-with_fc_mode(Mode,Goal):- locally_tl(pfc_fc_mode(Mode),((Goal))).
+with_fc_mode(Mode,Goal):- locally_tl(mpred_fc_mode(Mode),((Goal))).
 
-set_fc_mode(Mode):- asserta(t_l:pfc_fc_mode(Mode)).
+set_fc_mode(Mode):- asserta(t_l:mpred_fc_mode(Mode)).
 
 %% pfc_enqueue(+P,+S) is det.
 %
@@ -2126,14 +2126,14 @@ of_queue_module(_, _, Module):- get_query_from(Module), !.
 
 pfc_enqueue_direct(S,P):-
   of_queue_module(S,P,Module),
-  loop_check_term(Module:pfc_fwc(P),pfc_enqueueing(P),true).
+  loop_check_term(Module:mpred_fwc(P),pfc_enqueueing(P),true).
 
 /*
 pfc_enqueue_thread(S,P):- 
       with_only_current_why(S,
         call_in_thread(
            with_fc_mode(direct, % maybe keep `thread` mode?
-               loop_check_term(pfc_fwc(P),pfc_enqueueing(P),true)))).
+               loop_check_term(mpred_fwc(P),pfc_enqueueing(P),true)))).
 
 */
 
@@ -2141,7 +2141,7 @@ pfc_enqueue_thread(S,P):-
       with_only_current_why(S,
         call_in_thread(fwc_wlc(P))).
 
-fwc_wlc(P):- in_fc_call(loop_check_term(pfc_fwc(P),pfc_enqueueing(P),true)).
+fwc_wlc(P):- in_fc_call(loop_check_term(mpred_fwc(P),pfc_enqueueing(P),true)).
 
 % maybe keep `thread` mode?
 % in_fc_call(Goal):- with_fc_mode( thread, Goal).
@@ -2172,7 +2172,7 @@ pfcRemoveOldVersion(_).
 
 % pfc_run compute the deductive closure of the current database.
 % How this is done depends on the propagation mode:
-%    direct -  pfc_fwc has already done the job.
+%    direct -  mpred_fwc has already done the job.
 %    depth or breadth - use the queue mechanism.
                                                             
 pfc_run :- get_fc_mode(Mode)->Mode=paused,!.
@@ -2201,13 +2201,13 @@ pfc_step:-
   % fails iff the queue is empty.
   get_next_fact(P),
   %asserta(t_l:busy(P)),
-  ignore(pfc_fwc(P)),
+  ignore(mpred_fwc(P)),
  % ignore(retract(t_l:local_current_why(_,P))),
   %retractall(t_l:busy(P)),
   !.
 
 get_next_fact(P):-
-  %identifies the nect fact to pfc_fwc from and removes it from the queue.
+  %identifies the nect fact to mpred_fwc from and removes it from the queue.
   select_next_fact(P),
   remove_selection(P).
 
@@ -2312,9 +2312,9 @@ pfc_bt_pt_combine(_,_,_):- !.
 
 pfc_ain_actiontrace(Action,Support):-
   % adds an action trace and it''s support.
-  pfc_add_support(actn(Action),Support).
+  pfc_add_support(pfcAction(Action),Support).
 
-fcUndo_action(actn(Did)):-
+fcUndo_action(pfcAction(Did)):-
   (clause_asserted_u(do_and_undo(Did,Undo))->true;lookup_u(do_and_undo(Did,Undo))),
   call_u_no_bc(Undo),
   !.
@@ -2564,10 +2564,10 @@ fcUndo_unfwd(Fact):-
 % fcUndo(X):- doall(fcUndo1(X)).
 
 fcUndo1((H:-B)):- reduce_clause(unpost,(H:-B),HB), HB\=@= (H:-B),!,fcUndo1((HB)).
-fcUndo1(actn(A)):-
+fcUndo1(pfcAction(A)):-
   % undo an action by finding a method and successfully executing it.
   !,
-  show_call(fcUndo_action(actn(A))).
+  show_call(fcUndo_action(pfcAction(A))).
 
 fcUndo1(pt(Key,Head,Body)):-
   % undo a positive trigger 3.
@@ -2671,25 +2671,25 @@ is_single_valued(P):- get_unnegated_functor(P,F,_)->call_u(prologSingleValued(F)
 
 
 
-%%  pfc_fwc(+X) is det.
+%%  mpred_fwc(+X) is det.
 %
 % forward chains from a fact or a list of facts X.
 %
-pfc_fwc(Ps):- each_E(pfc_fwc0,Ps,[]).
-:- module_transparent((pfc_fwc0)/1).
+mpred_fwc(Ps):- each_E(mpred_fwc0,Ps,[]).
+:- module_transparent((mpred_fwc0)/1).
 
-%%  pfc_fwc0(+X) is det.
+%%  mpred_fwc0(+X) is det.
 %
-%  Avoid loop while calling pfc_fwc1(P)
+%  Avoid loop while calling mpred_fwc1(P)
 %
 % this line filters sequential (and secondary) dupes
- % pfc_fwc0(genls(_,_)):-!.
-pfc_fwc0(Fact):- fail, quietly_ex(ground(Fact)),
+ % mpred_fwc0(genls(_,_)):-!.
+mpred_fwc0(Fact):- fail, quietly_ex(ground(Fact)),
    \+ t_l:is_repropagating(_),
    quietly_ex((once(((fwc1s_post1s(_One,Two),Six is Two * 1))))), 
-   show_pfc_success(filter_buffer_n_test,(filter_buffer_n_test('$last_pfc_fwc1s',Six,Fact))),!.
-pfc_fwc0(Fact):- quietly_ex(copy_term_vn(Fact,FactC)),
-      loop_check(pfc_fwc1(FactC),true).
+   show_pfc_success(filter_buffer_n_test,(filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact))),!.
+mpred_fwc0(Fact):- quietly_ex(copy_term_vn(Fact,FactC)),
+      loop_check(mpred_fwc1(FactC),true).
 
 
 filter_buffer_trim(Name,N):- quietly_ex((
@@ -2717,25 +2717,25 @@ pfc_reduced_chain(P1,(P:-AB)):- compound(AB),AB=attr_bind(L,R),!,must_ex(attr_bi
 pfc_reduced_chain(P1,(P:-True)):- True==true,call(P1,P).
 
 pfc_reduced_chain(P1,==>(Fact),P1):- sanity(nonvar(Fact)),!,
-  must_ex(full_transform(pfc_fwc1,==>(Fact),ExpandFact)),!,  
+  must_ex(full_transform(mpred_fwc1,==>(Fact),ExpandFact)),!,  
   pfc_trace_msg((expanding_pfc_chain(P1,Fact) ==> ExpandFact)),
   sanity(ExpandFact\== (==>(Fact))),
   each_E(P1,ExpandFact,[]).
 
 
-%% pfc_fwc1(+P) is det.
+%% mpred_fwc1(+P) is det.
 %
 % forward chains for a single fact.
-%  Avoids loop while calling pfc_fwc1(P)
-pfc_fwc1(clause_asserted_u(Fact)):-!,sanity(clause_asserted_u(Fact)).
-pfc_fwc1(P):- pfc_reduced_chain(pfc_fwc1,P),!.
-pfc_fwc1(support_hilog(_,_)):-!.
-pfc_fwc1(pfc_unload_option(_,_)):-!.
+%  Avoids loop while calling mpred_fwc1(P)
+mpred_fwc1(clause_asserted_u(Fact)):-!,sanity(clause_asserted_u(Fact)).
+mpred_fwc1(P):- pfc_reduced_chain(mpred_fwc1,P),!.
+mpred_fwc1(support_hilog(_,_)):-!.
+mpred_fwc1(pfc_unload_option(_,_)):-!.
 
-% pfc_fwc1(singleValuedInArg(_, _)):-!.
+% mpred_fwc1(singleValuedInArg(_, _)):-!.
 % this line filters sequential (and secondary) dupes
-% pfc_fwc1(Fact):- current_prolog_flag(unsafe_speedups , true) , ground(Fact),fwc1s_post1s(_One,Two),Six is Two * 3,filter_buffer_n_test('$last_pfc_fwc1s',Six,Fact),!.
-pfc_fwc1(Prop):-'$current_source_module'(Sm),pfc_m_fwc1(Sm,Prop).
+% mpred_fwc1(Fact):- current_prolog_flag(unsafe_speedups , true) , ground(Fact),fwc1s_post1s(_One,Two),Six is Two * 3,filter_buffer_n_test('$last_mpred_fwc1s',Six,Fact),!.
+mpred_fwc1(Prop):-'$current_source_module'(Sm),pfc_m_fwc1(Sm,Prop).
 
 
 :-thread_local(t_l:busy_f/1).
@@ -2752,7 +2752,7 @@ pfc_m_fwc1(Sm,Prop):- % clause_asserted(t_l:busy_f(Prop)),!,
 % pfc_m_fwc1(Sm,Prop):- pfc_m_fwc2(Sm,Prop).
 
 pfc_m_fwc2(Sm,Prop):-   
-  pfc_trace_msg(Sm:pfc_fwc1(Prop)),
+  pfc_trace_msg(Sm:mpred_fwc1(Prop)),
   %ignore((pfc_non_neg_literal(Prop),remove_negative_version(Prop))),
   \+ \+ ignore(pfc_do_rule(Prop)),
   setup_call_cleanup(
@@ -2828,7 +2828,7 @@ pfc_do_hb_catchup_now_maybe(H,B):- B\=(cwc,_),
 
 % pfc_do_hb_catchup_now(_,_):-!.
 pfc_do_hb_catchup_now(H,B):- B\=(cwc,_),nonvar(B),
-  with_exact_assertions(catch( (forall(call_u(B),pfc_fwc(H));true),_,true)),!.
+  with_exact_assertions(catch( (forall(call_u(B),mpred_fwc(H));true),_,true)),!.
 
 
 % prolog_clause pfc_do_clause COMMENTED
@@ -3150,7 +3150,7 @@ call_u_mp(pfc_lib, P1 ):- !, call_u_mp(query, P1 ).
 call_u_mp(query, P1 ):- !, must(get_query_from(SM)),sanity(pfc_lib\==SM),call_u_mp(SM,P1).
 call_u_mp(assert, P1 ):- !, must(get_assert_to(SM)),call_u_mp(SM,P1).
 call_u_mp(System, P1 ):-  is_code_module(System),!, call_u_mp(query,P1).
-call_u_mp(M,P):- var(P),!,call((clause_b(mtExact(M))->pfc_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,pfc_fact_mp(W,P))))).
+call_u_mp(M,P):- var(P),!,call((clause_b(mtExact(M))->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
 call_u_mp(_, M:P1):-!,call_u_mp(M,P1).
 call_u_mp(M, (P1,P2)):-!,call_u_mp(M,P1),call_u_mp(M,P2).
 call_u_mp(M, (P1*->P2;P3)):-!,(call_u_mp(M,P1)*->call_u_mp(M,P2);call_u_mp(M,P3)).
@@ -3247,7 +3247,7 @@ call_u_mp_lc(M,P,F,A):- wdmsg_pretty(dynamic(M:P)),must_det_l((dynamic(M:F/A),ma
 */
 /*       
 Next
-call_u_mp(_G,M,P):- var(P),!,call((baseKB:mtExact(M)->pfc_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,pfc_fact_mp(W,P))))).
+call_u_mp(_G,M,P):- var(P),!,call((baseKB:mtExact(M)->mpred_fact_mp(M,P);(defaultAssertMt(W),with_umt(W,mpred_fact_mp(W,P))))).
 % call_u_mp(mtHybrid(P),_,mtHybrid(P)):-!,baseKB:mtHybrid(P).
 call_u_mp((P),M,(P)):-!,catch(call(P),E,(wdmsg_pretty(M:call_u_mp(P)),wdmsg_pretty(E),dtrace)).
 % call_u_mp(P,M,P):- !,catch(M:call(P),E,(wdmsg_pretty(M:call_u_mp(P)),wdmsg_pretty(E),dtrace)).
@@ -3279,7 +3279,7 @@ pfc_BC_CACHE0(_,P):-
 
 
 % I''d like to remove this soon
-%call_u_no_bc(P0):- strip_module(P0,M,P), sanity(stack_check),var(P),!, M:pfc_fact(P).
+%call_u_no_bc(P0):- strip_module(P0,M,P), sanity(stack_check),var(P),!, M:mpred_fact(P).
 %call_u_no_bc(_:true):-!.
 call_u_no_bc(P):- no_repeats(call_u(P)).
 % call_u_no_bc(P):- !, call_u(P).
@@ -3653,7 +3653,7 @@ pfcCompileRhsTerm(Sup,I,O):- pfcCompileRhsTerm_consquent(Sup,I,O).
      is_active_lhs(ActN):- var(ActN),!,fail.
      is_active_lhs(!).
      is_active_lhs(cut_c).
-     is_active_lhs(actn(_Act)).
+     is_active_lhs(pfcAction(_Act)).
      is_active_lhs('{}'(_Act)).
      is_active_lhs((Lhs1/Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
      is_active_lhs((Lhs1,Lhs2)):- !,is_active_lhs(Lhs1);is_active_lhs(Lhs2).
@@ -3898,7 +3898,7 @@ really_pfc_mark(Sup,Type,F,A):-
   why_marked(M,Sup,WM),
   with_no_pfc_trace_exec(with_fc_mode(direct,pfc_post1(MARK,(WM,ax)))).
   %with_no_pfc_trace_exec(with_fc_mode(direct,pfc_post1(MARK,(why_marked(Sup),ax)))).
-  % with_no_pfc_trace_exec(with_fc_mode(direct,pfc_fwc1(MARK,(why_marked(Sup),ax)))),!.
+  % with_no_pfc_trace_exec(with_fc_mode(direct,mpred_fwc1(MARK,(why_marked(Sup),ax)))),!.
 
 why_marked(M,_Sup,mfl4(VarNameZ,M,F,L)):- source_location(F,L),!,varnames_load_context(VarNameZ).
 why_marked(_,Sup,Sup).
@@ -4007,7 +4007,7 @@ pfc_db_type(pt(_,_,_),Type):- !, Type=trigger(pt).
 pfc_db_type(pt(_,_),Type):- !, Type=trigger(pt).
 pfc_db_type(nt(_,_,_),Type):- !,  Type=trigger(nt).
 pfc_db_type(bt(_,_),Type):- !,  Type=trigger(bt).
-pfc_db_type(actn(_),Type):- !, Type=action.
+pfc_db_type(pfcAction(_),Type):- !, Type=action.
 pfc_db_type((('::::'(_,X))),Type):- !, pfc_db_type(X,Type).
 pfc_db_type(_,fact(_FT)):-
   %  if it''s not one of the above, it must_ex be a fact!
@@ -4218,43 +4218,43 @@ pfc_retract_i_or_warn_2(X):- pfc_trace_msg("Couldn't retract_i: ~p.~n",[X]),fail
 %  tms is one of {none,local,cycles} and controles the tms alg.
 % :- during_boot(pfc_set_default(pfcWarnings(_), pfcWarnings(true))).
 
-%  pfc_fact(P) is true if fact P was asserted into the database via add.
+%  mpred_fact(P) is true if fact P was asserted into the database via add.
 
-pfc_fact_mp(M,G):- current_predicate(_,M:G),\+ predicate_property(M:G,imported_from(_)),
-  pfc_fact(G),ignore((lookup_u(G,Ref),clause_property(Ref,module(MW)))),MW=M.
+mpred_fact_mp(M,G):- current_predicate(_,M:G),\+ predicate_property(M:G,imported_from(_)),
+  mpred_fact(G),ignore((lookup_u(G,Ref),clause_property(Ref,module(MW)))),MW=M.
 
-pfc_fact(P):- pfc_fact(P,true).
+mpred_fact(P):- mpred_fact(P,true).
 
-%  pfc_fact(P,C) is true if fact P was asserted into the database via
+%  mpred_fact(P,C) is true if fact P was asserted into the database via
 %  add and contdition C is satisfied.  For example, we might do:
 %
-%   pfc_fact(X,pfc_userFact(X))
+%   mpred_fact(X,pfc_userFact(X))
 %
 
-pfc_fact(P,C):- pfc_fact0(P,C).
-pfc_fact(P,C):- compound(P),safe_functor(P,F,2),clause_b(rtSymmetricBinaryPredicate(F)),args_swapped(P,Q),pfc_fact0(Q,C).
-pfc_fact(~P,C):- compound(P),safe_functor(P,F,2),clause_b(rtSymmetricBinaryPredicate(F)),args_swapped(P,Q),pfc_fact0(~Q,C).
-pfc_fact0(P,C):-
+mpred_fact(P,C):- mpred_fact0(P,C).
+mpred_fact(P,C):- compound(P),safe_functor(P,F,2),clause_b(rtSymmetricBinaryPredicate(F)),args_swapped(P,Q),mpred_fact0(Q,C).
+mpred_fact(~P,C):- compound(P),safe_functor(P,F,2),clause_b(rtSymmetricBinaryPredicate(F)),args_swapped(P,Q),mpred_fact0(~Q,C).
+mpred_fact0(P,C):-
   pfc_get_support(P,_),
   pfc_db_type(P,fact(_FT)),
   call_u_no_bc(C).
 
-%  pfc_facts_in_kb(MM,-ListofPpfc_facts) returns a list of facts added.
+%  mpred_facts_in_kb(MM,-ListofPmpred_facts) returns a list of facts added.
 
-pfc_facts(L):- pfc_facts_in_kb(_,L).
-pfc_facts_in_kb(MM,L):- pfc_facts_in_kb(MM,_,true,L).
+mpred_facts(L):- mpred_facts_in_kb(_,L).
+mpred_facts_in_kb(MM,L):- mpred_facts_in_kb(MM,_,true,L).
 
-pfc_facts(P,L):- pfc_facts_in_kb(_,P,L).
-pfc_facts(KB,P,L):- pfc_facts_in_kb(KB,P,L).
-pfc_facts_in_kb(MM,P,L):- pfc_facts_in_kb(MM,P,true,L).
+mpred_facts(P,L):- mpred_facts_in_kb(_,P,L).
+mpred_facts(KB,P,L):- mpred_facts_in_kb(KB,P,L).
+mpred_facts_in_kb(MM,P,L):- mpred_facts_in_kb(MM,P,true,L).
 
-%  pfc_facts_in_kb(MM,Pattern,Condition,-ListofPpfc_facts) returns a list of facts added.
+%  mpred_facts_in_kb(MM,Pattern,Condition,-ListofPmpred_facts) returns a list of facts added.
 
-%% pfc_facts_in_kb(MM,+P, ?C, ?L) is semidet.
+%% mpred_facts_in_kb(MM,+P, ?C, ?L) is semidet.
 %
 % PFC Facts.
 %
-pfc_facts_in_kb(MM,P,C,L):- with_exact_kb(MM,setof(P,pfc_fact(P,C),L)).
+mpred_facts_in_kb(MM,P,C,L):- with_exact_kb(MM,setof(P,mpred_fact(P,C),L)).
 
 
 %% brake(+X) is semidet.
@@ -4531,10 +4531,10 @@ pfc_trigger_key(X,X).
 % :- initialization(ensure_abox(baseKB)).
 
 
-% % :- set_prolog_flag(pfc_pfc_file,true).
+% % :- set_prolog_flag(pfc_mpred_file,true).
 % local_testing
 
-:- set_prolog_flag(expect_pfc_file,never).
+:- set_prolog_flag(expect_mpred_file,never).
 
 :- fixup_exports.
 
@@ -4809,7 +4809,7 @@ functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_d
       pfc_update_literal(*,*,0,*),
       pfc_retry(*),
 %      pfc_op(?, ?),
-      pfc_facts_only(*),
+      mpred_facts_only(*),
       map_unless(1,:,*,*),      
       is_callable(*),     
 %      deducedSimply(*),
@@ -4925,7 +4925,7 @@ check_real_context_module:-!.
 check_real_context_module:- sanity((context_module(M1),defaultAssertMt(M2),must(M1==M2))).
 
 
-% ======================= pfc_file('pfcsyntax').	% operator declarations.
+% ======================= mpred_file('pfcsyntax').	% operator declarations.
 
 :-
  op(1199,fx,('==>')), 
@@ -4951,7 +4951,7 @@ check_real_context_module:- sanity((context_module(M1),defaultAssertMt(M2),must(
 %
 mreq(G):- if_defined(call_u(G),fail).
 
-% ======================= pfc_file('pfccore').	% core of Pfc.
+% ======================= mpred_file('pfccore').	% core of Pfc.
 
 %   File   : pfccore.pl
 %   Author : Tim Finin, finin@prc.unisys.com
@@ -5703,15 +5703,15 @@ map_first_arg(CM,Pred,H,S):- CM:apply(Pred,[H|S]).
 %
 pfcVerifyMissing(GC, GO, ((GO, {D==C});\+ GO) ):-  GC=..[F,A|Args],append(Left,[D],Args),append(Left,[C],NewArgs),GO=..[F,A|NewArgs],!.
 
-%example pfc_freeLastArg(pfc_isa(I,C),~(pfc_isa(I,C))):-is_ftNonvar(C),!.
-%example pfc_freeLastArg(pfc_isa(I,C),(pfc_isa(I,F),C\=F)):-!.
+%example mpred_freeLastArg(pfc_isa(I,C),~(pfc_isa(I,C))):-is_ftNonvar(C),!.
+%example mpred_freeLastArg(pfc_isa(I,C),(pfc_isa(I,F),C\=F)):-!.
 
-%% pfc_freeLastArg( +G, ?GG) is semidet.
+%% mpred_freeLastArg( +G, ?GG) is semidet.
 %
 % PFC Free Last Argument.
 %
-pfc_freeLastArg(G,GG):- G=..[F,A|Args],append(Left,[_],Args),append(Left,[_],NewArgs),GG=..[F,A|NewArgs],!.
-pfc_freeLastArg(_G,false).
+mpred_freeLastArg(G,GG):- G=..[F,A|Args],append(Left,[_],Args),append(Left,[_],NewArgs),GG=..[F,A|NewArgs],!.
+mpred_freeLastArg(_G,false).
 
 
 %% pfc_current_op_support( +VALUE1) is semidet.
@@ -6216,7 +6216,7 @@ call_with_bc_triggers(MP) :- strip_module(MP,_,P), functor(P,F,A), \+ t_l:infBac
 %
 pfc_call_with_no_triggers(Clause) :-  strip_module(Clause,_,F),
   %= this (is_ftVar(F)) is probably not advisable due to extreme inefficiency.
-  (is_ftVar(F)    ->  pfc_facts_and_universe(F) ;
+  (is_ftVar(F)    ->  mpred_facts_and_universe(F) ;
      pfc_call_with_no_triggers_bound(F)).
 
 
@@ -6521,7 +6521,7 @@ pfc_non_neg_literal(X):- atom(X),!.
 pfc_non_neg_literal(X):- sanity(stack_check),
     pfcPositiveLiteral(X), X \= ~(_), X \= pfc_prop(_,_,_,_), X \= conflict(_).
 
-% ======================= pfc_file('pfcsupport').	% support maintenance
+% ======================= mpred_file('pfcsupport').	% support maintenance
 
 
 %% is_relative( :TermV) is semidet.
@@ -6564,7 +6564,7 @@ pfc_trigger_key(chart(stem([Char1|_Rest]),_L),Char1) :- !.
 pfc_trigger_key(chart(Concept,_L),Concept) :- !.
 pfc_trigger_key(X,X).
 */
-% ======================= pfc_file('pfcdb').	% predicates to manipulate database.
+% ======================= mpred_file('pfcdb').	% predicates to manipulate database.
 
 %   File   : pfcdb.pl
 %   Author : Tim Finin, finin@prc.unisys.com
@@ -6661,7 +6661,7 @@ is_resolved(C):- Why= is_resolved, pfc_call_only_facts(Why,~(C)),\+pfc_call_only
 %
 % PFC Prove Negated.
 %
-pfc_prove_neg(G):-  (dtrace), \+ pfc_bc_only(G), \+ pfc_fact(G).
+pfc_prove_neg(G):-  (dtrace), \+ pfc_bc_only(G), \+ mpred_fact(G).
 
 
 %% pred_head( :PRED1Type, ?P) is semidet.
@@ -6811,11 +6811,11 @@ cnstrn0(X,V):-when(is_ftNonvar(V),X).
 rescan_pfc:-forall(clause(baseKB:pfc_hook_rescan_files,Body),show_entry(rescan_pfc,Body)).
 
 
-%% pfc_facts_and_universe( +P) is semidet.
+%% mpred_facts_and_universe( +P) is semidet.
 %
 % PFC Facts And Universe.
 %
-pfc_facts_and_universe(P):- (is_ftVar(P)->pred_head_all(P);true),call_u(P). % (meta_wrapper_rule(P)->call_u(P) ; call_u(P)).
+mpred_facts_and_universe(P):- (is_ftVar(P)->pred_head_all(P);true),call_u(P). % (meta_wrapper_rule(P)->call_u(P) ; call_u(P)).
 
 
 %% repropagate( :TermP) is semidet.
@@ -6869,8 +6869,8 @@ repropagate_1(P):- call_u(repropagate_2(P)).
 % repropagate  Extended Helper.
 %
 repropagate_2(P):-
- call_u(doall((no_repeats((pfc_facts_and_universe(P))),
-    locally_tl(is_repropagating(P),ignore((once(show_failure(fwd_ok(P))),show_call(pfc_fwc(P)))))))).
+ call_u(doall((no_repeats((mpred_facts_and_universe(P))),
+    locally_tl(is_repropagating(P),ignore((once(show_failure(fwd_ok(P))),show_call(mpred_fwc(P)))))))).
 
 % repropagate_meta_wrapper_rule(P==>_):- !, repropagate(P).
 
@@ -6895,11 +6895,11 @@ fwd_ok(X):-compound(X),get_assertion_head_arg(_,X,E),compound(E),functor(E,(:-),
 % fwd_ok(P):-must(ground(P)),!.
 
 
-%% pfc_facts_only( +P) is semidet.
+%% mpred_facts_only( +P) is semidet.
 %
 % PFC Facts Only.
 %
-pfc_facts_only(P):- (is_ftVar(P)->(pred_head_all(P),\+ meta_wrapper_rule(P));true),no_repeats(P).
+mpred_facts_only(P):- (is_ftVar(P)->(pred_head_all(P),\+ meta_wrapper_rule(P));true),no_repeats(P).
 
 
 
@@ -7027,7 +7027,7 @@ retract_mu((H:-B)):-!, clause_u(H,B,R),erase(R).
 
  :- meta_predicate update_single_valued_arg(+,+,*).
  :- meta_predicate assert_mu(*,+,*,*).
- :- meta_predicate pfc_facts_and_universe(*).
+ :- meta_predicate mpred_facts_and_universe(*).
  :- meta_predicate {*}.
  :- meta_predicate neg_in_code0(*).
  :- meta_predicate repropagate_2(*).
@@ -7167,9 +7167,9 @@ module_pfc_expansion:- fail, nop(module(pfc_expansion,
             instTypePropsToType/2,
             into_functor_form/3,
             into_functor_form/5,
-            into_pfc_form/2,
-            into_pfc_form6/6,
-            into_pfc_form_ilc/2,
+            into_mpred_form/2,
+            into_mpred_form6/6,
+            into_mpred_form_ilc/2,
             is_arity_pred/1,
             is_meta_functor/3,
             is_pred_declarer/1,
@@ -7609,7 +7609,7 @@ is_holds_false(Prop):-quietly((atom(Prop),is_holds_false0(Prop))).
 %
 % If Is A Holds False Primary Helper.
 %
-is_holds_false0(Prop):-member(Prop,[not,nholds,holds_f,pfc_f,aint,assertion_f,not_true_t,asserted_pfc_f,retraction,not_secondOrder,not_firstOrder]).
+is_holds_false0(Prop):-member(Prop,[not,nholds,holds_f,mpred_f,aint,assertion_f,not_true_t,asserted_mpred_f,retraction,not_secondOrder,not_firstOrder]).
 %is_holds_false0(Prop,Stem):-atom_concat('not_',Stem,Prop).
 %is_holds_false0(Prop,Stem):-atom_concat('int_not_',Stem,Prop).
 %is_holds_false0(Prop,Stem):-atom_concat(Stem,'_f',Prop).
@@ -8422,7 +8422,7 @@ db_expand_chain(_,P<-B,P) :-is_true(B),!.
 
 fully_expand_head(Why,Before,After):-
   % quietly(subst(Before,pfc_isa,isa,Before1)),
-  into_pfc_form(Before,Before2),
+  into_mpred_form(Before,Before2),
   must(try_expand_head(Why,Before2,After1)),
   must(post_expansion(Why,After1,After)).
 
@@ -8940,76 +8940,76 @@ conjoin_l(A,B,C):-conjoin(A,B,C).
 
 
 % ========================================
-% into_pfc_form/2 (removes a second order functors until the common mpred form is left)
+% into_mpred_form/2 (removes a second order functors until the common mpred form is left)
 % ========================================
-%=  :- was_export(into_pfc_form/2).
+%=  :- was_export(into_mpred_form/2).
 
 %= 	 	 
 
-%% into_pfc_form( :TermV, ?VO) is semidet.
+%% into_mpred_form( :TermV, ?VO) is semidet.
 %
 % Converted To Managed Predicate Form.
 %
 
-% into_pfc_form(Var,MPRED):- is_ftVar(Var), trace_or_throw_ex(var_into_pfc_form(Var,MPRED)).
-into_pfc_form(V,VO):- (not_ftCompound(V)),!,VO=V.
-into_pfc_form(M:X,M:O):- atom(M),!,into_pfc_form(X,O),!.
-% convered into_pfc_form(Sent,SentO):-is_ftNonvar(Sent),get_ruleRewrite(Sent,SentM),!,into_pfc_form(SentM,SentO).
-into_pfc_form((H:-B),(HH:-BB)):-!,into_pfc_form(H,HH),into_pfc_form(B,BB).
-into_pfc_form((H:-B),(HH:-BB)):-!,into_pfc_form(H,HH),into_pfc_form(B,BB).
-into_pfc_form((H,B),(HH,BB)):-!,into_pfc_form(H,HH),into_pfc_form(B,BB).
-into_pfc_form((H;B),(HH;BB)):-!,into_pfc_form(H,HH),into_pfc_form(B,BB).
-into_pfc_form((H/B),(HH/BB)):-!,into_pfc_form(H,HH),into_pfc_form(B,BB).
-into_pfc_form(WAS,isa(I,C)):- was_isa_ex(WAS,I,C),!.
-into_pfc_form(t(P),O):-is_ftNonvar(P),!,into_pfc_form(P,O).
-into_pfc_form(t(P,A),O):-atom(P),!,O  univ_safe  [P,A].
-into_pfc_form(t(P,A,B),O):-atom(P),!,O  univ_safe  [P,A,B].
-into_pfc_form(t(P,A,B,C),O):-atom(P),!,O  univ_safe  [P,A,B,C].
-into_pfc_form(IN,OUT):- 
+% into_mpred_form(Var,MPRED):- is_ftVar(Var), trace_or_throw_ex(var_into_mpred_form(Var,MPRED)).
+into_mpred_form(V,VO):- (not_ftCompound(V)),!,VO=V.
+into_mpred_form(M:X,M:O):- atom(M),!,into_mpred_form(X,O),!.
+% convered into_mpred_form(Sent,SentO):-is_ftNonvar(Sent),get_ruleRewrite(Sent,SentM),!,into_mpred_form(SentM,SentO).
+into_mpred_form((H:-B),(HH:-BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
+into_mpred_form((H:-B),(HH:-BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
+into_mpred_form((H,B),(HH,BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
+into_mpred_form((H;B),(HH;BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
+into_mpred_form((H/B),(HH/BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
+into_mpred_form(WAS,isa(I,C)):- was_isa_ex(WAS,I,C),!.
+into_mpred_form(t(P),O):-is_ftNonvar(P),!,into_mpred_form(P,O).
+into_mpred_form(t(P,A),O):-atom(P),!,O  univ_safe  [P,A].
+into_mpred_form(t(P,A,B),O):-atom(P),!,O  univ_safe  [P,A,B].
+into_mpred_form(t(P,A,B,C),O):-atom(P),!,O  univ_safe  [P,A,B,C].
+into_mpred_form(IN,OUT):- 
    cnas(IN,F,Args),
-   must_maplist(into_pfc_form,Args,ArgsO),!,
+   must_maplist(into_mpred_form,Args,ArgsO),!,
    map_f(F,FO),
    cnas(OUT,FO,ArgsO).
 
 
-% into_pfc_form(I,O):- /*quietly*/(loop_check(into_pfc_form_ilc(I,O),O=I)). % trace_or_throw_ex(into_pfc_form(I,O).
+% into_mpred_form(I,O):- /*quietly*/(loop_check(into_mpred_form_ilc(I,O),O=I)). % trace_or_throw_ex(into_mpred_form(I,O).
 
-%:- pfc_trace_nochilds(into_pfc_form/2).
+%:- pfc_trace_nochilds(into_mpred_form/2).
 
 
 %= 	 	 
 
-%% into_pfc_form_ilc( ?G, ?O) is semidet.
+%% into_mpred_form_ilc( ?G, ?O) is semidet.
 %
 % Converted To Managed Predicate Form Inside Of Loop Checking.
 %
-into_pfc_form_ilc([F|Fist],O):- is_list([F|Fist]),!,G  univ_safe  [t|[F|Fist]], into_pfc_form(G,O).
-into_pfc_form_ilc(G,O):- safe_functor(G,F,A),G  univ_safe  [F,P|ARGS],!,into_pfc_form6(G,F,P,A,ARGS,O),!.
+into_mpred_form_ilc([F|Fist],O):- is_list([F|Fist]),!,G  univ_safe  [t|[F|Fist]], into_mpred_form(G,O).
+into_mpred_form_ilc(G,O):- safe_functor(G,F,A),G  univ_safe  [F,P|ARGS],!,into_mpred_form6(G,F,P,A,ARGS,O),!.
 
 % TODO confirm negations
 
 :- expire_tabled_list(all).
 
 
-%% into_pfc_form6( ?X, ?H, ?P, ?N, ?A, ?O) is semidet.
+%% into_mpred_form6( ?X, ?H, ?P, ?N, ?A, ?O) is semidet.
 %
 % Converted To Managed Predicate Form6.
 %
-into_pfc_form6(C,_,_,2,_,C):-!.
-% into_pfc_form6(H,_,_,_,_,G0):- once(locally(t_l:into_form_code,(expand_term( (H :- true) , C ), reduce_clause(assert,C,G)))),expanded_different(H,G),!,into_pfc_form(G,G0),!.
-into_pfc_form6(_,F,_,1,[C],O):-alt_calls(F),!,into_pfc_form(C,O),!.
-into_pfc_form6(_,':-',C,1,_,':-'(O)):-!,into_pfc_form_ilc(C,O).
-into_pfc_form6(_,not,C,1,_,not(O)):-into_pfc_form(C,O),!.
-into_pfc_form6(C,isa,_,2,_,C):-!.
-into_pfc_form6(C,_,_,_,_,isa(I,T)):-was_isa_ex(C,I,T),!.
-into_pfc_form6(_X,t,P,_N,A,O):-!,(atom(P)->O  univ_safe  [P|A];O  univ_safe  [t,P|A]).
-into_pfc_form6(G,_,_,1,_,G):-predicate_property(G,number_of_rules(N)),N >0, !.
-into_pfc_form6(G,F,C,1,_,O):-real_builtin_predicate(G),!,into_pfc_form(C,OO),O  univ_safe  [F,OO].
-into_pfc_form6(_X,H,P,_N,A,O):-a(is_holds_false,H),(atom(P)->(G  univ_safe  [P|A],O=not(G));O  univ_safe  [holds_f,P|A]).
-into_pfc_form6(_X,H,P,_N,A,O):-a(is_holds_true,H),(atom(P)->O  univ_safe  [P|A];O  univ_safe  [t,P|A]).
-into_pfc_form6(G,F,_,_,_,G):-a(prologHybrid,F),!.
-into_pfc_form6(G,F,_,_,_,G):-a(prologDynamic,F),!.
-into_pfc_form6(G,F,_,_,_,G):-nop(dmsg_pretty(warn(unknown_pfc_type(F,G)))).
+into_mpred_form6(C,_,_,2,_,C):-!.
+% into_mpred_form6(H,_,_,_,_,G0):- once(locally(t_l:into_form_code,(expand_term( (H :- true) , C ), reduce_clause(assert,C,G)))),expanded_different(H,G),!,into_mpred_form(G,G0),!.
+into_mpred_form6(_,F,_,1,[C],O):-alt_calls(F),!,into_mpred_form(C,O),!.
+into_mpred_form6(_,':-',C,1,_,':-'(O)):-!,into_mpred_form_ilc(C,O).
+into_mpred_form6(_,not,C,1,_,not(O)):-into_mpred_form(C,O),!.
+into_mpred_form6(C,isa,_,2,_,C):-!.
+into_mpred_form6(C,_,_,_,_,isa(I,T)):-was_isa_ex(C,I,T),!.
+into_mpred_form6(_X,t,P,_N,A,O):-!,(atom(P)->O  univ_safe  [P|A];O  univ_safe  [t,P|A]).
+into_mpred_form6(G,_,_,1,_,G):-predicate_property(G,number_of_rules(N)),N >0, !.
+into_mpred_form6(G,F,C,1,_,O):-real_builtin_predicate(G),!,into_mpred_form(C,OO),O  univ_safe  [F,OO].
+into_mpred_form6(_X,H,P,_N,A,O):-a(is_holds_false,H),(atom(P)->(G  univ_safe  [P|A],O=not(G));O  univ_safe  [holds_f,P|A]).
+into_mpred_form6(_X,H,P,_N,A,O):-a(is_holds_true,H),(atom(P)->O  univ_safe  [P|A];O  univ_safe  [t,P|A]).
+into_mpred_form6(G,F,_,_,_,G):-a(prologHybrid,F),!.
+into_mpred_form6(G,F,_,_,_,G):-a(prologDynamic,F),!.
+into_mpred_form6(G,F,_,_,_,G):-nop(dmsg_pretty(warn(unknown_pfc_type(F,G)))).
 
 % ========================================
 % acceptable_xform/2 (when the form is a isa/2, do a validity check)
@@ -9175,7 +9175,7 @@ do_expand_args_l(_,A,A).
 %if_expands_on(EachOf,Term,Call):- expands_on(EachOf,Term),subst(Call,Term,O,OCall),!, forall(do_expand_args(EachOf,Term,O),OCall).
 
 /*
-%db_reop(WhatNot,Call) :- into_pfc_form(Call,NewCall),NewCall\=@=Call,!,db_reop(WhatNot,NewCall).
+%db_reop(WhatNot,Call) :- into_mpred_form(Call,NewCall),NewCall\=@=Call,!,db_reop(WhatNot,NewCall).
 db_reop(Op,Term):- expands_on(isEach,Term), !,forall(do_expand_args(isEach,Term,O),db_reop_l(Op,O)).
 db_reop(Op,Term):-db_reop_l(Op,Term).
 
@@ -9229,8 +9229,8 @@ db_op_sentence(_Op,Prop,ARGS,C0):- C0  univ_safe  [t,Prop|ARGS].
 %
 % Simply Functors.
 %
-simply_functors(Db_pred,query(HLDS,Must),Wild):- once(into_pfc_form(Wild,Simpler)),Wild\=@=Simpler,!,call(Db_pred,query(HLDS,Must),Simpler).
-simply_functors(Db_pred,Op,Wild):- once(into_pfc_form(Wild,Simpler)),Wild\=@=Simpler,!,call(Db_pred,Op,Simpler).
+simply_functors(Db_pred,query(HLDS,Must),Wild):- once(into_mpred_form(Wild,Simpler)),Wild\=@=Simpler,!,call(Db_pred,query(HLDS,Must),Simpler).
+simply_functors(Db_pred,Op,Wild):- once(into_mpred_form(Wild,Simpler)),Wild\=@=Simpler,!,call(Db_pred,Op,Simpler).
 
 
 % -  dmsg_hook(db_op(query(HLDS,call),holds_t(ft_info,tCol,'$VAR'(_)))):-trace_or_throw_ex(dtrace).
@@ -9379,7 +9379,7 @@ exact_args_f(action_info).
 exact_args_f(never_retract_u).
 exact_args_f(install_converter).
 exact_args_f(installed_converter).
-exact_args_f(actn).
+exact_args_f(pfcAction).
 exact_args_f(wid).
 exact_args_f(wdmsg_pretty).
 exact_args_f(fol_to_pkif).
@@ -9694,7 +9694,7 @@ pfc_expansion_file.
 :- thread_local(t_l:deduceArgTypes/1).
 :- thread_local(t_l:noDBaseMODs/1).
 :- thread_local(t_l:side_effect_buffer/3).
-:- thread_local(t_l:loading_pfc_file/2).
+:- thread_local(t_l:loading_mpred_file/2).
 :- thread_local(t_l:consulting_sources/0).
 % HOOKS
 
@@ -9723,7 +9723,7 @@ baseKB:hook_one_minute_timer_tick/0,
 baseKB:hook_one_second_timer_tick/0, 
 baseKB:isa_pred_now_locked/0,
 baseKB:loaded_file_world_time/3, 
-baseKB:loaded_pfc_file/2,
+baseKB:loaded_mpred_file/2,
 baseKB:module_local_init/0,
 baseKB:pfc_hook_rescan_files/0, 
 baseKB:pfc_provide_read_attributes/3, 
@@ -9789,7 +9789,7 @@ user:term_expansion/2,user:goal_expansion/2,system:term_expansion/2,system:goal_
 :- thread_local(t_l:into_form_code/0).
 :- thread_local(t_l:inVoProp/0).
 :- thread_local(t_l:is_calling/0).
-:- thread_local(t_l:loading_pfc_file/2).
+:- thread_local(t_l:loading_mpred_file/2).
 :- thread_local(t_l:pfc_ain_loaded/0).
 :- thread_local(t_l:pfc_loads_file/0).
 :- thread_local(t_l:pfc_opcall/2).
@@ -9992,7 +9992,7 @@ justification(F,J):- supporters_list(F,J).
 
 justifications(F,Js):- bagof_nr(J,justification(F,J),Js).
 
-:- set_prolog_flag(expect_pfc_file,never).
+:- set_prolog_flag(expect_mpred_file,never).
 
 pfcWhy(M:Conseq,Ante):- atom(M),!,M:pfcWhy_2(Conseq,Ante).
 
@@ -10013,7 +10013,7 @@ pfc_info(O):-
   must_maplist(mp_printAll(O),
   [   pfc_db_type(O,v),  
       +(pfc_child(O,v)),
-      % pfc_fact(O),
+      % mpred_fact(O),
       pfc_axiom(O),
       well_founded(O),
       pfc_supported(local,O),
@@ -10913,12 +10913,12 @@ triggerSupports1(_,X,[X]):- \+ pfc_db_type(X,trigger(_)).
 % :- initialization(ensure_abox(baseKB)).
 
 
-% % :- set_prolog_flag(pfc_pfc_file,true).
+% % :- set_prolog_flag(pfc_mpred_file,true).
 % local_testing
 
 :- fixup_exports.
 
-:- set_prolog_flag(expect_pfc_file,unknown).
+:- set_prolog_flag(expect_mpred_file,unknown).
 
 % =======================================================
 /* 
@@ -11027,7 +11027,7 @@ pp_facts(Pattern) :- pp_facts(Pattern,true).
 % Pretty Print Facts.
 %
 pp_facts(P,C) :-
-  pfc_facts(P,C,L),
+  mpred_facts(P,C,L),
   pfc_classify_facts(L,User,Pfc,_Rule),
   draw_line,
   fmt("User added facts:",[]),
@@ -11443,7 +11443,7 @@ pp_db_facts(MM):- ignore(pp_db_facts(MM,_,true)).
 pp_db_facts(MM,Pattern):- pp_db_facts(MM,Pattern,true).
 
 pp_db_facts(MM,P,C):-
-  pfc_facts_in_kb(MM,P,C,L),
+  mpred_facts_in_kb(MM,P,C,L),
   pfc_classifyFacts(L,User,Pfc,_ZRule),
   length(User,UserSize),length(Pfc,PfcSize),
   format("~N~nUser added facts in [~w]: ~w",[MM,UserSize]),
@@ -11598,9 +11598,9 @@ pfc_loader_module:- fail, nop(module(pfc_loader,
             end_module_type/2,
             ensure_loaded_no_mpreds/1,
 
-            % ensure_prolog_file_consulted/2, ensure_pfc_file_consulted/2,
-            ensure_pfc_file_loaded/1,
-            ensure_pfc_file_loaded/2,
+            % ensure_prolog_file_consulted/2, ensure_mpred_file_consulted/2,
+            ensure_mpred_file_loaded/1,
+            ensure_mpred_file_loaded/2,
             
             etrace/0,
             expand_in_pfc_kb_module/2,
@@ -11608,9 +11608,9 @@ pfc_loader_module:- fail, nop(module(pfc_loader,
             file_begin/1,
             file_end/1,
             finish_processing_world/0,
-            force_reload_pfc_file/1,
-            force_reload_pfc_file/2,
-            force_reload_pfc_file2/2,
+            force_reload_mpred_file/1,
+            force_reload_mpred_file/2,
+            force_reload_mpred_file2/2,
             get_file_type/2,
             get_lang/1,
             get_lang0/1,
@@ -11618,20 +11618,20 @@ pfc_loader_module:- fail, nop(module(pfc_loader,
             get_op_alias/2,
             gload/0,
             hdr_debug/2,
-            include_pfc_files/1,
+            include_mpred_files/1,
             include_prolog_files/1,
             get_lang0/1,
             is_code_body/1,
             is_compiling/0,
             is_compiling_sourcecode/0,
             is_directive_form/1,
-            is_pfc_file/1,
+            is_mpred_file/1,
             lang_op_alias/3,
             expand_term_to_load_calls/2,
             pfc_expander_now_physically/3,
             load_init_world/2,
             load_language_file/1,
-            load_pfc_files/0,
+            load_mpred_files/0,
             load_pfc_on_file_end/2,
             loader_side_effect_capture_only/2,
             loader_side_effect_verify_only/2,
@@ -11646,9 +11646,9 @@ pfc_loader_module:- fail, nop(module(pfc_loader,
             pfc_expand_inside_file_anyways/0,
             pfc_expand_inside_file_anyways/1,
             pfc_te/6,
-            pfc_file_term_expansion/4,
+            mpred_file_term_expansion/4,
             dont_term_expansion/2,
-            pfc_file_term_expansion/4,
+            mpred_file_term_expansion/4,
             
             pfc_expand_file_module_clause/4,
             pfc_expand_file_module_clause/4,
@@ -11712,7 +11712,7 @@ pfc_loader_module:- fail, nop(module(pfc_loader,
             user:term_expansion/2,
             pfc_loader_module_transparent/1,
             convert_side_effect_0a/2, convert_side_effect_0b/2, 
-            convert_side_effect_0c/2, guess_if_pfc_file0/1, expand_term_to_load_calls/2, load_file_term_to_command_1/3, 
+            convert_side_effect_0c/2, guess_if_mpred_file0/1, expand_term_to_load_calls/2, load_file_term_to_command_1/3, 
             load_file_term_to_command_1b/3, pfc_term_expansion_by_pred_class/3, 
             must_expand_term_to_command/2, pl_to_pfc_syntax0/2, 
             
@@ -11766,10 +11766,10 @@ pfc_unload_file(File):-
         convert_side_effect(?, +, -),
         
         ensure_loaded_no_mpreds(:),
-        ensure_pfc_file_loaded(:),
-        ensure_pfc_file_loaded(+, :),
-        force_reload_pfc_file(?),
-        force_reload_pfc_file2(+,+),
+        ensure_mpred_file_loaded(:),
+        ensure_mpred_file_loaded(+, :),
+        force_reload_mpred_file(?),
+        force_reload_mpred_file2(+,+),
         get_last_time_file(+, +, -),
         expand_term_to_load_calls(?, ?),
         pfc_expander_now_physically(?, ?, ?),
@@ -11790,8 +11790,8 @@ pfc_unload_file(File):-
 % call_from_module/2, with_source_module/2, can_be_dynamic/1, cl_assert/2, clear_predicates/1, collect_expansions/3, compile_clause/1,
 %  pfc_term_expansion_by_storage_type/3, convert_side_effect/2, convert_side_effect/3, convert_side_effect_0a/2, convert_side_effect_0b/2, convert_side_effect_0c/2, 
 % convert_side_effect_buggy/2, current_context_module/1, current_op_alias/2, cwc/0, decache_file_type/1, ensure_abox/1, declare_load_dbase/1, 
-% disable_pfc_expansion/0, disable_mpreds_in_current_file/0, dyn_begin/0, dyn_end/0, enable_pfc_expansion/0, end_module_type/1, end_module_type/2, ensure_loaded_no_mpreds/1, ensure_pfc_file_consulted/2, ensure_pfc_file_loaded/1, ensure_pfc_file_loaded/2, ensure_prolog_file_consulted/2, etrace/0, expand_in_pfc_kb_module/2, expanded_already_functor/1, file_begin/1, file_end/1, finish_processing_world/0, force_reload_pfc_file/1, 
-%  force_reload_pfc_file2/2, force_reload_pfc_file/2, from_kif_string/2, get_file_type/2, get_lang/1, get_last_time_file/3, get_op_alias/2, gload/0, guess_file_type_loader/2, hdr_debug/2, in_include_file/0, in_pfc_kb_module/0, include_pfc_files/1, get_lang/1, is_code_body/1, is_compiling/0, is_compiling_sourcecode/0, is_kif_string/1, is_pfc_file/1, guess_if_pfc_file0/1, lang_op_alias/3, load_file_dir/2, load_file_some_type/2, expand_term_to_load_calls/2, load_file_term_to_command_1/3, load_file_term_to_command_1b/3, pfc_term_expansion_by_pred_class/3, expand_term_to_load_calls/2, expand_term_to_load_calls/4, load_init_world/2, load_language_file/1, load_pfc_files/0, load_pfc_on_file_end/2, loader_side_effect_capture_only/2, loader_side_effect_verify_only/2, expand_term_to_command/2, loading_source_file/1, make_db_listing/0, make_dynamic/1, module_typed_term_expand/2, module_typed_term_expand/5, pfc_begin/0,  pfc_expand_inside_file_anyways/0, pfc_expand_inside_file_anyways/1, pfc_te/4, pfc_expander_now/2, pfc_expand_file_module_clause/4, pfc_implode_varnames/1, pfc_loader_file/0, pfc_may_expand/0, pfc_may_expand_module/1, pfc_maybe_skip/1, pfc_process_input/2, pfc_process_input_1/1, baseKB:pfc_skipped_module/1, pfc_term_expansion/2, pfc_use_module/1, must_compile_special_clause/1, expand_term_to_load_calls/2, must_locate_file/2, must_expand_term_to_command/2, myDebugOnError/1, op_alias/2, op_lang/1, pl_to_pfc_syntax/2, pl_to_pfc_syntax0/2, pl_to_pfc_syntax_h/2, pop_predicates/2, process_this_script/0, process_this_script/1, process_this_script0/1, prolog_load_file_loop_checked/2, prolog_load_file_loop_checked_0/2, prolog_load_file_nlc/2, prolog_load_file_nlc_0/2, push_predicates/2, read_one_term/2, read_one_term/3, register_module_type/1, register_module_type/2, rsavedb/0, savedb/0, scan_updates/0, show_bool/1, show_interesting_cl/2, show_load_context/0, simplify_why/2, simplify_why_r/4, stream_pos/1, term_expand_local_each/5, transform_opers/3, transform_opers_0/2, transform_opers_1/2, use_file_type_loader/2, use_was_isa/3, was_exported_content/3, with_pfc_expansions/1, with_delayed_chaining/1, with_source_module/2, xfile_module_term_expansion_pass_3/7,  
+% disable_pfc_expansion/0, disable_mpreds_in_current_file/0, dyn_begin/0, dyn_end/0, enable_pfc_expansion/0, end_module_type/1, end_module_type/2, ensure_loaded_no_mpreds/1, ensure_mpred_file_consulted/2, ensure_mpred_file_loaded/1, ensure_mpred_file_loaded/2, ensure_prolog_file_consulted/2, etrace/0, expand_in_pfc_kb_module/2, expanded_already_functor/1, file_begin/1, file_end/1, finish_processing_world/0, force_reload_mpred_file/1, 
+%  force_reload_mpred_file2/2, force_reload_mpred_file/2, from_kif_string/2, get_file_type/2, get_lang/1, get_last_time_file/3, get_op_alias/2, gload/0, guess_file_type_loader/2, hdr_debug/2, in_include_file/0, in_pfc_kb_module/0, include_mpred_files/1, get_lang/1, is_code_body/1, is_compiling/0, is_compiling_sourcecode/0, is_kif_string/1, is_mpred_file/1, guess_if_mpred_file0/1, lang_op_alias/3, load_file_dir/2, load_file_some_type/2, expand_term_to_load_calls/2, load_file_term_to_command_1/3, load_file_term_to_command_1b/3, pfc_term_expansion_by_pred_class/3, expand_term_to_load_calls/2, expand_term_to_load_calls/4, load_init_world/2, load_language_file/1, load_mpred_files/0, load_pfc_on_file_end/2, loader_side_effect_capture_only/2, loader_side_effect_verify_only/2, expand_term_to_command/2, loading_source_file/1, make_db_listing/0, make_dynamic/1, module_typed_term_expand/2, module_typed_term_expand/5, pfc_begin/0,  pfc_expand_inside_file_anyways/0, pfc_expand_inside_file_anyways/1, pfc_te/4, pfc_expander_now/2, pfc_expand_file_module_clause/4, pfc_implode_varnames/1, pfc_loader_file/0, pfc_may_expand/0, pfc_may_expand_module/1, pfc_maybe_skip/1, pfc_process_input/2, pfc_process_input_1/1, baseKB:pfc_skipped_module/1, pfc_term_expansion/2, pfc_use_module/1, must_compile_special_clause/1, expand_term_to_load_calls/2, must_locate_file/2, must_expand_term_to_command/2, myDebugOnError/1, op_alias/2, op_lang/1, pl_to_pfc_syntax/2, pl_to_pfc_syntax0/2, pl_to_pfc_syntax_h/2, pop_predicates/2, process_this_script/0, process_this_script/1, process_this_script0/1, prolog_load_file_loop_checked/2, prolog_load_file_loop_checked_0/2, prolog_load_file_nlc/2, prolog_load_file_nlc_0/2, push_predicates/2, read_one_term/2, read_one_term/3, register_module_type/1, register_module_type/2, rsavedb/0, savedb/0, scan_updates/0, show_bool/1, show_interesting_cl/2, show_load_context/0, simplify_why/2, simplify_why_r/4, stream_pos/1, term_expand_local_each/5, transform_opers/3, transform_opers_0/2, transform_opers_1/2, use_file_type_loader/2, use_was_isa/3, was_exported_content/3, with_pfc_expansions/1, with_delayed_chaining/1, with_source_module/2, xfile_module_term_expansion_pass_3/7,  
 % (~)/1, baseKB:cl_assert/2, baseKB:cwc/0, baseKB:pfc_provide_clauses/3, always_expand_on_thread/1, t_l:current_lang/1, current_op_alias/2, defaultAssertMt/1,  baseKB:loaded_file_world_time/3, pfc_directive_value/3, baseKB:pfc_skipped_module/1, 
 %   never_reload_file/1, prolog_load_file_loop_checked/2, registered_module_type/2).
 :- module_transparent 
@@ -11802,7 +11802,7 @@ pfc_unload_file(File):-
 :- thread_local(t_l:pfc_module_expansion/1).
 
 %:- (volatile t_l:into_form_code/0, t_l:pfc_module_expansion/1).
-%:-  /**/ export((convert_side_effect_0a/2, convert_side_effect_0b/2, convert_side_effect_0c/2, guess_if_pfc_file0/1, expand_term_to_load_calls/2, load_file_term_to_command_1/3, load_file_term_to_command_1b/3, pfc_term_expansion_by_pred_class/3, pfc_process_input_1/1, must_expand_term_to_command/2, pl_to_pfc_syntax0/2, process_this_script0/1, prolog_load_file_loop_checked_0/2, prolog_load_file_nlc_0/2, transform_opers_0/2, transform_opers_1/2, xfile_module_term_expansion_pass_3/7)).
+%:-  /**/ export((convert_side_effect_0a/2, convert_side_effect_0b/2, convert_side_effect_0c/2, guess_if_mpred_file0/1, expand_term_to_load_calls/2, load_file_term_to_command_1/3, load_file_term_to_command_1b/3, pfc_term_expansion_by_pred_class/3, pfc_process_input_1/1, must_expand_term_to_command/2, pl_to_pfc_syntax0/2, process_this_script0/1, prolog_load_file_loop_checked_0/2, prolog_load_file_nlc_0/2, transform_opers_0/2, transform_opers_1/2, xfile_module_term_expansion_pass_3/7)).
 %:- dynamic((registered_module_type/2, current_op_alias/2, baseKB:pfc_skipped_module/1, prolog_load_file_loop_checked/2, lmcache:pfc_directive_value/3, defaultAssertMt/1, baseKB:loaded_file_world_time/3, baseKB:never_reload_file/1, always_expand_on_thread/1, t_l:current_lang/1, current_op_alias/2, defaultAssertMt/1, baseKB:loaded_file_world_time/3, pfc_directive_value/3, baseKB:pfc_skipped_module/1, never_reload_file/1, prolog_load_file_loop_checked/2, registered_module_type/2,  user:prolog_load_file/2, user:term_expansion/2)).
 %:- dynamic(registered_module_type/2).        
 
@@ -11881,7 +11881,7 @@ pfc_te(Type,_,I,_,_,_):- !,fail,quietly(dont_term_expansion(Type,I)),!,fail.
 pfc_te(Type,Module,I,PosI,O,PosO):- 
   \+ current_prolog_flag(pfc_te,false),
    % prolog_load_context(file,S),prolog_load_context(source,S),   
-   pfc_file_term_expansion(Type,Module,I,O)->PosO=PosI.
+   mpred_file_term_expansion(Type,Module,I,O)->PosO=PosI.
 
 dont_term_expansion(Type,I):- 
    current_prolog_flag(subclause_expansion,false);
@@ -11896,23 +11896,23 @@ dont_term_expansion(Type,I):-
 
 
 
-%% pfc_file_term_expansion( ?Type, ?LoaderMod, ?I, ?OO) is det.
+%% mpred_file_term_expansion( ?Type, ?LoaderMod, ?I, ?OO) is det.
 %
 % Managed Predicate Expander Primary Helper.
 %
-:- meta_predicate pfc_file_term_expansion(+,+,+,-).
-% pfc_file_term_expansion(_,_,_,_):- \+ current_predicate(_,_:pfc_loader_file),!,fail.
-pfc_file_term_expansion(_,_,I,_):- is_directive_form(I),!,fail.
-pfc_file_term_expansion(_,_,I,_):- is_ftVar(I),!,fail.
-% pfc_file_term_expansion(_,_,_,_):- get_lang(pl),!,fail.
-% pfc_file_term_expansion(Type,LoaderMod,(I:-B),OO):-B==true,!,pfc_file_term_expansion(Type,LoaderMod,I,OO).
-% pfc_file_term_expansion(_Type,_LoaderMod,I,( :- must(ain(I)))):-!.
+:- meta_predicate mpred_file_term_expansion(+,+,+,-).
+% mpred_file_term_expansion(_,_,_,_):- \+ current_predicate(_,_:pfc_loader_file),!,fail.
+mpred_file_term_expansion(_,_,I,_):- is_directive_form(I),!,fail.
+mpred_file_term_expansion(_,_,I,_):- is_ftVar(I),!,fail.
+% mpred_file_term_expansion(_,_,_,_):- get_lang(pl),!,fail.
+% mpred_file_term_expansion(Type,LoaderMod,(I:-B),OO):-B==true,!,mpred_file_term_expansion(Type,LoaderMod,I,OO).
+% mpred_file_term_expansion(_Type,_LoaderMod,I,( :- must(ain(I)))):-!.
 
-pfc_file_term_expansion(Type,LoaderMod,I,OO):- !,fail,
-   no_loop_check(pfc_file_term_expansion0(Type,LoaderMod,I,OO)).
+mpred_file_term_expansion(Type,LoaderMod,I,OO):- !,fail,
+   no_loop_check(mpred_file_term_expansion0(Type,LoaderMod,I,OO)).
 
 % Ensure rule macro predicates are being used checked just before assert/query time
-pfc_file_term_expansion0(Type,LoaderMod,I,O):- 
+mpred_file_term_expansion0(Type,LoaderMod,I,O):- 
   sanity((ground(Type:LoaderMod),nonvar(I),var(O))),
   quietly_must(get_source_mfl(mfl4(VarNameZ,MF,F,L))),!,
   % \+ pfc_prolog_only_file(F),
@@ -11982,7 +11982,7 @@ show_bool(G):- must(forall((G*->dmsg_pretty(true=G);dmsg_pretty(false=G)),true))
 %
 show_load_context:- 
   must((
-  %listing(baseKB:registered_pfc_file),
+  %listing(baseKB:registered_mpred_file),
   show_bool(pfc_may_expand),
   show_bool(in_pfc_kb_module),
   show_bool(pfc_expand_inside_file_anyways),
@@ -12066,7 +12066,7 @@ etrace:-leash(+all),leash(+exception),dtrace.
 :- style_check(-discontiguous).
 % :- style_check(-atom).
 
-% gload:- ensure_pfc_file_loaded(savedb),!.
+% gload:- ensure_mpred_file_loaded(savedb),!.
 
 
 
@@ -12074,7 +12074,7 @@ etrace:-leash(+all),leash(+exception),dtrace.
 %
 % Gload.
 %
-gload:- baseKB:ensure_pfc_file_loaded(logicmoo('rooms/startrek.all.pfc.pl')).
+gload:- baseKB:ensure_mpred_file_loaded(logicmoo('rooms/startrek.all.pfc.pl')).
 
 %:-meta_predicate(savedb/0).
 
@@ -12112,7 +12112,7 @@ rsavedb:-
 make_db_listing:-
  % defaultAssertMt(DBM),
 %   listing(t),
- %  listing(pfc_f),
+ %  listing(mpred_f),
      listing(_),
      listing(baseKB:_),  
      listing(dbase:_),
@@ -12173,18 +12173,18 @@ term_expand_local_each(CM,X,F,A,X):-baseKB:registered_module_type(CM,dynamic),dy
 
 
 % ========================================
-% include_pfc_file(MASK)
+% include_mpred_file(MASK)
 % ========================================
 
 
 
 
-%% include_pfc_files( ?Mask) is det.
+%% include_mpred_files( ?Mask) is det.
 %
 % Include Managed Predicate Files.
 %
-include_pfc_files(Mask):- 
-     forall(maybe_locate_file(Mask,E),ensure_pfc_file_loaded(E)).
+include_mpred_files(Mask):- 
+     forall(maybe_locate_file(Mask,E),ensure_mpred_file_loaded(E)).
 
 :- module_transparent(include_prolog_files/1).
 
@@ -12290,23 +12290,23 @@ get_file_type(File,Type):-file_name_extension(_,Type,File).
 
 
 
-%% is_pfc_file(?F) is det.
+%% is_mpred_file(?F) is det.
 %
 % If Is A Managed Predicate File.
 %
-is_pfc_file(F):- var(F),!,quietly_must(loading_source_file(F)),F\==user,!, baseKB:how_virtualize_file(heads,F,0),!.
-is_pfc_file(F):- guess_if_pfc_file0(F),!,guess_if_pfc_file0(F),(set_how_virtualize_file(heads,F,0)),!.
+is_mpred_file(F):- var(F),!,quietly_must(loading_source_file(F)),F\==user,!, baseKB:how_virtualize_file(heads,F,0),!.
+is_mpred_file(F):- guess_if_mpred_file0(F),!,guess_if_mpred_file0(F),(set_how_virtualize_file(heads,F,0)),!.
 
-%% guess_if_pfc_file0( ?F) is det.
+%% guess_if_mpred_file0( ?F) is det.
 %
 % If Is A Managed Predicate File Primary Helper.
 %
-guess_if_pfc_file0(F):- file_name_extension(_,pfc,F),!.
-guess_if_pfc_file0(F):- atom_concat(_,'.pfc.pl',F),!.
-guess_if_pfc_file0(F):- file_name_extension(_,plmoo,F),!.
-% guess_if_pfc_file0(F):- filematch(prologmud(**/*),F0),F0=F.
-guess_if_pfc_file0(F):- loop_check(get_lang(pfc)),!,loop_check(loading_source_file(F0)),F0=F.
-guess_if_pfc_file0(F):- atom(F),exists_file(F), file_name_extension(_,WAS,F),WAS\=pl,WAS\= '',WAS\=chr,!.
+guess_if_mpred_file0(F):- file_name_extension(_,pfc,F),!.
+guess_if_mpred_file0(F):- atom_concat(_,'.pfc.pl',F),!.
+guess_if_mpred_file0(F):- file_name_extension(_,plmoo,F),!.
+% guess_if_mpred_file0(F):- filematch(prologmud(**/*),F0),F0=F.
+guess_if_mpred_file0(F):- loop_check(get_lang(pfc)),!,loop_check(loading_source_file(F0)),F0=F.
+guess_if_mpred_file0(F):- atom(F),exists_file(F), file_name_extension(_,WAS,F),WAS\=pl,WAS\= '',WAS\=chr,!.
 
 
 
@@ -12386,7 +12386,7 @@ pfc_expand_inside_file_anyways:- loading_source_file(F),!,pfc_expand_inside_file
 %
 pfc_expand_inside_file_anyways(F):- var(F),!,loading_source_file(F),nonvar(F),pfc_expand_inside_file_anyways(F).
 pfc_expand_inside_file_anyways(F):- check_how_virtualize_file(heads,F), !.
-pfc_expand_inside_file_anyways(F):- t_l:loading_pfc_file(_,F),!.
+pfc_expand_inside_file_anyways(F):- t_l:loading_mpred_file(_,F),!.
 pfc_expand_inside_file_anyways(F):- check_how_virtualize_file(heads,F),quietly_must(loading_module(M);source_module(M)), 
   (M=user; \+ baseKB:pfc_skipped_module(M)),!.
 
@@ -12535,7 +12535,7 @@ expanded_already_functor(_:NV):-nonvar(NV),!,expanded_already_functor(NV).
 % system:goal_expansion(A,_B):-fail,quietly((source_module(M),(M=pfc_sanity;M=user;M=system),if_defined(pmsg(M:goal_expansion(A)),format(user_output /*e*/,'~N% ~q~n',M:goal_expansion(A))))),fail.
 % user:term_expansion(A,_B):-fail,quietly((source_module(M),(M=pfc_sanity;M=user;M=system),if_defined(pmsg(M:term_expansion(A)),format(user_output /*e*/,'~N% ~q~n',M:term_expansion(A))))),fail.
 
-% system:goal_expansion(N,pfc_prove_neg(P)):-fail,pfc_from_negation_plus_holder(N,P),show_failure(why,pfc_isa(P,pfcControlled)).
+% system:goal_expansion(N,pfc_prove_neg(P)):-fail,mpred_from_negation_plus_holder(N,P),show_failure(why,pfc_isa(P,pfcControlled)).
 
 
 
@@ -13422,20 +13422,20 @@ declare_load_dbase(Spec):- forall(no_repeats(File,must_locate_file(Spec,File)),
 % If Is A Compiling Sourcecode.
 %
 is_compiling_sourcecode:-is_compiling,!.
-is_compiling_sourcecode:-compiling, current_input(X),not((stream_property(X,file_no(0)))),prolog_load_context(source,F),\+((t_l:loading_pfc_file(_,_))),F=user,!.
+is_compiling_sourcecode:-compiling, current_input(X),not((stream_property(X,file_no(0)))),prolog_load_context(source,F),\+((t_l:loading_mpred_file(_,_))),F=user,!.
 is_compiling_sourcecode:-compiling,dmsg_pretty(system_compiling),!.
 
-:-  /**/ export(load_pfc_files/0).
+:-  /**/ export(load_mpred_files/0).
 
 
 
-%% load_pfc_files is det.
+%% load_mpred_files is det.
 %
 % Load Managed Predicate Files.
 %
-load_pfc_files :- 
+load_mpred_files :- 
    forall((baseKB:how_virtualize_file(Heads,File,_),false\==Heads,bodies\==Heads), 
-     baseKB:ensure_pfc_file_loaded(File)).
+     baseKB:ensure_mpred_file_loaded(File)).
 
 
 % =======================================================
@@ -13471,45 +13471,45 @@ load_init_world(World,File):-
  locally_hide(baseKB:use_cyc_database,
     ( world_clear(World),
       retractall(baseKB:loaded_file_world_time(_,_,_)),
-      time_call(ensure_pfc_file_loaded(File)),!,
+      time_call(ensure_mpred_file_loaded(File)),!,
       time_call(finish_processing_world))).
 
 
-:- meta_predicate(ensure_pfc_file_loaded(:)).
+:- meta_predicate(ensure_mpred_file_loaded(:)).
 
 
 
 /******
 
-% :- meta_predicate(ensure_pfc_file_loaded(:)). 
+% :- meta_predicate(ensure_mpred_file_loaded(:)). 
 
-:- meta_predicate ensure_pfc_file_loaded(:,+).
+:- meta_predicate ensure_mpred_file_loaded(:,+).
 
 
-ensure_pfc_file_loaded(M:F0,List):-!,
+ensure_mpred_file_loaded(M:F0,List):-!,
   must_locate_file(M:F0,F),  % scope_settings  expand(true),register(false),
   % 'format'(user_error ,'%  ~q + ~q -> ~q.~n',[M,F0,F]),
   load_files([F],[if(not_loaded), must_be_module(true)|List]).
    %load_files(F,[redefine_module(false),if(not_loaded),silent(false),exported(true),must_be_module(true)|List]).   
-ensure_pfc_file_loaded(M:F0,List):-
+ensure_mpred_file_loaded(M:F0,List):-
   must_locate_file(M:F0,F),  % scope_settings
-  'format'(user_error ,'% load_pfc_file_M ~q.~n',[M=must_locate_file(F0,F)]),
+  'format'(user_error ,'% load_mpred_file_M ~q.~n',[M=must_locate_file(F0,F)]),
    load_files([F],[redefine_module(false),module(M),expand(true),if(not_loaded),exported(true),register(false),silent(false),must_be_module(true)|List]).
 
 ******/
 
-%% ensure_pfc_file_loaded( ?MFileIn) is det.
+%% ensure_mpred_file_loaded( ?MFileIn) is det.
 %
 % Ensure Managed Predicate File Loaded.
 %
-:- meta_predicate(ensure_pfc_file_loaded(:)).
+:- meta_predicate(ensure_mpred_file_loaded(:)).
 
-% ensure_pfc_file_loaded(MFileIn):- baseKB:ensure_loaded(MFileIn),!.
-ensure_pfc_file_loaded(MFileIn):- strip_module(MFileIn,M,_),
+% ensure_mpred_file_loaded(MFileIn):- baseKB:ensure_loaded(MFileIn),!.
+ensure_mpred_file_loaded(MFileIn):- strip_module(MFileIn,M,_),
  forall((must_locate_file(MFileIn,File),
    needs_load_or_reload_file(File)),   
    (set_how_virtualize_file(heads,File),
-      force_reload_pfc_file(M:File))).
+      force_reload_mpred_file(M:File))).
 
 needs_load_or_reload_file(File) :- \+ source_file_property(File, _),!.
 needs_load_or_reload_file(File) :-
@@ -13533,20 +13533,20 @@ needs_load_or_reload_file(File) :-
 old_pfc_ensure_loaded(M,File):-
    must_det_l((set_how_virtualize_file(heads,File),time_file(File,FileTime),!,
    get_last_time_file(File,_World,LastLoadTime),
-   (FileTime \== LastLoadTime -> force_reload_pfc_file(M:File); M:ensure_loaded(File)))).
+   (FileTime \== LastLoadTime -> force_reload_mpred_file(M:File); M:ensure_loaded(File)))).
 
-:- meta_predicate(force_reload_pfc_file(?)).
+:- meta_predicate(force_reload_mpred_file(?)).
 
-:- meta_predicate(ensure_pfc_file_loaded(+,:)).
+:- meta_predicate(ensure_mpred_file_loaded(+,:)).
 
 
 
-%% ensure_pfc_file_loaded( +World, ?FileIn) is det.
+%% ensure_mpred_file_loaded( +World, ?FileIn) is det.
 %
 % Ensure Managed Predicate File Loaded.
 %
-ensure_pfc_file_loaded(World,FileIn):- 
-  with_umt(World,ensure_pfc_file_loaded(FileIn)).
+ensure_mpred_file_loaded(World,FileIn):- 
+  with_umt(World,ensure_mpred_file_loaded(FileIn)).
 
 
 
@@ -13566,39 +13566,39 @@ maybe_locate_file(FileIn,File):-
 
 
 
-%% force_reload_pfc_file( ?FileIn) is det.
+%% force_reload_mpred_file( ?FileIn) is det.
 %
 % Force Reload Managed Predicate File.
 %
-force_reload_pfc_file(MFileIn):- 
+force_reload_mpred_file(MFileIn):- 
  strip_module(MFileIn,M,FileIn),
  (FileIn==MFileIn->defaultAssertMt(World);World=M),
-  quietly_must(force_reload_pfc_file(World,FileIn)).
+  quietly_must(force_reload_mpred_file(World,FileIn)).
 
 
 
 
-%% force_reload_pfc_file( ?World, ?MFileIn) is det.
+%% force_reload_mpred_file( ?World, ?MFileIn) is det.
 %
 % Force Reload Managed Predicate File.
 %
 
-%force_reload_pfc_file(World,MFileIn):- must(World:consult(MFileIn)),!.
-force_reload_pfc_file(World,MFileIn):- 
- without_varname_scan(force_reload_pfc_file2(World,MFileIn)).
+%force_reload_mpred_file(World,MFileIn):- must(World:consult(MFileIn)),!.
+force_reload_mpred_file(World,MFileIn):- 
+ without_varname_scan(force_reload_mpred_file2(World,MFileIn)).
 
-%% force_reload_pfc_file2( ?World, ?MFileIn) is det.
+%% force_reload_mpred_file2( ?World, ?MFileIn) is det.
 %
 % Helper for Force Reloading of a Managed Predicate File.
 %
 
-force_reload_pfc_file2(World,MFileIn):-
+force_reload_mpred_file2(World,MFileIn):-
   time_file(MFileIn,NewTime),
   system:retractall(baseKB:loaded_file_world_time(MFileIn,World,_)),
   system:assert(baseKB:loaded_file_world_time(MFileIn,World,NewTime)),
   must(World:consult(MFileIn)),!.
 
-force_reload_pfc_file2(WorldIn,MFileIn):- 
+force_reload_mpred_file2(WorldIn,MFileIn):- 
  sanity(call_u(baseKB:mtHybrid(WorldIn))),
  must(call_u(baseKB:mtHybrid(WorldIn)->World=WorldIn;defaultAssertMt(World))),
  strip_module(MFileIn,_MaybeNewModule,_),
@@ -13620,18 +13620,18 @@ force_reload_pfc_file2(WorldIn,MFileIn):-
      locally(set_prolog_flag(subclause_expansion,true),
       locally(set_prolog_flag(pfc_te,true),
      show_call((with_source_module(NewModule,load_files(NewModule:File, [module(NewModule)]))))))),
-         must(force_reload_pfc_file3(File,World))
+         must(force_reload_mpred_file3(File,World))
      )))))).
 
-force_reload_pfc_file3(File,World):-
-   catch((locally(t_l:loading_pfc_file(World,File),     
+force_reload_mpred_file3(File,World):-
+   catch((locally(t_l:loading_mpred_file(World,File),     
       load_pfc_on_file_end(World,File))),
     Error,
-    (dmsg_pretty(error(Error,File)),retractall(baseKB:loaded_pfc_file(World,File)),
+    (dmsg_pretty(error(Error,File)),retractall(baseKB:loaded_mpred_file(World,File)),
      retractall(baseKB:loaded_file_world_time(File,World,_AnyTime)))).
 
 
-:- dynamic(baseKB:loaded_pfc_file/2).
+:- dynamic(baseKB:loaded_mpred_file/2).
 
 %% load_pfc_on_file_end( ?World, ?File) is det.
 %
@@ -13640,7 +13640,7 @@ force_reload_pfc_file3(File,World):-
 :- export(load_pfc_on_file_end/2).
 load_pfc_on_file_end(World,File):- 
    sanity(atom(File)),   
-   asserta_new(baseKB:loaded_pfc_file(World,File)),
+   asserta_new(baseKB:loaded_mpred_file(World,File)),
    must(signal_eof(File)),!.
 
 
@@ -13649,7 +13649,7 @@ load_pfc_on_file_end(World,File):-
 % Finish Processing World.
 %
 finish_processing_world :- 
-  load_pfc_files, 
+  load_mpred_files, 
   loop_check(locally(t_l:agenda_slow_op_do_prereqs,doall(finish_processing_dbase)),true).
 
 
@@ -14044,9 +14044,9 @@ load_file_dir(Module:DirName, Options):- fail,
 %
 % Use File Type Loader.
 %
-use_file_type_loader(pfc,ensure_pfc_file_consulted).
-use_file_type_loader(pddl,ensure_pfc_file_consulted).
-use_file_type_loader(plmoo,ensure_pfc_file_consulted).
+use_file_type_loader(pfc,ensure_mpred_file_consulted).
+use_file_type_loader(pddl,ensure_mpred_file_consulted).
+use_file_type_loader(plmoo,ensure_mpred_file_consulted).
 % use_file_type_loader(pl,ensure_prolog_file_consulted).
 
 
@@ -14061,11 +14061,11 @@ ensure_prolog_file_consulted(M:File,Options):-must(load_files(M:File,Options)),!
 
 
 
-%% ensure_pfc_file_consulted( :TermM, ?Options) is semidet.
+%% ensure_mpred_file_consulted( :TermM, ?Options) is semidet.
 %
 % Ensure Managed Predicate File Consulted.
 %
-ensure_pfc_file_consulted(M:File,Options):- 
+ensure_mpred_file_consulted(M:File,Options):- 
  call_from_module(M,
   with_pfc_expansions(locally_tl(pretend_loading_file(File),
               must((file_begin(pfc),
@@ -14092,14 +14092,14 @@ load_file_some_type(M:File,Options):- call_from_module(M,must(load_files(M:File,
 % Prolog Load File.
 %
 
-maybe_load_pfc_files(Module:Spec, Options):- 
+maybe_load_mpred_files(Module:Spec, Options):- 
    \+ exists_source(Spec),
    findall(SpecO,(logicmoo_util_filesystem:filematch(Module:Spec,SpecO),exists_file(SpecO)),SpecOList),!,
    SpecOList\==[], !, 
    forall(member(SpecO,SpecOList),load_files(Module:SpecO, Options)),!.
 
 
-maybe_load_pfc_files(Module:Spec, Options):- fail,
+maybe_load_mpred_files(Module:Spec, Options):- fail,
   Spec \== 'MKINDEX.pl',
    catch(find_and_call(prolog_load_file_loop_checked(Module:Spec, Options)),
     E,
@@ -14112,7 +14112,7 @@ maybe_load_pfc_files(Module:Spec, Options):- fail,
 
 :- module_transparent(user:prolog_load_file/1).
 
-user:prolog_load_file(ModuleSpec, Options):- maybe_load_pfc_files(ModuleSpec, Options),!.
+user:prolog_load_file(ModuleSpec, Options):- maybe_load_mpred_files(ModuleSpec, Options),!.
 
 
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/pfc_terms.pl
@@ -14412,36 +14412,36 @@ pfc_plist_t(t,[P|LIST]):-!, pfc_plist_t(P,LIST).
 pfc_plist_t(isa,[I,C]):-!,call(call,t,C,I).
 pfc_plist_t(P,_):-never_pfc_tcall(P),!,fail.
 pfc_plist_t(P,[L|IST]):-is_holds_true(P),!,pfc_plist_t(L,IST).
-pfc_plist_t(P,LIST):-is_holds_false(P),!,call_u(pfc_f(LIST)).
+pfc_plist_t(P,LIST):-is_holds_false(P),!,call_u(mpred_f(LIST)).
 pfc_plist_t(P,LIST):- CALL=..[t,P|LIST],on_x_debug(CALL).
 
 
-:- meta_predicate(pfc_fa_call(?,?,0)).
+:- meta_predicate(mpred_fa_call(?,?,0)).
 
 
 
 %= 	 	 
 
-%% pfc_fa_call( ?F, ?UPARAM2, :Goal) is semidet.
+%% mpred_fa_call( ?F, ?UPARAM2, :Goal) is semidet.
 %
 % Managed Predicate Functor-arity Call.
 %
-pfc_fa_call(F,A,Call):- var(F),!,
+mpred_fa_call(F,A,Call):- var(F),!,
  no_repeats(F,(clause_b(support_hilog(F,A));clause_b(arity(F,A)))), 
    once((F\==t, 
    \+ a(rtNotForUnboundPredicates,F),current_predicate(F,M:_OtherCall))),
     on_x_debug(M:Call).
-pfc_fa_call(M:F,A,Call):- nonvar(M),!,pfc_fa_call(F,A,M:Call).
-pfc_fa_call(F,_,Call):-F\==t,current_predicate(F,M:_OtherCall),!,M:Call.
+mpred_fa_call(M:F,A,Call):- nonvar(M),!,mpred_fa_call(F,A,M:Call).
+mpred_fa_call(F,_,Call):-F\==t,current_predicate(F,M:_OtherCall),!,M:Call.
 
 
 %= 	 	 
 
-%% pfc_fact_arity( ?VALUE1, ?VALUE2) is semidet.
+%% mpred_fact_arity( ?VALUE1, ?VALUE2) is semidet.
 %
 % Managed Predicate Fact Arity.
 %
-pfc_fact_arity(F,A):- call_u(arity(F,A)),
+mpred_fact_arity(F,A):- call_u(arity(F,A)),
   suggest_m(M),
   once(local_qh_pfc_prop(M,F,A,prologHybrid);
      local_qh_pfc_prop(M,F,A,pfcControlled);
@@ -14455,7 +14455,7 @@ pfc_fact_arity(F,A):- call_u(arity(F,A)),
 %
 % Prolog Hybrid Fact.
 %
-prologHybridFact(G):- (var(G)->(pfc_fact_arity(F,A),safe_functor(G,F,A));true),into_pfc_form(G,M),!,no_repeats(call_u(M)).
+prologHybridFact(G):- (var(G)->(mpred_fact_arity(F,A),safe_functor(G,F,A));true),into_mpred_form(G,M),!,no_repeats(call_u(M)).
 
 
 
