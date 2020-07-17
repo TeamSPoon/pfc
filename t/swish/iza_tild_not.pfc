@@ -2,6 +2,9 @@
 
 :- include(library(pfc_header_3_0)).
 
+:- pfcTrace.
+:- pfcWatch.
+
 :- dynamic(fly/1).
 
 % -*-Prolog-*-

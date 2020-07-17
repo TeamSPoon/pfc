@@ -23,13 +23,9 @@
 
 %# Tests Finin original defeasabilty system is working over 2nd order
 
-:- dynamic(t/2).
 :- include(library(pfc_header_3_0)).
-:- mpred_trace_exec.
 
-
-%:- rtrace.
-==> t(tBird,iChilly).
+mpred_test(X):- call(X),pfcTF(X).
 
 :- dynamic(instanceOf/2).
 %:- file_begin(pfc).
@@ -38,13 +34,6 @@
  functorDeclares(COL),
  (t(COL,X)<==>instanceOf(X,COL))).
 
-
-(bmdefault(P)/pfcLiteral(P))  ==>  (\+ ~(P) ==> P).
-
-bmdefault((P ==> Q))/pfcLiteral(Q) ==> (P, \+ ~(Q) ==> Q).
-
-
-
 ==> tType(tType).
 ==> tType(tFly).
 ==> tType(tCanary).
@@ -52,7 +41,7 @@ bmdefault((P ==> Q))/pfcLiteral(Q) ==> (P, \+ ~(Q) ==> Q).
 ==> tType(tBird).
 
 
-:- mpred_test(predicate_property(t(tBird,_),dynamic)).
+:- mpred_test(predicate_property(tBird(_),dynamic)).
 
 subClassOf(C1,C2)==> (instanceOf(X,C1)==>instanceOf(X,C2)).
 
@@ -65,59 +54,57 @@ subClassOf(C1,C2)==> (instanceOf(X,C1)==>instanceOf(X,C2)).
 
 
 :- dmsg("Chilly is a penguin.").
-==> t(tPenguin,iChilly).
+==> tPenguin(iChilly).
 
 :- dmsg("Make sure Chilly is a bird now.").
-:- mpred_test((t(tBird,iChilly))).
+:- mpred_test((tBird(iChilly))).
 
 
 :- dmsg("Tweety is a canary.").
-t(tCanary,iTweety).
+tCanary(iTweety).
 
-:- mpred_test((t(tBird,iTweety))).
+:- mpred_test((tBird(iTweety))).
 
-:- dmsg("birds fly by bmdefault.").
-bmdefault(( t(tBird,X) ==> t(tFly,X) )).
+:- dmsg("birds fly by default.").
+mdefault(( tBird(X) ==> tFly(X) )).
 
-:- mpred_test((t(tBird,iTweety))).
-:- mpred_test((t(tFly,iTweety))).
+:- mpred_test((tBird(iTweety))).
+:- mpred_test((tFly(iTweety))).
 
 :- dmsg("make sure Chilly can fly").
 :- mpred_test((instanceOf(I,tFly),I=iChilly)).
 
-:- mpred_test((t(tBird,iTweety))).
+:- mpred_test((tBird(iTweety))).
 
 :- listing([tFly/1,tBird/1,instanceOf/2]).
 
 
 :- dmsg("make sure Tweety can fly (and again Chilly)").
-:- mpred_test((t(tFly,iTweety))).
-:- mpred_test((t(tFly,iChilly))).
+:- mpred_test((tFly(iTweety))).
+:- mpred_test((tFly(iChilly))).
 
 
-==> never_retract_u(t(tBird,iChilly)).
+==> never_retract_u(tBird(iChilly)).
 
 
 :- dmsg("penguins do not tFly.").
-t(tPenguin,X) ==>  ~t(tFly,X). 
+tPenguin(X) ==>  ~tFly(X). 
 
 :- dmsg("confirm Chilly now cant fly").
-
-:- mpred_test(( ~ t(tFly,iChilly))).
-
-:- mpred_test((\+ t(tFly,iChilly))).
+:- mpred_test((\+ tFly(iChilly))).
+:- mpred_test(( ~ tFly(iChilly))).
 
 %= repropigate that Chilly was a bird again (actualy this asserts)
 
-==> t(tBird,iChilly).
+==> tBird(iChilly).
 
 :- listing(tBird/1).
 
 %= the dmsg explains the difference between \+ and ~
 :- dmsg("confirm Chilly still does not fly").
-:- mpred_test(( \+ t(tFly,iChilly))).
+:- mpred_test(( \+ tFly(iChilly))).
 :- dmsg("confirm Chilly still cant fly").
-:- mpred_test(( ~  t(tFly,iChilly))).
+:- mpred_test(( ~  tFly(iChilly))).
 
 
 
@@ -125,32 +112,33 @@ t(tPenguin,X) ==>  ~t(tFly,X).
 
 
 :- debug_logicmoo(_).
+:- mpred_trace_exec.
 :- debug_logicmoo(logicmoo(_)).
 
-:- mpred_test(t(tBird,iChilly)).
+:- mpred_test(tBird(iChilly)).
 
-==> never_retract_u(t(tBird,iChilly)).
-
-
-==> ~ t(tPenguin,iChilly).                              
+==> never_retract_u(tBird(iChilly)).
 
 
-:- mpred_test((t(tBird,iChilly))).
+==> ~ tPenguin(iChilly).                              
 
-:- mpred_test(( \+ t(tPenguin,iChilly))).
+
+:- mpred_test((tBird(iChilly))).
+
+:- mpred_test(( \+ tPenguin(iChilly))).
 
 :- dmsg("Chilly is still a bird").
-:- mpred_test((t(tBird,iChilly))).
+:- mpred_test((tBird(iChilly))).
 
 :- dmsg("confirm Chilly is flying bird").
-:- mpred_test(( t(tFly,iChilly))).
+:- mpred_test(( tFly(iChilly))).
 
-:- repropagate(t(tBird,iChilly)).   
+:- repropagate(tBird(iChilly)).   
 
 :- dmsg("confirm Chilly is flying bird").
-:- mpred_test(( t(tFly,iChilly))).
-:- mpred_test(( \+ t(tPenguin,iChilly))).
-:- mpred_test(( \+ ~t(tFly,iChilly))).
+:- mpred_test(( tFly(iChilly))).
+:- mpred_test(( \+ tPenguin(iChilly))).
+:- mpred_test(( \+ ~tFly(iChilly))).
 
 
 

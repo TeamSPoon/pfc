@@ -54,13 +54,13 @@
 %
 */
 % :- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
-module_mpred_expansion:- fail, nop(module(mpred_expansion,
+module_pfc_expansion:- fail, nop(module(pfc_expansion,
           [ a/2,
             acceptable_xform/2,
             additiveOp/1,
             alt_calls/1,
             any_op_to_call_op/2,
-            as_is_term/1,as_is_term/1,
+            as_is_term/1,
             as_list/2,
             cheaply_u/1,
             cheaply_u/1,
@@ -121,9 +121,9 @@ module_mpred_expansion:- fail, nop(module(mpred_expansion,
             instTypePropsToType/2,
             into_functor_form/3,
             into_functor_form/5,
-            into_mpred_form/2,
-            into_mpred_form6/6,
-            into_mpred_form_ilc/2,
+            into_pfc_form/2,
+            into_pfc_form6/6,
+            into_pfc_form_ilc/2,
             is_arity_pred/1,
             is_meta_functor/3,
             is_pred_declarer/1,
@@ -135,7 +135,7 @@ module_mpred_expansion:- fail, nop(module(mpred_expansion,
             is_unit_functor/1,
             listToE/2,
             map_f/2,
-            mpred_expand_rule/2,
+            pfc_expand_rule/2,
             should_expand/1,
             must_remodulize/3,
             recommify/2,
@@ -155,7 +155,7 @@ module_mpred_expansion:- fail, nop(module(mpred_expansion,
             translateOneArg/8,
             was_isa_ex/3,
 
-          mpred_expansion_file/0,
+          pfc_expansion_file/0,
           expand_kif_string/2,
          temp_comp/4,
          get_ruleRewrite/2,
@@ -169,21 +169,22 @@ module_mpred_expansion:- fail, nop(module(mpred_expansion,
           
           ])).
 
-:- include('mpred_header.pi').
+%:- include('pfc_header.pi').
 
 % :- endif.
 
 
 :- meta_predicate 
-   % mpred_expansion
+   % pfc_expansion
    cheaply_u(+),
    cheaply_u(+),
    db_expand_maplist(2,*,*,*,*),
-   % mpred_expansion
+   % pfc_expansion
    transitive_lc_nr(2,*,*),
    simply_functors(2,*,*).
           
 
+:- use_module(library(dictoo_lib)).
 :- thread_local(t_l:disable_px/0).
 
 
@@ -276,7 +277,7 @@ Writing in Prolog is actually really easy for a MUD is when X is chosen
 */
 
 %:-use_module(pfc_lib).
-%:-use_module(mpred_type_wff).
+%:-use_module(pfc_type_wff).
 
 
 % ============================================
@@ -299,7 +300,8 @@ disabled a(T,I):- rdf_x(I,rdf:type,T).
 
 :- meta_predicate a(+,?).
 % WANT (but will loop) a(C,I):- !, quietly((atom(C),G  univ_safe  [C,I], no_repeats(call_u(G)))).
-a(C,I):- quietly((atom(C),current_predicate(C/1), G  univ_safe  [C,I], no_repeats(lookup_u(G)))).
+%a(C,I):- quietly((atom(C),current_predicate(C/1), G  univ_safe  [C,I], no_repeats(lookup_u(G)))).
+a(C,I):- quietly((atom(C),current_predicate(C/1), G  univ_safe  [C,I], no_repeats(clause_b(G)))).
 
 
 %=  :- was_export(alt_calls/1).
@@ -361,6 +363,10 @@ cheaply_u(call(ereq,G)):- !,sanity(callable(G)),cheaply_u(G).
 % cheaply_u(G):-!,call(G).
 cheaply_u(G):- quietly(lookup_u(G)).
 
+lookup_u(G):- clause_b(G).
+
+
+
 %cheaply_u(G):- need_speed,!, (ground(G)->(quietly(baseKB:G),!);quietly(lookup_u(G))).
 %cheaply_u(G):- loop_check(cheaply_u(G),loop_check_term(cheaply_u(G),ilc2(G),fail)).
 %cheaply_u(G):- predicate_property(G,number_of_rules(N)),N=0,!,lookup_u(G).
@@ -417,7 +423,7 @@ functor_declares_instance_0(P,P):-
   arg(_,s(tPred,prologMultiValued, prologOrdered,prologNegByFailure,prologHybrid,prologPTTP,prologSideEffects,
        predIsFlag,prologBuiltin,prologKIF,prologDynamic,prologListValued,prologSingleValued),P).
 functor_declares_instance_0(P,P):- arg(_,s(predCanHaveSingletons,functorIsMacro),P).
-% functor_declares_instance_0(P,P):- arg(_,s(mpred_isa),P),!,fail.
+% functor_declares_instance_0(P,P):- arg(_,s(pfc_isa),P),!,fail.
 functor_declares_instance_0(col_as_isa,col_as_isa).
 
 functor_declares_instance_0(F,F):- between(2,5,A),arity_no_bc(F,A),!,fail.
@@ -445,8 +451,8 @@ functor_declares_instance_0(P,tFunction):-isa_from_morphology(P,O)->O=tFunction.
 functor_adds_instance_0(decl_mpred,tPred).
 functor_adds_instance_0(kb_shared,prologHybrid).
 functor_adds_instance_0(kb_shared,prologHybrid).
-functor_adds_instance_0(decl_mpred_prolog,prologBuiltin).
-functor_adds_instance_0(decl_mpred_prolog,prologDynamic).
+functor_adds_instance_0(decl_pfc_prolog,prologBuiltin).
+functor_adds_instance_0(decl_pfc_prolog,prologDynamic).
 
 % functor_adds_instance_0(meta_argtypes,tRelation).
 
@@ -508,7 +514,7 @@ is_holds_functor0(F):- is_2nd_order_holds(F).
 
 must_be_unqualified(_):-!.
 must_be_unqualified(Var):- \+ compound(Var),!.
-must_be_unqualified(Var):-strip_module(Var,_,O),Var\==O,!,break_ex.
+must_be_unqualified(Var):-strip_module(Var,_,O),Var\==O,!,break.
 must_be_unqualified(Var):-forall(arg(_,Var,E),must_be_unqualified(E)).
 
 
@@ -531,7 +537,7 @@ isBodyConnective(Funct):-member(Funct,[and,or,until,',',';',':-',unless,xor,hold
 %
 % If Is A Holds True Primary Helper.
 %
-is_holds_true0(Prop):-arg(_,vvv(holds,holds_t,t,t,asserted_mpred_t,assertion_t,true_t,assertion,secondOrder,firstOrder),Prop).
+is_holds_true0(Prop):-arg(_,vvv(holds,holds_t,t,t,asserted_pfc_t,assertion_t,true_t,assertion,secondOrder,firstOrder),Prop).
 
 
 % is_holds_true0(Prop):-atom_concat(_,'_t',Prop).
@@ -563,7 +569,7 @@ is_holds_false(Prop):-quietly((atom(Prop),is_holds_false0(Prop))).
 %
 % If Is A Holds False Primary Helper.
 %
-is_holds_false0(Prop):-member(Prop,[not,nholds,holds_f,mpred_f,aint,assertion_f,not_true_t,asserted_mpred_f,retraction,not_secondOrder,not_firstOrder]).
+is_holds_false0(Prop):-member(Prop,[not,nholds,holds_f,pfc_f,aint,assertion_f,not_true_t,asserted_pfc_f,retraction,not_secondOrder,not_firstOrder]).
 %is_holds_false0(Prop,Stem):-atom_concat('not_',Stem,Prop).
 %is_holds_false0(Prop,Stem):-atom_concat('int_not_',Stem,Prop).
 %is_holds_false0(Prop,Stem):-atom_concat(Stem,'_f',Prop).
@@ -726,7 +732,7 @@ should_expand_f(singleValuedHybrid).
 should_expand_f(F):-atom_concat('prolog',_,F).
 should_expand_f(F):-atom_concat('pddl',_,F).
 should_expand_f(F):-atom_concat('pfc',_,F).
-should_expand_f(F):-atom_concat('mpred_',_,F).
+should_expand_f(F):-atom_concat('pfc_',_,F).
 
 
 %= 	 	 
@@ -755,7 +761,7 @@ full_transform_warn_if_changed_UNUSED(A,B,O):-
 %
 fully_expand(X,Y):- must((fully_expand(clause(unknown,cuz),X,Y))).
 
-%:- mpred_trace_nochilds(fully_expand/3).
+%:- pfc_trace_nochilds(fully_expand/3).
 
 
 
@@ -908,7 +914,7 @@ fully_expand_real(Op,Sent,SentO):-
 %  Is a stripped Module (Meaning it will be found via inheritance)
 %
 is_stripped_module(A):-var(A),!,fail.
-is_stripped_module(Mt):- call_u(mtExact(Mt)),!,fail.
+is_stripped_module(Mt):- clause_b(mtExact(Mt)),!,fail.
 %is_stripped_module(Inherited):-'$current_source_module'(E), default_module(E,Inherited).
 %is_stripped_module(Inherited):-'$current_typein_module'(E), default_module(E,Inherited).
 is_stripped_module(abox).
@@ -998,13 +1004,14 @@ fully_expand_into_cache(Op,Sent,SentO):- memoize_on_local(fully_expand_clause,Se
   )),!.
 */
 
+:- thread_local(t_l:infSkipFullExpand/0).
 
 post_expansion(Op,Sent,SentO):- 
    do_renames_expansion(Sent,SentM),!,
    maybe_correctArgsIsa(Op,SentM,SentO),!.
 
 % 
-do_renames_expansion(Sent,Sent):- \+ current_prolog_flag(do_renames,mpred_expansion),!.
+do_renames_expansion(Sent,Sent):- \+ current_prolog_flag(do_renames,pfc_expansion),!.
 do_renames_expansion(Sent,SentM):- if_defined(do_renames(Sent,SentM),=(Sent,SentM)).
 
 maybe_correctArgsIsa(_ ,SentO,SentO):-!.
@@ -1095,7 +1102,7 @@ list_to_conj([H|T], (H,C)) :-
 
 const_or_var(I):- \+ atom(I), (var(I);I='$VAR'(_);(atomic(I),\+ string(I))),!.
 
-:- export(as_is_term/1).
+%:- export(as_is_term/1).
 
 %% as_is_term( :TermNC) is semidet.
 %
@@ -1130,7 +1137,8 @@ as_is_term(Op,_,[_]):- infix_op(Op,_).
 
 :- mpred_trace_none(as_is_term(_)).
 :- '$set_predicate_attribute'(as_is_term(_), hide_childs, 1).
-:- lock_predicate(as_is_term(_)).
+:- '$set_predicate_attribute'(as_is_term(_), system, true).
+
 
 %=  :- was_export(infix_op/2).
 
@@ -1222,14 +1230,14 @@ transitive_lc_nr(_,A,A).
 
 renamed_atom(F,FO):-atom(F),if_defined(best_rename(F,FO),fail),!.
 
-%% mpred_expand_rule( ?PfcRule, ?Out) is det.
+%% pfc_expand_rule( ?PfcRule, ?Out) is det.
 %
 % Managed Predicate Expand.
 %
-mpred_expand_rule(PfcRule,Out):- 
+pfc_expand_rule(PfcRule,Out):- 
    is_ftCompound(PfcRule),
    safe_functor(PfcRule,F,A),
-   clause_b(mpred_database_term(F,A,_)),
+   clause_b(pfc_database_term(F,A,_)),
    PfcRule  univ_safe  [F|Args],maplist(fully_expand_goal(assert),Args,ArgsO),!,Out  univ_safe  [F|ArgsO].
 
 is_parse_type(Var):- \+ compound(Var),!,fail.
@@ -1356,7 +1364,7 @@ db_expand_chain(_,M:PO,PO) :- atom(M),!.
 db_expand_chain(_,isa(I,Not),INot):-Not==not,!,INot   univ_safe   [Not,I].
 db_expand_chain(_,_,_):- t_l:into_goal_code,!,fail.
 db_expand_chain(_,(P:-B),P) :-is_true(B),!.
-db_expand_chain(_,B=>P,P) :-is_true(B),!.
+db_expand_chain(_,=>(B,P),P) :-is_true(B),!.
 db_expand_chain(_,<=(P,B),P) :-is_true(B),!.
 db_expand_chain(_,P<==>B,P) :-is_true(B),!.
 db_expand_chain(_,B<==>P,P) :-is_true(B),!.
@@ -1375,8 +1383,8 @@ db_expand_chain(_,P<-B,P) :-is_true(B),!.
 % covered fully_expand_head(_,Sent,SentO):- as_is_term(Sent),!,SentO=Sent,!.
 
 fully_expand_head(Why,Before,After):-
-  % quietly(subst(Before,mpred_isa,isa,Before1)),
-  into_mpred_form(Before,Before2),
+  % quietly(subst(Before,pfc_isa,isa,Before1)),
+  into_pfc_form(Before,Before2),
   must(try_expand_head(Why,Before2,After1)),
   must(post_expansion(Why,After1,After)).
 
@@ -1502,7 +1510,7 @@ db_expand_0(_Op,pddlSorts(I,EL),O):- listToE(EL,E),expand_isEach_or_fail(==>genl
 db_expand_0(_Op,pddlTypes(EL),O):- listToE(EL,E),expand_isEach_or_fail(==>isa(E,tCol),O).
 db_expand_0(_Op,pddlPredicates(EL),O):- listToE(EL,E),expand_isEach_or_fail(==>prologHybrid(E),O).
 
-db_expand_0(_,prop_mpred(M,RT,F,A),mpred_prop(M,F,A,RT)).
+db_expand_0(_,prop_mpred(M,RT,F,A),pfc_prop(M,F,A,RT)).
 
 db_expand_0(Op,DECL,OUT):- 
     is_ftCompound(DECL)->
@@ -1512,7 +1520,7 @@ db_expand_0(Op,DECL,OUT):-
     maplist(nonvar,[FA|Args]) ->
     db_expand_set(Op,[DT,FA|Args],OUT).
 
-db_expand_0(_,Sent,mpred_prop(M,F,A,RT)):- Sent  univ_safe  [RT,MFA],a(ttRelationType,RT),nonvar(MFA),get_mfa(MFA,M,F,A),atom(F),!.
+db_expand_0(_,Sent,pfc_prop(M,F,A,RT)):- Sent  univ_safe  [RT,MFA],a(ttRelationType,RT),nonvar(MFA),get_mfa(MFA,M,F,A),atom(F),!.
 
 get_mfa(M:FA,M,F,A):- !, get_fa(FA,F,A).
 get_mfa(FA,M,F,A):- get_fa(FA,F,A),must(current_assertion_module(M)).
@@ -1655,7 +1663,7 @@ arity_zor(D,ZOR) :- atom(D),D\==isa, \+ (arity_no_bc(D,N),!,N>ZOR).
 % Map False.
 %
 map_f(M:F,M:FO):-atom(M),map_f(F,FO).
-% map_f(mpred_isa,isa).
+% map_f(pfc_isa,isa).
 % map_f(props,isa).
 map_f(F,F):-!.
 
@@ -1666,7 +1674,7 @@ map_f(F,F):-!.
 %
 % ex Argument  (isa/2).
 %
-ex_argIsa(P,N,C):- clause(_:argIsa(P,N,C),true).
+ex_argIsa(P,N,C):- clause_b(argIsa(P,N,C)).
 
 db_expand_argIsa(P,_):- \+ compound(P),!,fail.
 db_expand_argIsa(P,_):- is_dict(P),!,fail.
@@ -1847,9 +1855,9 @@ expand_props(Op,Term,OUT):-expand_props(_,Op,Term,OUT).
 % Expand Props.
 %
 expand_props(_Prefix,_,Sent,OUT):- t_l:no_db_expand_props, (not_ftCompound(Sent)),!,OUT=Sent.
-%expand_props(Prefix,Op,Term,OUT):- stack_check,(is_ftVar(OpeR);is_ftVar(Term)),!,trace_or_throw_ex(var_expand_units(OpeR,Term,OUT)).
+%expand_props(Prefix,Op,Term,OUT):- stack_check,(is_ftVar(OpeR);is_ftVar(Term)),!,trace_or_throw(var_expand_units(OpeR,Term,OUT)).
 expand_props(Prefix,Op,Sent,OUT):-  Sent  univ_safe  [And|C12],is_sentence_functor(And),!,maplist(expand_props(Prefix,Op),C12,O12),OUT  univ_safe  [And|O12].
-expand_props(_Prefix,_ ,props(Obj,Open),props(Obj,Open)):- is_ftVar(Open),!. % ,trace_or_throw_ex(expand_props(Prefix,Op,props(Obj,Open))->OUT).
+expand_props(_Prefix,_ ,props(Obj,Open),props(Obj,Open)):- is_ftVar(Open),!. % ,trace_or_throw(expand_props(Prefix,Op,props(Obj,Open))->OUT).
 expand_props(_Prefix,change(assert,_),props(_Obj,List),true):- List==[],!.
 expand_props(_Prefix,_,props(Obj,List),{nonvar(Obj)}):- List==[],!.
 % expand_props(_Prefix,_ ,props(_Obj,List),true):- List==[],!.
@@ -1872,7 +1880,7 @@ expand_props(Prefix,Op,props(Obj,PropVal),OUT):-
     expand_props(Prefix,Op,props(Obj,PropVal2),OUT),!.
 expand_props(Prefix,Op,props(Obj,PropVal),OUT):- PropVal  univ_safe  [Prop|Val], \+ (infix_op(Prop,_)),!,from_univ(Prefix,Op,[Prop,Obj|Val],OUT).
 expand_props(Prefix,Op,props(Obj,PropVal),OUT):- PropVal  univ_safe  [Prop|Val],!,dtrace(from_univ(Prefix,Op,[Prop,Obj|Val],OUT)).
-expand_props(Prefix,Op,props(Obj,Open),props(Obj,Open)):- trace_or_throw_ex(unk_expand_props(Prefix,Op,props(Obj,Open))).
+expand_props(Prefix,Op,props(Obj,Open),props(Obj,Open)):- trace_or_throw(unk_expand_props(Prefix,Op,props(Obj,Open))).
 
 expand_props(Prefix,OpeR,ClassTemplate,OUT):- ClassTemplate  univ_safe  [props,Inst,Second,Third|Props],!,
    expand_props(Prefix,OpeR,props(Inst,[Second,Third|Props]),OUT),!.
@@ -1894,76 +1902,76 @@ conjoin_l(A,B,C):-conjoin(A,B,C).
 
 
 % ========================================
-% into_mpred_form/2 (removes a second order functors until the common mpred form is left)
+% into_pfc_form/2 (removes a second order functors until the common mpred form is left)
 % ========================================
-%=  :- was_export(into_mpred_form/2).
+%=  :- was_export(into_pfc_form/2).
 
 %= 	 	 
 
-%% into_mpred_form( :TermV, ?VO) is semidet.
+%% into_pfc_form( :TermV, ?VO) is semidet.
 %
 % Converted To Managed Predicate Form.
 %
 
-% into_mpred_form(Var,MPRED):- is_ftVar(Var), trace_or_throw_ex(var_into_mpred_form(Var,MPRED)).
-into_mpred_form(V,VO):- (not_ftCompound(V)),!,VO=V.
-into_mpred_form(M:X,M:O):- atom(M),!,into_mpred_form(X,O),!.
-% convered into_mpred_form(Sent,SentO):-is_ftNonvar(Sent),get_ruleRewrite(Sent,SentM),!,into_mpred_form(SentM,SentO).
-into_mpred_form((H:-B),(HH:-BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
-into_mpred_form((H:-B),(HH:-BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
-into_mpred_form((H,B),(HH,BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
-into_mpred_form((H;B),(HH;BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
-into_mpred_form((H/B),(HH/BB)):-!,into_mpred_form(H,HH),into_mpred_form(B,BB).
-into_mpred_form(WAS,isa(I,C)):- was_isa_ex(WAS,I,C),!.
-into_mpred_form(t(P),O):-is_ftNonvar(P),!,into_mpred_form(P,O).
-into_mpred_form(t(P,A),O):-atom(P),!,O  univ_safe  [P,A].
-into_mpred_form(t(P,A,B),O):-atom(P),!,O  univ_safe  [P,A,B].
-into_mpred_form(t(P,A,B,C),O):-atom(P),!,O  univ_safe  [P,A,B,C].
-into_mpred_form(IN,OUT):- 
+% into_pfc_form(Var,MPRED):- is_ftVar(Var), trace_or_throw(var_into_pfc_form(Var,MPRED)).
+into_pfc_form(V,VO):- (not_ftCompound(V)),!,VO=V.
+into_pfc_form(M:X,M:O):- atom(M),!,into_pfc_form(X,O),!.
+% convered into_pfc_form(Sent,SentO):-is_ftNonvar(Sent),get_ruleRewrite(Sent,SentM),!,into_pfc_form(SentM,SentO).
+into_pfc_form((H:-B),(HH:-BB)):-!,into_pfc_form(H,HH),into_pfc_form(B,BB).
+into_pfc_form((H:-B),(HH:-BB)):-!,into_pfc_form(H,HH),into_pfc_form(B,BB).
+into_pfc_form((H,B),(HH,BB)):-!,into_pfc_form(H,HH),into_pfc_form(B,BB).
+into_pfc_form((H;B),(HH;BB)):-!,into_pfc_form(H,HH),into_pfc_form(B,BB).
+into_pfc_form((H/B),(HH/BB)):-!,into_pfc_form(H,HH),into_pfc_form(B,BB).
+into_pfc_form(WAS,isa(I,C)):- was_isa_ex(WAS,I,C),!.
+into_pfc_form(t(P),O):-is_ftNonvar(P),!,into_pfc_form(P,O).
+into_pfc_form(t(P,A),O):-atom(P),!,O  univ_safe  [P,A].
+into_pfc_form(t(P,A,B),O):-atom(P),!,O  univ_safe  [P,A,B].
+into_pfc_form(t(P,A,B,C),O):-atom(P),!,O  univ_safe  [P,A,B,C].
+into_pfc_form(IN,OUT):- 
    cnas(IN,F,Args),
-   must_maplist(into_mpred_form,Args,ArgsO),!,
+   must_maplist(into_pfc_form,Args,ArgsO),!,
    map_f(F,FO),
    cnas(OUT,FO,ArgsO).
 
 
-% into_mpred_form(I,O):- /*quietly*/(loop_check(into_mpred_form_ilc(I,O),O=I)). % trace_or_throw_ex(into_mpred_form(I,O).
+% into_pfc_form(I,O):- /*quietly*/(loop_check(into_pfc_form_ilc(I,O),O=I)). % trace_or_throw(into_pfc_form(I,O).
 
-%:- mpred_trace_nochilds(into_mpred_form/2).
+%:- pfc_trace_nochilds(into_pfc_form/2).
 
 
 %= 	 	 
 
-%% into_mpred_form_ilc( ?G, ?O) is semidet.
+%% into_pfc_form_ilc( ?G, ?O) is semidet.
 %
 % Converted To Managed Predicate Form Inside Of Loop Checking.
 %
-into_mpred_form_ilc([F|Fist],O):- is_list([F|Fist]),!,G  univ_safe  [t|[F|Fist]], into_mpred_form(G,O).
-into_mpred_form_ilc(G,O):- safe_functor(G,F,A),G  univ_safe  [F,P|ARGS],!,into_mpred_form6(G,F,P,A,ARGS,O),!.
+into_pfc_form_ilc([F|Fist],O):- is_list([F|Fist]),!,G  univ_safe  [t|[F|Fist]], into_pfc_form(G,O).
+into_pfc_form_ilc(G,O):- safe_functor(G,F,A),G  univ_safe  [F,P|ARGS],!,into_pfc_form6(G,F,P,A,ARGS,O),!.
 
 % TODO confirm negations
 
 :- expire_tabled_list(all).
 
 
-%% into_mpred_form6( ?X, ?H, ?P, ?N, ?A, ?O) is semidet.
+%% into_pfc_form6( ?X, ?H, ?P, ?N, ?A, ?O) is semidet.
 %
 % Converted To Managed Predicate Form6.
 %
-into_mpred_form6(C,_,_,2,_,C):-!.
-% into_mpred_form6(H,_,_,_,_,G0):- once(locally(t_l:into_form_code,(expand_term( (H :- true) , C ), reduce_clause(assert,C,G)))),expanded_different(H,G),!,into_mpred_form(G,G0),!.
-into_mpred_form6(_,F,_,1,[C],O):-alt_calls(F),!,into_mpred_form(C,O),!.
-into_mpred_form6(_,':-',C,1,_,':-'(O)):-!,into_mpred_form_ilc(C,O).
-into_mpred_form6(_,not,C,1,_,not(O)):-into_mpred_form(C,O),!.
-into_mpred_form6(C,isa,_,2,_,C):-!.
-into_mpred_form6(C,_,_,_,_,isa(I,T)):-was_isa_ex(C,I,T),!.
-into_mpred_form6(_X,t,P,_N,A,O):-!,(atom(P)->O  univ_safe  [P|A];O  univ_safe  [t,P|A]).
-into_mpred_form6(G,_,_,1,_,G):-predicate_property(G,number_of_rules(N)),N >0, !.
-into_mpred_form6(G,F,C,1,_,O):-real_builtin_predicate(G),!,into_mpred_form(C,OO),O  univ_safe  [F,OO].
-into_mpred_form6(_X,H,P,_N,A,O):-a(is_holds_false,H),(atom(P)->(G  univ_safe  [P|A],O=not(G));O  univ_safe  [holds_f,P|A]).
-into_mpred_form6(_X,H,P,_N,A,O):-a(is_holds_true,H),(atom(P)->O  univ_safe  [P|A];O  univ_safe  [t,P|A]).
-into_mpred_form6(G,F,_,_,_,G):-a(prologHybrid,F),!.
-into_mpred_form6(G,F,_,_,_,G):-a(prologDynamic,F),!.
-into_mpred_form6(G,F,_,_,_,G):-nop(dmsg_pretty(warn(unknown_mpred_type(F,G)))).
+into_pfc_form6(C,_,_,2,_,C):-!.
+% into_pfc_form6(H,_,_,_,_,G0):- once(locally(t_l:into_form_code,(expand_term( (H :- true) , C ), reduce_clause(assert,C,G)))),expanded_different(H,G),!,into_pfc_form(G,G0),!.
+into_pfc_form6(_,F,_,1,[C],O):-alt_calls(F),!,into_pfc_form(C,O),!.
+into_pfc_form6(_,':-',C,1,_,':-'(O)):-!,into_pfc_form_ilc(C,O).
+into_pfc_form6(_,not,C,1,_,not(O)):-into_pfc_form(C,O),!.
+into_pfc_form6(C,isa,_,2,_,C):-!.
+into_pfc_form6(C,_,_,_,_,isa(I,T)):-was_isa_ex(C,I,T),!.
+into_pfc_form6(_X,t,P,_N,A,O):-!,(atom(P)->O  univ_safe  [P|A];O  univ_safe  [t,P|A]).
+into_pfc_form6(G,_,_,1,_,G):-predicate_property(G,number_of_rules(N)),N >0, !.
+into_pfc_form6(G,F,C,1,_,O):-real_builtin_predicate(G),!,into_pfc_form(C,OO),O  univ_safe  [F,OO].
+into_pfc_form6(_X,H,P,_N,A,O):-a(is_holds_false,H),(atom(P)->(G  univ_safe  [P|A],O=not(G));O  univ_safe  [holds_f,P|A]).
+into_pfc_form6(_X,H,P,_N,A,O):-a(is_holds_true,H),(atom(P)->O  univ_safe  [P|A];O  univ_safe  [t,P|A]).
+into_pfc_form6(G,F,_,_,_,G):-a(prologHybrid,F),!.
+into_pfc_form6(G,F,_,_,_,G):-a(prologDynamic,F),!.
+into_pfc_form6(G,F,_,_,_,G):-nop(dmsg_pretty(warn(unknown_pfc_type(F,G)))).
 
 % ========================================
 % acceptable_xform/2 (when the form is a isa/2, do a validity check)
@@ -2013,7 +2021,7 @@ foreach_arg([ArgIn1|ARGS],ArgN1,ArgIn,ArgN,ArgOut,Call1,[ArgOut1|ARGSO]):-
 %
 % Transform Functor Holds.
 %
-transform_functor_holds(_,F,ArgInOut,N,ArgInOut):- once(call_u(argQuotedIsa(F,N,FT))),FT=ftTerm,!.
+transform_functor_holds(_,F,ArgInOut,N,ArgInOut):- once(clause_b(argQuotedIsa(F,N,FT))),FT=ftTerm,!.
 transform_functor_holds(Op,_,ArgIn,_,ArgOut):- transform_holds(Op,ArgIn,ArgOut),!.
 
 
@@ -2029,9 +2037,9 @@ transform_holds_3(_,props(Obj,Props),props(Obj,Props)):-!.
 transform_holds_3(_,A,A):-compound(A),safe_functor(A,F,N), predicate_property(A,_),arity_no_bc(F,N),!.
 transform_holds_3(HFDS,M:Term,M:OUT):-atom(M),!,transform_holds_3(HFDS,Term,OUT).
 transform_holds_3(HFDS,[P,A|ARGS],DBASE):- is_ftVar(P),!,DBASE  univ_safe  [HFDS,P,A|ARGS].
-transform_holds_3(HFDS, ['[|]'|ARGS],DBASE):- trace_or_throw_ex(list_transform_holds_3(HFDS,['[|]'|ARGS],DBASE)).
+transform_holds_3(HFDS, ['[|]'|ARGS],DBASE):- trace_or_throw(list_transform_holds_3(HFDS,['[|]'|ARGS],DBASE)).
 transform_holds_3(Op,[SVOFunctor,Obj,Prop|ARGS],OUT):- if_defined(is_svo_functor(SVOFunctor)),!,transform_holds_3(Op,[Prop,Obj|ARGS],OUT).
-transform_holds_3(Op,[P|ARGS],[P|ARGS]):- not(atom(P)),!,dmsg_pretty(transform_holds_3),trace_or_throw_ex(transform_holds_3(Op,[P|ARGS],[P|ARGS])).
+transform_holds_3(Op,[P|ARGS],[P|ARGS]):- not(atom(P)),!,dmsg_pretty(transform_holds_3),trace_or_throw(transform_holds_3(Op,[P|ARGS],[P|ARGS])).
 transform_holds_3(HFDS,[HOFDS,P,A|ARGS],OUT):- a(is_holds_true,HOFDS),!,transform_holds_3(HFDS,[P,A|ARGS],OUT).
 transform_holds_3(HFDS,[HOFDS,P,A|ARGS],OUT):- HFDS==HOFDS, !, transform_holds_3(HFDS,[P,A|ARGS],OUT).
 transform_holds_3(_,HOFDS,isa(I,C)) :- was_isa_ex(HOFDS,I,C),!.
@@ -2049,7 +2057,7 @@ transform_holds_3(_,[Type,Inst|PROPS],props(Inst,[isa(Type)|PROPS])):-
                   must_det(\+(if_defined(is_never_type(Type)))),!.
 
 transform_holds_3(_,[P,A|ARGS],DBASE):- atom(P),!,DBASE  univ_safe  [P,A|ARGS].
-transform_holds_3(Op,[P,A|ARGS],DBASE):- !, is_ftNonvar(P),dumpST,trace_or_throw_ex(transform_holds_3(Op,[P,A|ARGS],DBASE)), DBASE  univ_safe  [P,A|ARGS].
+transform_holds_3(Op,[P,A|ARGS],DBASE):- !, is_ftNonvar(P),dumpST,trace_or_throw(transform_holds_3(Op,[P,A|ARGS],DBASE)), DBASE  univ_safe  [P,A|ARGS].
 transform_holds_3(Op,DBASE_T,OUT):- DBASE_T  univ_safe  [P,A|ARGS],!,transform_holds_3(Op,[P,A|ARGS],OUT).
 
 
@@ -2104,8 +2112,8 @@ do_expand_args_l(_,A,A).
 
 
 
-% :- mpred_trace_nochilds(functor_safe/2).
-% :- mpred_trace_nochilds(functor_safe/3).
+% :- pfc_trace_nochilds(functor_safe/2).
+% :- pfc_trace_nochilds(functor_safe/3).
 
 
 % ================================================
@@ -2129,14 +2137,14 @@ do_expand_args_l(_,A,A).
 %if_expands_on(EachOf,Term,Call):- expands_on(EachOf,Term),subst(Call,Term,O,OCall),!, forall(do_expand_args(EachOf,Term,O),OCall).
 
 /*
-%db_reop(WhatNot,Call) :- into_mpred_form(Call,NewCall),NewCall\=@=Call,!,db_reop(WhatNot,NewCall).
+%db_reop(WhatNot,Call) :- into_pfc_form(Call,NewCall),NewCall\=@=Call,!,db_reop(WhatNot,NewCall).
 db_reop(Op,Term):- expands_on(isEach,Term), !,forall(do_expand_args(isEach,Term,O),db_reop_l(Op,O)).
 db_reop(Op,Term):-db_reop_l(Op,Term).
 
 db_reop_l(query(_HLDS,Must),Call) :- !,preq(Must,Call).
 db_reop_l(Op,DATA):-no_loop_check(db_op0(Op,DATA)).
 
- dm sg_hook(transform_holds(t,_What,props(ttSpatialType,[isa(isa),isa]))):-trace_or_throw_ex(dtrace).
+ dm sg_hook(transform_holds(t,_What,props(ttSpatialType,[isa(isa),isa]))):-trace_or_throw(dtrace).
 
 */
 
@@ -2151,7 +2159,7 @@ db_reop_l(Op,DATA):-no_loop_check(db_op0(Op,DATA)).
 %
 expand_goal_correct_argIsa(A,B):- expand_goal(A,B).
 
-% db_op_simpler(query(HLDS,_),MODULE:C0,call_u(call,MODULE:C0)):- atom(MODULE), is_ftNonvar(C0),not(not(predicate_property(C0,_PP))),!. % , functor_catch(C0,F,A), dmsg_pretty(todo(unmodulize(F/A))), %trace_or_throw_ex(module_form(MODULE:C0)), %   db_op(Op,C0).
+% db_op_simpler(query(HLDS,_),MODULE:C0,call_u(call,MODULE:C0)):- atom(MODULE), is_ftNonvar(C0),not(not(predicate_property(C0,_PP))),!. % , functor_catch(C0,F,A), dmsg_pretty(todo(unmodulize(F/A))), %trace_or_throw(module_form(MODULE:C0)), %   db_op(Op,C0).
 
 %= 	 	 
 
@@ -2183,11 +2191,11 @@ db_op_sentence(_Op,Prop,ARGS,C0):- C0  univ_safe  [t,Prop|ARGS].
 %
 % Simply Functors.
 %
-simply_functors(Db_pred,query(HLDS,Must),Wild):- once(into_mpred_form(Wild,Simpler)),Wild\=@=Simpler,!,call(Db_pred,query(HLDS,Must),Simpler).
-simply_functors(Db_pred,Op,Wild):- once(into_mpred_form(Wild,Simpler)),Wild\=@=Simpler,!,call(Db_pred,Op,Simpler).
+simply_functors(Db_pred,query(HLDS,Must),Wild):- once(into_pfc_form(Wild,Simpler)),Wild\=@=Simpler,!,call(Db_pred,query(HLDS,Must),Simpler).
+simply_functors(Db_pred,Op,Wild):- once(into_pfc_form(Wild,Simpler)),Wild\=@=Simpler,!,call(Db_pred,Op,Simpler).
 
 
-% -  dmsg_hook(db_op(query(HLDS,call),holds_t(ft_info,tCol,'$VAR'(_)))):-trace_or_throw_ex(dtrace).
+% -  dmsg_hook(db_op(query(HLDS,call),holds_t(ft_info,tCol,'$VAR'(_)))):-trace_or_throw(dtrace).
 
 lin_visits(P,Visits):-attvar(P),get_attr(P,linv,num(Visits)),!.
 lin_visits(_,0).
@@ -2228,7 +2236,7 @@ fix_syntax(I,O):- fixed_negations(I,M),fix_syntax(M,O).
 %fix_syntax((~P)/Cond,O):- !,O=(((P/Cond)==> ~P)).
 %fix_syntax((~P)/Cond,O):- !,O=(((P/Cond)==> ~P)).
 %fix_syntax((~P)/Cond,O):- !,O=(((P/ (\+Cond)) ==> \+ ~P)).
-%fix_syntax(P/Cond,O):- mpred_literal_nonvar(P),!,O=((P <- { Cond } )).
+%fix_syntax(P/Cond,O):- pfc_literal_nonvar(P),!,O=((P <- { Cond } )).
 fix_syntax(P/Cond,O):- !,O=((P <- {Cond} )).
 fix_syntax(I, O):- sub_compound_of(I,((P/Cond):-B)),!,O=(P :- (B, Cond)).
 fix_syntax(P:-B,PP:-B):-!, fix_syntax(P,PP).
@@ -2333,7 +2341,7 @@ exact_args_f(action_info).
 exact_args_f(never_retract_u).
 exact_args_f(install_converter).
 exact_args_f(installed_converter).
-exact_args_f(actn).
+exact_args_f(pfcAction).
 exact_args_f(wid).
 exact_args_f(wdmsg_pretty).
 exact_args_f(fol_to_pkif).
@@ -2349,8 +2357,8 @@ exact_args_f(not_undoable).
 exact_args_f(mtExact).
 exact_args_f(vQuotientFn).
 exact_args_f(uSubLQuoteFn).
-exact_args_f(mpred_prop).
-exact_args_f(mpred_ain).
+exact_args_f(pfc_prop).
+exact_args_f(pfc_ain).
 exact_args_f(meta_argtypes_guessed).
 exact_args_f(meta_argtypes).
 exact_args_f(ignore).
@@ -2414,7 +2422,7 @@ db_quf_l_0(Op, And,[C|C12],PreO,TemplO):-
 db_quf(Op,C,Template):- db_quf(Op,C,true,Template),!.
 
 db_quf(_ ,C,Pretest,Template):- (not_ftCompound(C)),!,must(Pretest=true),must(Template=C).
-db_quf(Op,C,Pretest,Template):-is_ftVar(C),!,trace_or_throw_ex(var_db_quf(Op,C,Pretest,Template)).
+db_quf(Op,C,Pretest,Template):-is_ftVar(C),!,trace_or_throw(var_db_quf(Op,C,Pretest,Template)).
 db_quf(_ ,C,Pretest,Template):-as_is_term(C),!,must(Pretest=true),must(Template=C),!.
 
 db_quf(Op,M:C,Pretest,M:Template):-atom(M),!,must(db_quf(Op,C,Pretest,Template)).
@@ -2542,7 +2550,7 @@ expanded_different_ic(G0,G1):- G0\==G1.
 %
 expanded_different_1(NV:G0,G1):-is_ftNonvar(NV),!,expanded_different_1(G0,G1).
 expanded_different_1(G0,NV:G1):-is_ftNonvar(NV),!,expanded_different_1(G0,G1).
-expanded_different_1(G0,G1):- (is_ftVar(G0);is_ftVar(G1)),!,trace_or_throw_ex(expanded_different(G0,G1)).
+expanded_different_1(G0,G1):- (is_ftVar(G0);is_ftVar(G1)),!,trace_or_throw(expanded_different(G0,G1)).
 expanded_different_1(G0,G1):- G0 \= G1,!.
 
 
@@ -2580,6 +2588,457 @@ into_functor_form(Dbase_t,_X,F,A,Call):-Call  univ_safe  [Dbase_t,F|A].
 
 :- fixup_exports.
 
-:- export(mpred_expansion_file/0).
-mpred_expansion_file.
+:- export(pfc_expansion_file/0).
+pfc_expansion_file.
+
+
+/*
+
+% fix_mp(Why,Unassertable,_,_):- Why = clause(_,_), unassertable(Unassertable),!,trace_or_throw(unassertable_fix_mp(Why,Unassertable)).
+
+*/
+system_between(A,B,C):-call(call,between,A,B,C).
+
+pfc_truth_value(Call,vTrue,vAsserted):-clause_b(Call),!.
+pfc_truth_value(Call,vTrue,vDeduced):-call_u(Call),!.
+pfc_truth_value(_Call,vUnknown,vFailed).
+
+convention_to_mt(From,Why,F,A,RealMt):-convention_to_symbolic_mt_ec(From,Why,F,A,Mt),to_real_mt(Why,Mt,RealMt).
+
+get_unnegated_mfa(M:G,M,F,A):-!,get_unnegated_functor(G,F,A).
+get_unnegated_mfa(G,M,F,A):- strip_module(G,M0,_),get_unnegated_functor(G,F,A),
+                 convention_to_mt(M0,get_unnegated_mfa(G,M,F,A),F,A,M).
+
+get_unnegated_functor(G,F,A):- strip_module(G,_,GO),
+   get_assertion_head_unnegated(GO,Unwrap),
+   nonvar(Unwrap),
+   safe_functor(Unwrap,F,A),
+   ignore(show_failure(\+ bad_head_pred(F))),!.
+   
+
+:- module_transparent( (get_assertion_head_unnegated)/2).
+
+get_assertion_head_unnegated(Head,Unwrap):-
+  get_assertion_head(Head,Mid),
+  maybe_unnegated(Mid,Unwrap).
+
+   
+maybe_unnegated(Head,Head):- \+ compound(Head),!.
+maybe_unnegated(~ Head,Unwrap):- \+ is_ftVar(Head),!, get_assertion_head(Head,Unwrap).
+maybe_unnegated( \+ Head,Unwrap):- \+ is_ftVar(Head),!, get_assertion_head(Head,Unwrap).
+maybe_unnegated(Head,Unwrap):- get_assertion_head(Head,Unwrap).
+
+
+get_assertion_head(Head,Head):- \+ compound(Head),!.
+get_assertion_head(Head,Unwrap):- is_ftVar(Head),!,Head=Unwrap.
+get_assertion_head( ( Head :- _ ),Unwrap):- nonvar(Head), !, get_assertion_head(Head,Unwrap).
+get_assertion_head(Head,Unwrap):- strip_module(Head,_,HeadM),Head\=@=HeadM,!,get_assertion_head(HeadM,Unwrap).
+% Should?
+get_assertion_head( ( _,Head),Unwrap):- \+ is_ftVar(Head),!, get_assertion_head(Head,Unwrap).
+% Should?
+get_assertion_head((P/_),PP):- \+ is_ftVar(P),!,get_assertion_head(P,PP).
+% Should?
+% NOOOO get_assertion_head((P<-_),PP):-compound(P),!,get_assertion_head(P,PP).
+% disabled
+get_assertion_head( Head,UnwrapO):- fail, pfc_rule_hb(Head,Unwrap,_),nonvar(Unwrap),
+  Head \=@= Unwrap,!,get_assertion_head(Unwrap,UnwrapO).
+get_assertion_head(P,P).
+
+
+get_head_term(Form,Form):-var(Form),!.
+get_head_term(F/A,Form):- integer(A),safe_functor(Form,F,A),!.
+get_head_term(Form0,Form):- get_assertion_head_unnegated(Form0,Form).
+
+bad_head_pred([]).
+bad_head_pred('[]').
+bad_head_pred((.)).
+bad_head_pred('{}').
+bad_head_pred('[|]').
+bad_head_pred(',').
+bad_head_pred(':').
+bad_head_pred('/').
+bad_head_pred(':-').
+bad_head_pred(';').
+bad_head_pred( \+ ).
+bad_head_pred_neg('~').
+
+% bad_head_pred('=>').
+% bad_head_pred('<-').
+% bad_head_pred('==>').
+% Probably bad_head_pred('==>').
+
+% the next line transforms to pfc_lib:convention_to_symbolic_mt(_From,_Why,A, _, B) :- call(ereq, predicateConventionMt(A, B)), !.
+
+convention_to_symbolic_mt_ec(From,Why,F,A,Mt):-convention_to_symbolic_mt(From,Why,F,A,Mt).
+
+/*convention_to_symbolic_mt(_From,_Why,predicateConventionMt,2,baseKB):-!.
+convention_to_symbolic_mt(_From,_Why,genlMt,2,baseKB):-!.
+convention_to_symbolic_mt(_From,_Why,mtNonAssertable,1,baseKB):-!.
+convention_to_symbolic_mt(_From,_Why,mtProlog,1,baseKB):-!.
+convention_to_symbolic_mt(_From,_Why,functorDeclares,1,baseKB):-!.
+convention_to_symbolic_mt(_From,_Why,functorIsMacro,1,baseKB):-!.
+*/
+
+convention_to_symbolic_mt(_From,_Why,mtHybrid,1,baseKB):-!.
+convention_to_symbolic_mt(From,_Why,F,_,Mt):-  clause_b(From:predicateConventionMt(F,Mt)),!.
+convention_to_symbolic_mt(_From,_Why,F,A,M):- lmcache:already_decl(kb_global,M,F,A),!.
+
+
+
+
+% convention_to_symbolic_mt(From,Why,F,A,Error):- bad_head_pred(F),!,dumpST,dmsg_pretty(bad_head_pred(F)),break,trace_or_throw_ex(error_convention_to_symbolic_mt(From,Why,F,A,Error)).
+convention_to_symbolic_mt(_From,_Why,F,A,M):- lmcache:already_decl(kb_global,M,F,A),!.
+convention_to_symbolic_mt(_From,_Why,F,A,abox):- pfc_database_term_syntax(F,A,_).
+convention_to_symbolic_mt(_From,_Why,F,A,abox):- lmcache:already_decl(kb_shared,_,F,A),!.
+convention_to_symbolic_mt(_From,_Why,F,A,abox):- lmcache:already_decl(kb_local,_,F,A),!.
+
+convention_to_symbolic_mt(_From,_Why,F,A,Mt):-  safe_functor(P,F,A),show_success(predicate_property(P,imported_from(Mt))),!.
+convention_to_symbolic_mt(_From,_Why,F,A,   M):- lmcache:already_decl(kb_global,M,F,A),!.
+convention_to_symbolic_mt(_From,_Why,F,A,abox):- pfc_database_term(F,A,_).
+convention_to_symbolic_mt(_From,_Why,F,A,abox):- clause_b(safe_wrap(_M,F,A,ereq)).
+
+
+convention_to_symbolic_mt(From,Why,F,A,Error):- bad_head_pred(F),!,Error = From,
+  if_interactive((
+   dumpST,dmsg_pretty(bad_head_pred(F)),break,trace_or_throw(error_convention_to_symbolic_mt(From,Why,F,A,Error)))).
+
+
+% convention_to_symbolic_mt(_From,_Why,_,_,M):- atom(M),!.
+
+full_transform_warn_if_changed(_,MH,MHH):-!,MH=MHH.
+full_transform_warn_if_changed(Why,MH,MHH):- full_transform(Why,MH,MHH),!,sanity(MH=@=MHH).
+full_transform_warn_if_same(Why,MH,MHH):- full_transform(Why,MH,MHH),!,sanity(MH \=@= MHH).
+
+%% pred_head( :PRED1Type, ?P) is semidet.
+%
+% Predicate Head.
+%
+pred_head(Type,P):- no_repeats(P,(call(Type,P),\+ nonfact_metawrapper(P),is_ftCompound(P))).
+
+
+%% pred_head_all( +P) is semidet.
+%
+% Predicate Head All.
+%
+pred_head_all(P):- pred_head(pred_all,P).
+
+
+%% nonfact_metawrapper( :TermP) is semidet.
+%
+% Nonfact Metawrapper.
+%
+nonfact_metawrapper(~(_)).
+nonfact_metawrapper(pt(_,_)).
+nonfact_metawrapper(bt(_,_,_)).
+nonfact_metawrapper(nt(_,_)).
+nonfact_metawrapper(spft(_,_,_)).
+nonfact_metawrapper(added(_)).
+% we use the arity 1 forms is why 
+nonfact_metawrapper(term_expansion(_,_)).
+nonfact_metawrapper(P):- \+ current_predicate(_,P).
+nonfact_metawrapper(M:P):-atom(M),!,nonfact_metawrapper(P).
+nonfact_metawrapper(P):- get_functor(P,F,_), 
+   (a(prologSideEffects,F);a(rtNotForUnboundPredicates,F)).
+nonfact_metawrapper(P):-rewritten_metawrapper(P).
+
+
+%% rewritten_metawrapper( +C) is semidet.
+%
+% Rewritten Metawrapper.
+%
+rewritten_metawrapper(_):-!,fail.
+%rewritten_metawrapper(isa(_,_)).
+rewritten_metawrapper(C):-is_ftCompound(C),functor(C,t,_).
+
+
+%% meta_wrapper_rule( :TermARG1) is semidet.
+%
+% Meta Wrapper Rule.
+%
+meta_wrapper_rule((_<-_)).
+meta_wrapper_rule((_<==>_)).
+meta_wrapper_rule((_==>_)).
+meta_wrapper_rule((_:-_)).
+
+
+
+%% pred_all( +P) is semidet.
+%
+% Predicate All.
+%
+pred_all(P):-pred_u0(P).
+pred_all(P):-pred_t0(P).
+pred_all(P):-pred_r0(P).
+
+
+%% pred_u0( +P) is semidet.
+%
+% Predicate For User Code Primary Helper.
+%
+pred_u0(P):-pred_u1(P),has_db_clauses(P).
+pred_u0(P):-pred_u2(P).
+
+%% pred_u1( +VALUE1) is semidet.
+%
+% Predicate For User Code Secondary Helper.
+%
+pred_u1(P):-a(pfcControlled,F),arity_no_bc(F,A),functor(P,F,A).
+pred_u1(P):-a(prologHybrid,F),arity_no_bc(F,A),functor(P,F,A).
+pred_u1(P):-a(prologDynamic,F),arity_no_bc(F,A),functor(P,F,A).
+
+%% pred_u2( +P) is semidet.
+%
+% Predicate For User Code Extended Helper.
+%
+pred_u2(P):- compound(P),functor(P,F,A),sanity(no_repeats(arity_no_bc(F,A))),!,has_db_clauses(P).
+pred_u2(P):- no_repeats(arity_no_bc(F,A)),functor(P,F,A),has_db_clauses(P).
+
+
+
+%% has_db_clauses( +PI) is semidet.
+%
+% Has Database Clauses.
+%
+has_db_clauses(PI):-modulize_head(PI,P),
+   predicate_property(P,number_of_clauses(NC)),\+ predicate_property(P,number_of_rules(NC)), \+ \+ clause(P,true).
+
+
+
+%% pred_t0(+ ?P) is semidet.
+%
+% Predicate True Stucture Primary Helper.
+%
+pred_t0(P):-mreq('==>'(P)).
+pred_t0(P):-mreq(pt(P,_)).
+pred_t0(P):-mreq(bt(P,_)).
+pred_t0(P):-mreq(nt(P,_,_)).
+pred_t0(P):-mreq(spft(P,_,_)).
+
+%pred_r0(-(P)):- call_u(-(P)).
+%pred_r0(~(P)):- mreq(~(P)).
+
+
+%% pred_r0( :TermP) is semidet.
+%
+% Predicate R Primary Helper.
+%
+pred_r0(P==>Q):- mreq(P==>Q).
+pred_r0(P<==>Q):- mreq(P<==>Q).
+pred_r0(P<-Q):- mreq(P<-Q).
+
+mreq(G):- clause_b(G).
+
+
+:- user:use_module(library(clpfd),['#='/2]).
+%% get_arity( :TermTerm, ?F, ?A) is semidet.
+%
+% Get Arity.
+%
+get_arity(Term,F,A):- atom(Term),F=Term,!,ensure_arity(F,A).
+get_arity(F/A,F,A):-!,atom(F),ensure_arity(F,A),!,(A>0).
+get_arity(F // A,F,A2):- must(integer(A)),!, atom(F), is(A2 , A+2), ensure_arity(F,A2),!,(A2>0).
+get_arity(F // A,F,A2):- use_module(library(clpfd),['#='/2]),!, atom(F), clpfd:call(#=(A2 , A+2)), ensure_arity(F,A2),!,(A2>0).
+get_arity(M:FA,F,A):-atom(M),!,get_arity(FA,F,A).
+get_arity(FA,F,A):- get_functor(FA,F,A),must(A>0).
+
+% arity_no_bc(F,A):- call_u(arity(F,A)).
+arity_no_bc(F,A):- clause_b(arity(F,A)).
+arity_no_bc(F,A):- clause_b(support_hilog(F,A)).
+arity_no_bc(F,A):- clause_b(functorDeclares(F)),!,A=1.
+arity_no_bc(completeExtentAsserted,1).
+arity_no_bc(home,2).
+arity_no_bc(record,2).
+arity_no_bc(F,A):- suggest_m(M),clause_b(pfc_prop(M,F,AA,_)),nonvar(AA),A=AA.
+%arity_no_bc(F,A):- current_predicate(F/A)
+% arity_no_bc(F,A):- current_predicate(_:F/A),\+(current_predicate(_:F/AA),AA\=A). =
+
+%% ensure_arity( ?VALUE1, ?VALUE2) is semidet.
+%
+% Ensure Arity.
+%
+ensure_arity(F,A):- 
+ one_must(
+   arity_no_bc(F,A),
+   one_must(
+    (current_predicate(F/A),(A>0),assert_arity(F,A)),
+    (ground(F:A),(A>0),assert_arity(F,A)))),
+  !.
+
+
+%=
+
+%% assert_arity( ?F, :PRED2A) is semidet.
+%
+% Assert Arity.
+%
+
+assert_arity(F,A):- sanity(\+ ((bad_arity(F,A), trace_or_throw(assert_arity(F,A))))), arity_no_bc(F,A),!.
+assert_arity(F,A):- arity_no_bc(F,AA), A\=AA,dmsg_pretty(assert_additional_arity(F,AA->A)),!,ain_fast(arity(F,A)).
+assert_arity(F,A):- ain_fast(arity(F,A)),!.
+
+bad_arity(F,_):- \+ atom(F).
+bad_arity(_,A):- \+ integer(A).
+bad_arity('[|]',_).
+bad_arity(typeProps,0).
+bad_arity(argIsa,2).
+bad_arity(isEach,_).
+bad_arity(_,0).
+bad_arity(prologDynamic,2).
+bad_arity(F,A):- \+ good_pred_relation_name(F,A).
+
+
+%=
+
+%% good_pred_relation_name( ?F, ?A) is semidet.
+%
+% Good Predicate Relation Name.
+%
+good_pred_relation_name(F,A):- \+ bad_pred_relation_name0(F,A).
+
+
+%=
+
+%% bad_pred_relation_name0( ?V, ?VALUE2) is semidet.
+%
+% Bad Predicate Relation Name Primary Helper.
+%
+bad_pred_relation_name0(V,_):- \+ atom(V),!.
+bad_pred_relation_name0('[]',_).
+bad_pred_relation_name0('',_).
+bad_pred_relation_name0('!',_).
+bad_pred_relation_name0('{}',_).
+bad_pred_relation_name0(',',_).
+bad_pred_relation_name0('[|]',_).
+
+%=
+
+%% bad_pred_relation_name1( ?X, ?Y) is semidet.
+%
+% Bad Predicate Relation Name Secondary Helper.
+%
+bad_pred_relation_name1(X,Y):-bad_pred_relation_name0(X,Y).
+bad_pred_relation_name1(F,A):-must_det((atom_codes(F,[C|_]),to_upper(C,U))),!, U == C, A>1.
+bad_pred_relation_name1(F,A):-arity_no_bc(F,AO), A \= AO.
+
+% :-after_boot(writeq("Seen Mpred_props at start!\n")),!.
+
+%=
+
+%% functor_check_univ( ?G1, ?F, ?List) is semidet.
+%
+% Functor Check Univ.
+%
+functor_check_univ(M:G1,F,List):-atom(M),member(M,[dbase,user]),!,functor_check_univ(G1,F,List),!.
+functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_det(G1 \= _/_),G1=..[F|List],!.
+
+full_transform(Why,MH,MHH):-
+ must_det(fully_expand_real(change(assert,Why),MH,MHH)),!,
+ nop(sanity(on_f_debug(same_modules(MH,MHH)))).
+
+same_modules(MH,MHH):- strip_module(MH,HM,_),strip_module(MHH,HHM,_),!,
+   HM==HHM.
+
+
+
+%% sub_term_eq( +H, ?HH) is semidet.
+%
+% Sub Term Using (==/2) (or =@=/2) ).
+%
+sub_term_eq(H,HH):-H==HH,!.
+sub_term_eq(H,HH):-each_subterm(HH,ST),ST==H,!.
+
+
+%% sub_term_v( +H, ?HH) is semidet.
+%
+% Sub Term V.
+%
+sub_term_v(H,HH):-H=@=HH,!.
+sub_term_v(H,HH):-each_subterm(HH,ST),ST=@=H,!.
+
+%% all_different_head_vals(+Clause) is det.
+%
+% Enforces All Different Head Vals.
+%
+all_different_head_vals(HB):- (\+ compound(HB) ; ground(HB)),!.
+all_different_head_vals(HB):- 
+  pfc_rule_hb(HB,H,B),
+  term_slots(H,Slots),  
+  (Slots==[]->
+     all_different_head_vals(B);
+    (lock_vars(Slots),all_different_head_vals_2(H,Slots),unlock_vars(Slots))),!.
+  
+
+all_different_head_vals_2(_H,[]):-!.
+all_different_head_vals_2(H,[A,R|EST]):-get_assertion_head_arg(_,H,E1),E1 ==A,dif(A,E2),get_assertion_head_arg(_,H,E2),\+ occurs:contains_var(A,E2),all_different_vals(dif_matrix,[A,E2,R|EST]),!.
+all_different_head_vals_2(_H,[A,B|C]):-all_different_vals(dif_matrix,[A,B|C]),!.
+all_different_head_vals_2(HB,_):- \+ compound(HB),!.
+all_different_head_vals_2(H,[A]):-get_assertion_head_arg(_,H,E1),E1 ==A, H=..[_|ARGS], all_different_vals(dif_matrix,ARGS),!.
+all_different_head_vals_2(H,[A]):-get_assertion_head_arg(_,H,E1),E1 ==A,  get_assertion_head_arg(_,H,E2), A\==E2, \+ occurs:contains_var(A,E2), dif(A,E2),!.
+all_different_head_vals_2(H,[A]):-get_assertion_head_arg(_,H,E1),E1\==A, compound(E1), occurs:contains_var(A,E1), all_different_head_vals_2(E1,[A]),!.
+all_different_head_vals_2(_,_).
+   	 
+
+%% pfc_rule_hb( +Outcome, ?OutcomeO, ?AnteO) is semidet.
+%
+% Calculate PFC Rule Head+body.
+%
+pfc_rule_hb(Outcome,OutcomeO,Body):- nonvar(OutcomeO),!,pfc_rule_hb(Outcome,OutcomeN,Body),must(OutcomeO=OutcomeN).
+pfc_rule_hb(Outcome,OutcomeO,BodyO):- nonvar(BodyO),!,pfc_rule_hb(Outcome,OutcomeO,BodyN),must(BodyN=BodyO).
+pfc_rule_hb(Outcome,OutcomeO,AnteO):- 
+  quietly((pfc_rule_hb_0(Outcome,OutcomeO,Ante),
+  pfc_rule_hb_0(Ante,AnteO,_))).
+% :-pfc_trace_nochilds(pfc_rule_hb/3).
+
+
+%% pfc_rule_hb_0( +Rule, -Head, -Body) is nondet.
+%
+% Calculate PFC rule Head+Body  Primary Helper.
+%
+
+
+pfc_rule_hb_0(Outcome,OutcomeO,true):-is_ftVar(Outcome),!,OutcomeO=Outcome.
+pfc_rule_hb_0(Outcome,OutcomeO,true):- \+compound(Outcome),!,OutcomeO=Outcome.
+pfc_rule_hb_0((Outcome1,Outcome2),OutcomeO,AnteO):- pfc_rule_hb(Outcome1,Outcome1O,Ante1),pfc_rule_hb(Outcome2,Outcome2O,Ante2),
+                   conjoin(Outcome1O,Outcome2O,OutcomeO),
+                   conjoin(Ante1,Ante2,AnteO).
+pfc_rule_hb_0((Ante1==>Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0(=>(Ante1,Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0((Ante1->Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0((Ante1*->Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+% pfc_rule_hb_0((Outcome/Ante1),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0(rhs([Outcome]),OutcomeO,Ante2):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+% pfc_rule_hb_0(rhs([OutcomeH|OutcomeT]),OutcomeO,Ante2):- !, pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0({Outcome},OutcomeO,Ante2):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0((Outcome<-Ante1),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0(&(Ante1 , Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0((Ante1 , Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0((Outcome<==>Ante1),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0((Ante1<==>Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0(_::::Outcome,OutcomeO,Ante2):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb_0(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0(bt(Outcome,Ante1),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0(pt(Ante1,Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0(pk(Ante1a,Ante1b,Outcome),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0(nt(Ante1a,Ante1b,Outcome),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0(spft(Outcome,Ante1a,Ante1b),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true),pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0(que(Outcome,_),OutcomeO,Ante2):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+% pfc_rule_hb_0(pfc Default(Outcome),OutcomeO,Ante2):- (nonvar(Outcome)-> ! ; true), pfc_rule_hb(Outcome,OutcomeO,Ante2).
+pfc_rule_hb_0((Outcome:-Ante),Outcome,Ante):-(nonvar(Outcome)-> ! ; true).
+pfc_rule_hb_0(Outcome,Outcome,true).
+
+
+%:- multifile(get_current_default_tbox/1).
+%:- dynamic(get_current_default_tbox/1).
+%get_current_default_tbox(baseKB).
+:- if(current_predicate(get_current_default_tbox/1)).
+:- redefine_system_predicate(get_current_default_tbox/1).
+:- endif.
+:- module_transparent(get_current_default_tbox/1).
+get_current_default_tbox(TBox):- defaultAssertMt(ABox)->current_module(ABox)->clause(ABox:defaultTBoxMt(TBox),B),call(B),!.
+get_current_default_tbox(baseKB).
+:- sexport(get_current_default_tbox/1).
+
+
+to_real_mt(_Why,abox,ABOX):- defaultAssertMt(ABOX),!.
+to_real_mt(_Why,tbox,TBOX):- get_current_default_tbox(TBOX),!.
+to_real_mt(_Why,BOX,BOX).
 
