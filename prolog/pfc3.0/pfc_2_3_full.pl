@@ -217,7 +217,7 @@ termf_subst(Subst,F,F2):-member(F-F2,Subst)->true;F=F2.
 
 :- thread_local(t_l:pfcSearchTL/1).
 
-:- dynamic support1/3.
+:- dynamic spft/3.
 
 %%% initialization of global assertons 
 
@@ -890,7 +890,7 @@ fcpt(Fact,F) :-
 fcpt(_,_).
 
 fcnt(_Fact,F) :-
-  support1(X,_,nt(F,Condition,Body)),
+  spft(X,_,nt(F,Condition,Body)),
   pfcCallSystem(Condition),
   pfcRem_S(X,(_,nt(F,Condition,Body))),
   fail.
@@ -1493,7 +1493,7 @@ pfcConjoin(C1,C2,(C1,C2)).
 % pfcDatabaseTerm(P/A) is true iff P/A is something that pfc adds to
 % the database and should not be present in an empty pfc database
 
-pfcDatabaseTerm(support1/3).
+pfcDatabaseTerm(spft/3).
 pfcDatabaseTerm(pt/2).
 pfcDatabaseTerm(bt/2).
 pfcDatabaseTerm(nt/3).
@@ -1505,9 +1505,9 @@ pfcDatabaseTerm(pfcQueue/1).
 % removes all forward chaining rules and justifications from db.
 
 pfcReset :-
-  clause(support1(P,F,Trigger),true),
+  clause(spft(P,F,Trigger),true),
   pfcRetractOrWarn(P),
-  pfcRetractOrWarn(support1(P,F,Trigger)),
+  pfcRetractOrWarn(spft(P,F,Trigger)),
   fail.
 pfcReset :-
   (pfcDatabaseItem(T)*->
@@ -1966,9 +1966,9 @@ matterialize_support_term(SS,SS).
 
 %% pfcAddSupport(+Fact,+Support)
 
-pfcAddSupport(P,(Fact,Trigger)) :- assert(support1(P,Fact,Trigger)).
+pfcAddSupport(P,(Fact,Trigger)) :- assert(spft(P,Fact,Trigger)).
 
-pfcGetSupport(P,(Fact,Trigger)) :- pfcCallSystem(support1(P,Fact,Trigger)).
+pfcGetSupport(P,(Fact,Trigger)) :- pfcCallSystem(spft(P,Fact,Trigger)).
 
 
 % There are three of these to try to efficiently handle the cases
@@ -1976,11 +1976,11 @@ pfcGetSupport(P,(Fact,Trigger)) :- pfcCallSystem(support1(P,Fact,Trigger)).
 
 pfcRemOneSupport(P,(Fact,Trigger)) :-
   must(callable(P);callable(Fact);callable(Trigger)),
-  pfcRetractOrWarn(support1(P,Fact,Trigger)).
+  pfcRetractOrWarn(spft(P,Fact,Trigger)).
 
 pfcRemOneSupportOrQuietlyFail(P,(Fact,Trigger)) :-
   must(callable(P);callable(Fact);callable(Trigger)),
-  pfcRetractOrQuietlyFail(support1(P,Fact,Trigger)).
+  pfcRetractOrQuietlyFail(spft(P,Fact,Trigger)).
 
 
 pfc_collect_supports(Tripples) :-
@@ -1989,7 +1989,7 @@ pfc_collect_supports(Tripples) :-
 pfc_collect_supports([]).
 
 pfc_support_relation((P,F,T)) :-
-  support1(P,F,T).
+  spft(P,F,T).
 
 pfc_make_supports((P,S1,S2)) :- 
   pfcAddSupport(P,(S1,S2)),
