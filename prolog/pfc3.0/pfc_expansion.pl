@@ -1510,7 +1510,7 @@ db_expand_0(_Op,pddlSorts(I,EL),O):- listToE(EL,E),expand_isEach_or_fail(==>genl
 db_expand_0(_Op,pddlTypes(EL),O):- listToE(EL,E),expand_isEach_or_fail(==>isa(E,tCol),O).
 db_expand_0(_Op,pddlPredicates(EL),O):- listToE(EL,E),expand_isEach_or_fail(==>prologHybrid(E),O).
 
-db_expand_0(_,prop_mpred(M,RT,F,A),pfc_prop(M,F,A,RT)).
+db_expand_0(_,prop_mpred(M,RT,F,A),mpred_prop(M,F,A,RT)).
 
 db_expand_0(Op,DECL,OUT):- 
     is_ftCompound(DECL)->
@@ -1520,7 +1520,7 @@ db_expand_0(Op,DECL,OUT):-
     maplist(nonvar,[FA|Args]) ->
     db_expand_set(Op,[DT,FA|Args],OUT).
 
-db_expand_0(_,Sent,pfc_prop(M,F,A,RT)):- Sent  univ_safe  [RT,MFA],a(ttRelationType,RT),nonvar(MFA),get_mfa(MFA,M,F,A),atom(F),!.
+db_expand_0(_,Sent,mpred_prop(M,F,A,RT)):- Sent  univ_safe  [RT,MFA],a(ttRelationType,RT),nonvar(MFA),get_mfa(MFA,M,F,A),atom(F),!.
 
 get_mfa(M:FA,M,F,A):- !, get_fa(FA,F,A).
 get_mfa(FA,M,F,A):- get_fa(FA,F,A),must(current_assertion_module(M)).
@@ -2357,7 +2357,7 @@ exact_args_f(not_undoable).
 exact_args_f(mtExact).
 exact_args_f(vQuotientFn).
 exact_args_f(uSubLQuoteFn).
-exact_args_f(pfc_prop).
+exact_args_f(mpred_prop).
 exact_args_f(pfc_ain).
 exact_args_f(meta_argtypes_guessed).
 exact_args_f(meta_argtypes).
@@ -2848,7 +2848,7 @@ arity_no_bc(F,A):- clause_b(functorDeclares(F)),!,A=1.
 arity_no_bc(completeExtentAsserted,1).
 arity_no_bc(home,2).
 arity_no_bc(record,2).
-arity_no_bc(F,A):- suggest_m(M),clause_b(pfc_prop(M,F,AA,_)),nonvar(AA),A=AA.
+arity_no_bc(F,A):- suggest_m(M),clause_b(mpred_prop(M,F,AA,_)),nonvar(AA),A=AA.
 %arity_no_bc(F,A):- current_predicate(F/A)
 % arity_no_bc(F,A):- current_predicate(_:F/A),\+(current_predicate(_:F/AA),AA\=A). =
 

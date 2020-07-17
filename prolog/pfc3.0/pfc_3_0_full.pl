@@ -108,7 +108,7 @@ pfc_core_database_term(pfcTraceExecution,0,debug).
 pfc_core_database_term(pfcWarnings,1,debug).
 % pfc_core_database_term(t_l:whybuffer,2,debug).
 
-pfc_core_database_term(pfc_prop,4,fact(_)).
+pfc_core_database_term(mpred_prop,4,fact(_)).
 
 pfc_core_database_term(predicateConventionMt,2,fact(_)).
 % pfc_core_database_term(genlMt,2,fact(_)).
@@ -1748,7 +1748,7 @@ pp_supports:- pfcPrintSupports.
 pp_filtered(P):-var(P),!,fail.
 pp_filtered(_:P):- !, pp_filtered(P).
 pp_filtered(P):- safe_functor(P,F,A),F\==(/),!,pp_filtered(F/A).
-pp_filtered(F/_):-F==pfc_prop.
+pp_filtered(F/_):-F==mpred_prop.
 
 
 
@@ -2755,7 +2755,7 @@ pfc_list_triggers_1(What):-
    print_db_items_and_neg('Instances: ',isa(_,IWhat),IWhat),
    print_db_items_and_neg('Subclass Of',genls(IWhat,_),IWhat),
    print_db_items_and_neg('Subclasses: ',genls(_,IWhat),IWhat))),
-   forall(suggest_m(M),print_db_items('PFC Watches', pfc_prop(M,_,_,_),What)),
+   forall(suggest_m(M),print_db_items('PFC Watches', mpred_prop(M,_,_,_),What)),
    print_db_items('Triggers Negative', nt(_,_,_,_),What),
    print_db_items('Triggers Goal',bt(_,_,_),What),
    print_db_items('Triggers Positive',pt(_,_,_),What),
@@ -2976,8 +2976,8 @@ should_call_for_facts(H):- get_functor(H,F,A),call_u(should_call_for_facts(H,F,A
 %
 should_call_for_facts(_,F,_):- a(prologSideEffects,F),!,fail.
 should_call_for_facts(H,_,_):- modulize_head(H,HH), \+ predicate_property(HH,number_of_clauses(_)),!.
-should_call_for_facts(_,F,A):- clause_b(pfc_prop(_M,F,A,pfcRHS)),!,fail.
-should_call_for_facts(_,F,A):- clause_b(pfc_prop(_M,F,A,pfcMustFC)),!,fail.
+should_call_for_facts(_,F,A):- clause_b(mpred_prop(_M,F,A,pfcRHS)),!,fail.
+should_call_for_facts(_,F,A):- clause_b(mpred_prop(_M,F,A,pfcMustFC)),!,fail.
 should_call_for_facts(_,F,_):- a(prologDynamic,F),!.
 should_call_for_facts(_,F,_):- \+ a(pfcControlled,F),!.
 
@@ -3718,7 +3718,7 @@ is_reprop_0(X):-get_functor(X,repropagate,_).
 pfc_non_neg_literal(X):- is_reprop(X),!,fail.
 pfc_non_neg_literal(X):- atom(X),!.
 pfc_non_neg_literal(X):- sanity(stack_check),
-    pfcPositiveLiteral(X), X \= ~(_), X \= pfc_prop(_,_,_,_), X \= conflict(_).
+    pfcPositiveLiteral(X), X \= ~(_), X \= mpred_prop(_,_,_,_), X \= conflict(_).
 
 
 % module prefixed clauses for sure should be non pfc?
@@ -3994,12 +3994,12 @@ into_plist_arities(_,_,Call,PLIST):- Call=..PLIST. % finally the fallthrue
 % Never Managed Predicate Managed Predicate.
 %
 
-never_pfc_tcall(pfc_prop).
+never_pfc_tcall(mpred_prop).
 never_pfc_tcall(isa).
 never_pfc_tcall(arity).
 
 
-local_qh_pfc_prop(M,F,A,C):- call_u(pfc_prop(M,F,A,C)).
+local_qh_pfc_prop(M,F,A,C):- call_u(mpred_prop(M,F,A,C)).
 
 
 % :- setup_pfc_ops.

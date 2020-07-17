@@ -757,7 +757,7 @@ pfc_core_database_term(pfc_is_tracing_exec,0,debug).
 pfc_core_database_term(pfcWarnings,1,debug).
 % pfc_core_database_term(t_l:whybuffer,2,debug).
 
-pfc_core_database_term(pfc_prop,4,fact(_)).
+pfc_core_database_term(mpred_prop,4,fact(_)).
 
 pfc_core_database_term(predicateConventionMt,2,fact(_)).
 % pfc_core_database_term(genlMt,2,fact(_)).
@@ -794,7 +794,7 @@ decl_rt(RT) :-
  '@'(((
    sanity(atom(RT)),
    univ_safe(Head , [RT,FP]),
-   AIN = ((Head :- cwc, /* dmsg_pretty(warn(call(Head))), */ pfc_prop(M,FP,_,RT))),
+   AIN = ((Head :- cwc, /* dmsg_pretty(warn(call(Head))), */ mpred_prop(M,FP,_,RT))),
    (clause_asserted(AIN) -> 
     (nop(listing(RT)),
      sanity((predicate_property(RHead,number_of_clauses(CL)),predicate_property(RHead,number_of_rules(RL)),CL=RL)));
@@ -803,8 +803,8 @@ decl_rt(RT) :-
    (current_predicate(RT/1)->
    ( nop(listing(RT)),
      RHead univ_safe [RT,F/A],
-     forall(retract(RHead),ain(pfc_prop(M,F,A,RT))),
-     forall(retract(Head),(get_arity(FP,F,A),sanity(atom(F)),sanity(integer(A)),ain(pfc_prop(M,F,A,RT)))),
+     forall(retract(RHead),ain(mpred_prop(M,F,A,RT))),
+     forall(retract(Head),(get_arity(FP,F,A),sanity(atom(F)),sanity(integer(A)),ain(mpred_prop(M,F,A,RT)))),
      sanity((predicate_property(RHead,number_of_clauses(CL)),CL==0)),
      sanity((predicate_property(RHead,number_of_rules(RL)),RL==0)),
      abolish(RT,1));true),
@@ -2060,8 +2060,8 @@ pfc_unique_u(P):- \+ clause_asserted_u(P).
 %
 
 %get_fc_mode(_P,_S,direct):-!.
-get_fc_mode(P,_S,Mode):- get_unnegated_mfa(P,M,F,A),pfc_prop(M,F,A,Mode),is_fwc_mode(Mode),!.
-get_fc_mode(pfc_prop(_,_,_,_),_S,direct).
+get_fc_mode(P,_S,Mode):- get_unnegated_mfa(P,M,F,A),mpred_prop(M,F,A,Mode),is_fwc_mode(Mode),!.
+get_fc_mode(mpred_prop(_,_,_,_),_S,direct).
 get_fc_mode(P,_S,direct):- compound(P),functor(P,_,1).
 get_fc_mode(_P,_S,Mode):- get_fc_mode(Mode).
 
@@ -2794,7 +2794,7 @@ pfc_do_rule((H:-B)):- fail,
   pfc_do_hb_catchup(H,B).
 
 
-is_head_LHS(H):- nonvar(H),get_functor(H,F,A),must_ex(suggest_m(M)),lookup_u(pfc_prop(M,F,A,pfcLHS)).
+is_head_LHS(H):- nonvar(H),get_functor(H,F,A),must_ex(suggest_m(M)),lookup_u(mpred_prop(M,F,A,pfcLHS)).
 body_clause(SK,Cont):-nonvar(SK),SK=Cont.
 
 pfc_do_hb_catchup(H, _B):- \+ is_head_LHS(H),!.
@@ -2879,7 +2879,7 @@ get_tms_mode(_P,Mode):- Mode=local.
 
 
 % do all positive triggers
-pfc_do_fcpt(pfc_prop(swish_help, index_json, 2, kb_shared),_):- dumpST, break.
+pfc_do_fcpt(mpred_prop(swish_help, index_json, 2, kb_shared),_):- dumpST, break.
 pfc_do_fcpt(Copy,Trigger):-
   forall((call_u(pt(Trigger,Body)),
   pfc_trace_msg('~N~n\tFound positive trigger: ~p~n\t\tbody: ~p~n',
@@ -3882,18 +3882,18 @@ pfc_mark_fa_as(_Sup,_P,isa,_,_):- !.
 pfc_mark_fa_as(_Sup,_P,t,_,_):- !.
 pfc_mark_fa_as(_Sup,_P,argIsa,N,_):- !,must_ex(N=3).
 pfc_mark_fa_as(_Sup,_P,arity,N,_):- !,must_ex(N=2).
-pfc_mark_fa_as(_Sup,_P,pfc_prop,N,_):- !,must_ex(N=4).
+pfc_mark_fa_as(_Sup,_P,mpred_prop,N,_):- !,must_ex(N=4).
 %pfc_mark_fa_as(_Sup,_P,pfc_isa,N,_):- must_ex(N=2).
 pfc_mark_fa_as(_Sup,_P,'[|]',N,_):- dtrace,must_ex(N=2).
-pfc_mark_fa_as(_Sup,_P,_:pfc_prop,N,_):- must_ex(N=4).
+pfc_mark_fa_as(_Sup,_P,_:mpred_prop,N,_):- must_ex(N=4).
 pfc_mark_fa_as(Sup, _P,F,A,Type):- really_pfc_mark(Sup,Type,F,A),!.
 
 % i hope i am not exagerating but anniepoo used to enter this yearly contest for whom could build graphical assets the most pretty and complex the quickest in secondlife.. (now it makes sense she used a 3d mouse)  she won so much, they and she had to ban herself becasue she always won hands down.. so with this agility to create the physical aspects of a wolrd veery easily .. we realized we could make a fun leanring inpiring world for AIs .. however 
 
-really_pfc_mark(_  ,Type,F,A):- call_u_no_bc(pfc_prop(_M,F,A,Type)),!.
+really_pfc_mark(_  ,Type,F,A):- call_u_no_bc(mpred_prop(_M,F,A,Type)),!.
 really_pfc_mark(Sup,Type,F,A):-
   current_assertion_module(M),
-  MARK = pfc_prop(M,F,A,Type),
+  MARK = mpred_prop(M,F,A,Type),
   check_never_assert(MARK),
   why_marked(M,Sup,WM),
   with_no_pfc_trace_exec(with_fc_mode(direct,pfc_post1(MARK,(WM,ax)))).
@@ -4696,7 +4696,7 @@ arity_no_bc(F,A):- clause_b(functorDeclares(F)),!,A=1.
 arity_no_bc(completeExtentAsserted,1).
 arity_no_bc(home,2).
 arity_no_bc(record,2).
-arity_no_bc(F,A):- suggest_m(M),clause_b(pfc_prop(M,F,AA,_)),nonvar(AA),A=AA.
+arity_no_bc(F,A):- suggest_m(M),clause_b(mpred_prop(M,F,AA,_)),nonvar(AA),A=AA.
 %arity_no_bc(F,A):- current_predicate(F/A)
 % arity_no_bc(F,A):- current_predicate(_:F/A),\+(current_predicate(_:F/AA),AA\=A). =
 
@@ -5489,8 +5489,8 @@ is_ain_head(_,_):- get_how_virtualize_file(Lang),!,Lang=heads.
 is_ain_body(_, P):- var(P),!,fail.
 is_ain_body(M, (P,_)):- !, nonvar(P), is_ain_body(M, P).
 is_ain_body(_, CWC):- atom(CWC),  is_pfc_chained(CWC).
-is_ain_body(M, P):- functor(P,F,A), \+ \+ pfc_prop(M,F,A,_), !,
-  \+ (pfc_prop(M,F,A,Prop), is_pfc_prolog_only_prop(Prop)).
+is_ain_body(M, P):- functor(P,F,A), \+ \+ mpred_prop(M,F,A,_), !,
+  \+ (mpred_prop(M,F,A,Prop), is_pfc_prolog_only_prop(Prop)).
 is_ain_body(M, MP):- strip_module(MP,M2,P), M2\==M, !,is_ain_body(M2,P).
 
 is_pfc_prolog_only_prop(prologOnly).
@@ -6421,7 +6421,7 @@ baseKB:hook_one_minute_timer_tick:-pfc_cleanup.
 %
 % PFC Cleanup.
 %
-pfc_cleanup:- forall((no_repeats(F-A,(call_u(pfc_prop(M,F,A,pfcRHS)),A>1))),pfc_cleanup(M,F,A)).
+pfc_cleanup:- forall((no_repeats(F-A,(call_u(mpred_prop(M,F,A,pfcRHS)),A>1))),pfc_cleanup(M,F,A)).
 
 
 %% pfc_cleanup(M, +F, ?A) is semidet.
@@ -6519,7 +6519,7 @@ is_reprop_0(X):-get_functor(X,repropagate,_).
 pfc_non_neg_literal(X):- is_reprop(X),!,fail.
 pfc_non_neg_literal(X):- atom(X),!.
 pfc_non_neg_literal(X):- sanity(stack_check),
-    pfcPositiveLiteral(X), X \= ~(_), X \= pfc_prop(_,_,_,_), X \= conflict(_).
+    pfcPositiveLiteral(X), X \= ~(_), X \= mpred_prop(_,_,_,_), X \= conflict(_).
 
 % ======================= mpred_file('pfcsupport').	% support maintenance
 
@@ -6605,8 +6605,8 @@ should_call_for_facts(H):- get_functor(H,F,A),call_u(should_call_for_facts(H,F,A
 %
 should_call_for_facts(_,F,_):- a(prologSideEffects,F),!,fail.
 should_call_for_facts(H,_,_):- modulize_head(H,HH), \+ predicate_property(HH,number_of_clauses(_)),!.
-should_call_for_facts(_,F,A):- clause_b(pfc_prop(_M,F,A,pfcRHS)),!,fail.
-should_call_for_facts(_,F,A):- clause_b(pfc_prop(_M,F,A,pfcMustFC)),!,fail.
+should_call_for_facts(_,F,A):- clause_b(mpred_prop(_M,F,A,pfcRHS)),!,fail.
+should_call_for_facts(_,F,A):- clause_b(mpred_prop(_M,F,A,pfcMustFC)),!,fail.
 should_call_for_facts(_,F,_):- a(prologDynamic,F),!.
 should_call_for_facts(_,F,_):- \+ a(pfcControlled,F),!.
 
@@ -8548,7 +8548,7 @@ db_expand_0(_Op,pddlSorts(I,EL),O):- listToE(EL,E),expand_isEach_or_fail(==>genl
 db_expand_0(_Op,pddlTypes(EL),O):- listToE(EL,E),expand_isEach_or_fail(==>isa(E,tCol),O).
 db_expand_0(_Op,pddlPredicates(EL),O):- listToE(EL,E),expand_isEach_or_fail(==>prologHybrid(E),O).
 
-db_expand_0(_,prop_mpred(M,RT,F,A),pfc_prop(M,F,A,RT)).
+db_expand_0(_,prop_mpred(M,RT,F,A),mpred_prop(M,F,A,RT)).
 
 db_expand_0(Op,DECL,OUT):- 
     is_ftCompound(DECL)->
@@ -8558,7 +8558,7 @@ db_expand_0(Op,DECL,OUT):-
     maplist(nonvar,[FA|Args]) ->
     db_expand_set(Op,[DT,FA|Args],OUT).
 
-db_expand_0(_,Sent,pfc_prop(M,F,A,RT)):- Sent  univ_safe  [RT,MFA],a(ttRelationType,RT),nonvar(MFA),get_mfa(MFA,M,F,A),atom(F),!.
+db_expand_0(_,Sent,mpred_prop(M,F,A,RT)):- Sent  univ_safe  [RT,MFA],a(ttRelationType,RT),nonvar(MFA),get_mfa(MFA,M,F,A),atom(F),!.
 
 get_mfa(M:FA,M,F,A):- !, get_fa(FA,F,A).
 get_mfa(FA,M,F,A):- get_fa(FA,F,A),must(current_assertion_module(M)).
@@ -9395,7 +9395,7 @@ exact_args_f(not_undoable).
 exact_args_f(mtExact).
 exact_args_f(vQuotientFn).
 exact_args_f(uSubLQuoteFn).
-exact_args_f(pfc_prop).
+exact_args_f(mpred_prop).
 exact_args_f(pfc_ain).
 exact_args_f(meta_argtypes_guessed).
 exact_args_f(meta_argtypes).
@@ -11182,7 +11182,7 @@ pp_supports :-
 pp_filtered(P):-var(P),!,fail.
 pp_filtered(_:P):- !, pp_filtered(P).
 pp_filtered(P):- safe_functor(P,F,A),F\==(/),!,pp_filtered(F/A).
-pp_filtered(F/_):-F==pfc_prop.
+pp_filtered(F/_):-F==mpred_prop.
 
 
 
@@ -11371,7 +11371,7 @@ pfc_list_triggers_1(What):-
    print_db_items_and_neg('Instances: ',isa(_,IWhat),IWhat),
    print_db_items_and_neg('Subclass Of',genls(IWhat,_),IWhat),
    print_db_items_and_neg('Subclasses: ',genls(_,IWhat),IWhat))),
-   forall(suggest_m(M),print_db_items('PFC Watches', pfc_prop(M,_,_,_),What)),
+   forall(suggest_m(M),print_db_items('PFC Watches', mpred_prop(M,_,_,_),What)),
    print_db_items('Triggers Negative', nt(_,_,_,_),What),
    print_db_items('Triggers Goal',bt(_,_,_),What),
    print_db_items('Triggers Positive',pt(_,_,_),What),
@@ -12044,7 +12044,7 @@ read_one_term(Term,Vs):- catch(once(( read_term(Term,[double_quotes(string),vari
 %
 read_one_term(Stream,Term,Vs):- catch(once(( read_term(Stream,Term,[double_quotes(string),variable_names(Vs)]))),E,(Term=error(E),dmsg_pretty(error(E,read_one_term(Term))))).
 
-% rescan_pfc_stubs:- doall((pfc_prop(M,F,A,prologHybrid),arity(F,A),A>0,warnOnError(declare_pfc_local_dynamic(moo,F,A)))).
+% rescan_pfc_stubs:- doall((mpred_prop(M,F,A,prologHybrid),arity(F,A),A>0,warnOnError(declare_pfc_local_dynamic(moo,F,A)))).
 
 
 
@@ -12524,7 +12524,7 @@ expanded_already_functor('$si$':'$was_imported_kb_content$').
 expanded_already_functor(was_enabled).
 expanded_already_functor(_:NV):-nonvar(NV),!,expanded_already_functor(NV).
 
-% expanded_already_functor(F):-pfc_prop(M,F,A,pl).
+% expanded_already_functor(F):-mpred_prop(M,F,A,pl).
 
 
 %:- thread_local is_compiling_clause/0.
@@ -14372,12 +14372,12 @@ into_plist_arities(_,_,Call,PLIST):- Call=..PLIST. % finally the fallthrue
 % Never Managed Predicate Managed Predicate.
 %
 
-never_pfc_tcall(pfc_prop).
+never_pfc_tcall(mpred_prop).
 never_pfc_tcall(isa).
 never_pfc_tcall(arity).
 
 
-local_qh_pfc_prop(M,F,A,C):- call_u(pfc_prop(M,F,A,C)).
+local_qh_pfc_prop(M,F,A,C):- call_u(mpred_prop(M,F,A,C)).
 
 
 % :- setup_pfc_ops.

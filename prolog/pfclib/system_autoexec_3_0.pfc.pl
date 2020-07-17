@@ -162,10 +162,10 @@ predicateTriggerType(kbi_define).
 % TODO make these undoable
 :- if((current_predicate(predicate_m_f_a_decl/4))).
 (genlMt(C,M)/(C\=baseKB)) ==> {doall(((predicate_m_f_a_decl(M,F,A,Type)),
-  ain(baseKB:pfc_prop(M,F,A,Type))))}.
+  ain(baseKB:mpred_prop(M,F,A,Type))))}.
 
 predicateTriggerType(Type) ==>
-(( pfc_prop(M,F,A,Type),genlMt(C,M)/(C\=baseKB)) ==> {
+(( mpred_prop(M,F,A,Type),genlMt(C,M)/(C\=baseKB)) ==> {
  ( nop(dmsg_pretty(C:call(Type,C:F/A))),
    show_failure(on_x_fail(C:call(Type,C:F/A))))}).
 
@@ -310,7 +310,7 @@ functorIsMacro(functorIsMacro).
 pfcControlled(P),arity(P,A)==>hybrid_support(P,A).
 
 
-rtArgsVerbatum(pfc_prop).
+rtArgsVerbatum(mpred_prop).
 rtArgsVerbatum(listing).
 
 rtNotForUnboundPredicates(~).
@@ -326,33 +326,33 @@ rtNotForUnboundPredicates(call).
 /*
 % catching of misinterpreations
 */
-pfc_checking ==> (pfc_prop(M,F,A,pfcPosTrigger)==>{M:warn_if_static(F,A)}).
-pfc_checking ==> (pfc_prop(M,F,A,pfcNegTrigger)==>{M:warn_if_static(F,A)}).
-pfc_checking ==> (pfc_prop(M,F,A,pfcBcTrigger)==>{M:warn_if_static(F,A)}).
-pfc_prop(M,F,A,What)/(\+ ground(F/A))==>{trace_or_throw_ex(pfc_prop(M,F,A,What))}.
+pfc_checking ==> (mpred_prop(M,F,A,pfcPosTrigger)==>{M:warn_if_static(F,A)}).
+pfc_checking ==> (mpred_prop(M,F,A,pfcNegTrigger)==>{M:warn_if_static(F,A)}).
+pfc_checking ==> (mpred_prop(M,F,A,pfcBcTrigger)==>{M:warn_if_static(F,A)}).
+mpred_prop(M,F,A,What)/(\+ ground(F/A))==>{trace_or_throw_ex(mpred_prop(M,F,A,What))}.
 
 
-pfc_prop(M,F,A,pfcCreates)==> 
+mpred_prop(M,F,A,pfcCreates)==> 
  % {functor(P,F,A),quietly(make_dynamic(P)),kb_shared(F/A),create_predicate_inheritance(abox,F,A)},
   {kb_shared(M:F/A)},
   {M:warn_if_static(F,A)}.
-pfc_prop(M,F,A,pfcControlled)==> {kb_shared(M:F/A)}.
-pfc_prop(M,F,A,pfcWatches)==> {kb_shared(M:F/A)}.
+mpred_prop(M,F,A,pfcControlled)==> {kb_shared(M:F/A)}.
+mpred_prop(M,F,A,pfcWatches)==> {kb_shared(M:F/A)}.
                                                                                      
 
-pfc_prop(M,F,A,pfcPosTrigger)==>pfc_prop(M,F,A,pfcWatches).
-pfc_prop(M,F,A,pfcNegTrigger)==>pfc_prop(M,F,A,pfcWatches).
-pfc_prop(M,F,A,pfcBcTrigger)==>pfc_prop(M,F,A,pfcCreates).
-pfc_prop(M,F,A,pfcLHS)==> arity(F,A),functorIsMacro(F),pfc_prop(M,F,A,pfcWatches).
-pfc_prop(M,F,A,pfcRHS)==> pfc_prop(M,F,A,pfcCreates).
+mpred_prop(M,F,A,pfcPosTrigger)==>mpred_prop(M,F,A,pfcWatches).
+mpred_prop(M,F,A,pfcNegTrigger)==>mpred_prop(M,F,A,pfcWatches).
+mpred_prop(M,F,A,pfcBcTrigger)==>mpred_prop(M,F,A,pfcCreates).
+mpred_prop(M,F,A,pfcLHS)==> arity(F,A),functorIsMacro(F),mpred_prop(M,F,A,pfcWatches).
+mpred_prop(M,F,A,pfcRHS)==> mpred_prop(M,F,A,pfcCreates).
 
 
 
-pfc_prop(M,F,A,pfcCallCode)/predicate_is_undefined_fa(F,A)
-    ==> pfc_prop(M,F,A,needsDefined).
+mpred_prop(M,F,A,pfcCallCode)/predicate_is_undefined_fa(F,A)
+    ==> mpred_prop(M,F,A,needsDefined).
 /*
-pfc_prop(M,F,A,pfcCallCode)/predicate_is_undefined_fa(F,A)
-    ==> pfc_prop(M,F,A,pfcWatches).
+mpred_prop(M,F,A,pfcCallCode)/predicate_is_undefined_fa(F,A)
+    ==> mpred_prop(M,F,A,pfcWatches).
 */
 
 :- if(\+ current_prolog_flag(retry_undefined,_)).
@@ -491,7 +491,7 @@ rtArgsVerbatum(X):- cwc, atom(X),atom_concat(_,'Fn',X).
 rtArgsVerbatum(ain).
 rtArgsVerbatum(ruleRewrite).
 rtArgsVerbatum(pfc_action).
-rtArgsVerbatum(pfc_prop).
+rtArgsVerbatum(mpred_prop).
 rtArgsVerbatum(ain).
 rtArgsVerbatum(pfc_rem).
 rtArgsVerbatum(added).
@@ -521,11 +521,11 @@ rtArgsVerbatum(second_order).
 % :- kb_shared(bt/2).
 (bt(P,_)/(nonvar(P),must(get_bc_clause(P,Post)))) ==> ({ignore(kb_shared(P))},Post).
 
-%redundantMaybe ==> ((prologHybrid(F),arity(F,A))==>pfc_prop(M,F,A,pfcVisible)).
-%redundantMaybe ==> (pfc_prop(M,F,A,pfcVisible)==>prologHybrid(F),arity(F,A)).
+%redundantMaybe ==> ((prologHybrid(F),arity(F,A))==>mpred_prop(M,F,A,pfcVisible)).
+%redundantMaybe ==> (mpred_prop(M,F,A,pfcVisible)==>prologHybrid(F),arity(F,A)).
 
-% ((pfc_prop(M,F,A,pfcRHS)/(A\=0)) ==> {kb_shared(F/A)}).
-% ((pfc_prop(M,F,A,_)/(A\=0)) ==> {kb_shared(F/A)}).
+% ((mpred_prop(M,F,A,pfcRHS)/(A\=0)) ==> {kb_shared(F/A)}).
+% ((mpred_prop(M,F,A,_)/(A\=0)) ==> {kb_shared(F/A)}).
 
 % pfcMustFC(F) ==> pfcControlled(F).
 genlPreds(pfcMustFC, pfcControlled).
@@ -533,7 +533,7 @@ genlPreds(pfcMustFC, pfcControlled).
 % pfcControlled(C)==>prologHybrid(C).
 genlPreds(pfcControlled, prologHybrid).
 
-((pfc_prop(M,F,A,R1),genlPreds(R1,R2))==>pfc_prop(M,F,A,R2)).
+((mpred_prop(M,F,A,R1),genlPreds(R1,R2))==>mpred_prop(M,F,A,R2)).
 
 do_and_undo(pfc_post_exactly,pfc_remove_exactly).
 
