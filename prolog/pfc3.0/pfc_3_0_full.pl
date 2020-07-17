@@ -85,7 +85,7 @@ pfc_core_database_term(pfcAction,1,state).
 pfc_core_database_term(pfcQueue,1,state).
 pfc_core_database_term(pfcHaltSignal,1,state).
 
-:- dynamic fcUndoMethod/2.
+:- dynamic do_and_undo/2.
 :- dynamic fcAction/2.
 :- dynamic fcTmsMode/1.
 :- dynamic pfcQueue/1.
@@ -301,7 +301,7 @@ termf_subst(Subst,F,F2):-member(F-F2,Subst)->true;F=F2.
 :- dynamic 'pt'/2.
 :- dynamic 'nt'/3.
 :- dynamic 'bt'/2.
-:- dynamic fcUndoMethod/2.
+:- dynamic do_and_undo/2.
 :- dynamic fcAction/2.
 :- dynamic fcTmsMode/1.
 :- dynamic pfcQueue/1.
@@ -605,7 +605,7 @@ pfcAddActionTrace(Action,Support) :-
   pfcAddSupport(pfcAction(Action),Support).
 
 pfcRemActionTrace(pfcAction(A)) :-
-  fcUndoMethod(A,UndoMethod),
+  do_and_undo(A,UndoMethod),
   pfcCallSystem(UndoMethod),
   !.
 
@@ -1196,7 +1196,7 @@ pfc_call_var(P) :- clause(P,true)*-> true ;
 
 
 % an action is undoable if there exists a method for undoing it.
-undoable(A) :- fcUndoMethod(A,_).
+undoable(A) :- do_and_undo(A,_).
 
 
 
@@ -3604,6 +3604,7 @@ defaultQueryMt0(M):- guess_maybe_assertMt(M).
 
 scan_missed_source:-!.
 pfc_ain(G):- pfcAdd(G).
+mpred_ain(G):- pfcAdd(G).
 pfc_unload_file:-!.
 file_begin(_).
 %% neg_in_code( +G) is semidet.
