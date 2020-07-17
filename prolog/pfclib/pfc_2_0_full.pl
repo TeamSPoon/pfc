@@ -690,8 +690,8 @@ with_each_item(P,H,S) :- apply(P,[H|S]).
 :- dynamic(baseKB:pt/2).                   
 :- system:import(baseKB:pt/2).
 
-:- dynamic(baseKB:pm/1).                   
-:- system:import(baseKB:pm/1).
+:- dynamic(baseKB:pfcSearch/1).                   
+:- system:import(baseKB:pfcSearch/1).
 
 :- dynamic(baseKB:nt/3).                   
 :- system:import(baseKB:nt/3).
@@ -749,7 +749,7 @@ pfc_core_database_term(hs,1,state).
 pfc_core_database_term(pfc_current_db,1,setting).
 pfc_core_database_term(pfcSelect,1,setting).
 pfc_core_database_term(tms,1,setting).
-pfc_core_database_term(pm,1,setting).
+pfc_core_database_term(pfcSearch,1,setting).
 
 % debug settings
 pfc_core_database_term(pfc_is_tracing_exec,0,debug).
@@ -1455,8 +1455,8 @@ pfc_set_default(GeneralTerm,Default):-
 %  tms is one of {none,local,cycles} and controles the tms alg.
 % :- pfc_set_default(tms(_),tms(cycles)).
 
-% Pfc Propagation strategy. pm(X) where P is one of {direct,depth,breadth}
-% :- must_ex(pfc_set_default(pm(_), pm(direct))).
+% Pfc Propagation strategy. pfcSearch(X) where P is one of {direct,depth,breadth}
+% :- must_ex(pfc_set_default(pfcSearch(_), pfcSearch(direct))).
 
 
 ain_expanded(IIIOOO):- pfc_ain((IIIOOO)).
@@ -2066,7 +2066,7 @@ get_fc_mode(P,_S,direct):- compound(P),functor(P,_,1).
 get_fc_mode(_P,_S,Mode):- get_fc_mode(Mode).
 
 get_fc_mode(Mode):- t_l:mpred_fc_mode(Mode),!.
-get_fc_mode(Mode):- lookup_m(pm(Mode)),!.
+get_fc_mode(Mode):- lookup_m(pfcSearch(Mode)),!.
 get_fc_mode(Mode):- !, Mode=direct.
 
 
@@ -2095,7 +2095,7 @@ pfc_enqueue(P,S):-
  (var(S)->current_why(S);true),
  (must_ex(get_fc_mode(P,S,Mode)) 
   -> pfc_enqueue_w_mode(S,Mode,P)
-   ; pfcError("No pm mode")).
+   ; pfcError("No pfcSearch mode")).
 
 pfc_enqueue_w_mode(S,Mode,P):-
        (Mode=direct  -> pfc_enqueue_direct(S,P) ;
@@ -2105,7 +2105,7 @@ pfc_enqueue_w_mode(S,Mode,P):-
 	Mode=breadth -> pfc_assertz_w_support(que(P,S),S) ;
         Mode=next   -> pfc_asserta_w_support(que(P,S),S) ;
         Mode=last -> pfc_assertz_w_support(que(P,S),S) ;
-	true     -> pfcError("Unrecognized pm mode: ~p", Mode)).
+	true     -> pfcError("Unrecognized pfcSearch mode: ~p", Mode)).
 
 is_fwc_mode(direct).
 is_fwc_mode(thread).
