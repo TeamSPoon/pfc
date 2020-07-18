@@ -1,3 +1,4 @@
+end_of_file.
 /* 
 % Game loading Utils
 %

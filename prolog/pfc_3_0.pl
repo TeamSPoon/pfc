@@ -4,27 +4,39 @@
 % Douglas Miles
 
 */
-:- if(( current_prolog_flag(xref,true) ;
-   ('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'wusing_pfc'(M,CM,SM,pfc_mod))))).
+:- if((use_module(library(logicmoo_utils)))).
 :- endif.
-:- if((prolog_load_context(source,File),prolog_load_context(file,File));current_prolog_flag(xref,true)).
-:- module(pfc_mod,[]).
-:- prolog_load_context(file,File),unload_file(File).
-:- use_module(library(logicmoo_utils)).
+:- if((reexport(library(logicmoo_utils)))).
 :- endif.
-:- if( \+  current_prolog_flag(xref,true)).
-:- must(retract(baseKB:'wusing_pfc'(M,CM,SM,pfc_mod))),
-   wdmsg(baseKB:'chusing_pfc'(M,CM,SM,pfc_mod)),
-   (M==SM -> 
-     (SM:ensure_loaded('pfc3.0'/pfc_3_0_full),maybe_ensure_abox(SM),nop((M:ain(genlMt(SM,baseKB)))));
-      wdmsg(baseKB:'lusing_pfc'(M,CM,SM,pfc_mod))),   
-   assert(baseKB:'$using_pfc'(M,CM,SM,pfc_mod)),
-   asserta(SM:'$does_use_pfc_mod'(M,CM,SM,pfc_mod)).
-   %backtrace(200).
-   
-%:- set_prolog_flag(retry_undefined, kb_shared).
-%:- set_prolog_flag(pfc_ready, true).
-:- set_prolog_flag(expect_pfc_file,unknown).
-:- endif.
+:- if(\+ current_prolog_flag(xref,true)).
+:- if(('$current_typein_module'(TM),'$current_source_module'(SM),'context_module'(CM),Info = (baseKB:'using_pfc'(TM,SM,CM,pfc_mod)),
+   dmsg(Info), 
+   fail,
+   % Version 3.0
+   absolute_file_name(library('pfc3.0/pfc_3_0_loader'),FN,[access(read),file_type(prolog)]),
+   open(FN,read,Input), atomic_list_concat(['pfc_loader_for_',SM],FakeName),
+   asserta(SM:'$does_use_pfc_lib'(FakeName,Info)),
+   SM:load_files(FakeName,[module(SM),if(always),stream(Input),must_be_module(false),reexport(true),silent(false)]),
 
+   % Version 2.0
+   % SM:reexport(pfc_lib_2_0),
+
+   maybe_ensure_abox(SM),
+   asserta(Info))).
+
+% All good!
+ :-else.
+   :- if(('$current_typein_module'(TM),'$current_source_module'(SM),'context_module'(CM),Info = (baseKB:'FAILED'(TM,SM,CM,pfc_mod)),
+      dmsg(Info))).
+
+      :- '$current_typein_module'(TM2),'$current_source_module'(SM2),'context_module'(CM2),
+         print_message(error,failed_pfc_load(TM2,SM2,CM2,pfc_mod)).
+
+   :-endif. % FAILED
+:- endif. % maybe_ensure_abox
+:- endif. % \+ XREF
+:- if((prolog_load_context(source,File),prolog_load_context(file,File))).
+module(pfc_mod,[]).
+:- prolog_load_context(file,File),unload_file(File).
+:- endif.
 

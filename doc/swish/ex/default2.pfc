@@ -1,5 +1,0 @@
-:- include(library(pfc_header_3_0)).
-
-% -*-Prolog-*-
-
-switch(Name), ~(status(Name,X), {X \== false}) ==> status(Name,false).

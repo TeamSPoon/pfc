@@ -59,7 +59,7 @@ test_header_include.
 %:- set_stream(user_input,tty(false)).
 
 
-:- use_module(library(pfc_lib)).
+% :- ensure_loaded(library(pfc_lib)).
 %:- if(( \+ current_module(pfc_lib) )).
 :- use_module(library(pfc)).
 %:- endif.
@@ -71,7 +71,7 @@ test_header_include.
 
 
 :- prolog_load_context(source,File),!,
-   ignore((((atom_contains(File,'.pfc')-> sanity(pfc_lib:is_pfc_file) ; sanity( \+ pfc_lib:is_pfc_file))))),!.
+   ignore((((atom_contains(File,'.pfc')-> sanity(/**pfc_lib:**/is_pfc_file) ; sanity( \+ /**pfc_lib:**/is_pfc_file))))),!.
 
 :- mpred_trace_exec.
 

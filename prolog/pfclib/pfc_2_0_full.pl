@@ -690,8 +690,8 @@ with_each_item(P,H,S) :- apply(P,[H|S]).
 :- dynamic(baseKB:pt/2).                   
 :- system:import(baseKB:pt/2).
 
-:- dynamic(baseKB:pfcSearch/1).                   
-:- system:import(baseKB:pfcSearch/1).
+:- dynamic(baseKB:fcMode/1).                   
+:- system:import(baseKB:fcMode/1).
 
 :- dynamic(baseKB:nt/3).                   
 :- system:import(baseKB:nt/3).
@@ -749,7 +749,7 @@ pfc_core_database_term(hs,1,state).
 pfc_core_database_term(pfc_current_db,1,setting).
 pfc_core_database_term(pfcSelect,1,setting).
 pfc_core_database_term(tms,1,setting).
-pfc_core_database_term(pfcSearch,1,setting).
+pfc_core_database_term(fcMode,1,setting).
 
 % debug settings
 pfc_core_database_term(pfc_is_tracing_exec,0,debug).
@@ -1455,8 +1455,8 @@ pfc_set_default(GeneralTerm,Default):-
 %  tms is one of {none,local,cycles} and controles the tms alg.
 % :- pfc_set_default(tms(_),tms(cycles)).
 
-% Pfc Propagation strategy. pfcSearch(X) where P is one of {direct,depth,breadth}
-% :- must_ex(pfc_set_default(pfcSearch(_), pfcSearch(direct))).
+% Pfc Propagation strategy. fcMode(X) where P is one of {direct,depth,breadth}
+% :- must_ex(pfc_set_default(fcMode(_), fcMode(direct))).
 
 
 ain_expanded(IIIOOO):- pfc_ain((IIIOOO)).
@@ -2066,7 +2066,7 @@ get_fc_mode(P,_S,direct):- compound(P),functor(P,_,1).
 get_fc_mode(_P,_S,Mode):- get_fc_mode(Mode).
 
 get_fc_mode(Mode):- t_l:mpred_fc_mode(Mode),!.
-get_fc_mode(Mode):- lookup_m(pfcSearch(Mode)),!.
+get_fc_mode(Mode):- lookup_m(fcMode(Mode)),!.
 get_fc_mode(Mode):- !, Mode=direct.
 
 
@@ -2095,7 +2095,7 @@ pfc_enqueue(P,S):-
  (var(S)->current_why(S);true),
  (must_ex(get_fc_mode(P,S,Mode)) 
   -> pfc_enqueue_w_mode(S,Mode,P)
-   ; pfcError("No pfcSearch mode")).
+   ; pfcError("No fcMode mode")).
 
 pfc_enqueue_w_mode(S,Mode,P):-
        (Mode=direct  -> pfc_enqueue_direct(S,P) ;
@@ -2105,7 +2105,7 @@ pfc_enqueue_w_mode(S,Mode,P):-
 	Mode=breadth -> pfc_assertz_w_support(que(P,S),S) ;
         Mode=next   -> pfc_asserta_w_support(que(P,S),S) ;
         Mode=last -> pfc_assertz_w_support(que(P,S),S) ;
-	true     -> pfcError("Unrecognized pfcSearch mode: ~p", Mode)).
+	true     -> pfcError("Unrecognized fcMode mode: ~p", Mode)).
 
 is_fwc_mode(direct).
 is_fwc_mode(thread).
@@ -4302,9 +4302,9 @@ pfc_trace_maybe_break(Add,P0,_ZS):-
 
 pfc_hide(P):-call(P).
 
-pfc_trace:- pfc_trace(_).
+pfcTrace:- pfcTrace(_).
 
-pfc_trace(Form0):-  get_head_term(Form0,Form),
+pfcTrace(Form0):-  get_head_term(Form0,Form),
   assert_u_no_dep(lmcache:pfc_is_spying_pred(Form,print)).
 
 %% get_pfc_is_tracing(:PRED) is semidet.
@@ -4319,11 +4319,11 @@ get_pfc_is_tracing(Form0):- get_head_term(Form0,Form),
      call_u(lmcache:pfc_is_spying_pred(Form,print))).
 
 
-%% pfc_trace(+Form, ?Condition) is semidet.
+%% pfcTrace(+Form, ?Condition) is semidet.
 %
 % PFC Trace.
 %
-pfc_trace(Form0,Condition):- get_head_term(Form0,Form),
+pfcTrace(Form0,Condition):- get_head_term(Form0,Form),
   assert_u_no_dep((lmcache:pfc_is_spying_pred(Form,print):- Condition)).
 
 pfc_spy(Form):- pfc_spy(Form,[add,rem],true).
@@ -4382,13 +4382,13 @@ maybe_pfc_break(Info):- (t_l:no_breaks->true;(debugging(logicmoo(pfc))->dtrace(d
 %maybe_pfc_break(Info):- (t_l:no_breaks->true;(debugging(logicmoo(pfc))->dtrace(dmsg_pretty(Info));(dmsg_pretty(Info)))),break_ex.
 
 % if the correct flag is set, dtrace exection of Pfc
-pfc_trace_msg(_):- current_prolog_flag(pfc_pfc_silent,true).
+pfc_trace_msg(_):- current_prolog_flag(set_pfc_silent,true).
 pfc_trace_msg(Info):- not_not_ignore_quietly_ex(((((clause_asserted_u(pfc_is_tracing_exec);tracing)->(show_wdmsg(Info));true)))).
 pfc_trace_msg(Format,Args):- not_not_ignore_quietly_ex((((clause_asserted_u(pfc_is_tracing_exec);tracing)-> (show_wdmsg(Format,Args))))),!.
 % pfc_trace_msg(Format,Args):- not_not_ignore_quietly_ex((((format_to_message(Format,Args,Info),pfc_trace_msg(Info))))).
 
-show_wdmsg(A,B):- current_prolog_flag(pfc_pfc_silent,true)-> true; wdmsg_pretty(A,B).
-show_wdmsg(A):- current_prolog_flag(pfc_pfc_silent,true)-> true; wdmsg_pretty(A).
+show_wdmsg(A,B):- current_prolog_flag(set_pfc_silent,true)-> true; wdmsg_pretty(A,B).
+show_wdmsg(A):- current_prolog_flag(set_pfc_silent,true)-> true; wdmsg_pretty(A).
 
 pfcWarn(Info):- not_not_ignore_quietly_ex((((color_line(red,1), lookup_u(pfcWarnings(true));tracing) ->
   wdmsg_pretty(warn(logicmoo(pfc),Info)) ; pfc_trace_msg('WARNING/PFC:  ~p ',[Info])),
@@ -4399,16 +4399,16 @@ pfcWarn(Format,Args):- not_not_ignore_quietly_ex((((format_to_message(Format,Arg
 pfcError(Info):- not_not_ignore_quietly_ex(((tracing -> wdmsg_pretty(error(logicmoo(pfc),Info)) ; pfcWarn(error(Info))))).
 pfcError(Format,Args):- not_not_ignore_quietly_ex((((format_to_message(Format,Args,Info),pfcError(Info))))).
 
-pfc_pfc_silent(TF):-set_prolog_flag(pfc_pfc_silent,TF).
+set_pfc_silent(TF):-set_prolog_flag(set_pfc_silent,TF).
 
 
-pfcWatch:- pfc_trace_exec,pfc_pfc_silent(false).
+pfcWatch:- pfc_trace_exec,set_pfc_silent(false).
 pfc_nowatch:-  pfc_notrace_exec.
 
-pfc_trace_exec:- assert_u_no_dep(pfc_is_tracing_exec),pfc_pfc_silent(false).
+pfc_trace_exec:- assert_u_no_dep(pfc_is_tracing_exec),set_pfc_silent(false).
 pfc_notrace_exec:- retractall_u(pfc_is_tracing_exec).
 
-pfc_trace_all:- pfc_trace_exec,pfc_trace,pfc_set_warnings(true),pfc_pfc_silent(false).
+pfc_trace_all:- pfc_trace_exec,pfcTrace,pfc_set_warnings(true),set_pfc_silent(false).
 pfc_notrace_all:- pfc_notrace_exec,pfc_notrace,pfc_set_warnings(false).
 
 
@@ -4610,7 +4610,7 @@ end_of_file.
 
 :- defaultAssertMt(M),dynamic((M:current_ooZz/1,M:default_ooZz/1,M:if_mooZz/2)).
 
-:- pfc_trace.
+:- pfcTrace.
 :- pfcWatch.
 
 

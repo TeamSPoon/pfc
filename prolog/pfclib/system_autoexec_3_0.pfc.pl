@@ -58,6 +58,7 @@
 */
 
 %:- use_module(library(pfc_test)).
+:- prolog_load_context(file,File),unload_file(File).
 
 :- set_prolog_flag(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
 
@@ -635,12 +636,14 @@ never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
 %:- break.
 
 
+==> breakOnWarnings.
 P/pfc_positive_fact(P) ==> \+ ~P.
+:- break.
 (~P)/pfc_positive_fact(P) ==> (\+ P, nesc(~P)).
 (nesc(~P)/pfc_positive_fact(P)) ==> (~P, (P ==> \+ P)).
 (nesc(P) /pfc_positive_fact(P) ==>  ( P, (~P ==> \+ ~P))).
 
- nesc(P)==>P.
+nesc(P)==>P.
 
 % % preventedWhen(P,{Cond})==> (((P:- awc,Cond,!,fail))).
 preventedWhen(P,Cond)==> (((P/pfc_positive_fact(P),Cond)==> nesc(~P))).
@@ -665,7 +668,7 @@ preventedWhen(P,{Cond})/pfc_positive_fact(P)==> ((~P) :- cwc, Cond).
 
 %:- rtrace.
 % prologHybrid(arity/2).
-prologDynamic(term_expansion/2).
+%prologDynamic(term_expansion/2).
 prologBuiltin(var/1).
 
 /* 
@@ -746,6 +749,8 @@ mdefault(Q)/(pfc_positive_fact(Q),if_missing_mask(Q,R,Test)) ==> ( ((R/(ground(R
 % :- reconsult(pack(logicmoo_base/t/examples/pfc/'sanity_birdt.pfc')).
 
 :- endif.
+
+:- include('system_singleValued.pfc').
 
 :- nodebug(codewalk).
 :- nodebug(codewalk(trace)).
