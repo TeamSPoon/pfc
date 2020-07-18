@@ -4,32 +4,36 @@
 % Douglas Miles
 
 */
-:- if(( current_prolog_flag(xref,true) ;
-   ('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'wusing_pfc'(M,CM,SM,pfc_rt))))).
+:- if(current_prolog_flag(xref,true)).  % XREF
+                                      
+:- module(pfc_full,[]).
+
+:- else. % XREF
+:- prolog_load_context(file,File),unload_file(File).
+
+:- if(('$current_typein_module'(TM),'$current_source_module'(SM),'context_module'(CM),
+   Info = (baseKB:'using_pfc'(TM,SM,CM,pfc_full)),
+   dmsg(Info),
+   asserta(Info))).  
 :- endif.
-:- if(current_prolog_flag(xref,true)).
-:- module(pfc_rt,[]).
+
+
+:- if((use_module(library(logicmoo_utils)))). 
 :- endif.
+:- if(use_module(library(make))). 
+:- endif.
+:- if((reexport(library(logicmoo_utils)))). 
+:- endif.
+ 
 :- if((prolog_load_context(source,File),prolog_load_context(file,File))).
 :- prolog_load_context(file,File),unload_file(File).
-:- use_module(library(logicmoo_utils)).
 :- endif.
-%:- pfc_lib:use_module(pfc_lib).
-:- if( \+  current_prolog_flag(xref,true)).
-:- must(retract(baseKB:'wusing_pfc'(M,CM,SM,pfc_rt))),
-   nop(wdmsg(baseKB:'chusing_pfc'(M,CM,SM,pfc_rt))),
-   (M==SM -> 
-     (nop(maybe_ensure_abox(SM)),nop((M:ain(genlMt(SM,baseKB)))));
-     nop(wdmsg(baseKB:'lusing_pfc'(M,CM,SM,pfc_rt)))),
-   assert(baseKB:'$using_pfc'(M,CM,SM,pfc_rt)),
-   asserta(SM:'$does_use_pfc_mod'(M,CM,SM,pfc_rt)).
-   %backtrace(200).
 
-:- system:use_module(library(make)).
-%:- set_prolog_flag(retry_undefined, kb_shared).
-%:- set_prolog_flag(pfc_ready, true).
-:- set_prolog_flag(expect_pfc_file,unknown).
-:- endif.
+:- endif. % \+ XREF
+
+begin_pfc.
+
+mpred_positive_literal(P):- pfcPositiveLiteral(P).
 
 :- ifprolog:import(date:day_of_the_week/2).
 :- ifprolog:import(date:day_of_the_year/2).
@@ -67,8 +71,8 @@ pfc_database_term_syntax((==>),1,fact(_)).
 pfc_database_term_syntax((~),1,fact(_)).
 
 
-pfc_database_term(F,A,syntaxic(T)):- pfc_lib:pfc_database_term_syntax(F,A,T).
-pfc_database_term(F,A,T):- pfc_lib:pfc_core_database_term(F,A,T).
+pfc_database_term(F,A,syntaxic(T)):- pfc_database_term_syntax(F,A,T).
+pfc_database_term(F,A,T):- pfc_core_database_term(F,A,T).
 
 pfc_core_database_term(genlPreds,2,fact(_)).
 % pfc_core_database_term(rtArgsVerbatum,1,fact(_)).
@@ -85,22 +89,14 @@ pfc_core_database_term(pfcAction,1,state).
 pfc_core_database_term(pfcQueue,1,state).
 pfc_core_database_term(pfcHaltSignal,1,state).
 
-:- dynamic do_and_undo/2.
-:- dynamic fcAction/2.
-:- dynamic fcTmsMode/1.
-:- dynamic pfcQueue/1.
-:- dynamic pfcCurrentDb/1.
-:- dynamic pfcHaltSignal/1.
-:- dynamic pfcDebugging/0.
-:- dynamic pfcSelect/1.
-:- dynamic pfcSearch/1.
+
 
 
 % forward,backward settings
 pfc_core_database_term(pfcCurrentDb,1,setting).
 pfc_core_database_term(pfcSelect,1,setting).
 pfc_core_database_term(fcTmsMode,1,setting).
-pfc_core_database_term(pfcSearch,1,setting).
+pfc_core_database_term(fcMode,1,setting).
 
 % debug settings
 pfc_core_database_term(pfcTraceExecution,0,debug).
@@ -115,12 +111,16 @@ pfc_core_database_term(predicateConventionMt,2,fact(_)).
 %pfc_core_database_term(arity,2,fact(_)).
 %pfc_core_database_term(rtArgsVerbatum,1,fact(_)).
 
-                         
-import_everywhere:- 
-  forall(pfc_database_term(F,A,_),
-    (dynamic(baseKB:F/A),baseKB:export(baseKB:F/A),
-     system:import(baseKB:F/A))).
-:- import_everywhere.
+
+declare_pfc_support(Dyn,M):- forall(pfc_database_term(F,A,_),M:call(Dyn,M:F/A)).
+declare_pfc_support(M):- declare_pfc_support(dynamic,M).
+export_pfc_support(M):- declare_pfc_support(export,M).
+import_pfc_support(M,Into):- declare_pfc_support(Into:import,M).
+
+import_everywhere(BaseKB):-   
+   declare_pfc_support(BaseKB),
+   export_pfc_support(BaseKB),
+   import_pfc_support(BaseKB,system).
 
 :- thread_local(t_l:whybuffer/2).
 % :- dynamic(baseKB:que/2).
@@ -149,7 +149,7 @@ remove(X):- pfcBlast(X).
 thread_pool:create_pool(ain_pool) :-
     thread_pool_create(ain_pool, 50, [detached(true)] ).
 
-:- use_module(library(http/thread_httpd)).
+%:- use_module(library(http/thread_httpd)).
 :- use_module(library(thread_pool)).
 
 is_ain_pool_empty:- thread_pool_property(ain_pool,running(N)),!,N==0.
@@ -217,6 +217,7 @@ pfcLoad.
 %   Author : Tim Finin, finin@prc.unisys.com
 %   Purpose: syntactic sugar for Pfc - operator definitions and term expansions.
 
+
 :- op(500,fx,'~').
 :- op(1050,xfx,('==>')).
 :- op(1050,xfx,'<==>').
@@ -224,9 +225,8 @@ pfcLoad.
 :- op(1100,fx,('==>')).
 :- op(1150,xfx,('::::')).
 
-:- ensure_loaded(pfc_expansion).
+:- include(pfc_expansion).
 
-:- multifile('term_expansion'/2).
 
 :- dynamic(pfctmp:knows_will_table_as/2).
 
@@ -237,9 +237,9 @@ will_table_as(Stuff,As):- assert(pfctmp:knows_will_table_as(Stuff,As)),
 react_tabling(Stuff,_):- dynamic(Stuff).
 
 :- dynamic(lmconf:is_treated_like_pfc_file/1).
-:- dynamic(lmconf:is_pfc_module/1).
+:- dynamic(lmconf:is_treated_like_pfc_module/1).
 if_pfc_indicated :- source_location(F,_),(sub_string(F, _, _, _, '.pfc')->true;lmconf:is_treated_like_pfc_file(F)),!.
-if_pfc_indicated :- prolog_load_context(module, M),lmconf:is_pfc_module(M),!.
+if_pfc_indicated :- prolog_load_context(module, M),is_pfc_module(M),!.
 
 pfc_term_expansion((:- table Stuff as Type), [:- pfcAdd(tabled_as(Stuff,Type)),(:- table Stuff as Type)]):- !, if_pfc_indicated, \+ will_table_as(Stuff, Type).
 pfc_term_expansion((:- table Stuff ), [:- pfcAdd(tabled_as(Stuff,incremental)),(:- table Stuff as incremental)]):- if_pfc_indicated, \+ will_table_as(Stuff,incremental).
@@ -250,11 +250,10 @@ pfc_term_expansion(('<-'(P,Q)),(:- pfcAdd(('<-'(P,Q))))).
 pfc_term_expansion((P<==>Q),(:- pfcAdd((P<==>Q)))).
 pfc_term_expansion((RuleName :::: Rule),(:- pfcAdd((RuleName :::: Rule)))).
 pfc_term_expansion((==>P),(:- pfcAdd(P))).
-pfc_term_expansion(I,I):- I == end_of_file,!.
+pfc_term_expansion(I,I):- (I == end_of_file; I=begin_of_file),!.
+pfc_term_expansion(( M:H :- B) ,(:- M:pfcAdd(H :- B))):- is_pfc_module(M).
+pfc_term_expansion( M:P ,(:- M:pfcAdd(P))):- is_pfc_module(M).
 pfc_term_expansion( P ,(:- pfcAdd(P))):- if_pfc_indicated.
-
-system:term_expansion(I,S0,O,S1):- notrace(prolog_load_context(term,T)->T==I)->pfc_term_expansion(I,O)->I\=@=O->S0=S1.
-
 
 term_subst(P,O):- term_subst(clause,P,O),!.
 
@@ -290,7 +289,7 @@ termf_subst(Subst,F,F2):-member(F-F2,Subst)->true;F=F2.
 :- dynamic ('<-')/2.
 :- discontiguous(('<-')/2).
 
-
+/*
 :- multifile ('==>')/2.
 :- dynamic ('==>')/2.
 :- discontiguous(('==>')/2).
@@ -309,13 +308,14 @@ termf_subst(Subst,F,F2):-member(F-F2,Subst)->true;F=F2.
 :- dynamic pfcHaltSignal/1.
 :- dynamic pfcDebugging/0.
 :- dynamic pfcSelect/1.
-:- dynamic pfcSearch/1.
+:- dynamic fcMode/1.
+:- dynamic spft/3.
+*/
 
 :- thread_local(t_l:pfcSearchTL/1).
 
-:- dynamic spft/3.
 
-%%% initialization of global assertons 
+% %%% initialization of global assertons 
 
 pfcSetVal(Stuff):- 
    duplicate_term(Stuff,DStuff),
@@ -324,26 +324,26 @@ pfcSetVal(Stuff):-
    retractall(DStuff),
    assert(Stuff).
 
-%% pfcDefault/1 initialized a global assertion.
-%%  pfcDefault(P,Q) - if there is any fact unifying with P, then do 
-%%  nothing, else assert Q.
+% %% pfcDefault/1 initialized a global assertion.
+% %%  pfcDefault(P,Q) - if there is any fact unifying with P, then do 
+% %%  nothing, else assert Q.
 
 pfcDefault(GeneralTerm,Default) :-
   clause(GeneralTerm,true) -> true ; assert(Default).
 
-%% fcTmsMode is one of {none,local,cycles} and controles the tms alg.
+% %% fcTmsMode is one of {none,local,cycles} and controles the tms alg.
 :- pfcDefault(fcTmsMode(_), fcTmsMode(cycles)).
 
-% Pfc Search strategy. pfcSearch(X) where X is one of {direct,depth,breadth}
-:- pfcDefault(pfcSearch(_), pfcSearch(direct)).
+% Pfc Search strategy. fcMode(X) where X is one of {direct,depth,breadth}
+:- pfcDefault(fcMode(_), fcMode(direct)).
 
 
 % 
 
-%% pfcAdd/2 and pfcPost/2 are the main ways to assert new clauses into the
-%% database and have forward reasoning done.
+% %% pfcAdd/2 and pfcPost/2 are the main ways to assert new clauses into the
+% %% database and have forward reasoning done.
 
-%% pfcAdd(P,S) asserts P into the dataBase with support from S.
+% %% pfcAdd(P,S) asserts P into the dataBase with support from S.
 
 pfcAdd(P) :-  must(current_why_UU(UU)), pfcAdd(P, UU).
 
@@ -393,7 +393,7 @@ pfcPost1(_,_).
 %pfcPost1(P,S) :-  
  %pfcWarn("pfcPost1: ~p\n (support: ~p) failed",[P,S]).
 
-%%  pfcAddDbToHead(+P,-NewP) is semidet.
+% %%  pfcAddDbToHead(+P,-NewP) is semidet.
 % talkes a fact P or a conditioned fact
 % (P:-C) and adds the Db context.
 %
@@ -407,7 +407,7 @@ pfcAddDbToHead(P,NewP) :-
 :- dynamic(pfcCurrentDb/1).
 pfcCurrentDb(true).
 
-%% pfcUnique(X) is det.
+% %% pfcUnique(X) is det.
 % 
 % is true if there is no assertion X in the prolog db.
 %
@@ -419,13 +419,13 @@ pfcUnique(_Type, P) :-
   \+ clause(P,true).
 
 
-%% pfcEnqueue(P,Q) is det.
+% %% pfcEnqueue(P,Q) is det.
 % 
 % Enqueu according to settings
 %
-pfcSetSearch(Mode):- pfcSetVal(pfcSearch(Mode)).
+pfcSetSearch(Mode):- pfcSetVal(fcMode(Mode)).
 
-pfcGetSearch(Mode):- (t_l:pfcSearchTL(ModeT)->true;pfcSearch(ModeT))->Mode=ModeT.
+pfcGetSearch(Mode):- (t_l:pfcSearchTL(ModeT)->true;fcMode(ModeT))->Mode=ModeT.
 
 pfcEnqueue(P,S) :-
   pfcGetSearch(Mode)
@@ -433,12 +433,12 @@ pfcEnqueue(P,S) :-
 	Mode=thread   -> pfcThreadFwd(P,S) ;
     Mode=depth   -> pfcAsserta(pfcQueue(P),S) ;
 	Mode=breadth -> pfcAssert(pfcQueue(P),S) ;
-	true         -> pfcWarn("Unrecognized pfcSearch mode: ~p", Mode))
-     ; pfcWarn("No pfcSearch mode").
+	true         -> pfcWarn("Unrecognized fcMode mode: ~p", Mode))
+     ; pfcWarn("No fcMode mode").
 
 
 
-%% pfcRemoveOldVersion(+Rule) is det.
+% %% pfcRemoveOldVersion(+Rule) is det.
 %
 % if there is a rule of the form Identifier ::: Rule then delete it.
 
@@ -460,7 +460,7 @@ pfcRemoveOldVersion0((Identifier::::Body)) :-
 pfcRemoveOldVersion0(_).
 
 
-%% with_fc_mode(+Mode,:Goal) is semidet.
+% %% with_fc_mode(+Mode,:Goal) is semidet.
 % 
 % Temporariliy changes to forward chaining propagation mode while running the Goal
 %
@@ -550,10 +550,10 @@ pfcHalt(Format,Args) :-
      ; assert(pfcHaltSignal(Msg))).
 
 
-%%
-%%
-%% predicates for manipulating triggers
-%%
+% %%
+% %%
+% %% predicates for manipulating triggers
+% %%
 
 pfcAddTrigger(pt(Trigger,Body),Support) :-
   !,
@@ -595,10 +595,10 @@ pfcBtPtCombine(_,_,_) :- !.
 pfcGetTriggerQuick(Trigger) :-  clause(Trigger,true).
 pfcCallSystem(Trigger) :-  call(Trigger).
 
-%%
-%%
-%% predicates for manipulating action traces.
-%%
+% %%
+% %%
+% %% predicates for manipulating action traces.
+% %%
 
 pfcAddActionTrace(Action,Support) :- 
   % adds an action trace and it's support.
@@ -610,10 +610,10 @@ pfcRemActionTrace(pfcAction(A)) :-
   !.
 
 
-%%
-%% predicates to remove pfc facts, triggers, action traces, and queue items
-%% from the database.
-%%
+% %%
+% %% predicates to remove pfc facts, triggers, action traces, and queue items
+% %% from the database.
+% %%
 
 pfcRetract(X) :- 
   %% retract an arbitrary thing.
@@ -637,7 +637,7 @@ pfcRetractType(trigger,X) :-
 pfcRetractType(action,X) :- pfcRemActionTrace(X).
   
 
-%% pfcAddType1(X) adds item X to some database
+% %% pfcAddType1(X) adds item X to some database
 
 pfcAddType1(X) :-
   % what type of X do we have?
@@ -665,9 +665,9 @@ pfcAddType(action,_Action) :- !.
 % If a list, iterates down the list
 pfcWithdraw(P) :- is_list(P),!,maplist(pfcWithdraw,P).
 pfcWithdraw(P) :- matches_why_UU(UU), pfcWithdraw(P,UU).
-%% pfcWithdraw(P,S) removes support S from P and checks to see if P is still supported.
-%% If it is not, then the fact is retractred from the database and any support
-%% relationships it participated in removed.
+% %% pfcWithdraw(P,S) removes support S from P and checks to see if P is still supported.
+% %% If it is not, then the fact is retractred from the database and any support
+% %% relationships it participated in removed.
 pfcWithdraw(P,S) :-
   % pfcDebug(pfcPrintf("removing support ~p from ~p",[S,P])),
   pfcGetSupport(P,S),
@@ -689,9 +689,9 @@ pfcWithdraw(P,S) :-
 pfcRetractAll(P) :- is_list(P),!,maplist(pfcRetractAll,P).
 pfcRetractAll(P) :- matches_why_UU(UU), pfcRetractAll(P,UU).
 
-%% pfcRetractAll(P,S) removes support S from P and checks to see if P is still supported.
-%% If it is not, then the fact is retreactred from the database and any support
-%% relationships it participated in removed.
+% %% pfcRetractAll(P,S) removes support S from P and checks to see if P is still supported.
+% %% If it is not, then the fact is retreactred from the database and any support
+% %% relationships it participated in removed.
 pfcRetractAll(P,S) :-
   \+ \+ pfcWithdraw(P,S),
   fail.
@@ -758,7 +758,7 @@ pfcRemove(P) :-
       ; true.
 
 
-%% pfcBlast(+F) is det
+% %% pfcBlast(+F) is det
 %
 % retracts fact F from the DB and removes any dependent facts 
 %
@@ -811,7 +811,7 @@ fcUndo(Fact) :-
   unFc(Fact).
   
 
-%% unFc(P) is det.
+% %% unFc(P) is det.
 %
 % unFc(P) "un-forward-chains" from fact f.  That is, fact F has just
 % been removed from the database, so remove all dependant relations it
@@ -848,15 +848,15 @@ pfcRetractDependantRelations(_).
 
 
 
-%% removeIfUnsupported(+P) checks to see if P is supported and removes
-%% it from the DB if it is not.
+% %% removeIfUnsupported(+P) checks to see if P is supported and removes
+% %% it from the DB if it is not.
 
 removeIfUnsupported(P) :- 
    fcSupported(P) -> nop(pfcTraceMsg(fcSupported(P))) ;  fcUndo(P).
 
 
-%% fcSupported(+P) succeeds if P is "supported". What this means
-%% depends on the TMS mode selected.
+% %% fcSupported(+P) succeeds if P is "supported". What this means
+% %% depends on the TMS mode selected.
 
 fcSupported(P) :- 
   must(fcTmsMode(Mode)),
@@ -867,10 +867,10 @@ supported(cycles,P) :-  !, wellFounded(P).
 supported(_,_P) :- true.
 
 
-%%
-%% a fact is well founded if it is supported by the user
-%% or by a set of facts and a rules, all of which are well founded.
-%%
+% %%
+% %% a fact is well founded if it is supported by the user
+% %% or by a set of facts and a rules, all of which are well founded.
+% %%
 
 wellFounded(Fact) :- wf(Fact,[]).
 
@@ -888,7 +888,7 @@ wf(F,Descendants) :-
   wflist(Supporters,[F|Descendants]),
   !.
 
-%% wflist(L) simply maps wf over the list.
+% %% wflist(L) simply maps wf over the list.
 
 wflist([],_).
 wflist([X|Rest],L) :-
@@ -933,10 +933,10 @@ may_cheat:- fail.
 
 
 
-%%
-%%
-%% pfcFwd(X) forward chains from a fact or a list of facts X.
-%%
+% %%
+% %%
+% %% pfcFwd(X) forward chains from a fact or a list of facts X.
+% %%
 pfcFwd(Fact) :- is_list(List)->maplist(pfcFwd1,List);pfcFwd1(Fact).
 
 % fc1(+P) forward chains for a single fact.
@@ -949,10 +949,10 @@ pfcFwd1(Fact) :-
   fcnt(Fact,F).
 
 
-%%
-%% fc_rule_check(P) does some special, built in forward chaining if P is 
-%% a rule.
-%% 
+% %%
+% %% fc_rule_check(P) does some special, built in forward chaining if P is 
+% %% a rule.
+% %% 
 
 fc_rule_check((P==>Q)) :-  
   !,  
@@ -998,9 +998,9 @@ fcnt(_Fact,F) :-
 fcnt(_,_).
 
 
-%% pfcRem_S(P,S) removes support S from P and checks to see if P is still supported.
-%% If it is not, then the fact is retreactred from the database and any support
-%% relationships it participated in removed.
+% %% pfcRem_S(P,S) removes support S from P and checks to see if P is still supported.
+% %% If it is not, then the fact is retreactred from the database and any support
+% %% relationships it participated in removed.
 pfcRem_S(P,S) :-
   % pfcDebug(pfcPrintf("removing support ~p from ~p",[S,P])),
   pfcTraceMsg('    Removing support: ~p from ~p~n',[S,P]),
@@ -1011,7 +1011,7 @@ pfcRem_S(P,S) :-
 
 
 
-%% pfcDefineBcRule(+Head,+Body,+ParentRule) 
+% %% pfcDefineBcRule(+Head,+Body,+ParentRule) 
 %
 % defines a backward
 % chaining rule and adds the corresponding bt triggers to the database.
@@ -1050,10 +1050,10 @@ cut_c:- current_prolog_flag(pfc_support_cut,false),!.
 cut_c:- must(nb_current('$pfc_current_choice',[CP|_WAS])),prolog_cut_to(CP).
 
 
-%%
-%%
-%% eval something on the LHS of a rule.
-%%
+% %%
+% %%
+% %% eval something on the LHS of a rule.
+% %%
 
  
 fcEvalLHS((Test->Body),Support) :-  
@@ -1084,9 +1084,9 @@ fcEvalLHS(X,_) :-
   pfcWarn("Unrecognized item found in trigger body, namely ~p.",[X]).
 
 
-%%
-%% eval something on the RHS of a rule.
-%%
+% %%
+% %% eval something on the RHS of a rule.
+% %%
 
 pfc_eval_rhs([],_) :- !.
 pfc_eval_rhs([Head|Tail],Support) :- 
@@ -1119,9 +1119,9 @@ pfc_eval_rhs1(X,_) :-
   pfcWarn("Malformed rhs of a rule: ~p",[X]).
 
 
-%%
-%% evaluate an action found on the rhs of a rule.
-%%
+% %%
+% %% evaluate an action found on the rhs of a rule.
+% %%
 
 fcEvalAction(Action,Support) :-
   pfcCallSystem(Action), 
@@ -1130,9 +1130,9 @@ fcEvalAction(Action,Support) :-
       ; true).
 
 
-%%
-%% 
-%%
+% %%
+% %% 
+% %%
 
 trigger_trigger(Trigger,Body,_Support) :-
  trigger_trigger1(Trigger,Body).
@@ -1153,7 +1153,7 @@ trigger_trigger1(Trigger,Body) :-
   fail.
 
 
-%% pfc_call(F) is nondet.
+% %% pfc_call(F) is nondet.
 %
 % pfc_call(F) is true iff F is a fact available for forward chaining.
 % Note that this has the side effect of catching unsupported facts and
@@ -1200,14 +1200,14 @@ undoable(A) :- do_and_undo(A,_).
 
 
 
-%%
-%%
-%% defining fc rules 
-%%
+% %%
+% %%
+% %% defining fc rules 
+% %%
 
-%% pfc_nf(+In,-Out) maps the LHR of a pfc rule In to one normal form 
-%% Out.  It also does certain optimizations.  Backtracking into this
-%% predicate will produce additional clauses.
+% %% pfc_nf(+In,-Out) maps the LHR of a pfc rule In to one normal form 
+% %% Out.  It also does certain optimizations.  Backtracking into this
+% %% predicate will produce additional clauses.
 
 
 pfc_nf(LHS,List) :-
@@ -1215,8 +1215,8 @@ pfc_nf(LHS,List) :-
   pfc_nf_negations(List2,List).
 
 
-%% pfc_nf1(+In,-Out) maps the LHR of a pfc rule In to one normal form
-%% Out.  Backtracking into this predicate will produce additional clauses.
+% %% pfc_nf1(+In,-Out) maps the LHR of a pfc rule In to one normal form
+% %% Out.  Backtracking into this predicate will produce additional clauses.
 
 % handle a variable.
 
@@ -1227,23 +1227,23 @@ pfc_nf1(P,[P]) :- var(P), !.
 
 pfc_nf1(P/Cond,[(\+P)/Cond]) :- pfcNegatedLiteral(P), !.
 
-pfc_nf1(P/Cond,[P/Cond]) :-  pfcLiteral(P), !.
+pfc_nf1(P/Cond,[P/Cond]) :-  (pfcLiteral(P);var(P)), !.
 
-%% handle a negated form
+% %% handle a negated form
 
 pfc_nf1(NegTerm,NF) :-
   pfc_unnegate(NegTerm,Term),
   !,
   pfc_nf1_negation(Term,NF).
 
-%% disjunction.
+% %% disjunction.
 
 pfc_nf1((P;Q),NF) :- 
   !,
   (pfc_nf1(P,NF) ;   pfc_nf1(Q,NF)).
 
 
-%% conjunction.
+% %% conjunction.
 
 pfc_nf1((P,Q),NF) :-
   !,
@@ -1251,18 +1251,18 @@ pfc_nf1((P,Q),NF) :-
   pfc_nf1(Q,NF2),
   append(NF1,NF2,NF).
 
-%% handle a random atom.
+% %% handle a random atom.
 
 pfc_nf1(P,[P]) :-
   pfcLiteral(P), 
   !.
 
-%%% shouln't we have something to catch the rest as errors?
+% %%% shouln't we have something to catch the rest as errors?
 pfc_nf1(Term,[Term]) :-
   pfcWarn("pfc_nf doesn't know how to normalize ~p",[Term]).
 
 
-%% pfc_nf1_negation(P,NF) is true if NF is the normal form of \+P.
+% %% pfc_nf1_negation(P,NF) is true if NF is the normal form of \+P.
 pfc_nf1_negation((P/Cond),[(\+(P))/Cond]) :- !.
 
 pfc_nf1_negation((P;Q),NF) :-
@@ -1283,9 +1283,9 @@ pfc_nf1_negation((P,Q),NF) :-
 pfc_nf1_negation(P,[\+P]).
 
 
-%% pfc_nf_negations(List2,List) sweeps through List2 to produce List,
-%% changing ~{...} to {\+...}
-%%% ? is this still needed? twf 3/16/90
+% %% pfc_nf_negations(List2,List) sweeps through List2 to produce List,
+% %% changing ~{...} to {\+...}
+% %%% ? is this still needed? twf 3/16/90
 
 pfc_nf_negations(X,X) :- !.  % I think not! twf 3/27/90
 
@@ -1371,9 +1371,9 @@ pfc_nf_negation(X,X).
 
 
 
-%%
-%% buildRhs(+Conjunction,-Rhs)
-%%
+% %%
+% %% buildRhs(+Conjunction,-Rhs)
+% %%
 
 buildRhs(X,[X]) :- 
   var(X),
@@ -1392,8 +1392,8 @@ pfcCompileRhsTerm((P/C),((P:-C))) :- !.
 pfcCompileRhsTerm(P,P).
 
 
-%% pfc_unnegate(N,P) is true if N is a negated term and P is the term
-%% with the negation operator stripped.
+% %% pfc_unnegate(N,P) is true if N is a negated term and P is the term
+% %% with the negation operator stripped.
 
 pfc_unnegate(P,_):- var(P),!,fail.
 pfc_unnegate((~P),P):-  \+ tilded_negation.
@@ -1480,13 +1480,13 @@ buildTrigger([T|Triggers],Consequent,pt(T,X)) :-
   !, 
   buildTrigger(Triggers,Consequent,X).
 
-%%
-%% buildNtTest(+,+,-).
-%%
-%% builds the test used in a negative trigger (nt/3).  This test is a
-%% conjunction of the check than no matching facts are in the db and any
-%% additional test specified in the rule attached to this ~ term.
-%%
+% %%
+% %% buildNtTest(+,+,-).
+% %%
+% %% builds the test used in a negative trigger (nt/3).  This test is a
+% %% conjunction of the check than no matching facts are in the db and any
+% %% additional test specified in the rule attached to this ~ term.
+% %%
      %  tilded_negation.
 buildNtTest(T,Testin,Testout) :-
   buildTest(Testin,Testmid),
@@ -1498,10 +1498,10 @@ buildNtTest(T,Testin,Testout) :-
 buildTest({Test},Test) :- !.
 buildTest(Test,Test).
 
-%%
+% %%
 
 
-%% pfcType(+VALUE1, ?Type) is semidet.
+% %% pfcType(+VALUE1, ?Type) is semidet.
 %
 % PFC Database Type.
 %
@@ -1565,8 +1565,8 @@ pfcdo(X) :- X,!.
 pfcdo(_).
 
 
-%% pfcUnion(L1,L2,L3) - true if set L3 is the result of appending sets
-%% L1 and L2 where sets are represented as simple lists.
+% %% pfcUnion(L1,L2,L3) - true if set L3 is the result of appending sets
+% %% L1 and L2 where sets are represented as simple lists.
 
 pfcUnion([],L,L).
 pfcUnion([Head|Tail],L,Tail2) :-  
@@ -1577,9 +1577,9 @@ pfcUnion([Head|Tail],L,[Head|Tail2]) :-
   pfcUnion(Tail,L,Tail2).
 
 
-%% pfcConjoin(+Conjunct1,+Conjunct2,?Conjunction).
-%% arg3 is a simplified expression representing the conjunction of
-%% args 1 and 2.
+% %% pfcConjoin(+Conjunct1,+Conjunct2,?Conjunction).
+% %% arg3 is a simplified expression representing the conjunction of
+% %% args 1 and 2.
 
 pfcConjoin(true,X,X) :- !.
 pfcConjoin(X,true,X) :- !.
@@ -1592,7 +1592,7 @@ pfcConjoin(C1,C2,(C1,C2)).
 %   Author :  Dan Corpron
 %   Updated: 10/11/87, ...
 %   Purpose: predicates to manipulate a pfc database (e.g. save,
-%%	restore, reset, etc.0
+% %%	restore, reset, etc.0
 
 % pfcDatabaseTerm(P/A) is true iff P/A is something that pfc adds to
 % the database and should not be present in an empty pfc database
@@ -1650,7 +1650,7 @@ pfcRetractOrQuietlyFail(X) :-
 
 :- pfcDefault(pfcWarnings(_), pfcWarnings(true)).
 
-%% predicates to examine the state of pfc
+% %% predicates to examine the state of pfc
 
 pfcQueue :- listing(pfcQueue/1).
 
@@ -1662,7 +1662,7 @@ pfcPrintDB :-
 
 printLine:- ansi_format([underline],"~N=========================================~n",[]).
 
-%% pfcPrintFacts ...
+% %% pfcPrintFacts ...
 
 pfcPrintFacts :- pfcPrintFacts(_,true).
 
@@ -1681,7 +1681,7 @@ pfcPrintFacts(P,C) :-
   printLine,!.
 
 
-%% printitems clobbers it's arguments - beware!
+% %% printitems clobbers it's arguments - beware!
 
 pfcPrintitems([]).
 pfcPrintitems([H|T]) :-
@@ -1720,19 +1720,19 @@ pfcPrintRules :-
 pfcGetTrigger(Trigger):- pfc_call(Trigger).
 
 
-%%  pfcPrintTriggers is semidet.
+% %%  pfcPrintTriggers is semidet.
 %
 % Pretty Print Triggers.
 %
 pfcPrintTriggers :-
-     print_db_items("Positive triggers", pt(_,_)),
-     print_db_items("Negative triggers", nt(_,_,_)),
-     print_db_items("Goal triggers",bt(_,_)).
+     pp_mask("Positive trigger", pt(_,_)),
+     pp_mask("Negative trigger", nt(_,_,_)),
+     pp_mask("Goal trigger",bt(_,_)).
 
 pp_triggers:-pfcPrintTriggers.
 %= 	 	 
 
-%% pfcPrintSupports is semidet.
+% %% pfcPrintSupports is semidet.
 %
 % Pretty Print Supports.
 %
@@ -1754,33 +1754,33 @@ pp_filtered(F/_):-F==mpred_prop.
 
 pfcFact(P) :- pfcFact(P,true).
 
-%% pfcFact(P,C) is true if fact P was asserted into the database via
-%% pfcAdd and contdition C is satisfied.  For example, we might do:
-%% 
-%%  pfcFact(X,pfcUserFact(X))
-%%
+% %% pfcFact(P,C) is true if fact P was asserted into the database via
+% %% pfcAdd and contdition C is satisfied.  For example, we might do:
+% %% 
+% %%  pfcFact(X,pfcUserFact(X))
+% %%
 
 pfcFact(P,C) :- 
   pfcGetSupport(P,_),
   pfcType(P,fact(_)),
   pfcCallSystem(C).
 
-%% pfcFacts(-ListofPfcFacts) returns a list of facts added.
+% %% pfcFacts(-ListofPfcFacts) returns a list of facts added.
 
 pfcFacts(L) :- pfcFacts(_,true,L).
 
 pfcFacts(P,L) :- pfcFacts(P,true,L).
 
-%% pfcFacts(Pattern,Condition,-ListofPfcFacts) returns a list of facts added.
+% %% pfcFacts(Pattern,Condition,-ListofPfcFacts) returns a list of facts added.
 
 pfcFacts(P,C,L) :- setof_or_nil(P,pfcFact(P,C),L).
 
 brake(X) :-  X, break.
 
-%%
-%%
-%% predicates providing a simple tracing facility
-%%
+% %%
+% %%
+% %% predicates providing a simple tracing facility
+% %%
 
 pfcTraceAdd(P) :- 
   % this is here for upward compat. - should go away eventually.
@@ -1906,18 +1906,20 @@ pfcNoWatch :-  retractall(pfcTraceExecution).
 pfcError(Msg) :-  pfcError(Msg,[]).
 
 pfcError(Msg,Args) :- 
-  format("~N~nERROR/Pfc: ",[]),
-  format(Msg,Args).
+  ansi_format([underline,fg(red)],"~N===============nERROR/Pfc=================~n",[]),
+  ansi_format([fg(yellow)],Msg,Args),
+  printLine,
+  (clause_b(breakOnWarnings)->break;true).
 
-%%
-%% These control whether or not warnings are printed at all.
-%%   pfcWarn.
-%%   nopfcWarn.
-%%
-%% These print a warning message if the flag pfcWarnings is set.
-%%   pfcWarn(+Message)
-%%   pfcWarn(+Message,+ListOfArguments)
-%%
+% %%
+% %% These control whether or not warnings are printed at all.
+% %%   pfcWarn.
+% %%   nopfcWarn.
+% %%
+% %% These print a warning message if the flag pfcWarnings is set.
+% %%   pfcWarn(+Message)
+% %%   pfcWarn(+Message,+ListOfArguments)
+% %%
 
 pfcWarn :- 
   retractall(pfcWarnings(_)),
@@ -1930,17 +1932,18 @@ nopfcWarn :-
 pfcWarn(Msg) :-  pfcWarn('~p',[Msg]).
 
 pfcWarn(Msg,Args) :- 
-  pfcWarnings(true),
+  (pfcWarnings(true);clause_b(breakOnWarnings)),
   !,
-  ansi_format([underline,fg(red)],"~N==============WARNING/Pfc================~n",[]),
-  ansi_format([fg(yellow)],Msg,Args),
-  printLine.
+   ansi_format([underline,fg(red)],"~N==============WARNING/Pfc================~n",[]),
+   ansi_format([fg(yellow)],Msg,Args),
+  printLine,
+  (clause_b(breakOnWarnings)->break;true).
 pfcWarn(_,_).
 
-%%
-%% pfcWarnings/0 sets flag to cause pfc warning messages to print.
-%% pfcNoWarnings/0 sets flag to cause pfc warning messages not to print.
-%%
+% %%
+% %% pfcWarnings/0 sets flag to cause pfc warning messages to print.
+% %% pfcNoWarnings/0 sets flag to cause pfc warning messages not to print.
+% %%
 
 pfcWarnings :- 
   retractall(pfcWarnings(_)),
@@ -1960,7 +1963,7 @@ pfcNoWarnings :-
 %= *** predicates for exploring supports of a fact *****
 
 
-:- use_module(library(lists)).
+%:- use_module(library(lists)).
 
 justification(F,J) :- supports(F,J).
 
@@ -1968,10 +1971,10 @@ justifications(F,Js) :- bagof(J,justification(F,J),Js).
 
 
 
-%% base(P,L) - is true iff L is a list of "base" facts which, taken
-%% together, allows us to deduce P.  A base fact is an axiom (a fact 
-%% added by the user or a raw Prolog fact (i.e. one w/o any support))
-%% or an assumption.
+% %% base(P,L) - is true iff L is a list of "base" facts which, taken
+% %% together, allows us to deduce P.  A base fact is an axiom (a fact 
+% %% added by the user or a raw Prolog fact (i.e. one w/o any support))
+% %% or an assumption.
 
 base(F,[F]) :- (axiom(F) ; assumption(F)),!.
 
@@ -1981,8 +1984,8 @@ base(F,L) :-
   bases(Js,L).
 
 
-%% bases(L1,L2) is true if list L2 represents the union of all of the 
-%% facts on which some conclusion in list L1 is based.
+% %% bases(L1,L2) is true if list L2 represents the union of all of the 
+% %% facts on which some conclusion in list L1 is based.
 
 bases([],[]).
 bases([X|Rest],L) :-
@@ -1995,12 +1998,12 @@ axiom(F) :-
   pfcGetSupport(F,UU); 
   pfcGetSupport(F,(god,god)).
 
-%% an assumption is a failed goal, i.e. were assuming that our failure to 
-%% prove P is a proof of not(P)
+% %% an assumption is a failed goal, i.e. were assuming that our failure to 
+% %% prove P is a proof of not(P)
 
 assumption(P) :- pfc_unnegate(P,_).
    
-%% assumptions(X,As) if As is a set of assumptions which underly X.
+% %% assumptions(X,As) if As is a set of assumptions which underly X.
 
 assumptions(X,[X]) :- assumption(X).
 assumptions(X,[]) :- axiom(X).
@@ -2015,12 +2018,12 @@ assumptions1([X|Rest],L) :-
   pfcUnion(Bx,Br,L).  
 
 
-%% pfcProofTree(P,T) the proof tree for P is T where a proof tree is
-%% of the form
-%%
-%%     [P , J1, J2, ;;; Jn]         each Ji is an independent P justifier.
-%%          ^                         and has the form of
-%%          [J11, J12,... J1n]      a list of proof trees.
+% %% pfcProofTree(P,T) the proof tree for P is T where a proof tree is
+% %% of the form
+% %%
+% %%     [P , J1, J2, ;;; Jn]         each Ji is an independent P justifier.
+% %%          ^                         and has the form of
+% %%          [J11, J12,... J1n]      a list of proof trees.
 
 
 % pfcChild(P,Q) is true iff P is an immediate justifier for Q.
@@ -2066,12 +2069,12 @@ matches_why_UU(UU):- nop(only_is_user_reason(UU)). % matches_why_U(U1),matches_w
 matterialize_support_term(S,Sup):- term_attvars(S,Atts), Atts\==[] -> copy_term(S,_,Goals),Sup= S+Goals,!.
 matterialize_support_term(SS,SS).
 
-%%
-%%
-%% predicates for manipulating support relationships
-%%
+% %%
+% %%
+% %% predicates for manipulating support relationships
+% %%
 
-%% pfcAddSupport(+Fact,+Support)
+% %% pfcAddSupport(+Fact,+Support)
 
 pfcAddSupport(P,(Fact,Trigger)) :- assert(spft(P,Fact,Trigger)).
 
@@ -2103,9 +2106,9 @@ pfc_make_supports((P,S1,S2)) :-
   (pfcAddType1(P); true),
   !.
 
-%% pfcTriggerKey(+Trigger,-Key) 
-%%
-%% Arg1 is a trigger.  Key is the best term to index it on.
+% %% pfcTriggerKey(+Trigger,-Key) 
+% %%
+% %% Arg1 is a trigger.  Key is the best term to index it on.
 
 pfcTriggerKey(pt(Key,_),Key).
 pfcTriggerKey(pt(Key,_,_),Key).
@@ -2113,10 +2116,10 @@ pfcTriggerKey(nt(Key,_,_),Key).
 pfcTriggerKey(Key,Key).
 
 
-%%^L
-%% Get a key from the trigger that will be used as the first argument of
-%% the trigger base clause that stores the trigger.
-%%
+% %%^L
+% %% Get a key from the trigger that will be used as the first argument of
+% %% the trigger base clause that stores the trigger.
+% %%
 
 pfc_trigger_key(X,X) :- var(X), !.
 pfc_trigger_key(chart(word(W),_L),W) :- !.
@@ -2131,14 +2134,16 @@ pfc_trigger_key(X,X).
 
 % ***** predicates for brousing justifications *****
 
-:- use_module(library(lists)).
+%:- use_module(library(lists)).
 
 :- dynamic(t_l:whybuffer/2).
 
 
+/*
 mpred_test(\+ X):- !, mpred_test(~ X).
 mpred_test(~(~(X))):- !, mpred_test(X).
 mpred_test(X):- full_transform(pfcWhy,X,G), pfc_call(G),pfcTF(G).
+*/
 
 pfcWhy :- 
   t_l:whybuffer(P,_),
@@ -2165,6 +2170,9 @@ pfcWhy(KR) :-
   retractall(t_l:whybuffer(_,_)),
   assert(t_l:whybuffer(P,Js)),
   pfcWhyBrouse(P,Js).
+
+system:pfcWhy(P):- pfcWhy(P).
+
 
 pfcWhy1(P) :-
   justifications(P,Js),
@@ -2268,7 +2276,7 @@ pfcShowSingleJust(JustNo,StepNo,pt(P,Body)):- !,
 pfcShowSingleJust(JustNo,StepNo,C):- 
  pfcShowSingleJust1(JustNo,StepNo,C).
 
-fmt_cl(P):- \+ \+ (pretty_numbervars(P,PP),numbervars(PP,126,_,[attvar(skip),singletons(true)]),write_term(PP,[portray(true)])).
+system:fmt_cl(P):- \+ \+ (pretty_numbervars(P,PP),numbervars(PP,126,_,[attvar(skip),singletons(true)]),write_term(PP,[portray(true)])).
 
 unwrap_litr(C,CCC+VS):- copy_term(C,CC,VS),
   numbervars(CC+VS,0,_),
@@ -2406,7 +2414,7 @@ pfc_listing_module:- nop( module(pfc_listing,
 
 %= 	 	 
 
-%% lqu is semidet.
+% %% lqu is semidet.
 %
 % Lqu.
 %
@@ -2417,7 +2425,7 @@ lqu :- listing(que/2).
 
 %= 	 	 
 
-%% pp_facts is semidet.
+% %% pp_facts is semidet.
 %
 % Pretty Print Facts.
 %
@@ -2426,7 +2434,7 @@ pp_facts :- pp_facts(_,true).
 
 %= 	 	 
 
-%% pp_facts( ?Pattern) is semidet.
+% %% pp_facts( ?Pattern) is semidet.
 %
 % Pretty Print Facts.
 %
@@ -2435,7 +2443,7 @@ pp_facts(Pattern) :- pp_facts(Pattern,true).
 
 %= 	 	 
 
-%% pp_facts( ?P, ?C) is semidet.
+% %% pp_facts( ?P, ?C) is semidet.
 %
 % Pretty Print Facts.
 %
@@ -2455,7 +2463,7 @@ pp_facts(P,C) :-
 
 %= 	 	 
 
-%% pp_items( ?Type, :TermH) is semidet.
+% %% pp_items( ?Type, :TermH) is semidet.
 %
 % Pretty Print Items.
 %
@@ -2469,7 +2477,7 @@ pp_items(Type,H) :- ignore(pp_item(Type,H)).
 
 %= 	 	 
 
-%% pp_item( ?MM, :TermH) is semidet.
+% %% pp_item( ?MM, :TermH) is semidet.
 %
 % Pretty Print Item.
 %
@@ -2492,7 +2500,7 @@ pp_item(MM,H):- \+ \+ (( get_clause_vars_for_print(H,HH),fmt("~w ~p~N",[MM,HH]))
 
 %= 	 	 
 
-%% get_clause_vars_for_print( ?HB, ?HB) is semidet.
+% %% get_clause_vars_for_print( ?HB, ?HB) is semidet.
 %
 % Get Clause Variables For Print.
 %
@@ -2503,7 +2511,7 @@ get_clause_vars_for_print(HB,HB).
 
 %= 	 	 
 
-%% pfc_classify_facts( :TermH, ?User, :TermPfc, ?H) is semidet.
+% %% pfc_classify_facts( :TermH, ?User, :TermPfc, ?H) is semidet.
 %
 % Managed Predicate Classify Facts.
 %
@@ -2526,7 +2534,7 @@ pfc_classify_facts([H|T],User,[H|Pfc],Rule) :-
 
 %= 	 	 
 
-%% print_db_items( ?T, ?I) is semidet.
+% %% print_db_items( ?T, ?I) is semidet.
 %
 % Print Database Items.
 %
@@ -2539,7 +2547,7 @@ print_db_items(T, I):-
 
 %= 	 	 
 
-%% print_db_items( ?I) is semidet.
+% %% print_db_items( ?I) is semidet.
 %
 % Print Database Items.
 %
@@ -2551,24 +2559,25 @@ print_db_items(H):- catch( ('$find_predicate'(H,_),call_u(listing(H))),_,true),!
 
 %= 	 	 
 
-%% pp_rules is semidet.
+% %% pp_rules is semidet.
 %
 % Pretty Print Rules.
 %
 pp_rules :-
-   print_db_items("Forward Rules",(_ ==> _)),
-   print_db_items("Bidirectional Rules",(_ <==> _)), 
-   print_db_items("Implication Rules",=>(_ , _)),
-   print_db_items("Bi-conditional Rules",<=>(_ , _)),
-   print_db_items("Backchaining Rules",(_ <- _)),
-   print_db_items("Positive Facts",(==>(_))),
-   print_db_items("Negative Facts",(~(_))).
+   pp_mask("Forward Rules",(_ ==> _)),
+   pp_mask("Bidirectional Rules",(_ <==> _)), 
+   pp_mask("Implication Rules",=>(_ , _)),
+   pp_mask("Bi-conditional Rules",<=>(_ , _)),
+   pp_mask("Backchaining Rules",(_ <- _)),
+   pp_mask("Positive Facts",(==>(_))),
+   pp_mask("Negative Facts",(~(_))).
+   
 
 
 %= 	 	 
 
 
-%% draw_line is semidet.
+% %% draw_line is semidet.
 %
 % Draw Line.
 %
@@ -2580,7 +2589,7 @@ draw_line:- (t_l:print_mode(H)->true;H=unknown),fmt("~N%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %= 	 	 
 
-%% loop_check_just( :GoalG) is semidet.
+% %% loop_check_just( :GoalG) is semidet.
 %
 % Loop Check Justification.
 %
@@ -2589,7 +2598,7 @@ loop_check_just(G):-loop_check(G,ignore(arg(1,G,[]))).
 
 %= 	 	 
 
-%% show_pred_info( ?F) is semidet.
+% %% show_pred_info( ?F) is semidet.
 %
 % Show Predicate Info.
 %
@@ -2607,7 +2616,7 @@ show_pred_info(PI):-
 
 %= 	 	 
 
-%% show_pred_info_0( ?Head) is semidet.
+% %% show_pred_info_0( ?Head) is semidet.
 %
 % show Predicate info  Primary Helper.
 %
@@ -2624,7 +2633,7 @@ show_pred_info_0(Head):-
 
 %= 	 	 
 
-%% print_db_items( ?Title, ?Mask, ?What) is semidet.
+% %% print_db_items( ?Title, ?Mask, ?What) is semidet.
 %
 % Print Database Items.
 %
@@ -2632,7 +2641,7 @@ print_db_items(Title,Mask,What):-print_db_items(Title,Mask,Mask,What).
 
 %= 	 	 
 
-%% print_db_items( ?Title, ?Mask, ?SHOW, ?What0) is semidet.
+% %% print_db_items( ?Title, ?Mask, ?SHOW, ?What0) is semidet.
 %
 % Print Database Items.
 %
@@ -2650,7 +2659,7 @@ print_db_items(Title,Mask,SHOW,What0):-
 
 %= 	 	 
 
-%% pfc_contains_term( ?What, ?VALUE2) is semidet.
+% %% pfc_contains_term( ?What, ?VALUE2) is semidet.
 %
 % Managed Predicate Contains Term.
 %
@@ -2662,7 +2671,7 @@ pfc_contains_term(What,Inside):- (\+ \+ once((subst(Inside,What,foundZadooksy,Di
 
 %= 	 	 
 
-%% hook_pfc_listing( ?What) is semidet.
+% %% hook_pfc_listing( ?What) is semidet.
 %
 % Hook To [baseKB:hook_pfc_listing/1] For Module Mpred_listing.
 % Hook Managed Predicate Listing.
@@ -2675,7 +2684,7 @@ baseKB:hook_pfc_listing(What):- on_x_debug(pfc_list_triggers(What)).
 
 %= 	 	 
 
-%% pfc_list_triggers( ?What) is semidet.
+% %% pfc_list_triggers( ?What) is semidet.
 %
 % Managed Predicate List Triggers.
 %
@@ -2687,7 +2696,7 @@ pfc_list_triggers(What):-loop_check(pfc_list_triggers_nlc(What)).
 
 %= 	 	 
 
-%% pfc_list_triggers_nlc( ?What) is semidet.
+% %% pfc_list_triggers_nlc( ?What) is semidet.
 %
 % Managed Predicate List Triggers Nlc.
 %
@@ -2697,7 +2706,7 @@ pfc_list_triggers_nlc(What):-loop_check(pfc_list_triggers_0(What),true).
 
 %= 	 	 
 
-%% pfc_list_triggers_0( ?What) is semidet.
+% %% pfc_list_triggers_0( ?What) is semidet.
 %
 % Managed Predicate list triggers  Primary Helper.
 %
@@ -2708,7 +2717,7 @@ pfc_list_triggers_0(What):- \+ \+  pfc_list_triggers_1(~(What)), \+ \+ pfc_list_
 
 %= 	 	 
 
-%% pfc_list_triggers_types( ?VALUE1) is semidet.
+% %% pfc_list_triggers_types( ?VALUE1) is semidet.
 %
 % Managed Predicate list triggers  Types.
 %
@@ -2729,7 +2738,7 @@ pfc_list_triggers_types('Edits').
 
 %= 	 	 
 
-%% print_db_items_and_neg( ?Title, ?Fact, ?What) is semidet.
+% %% print_db_items_and_neg( ?Title, ?Fact, ?What) is semidet.
 %
 % Print Database Items And Negated.
 %
@@ -2739,7 +2748,7 @@ print_db_items_and_neg(Title,Fact,What):-print_db_items(Title,~(Fact),What).
 
 %= 	 	 
 
-%% pfc_list_triggers_1( ?What) is semidet.
+% %% pfc_list_triggers_1( ?What) is semidet.
 %
 % Managed Predicate list triggers  Secondary Helper.
 %
@@ -2793,7 +2802,7 @@ pinfo(F/A):- listing(F/A),safe_functor(P,F,A),findall(Prop,predicate_property(P,
 
 
 
-%% pp_DB is semidet.
+% %% pp_DB is semidet.
 %
 % Pretty Print All.
 %
@@ -2856,14 +2865,17 @@ is_hidden_pft(_,(mfl4(_VarNameZ,baseKB,_,_),ax)).
 is_hidden_pft(_,(why_marked(_),ax)).
 
 
-pp_mask(Type,MM,Mask):-   
-  bagof_or_nil(Mask,lookup_kb(MM,Mask),Nts),
-  list_to_set_variant(Nts,NtsSet),!,
-  pp_mask_list(Type,MM,NtsSet).
+pp_mask(Type,MMMask):- strip_module(MMMask,MM,Mask),pp_4_mask(Type,MM,Mask,Mask).
+pp_mask(Type,MMMask,Template):- strip_module(MMMask,MM,Mask),pp_4_mask(Type,MM,Mask,Template).
 
-pp_mask_list(Type,MM,[]):- !,
+pp_4_mask(Type,MM,Mask,Template):-   
+  bagof_or_nil(Template,Mask^lookup_kb(MM,Mask),Nts),
+  list_to_set_variant(Nts,NtsSet),!,
+  pp__mask_list(Type,MM,NtsSet).
+
+pp__mask_list(Type,MM,[]):- !,
   format("~N~nNo ~ws in [~w]...~n",[Type,MM]).
-pp_mask_list(Type,MM,NtsSet):- length(NtsSet,Size), !,
+pp__mask_list(Type,MM,NtsSet):- length(NtsSet,Size), !,
   format("~N~n~ws (~w) in [~w]...~n",[Type,Size,MM]),
   pp_db_items(NtsSet).
 
@@ -2885,21 +2897,22 @@ pfc_classifyFacts([H|T],User,[H|Pfc],Rule):-
 
 
 pp_db_rules(MM):- 
-   pp_mask("Forward Rule",MM,==>(_,_)),
-   pp_mask("Bidirectional Rule",MM,<==>(_,_)),
-   pp_mask("Backchaining Rule",MM,<-(_,_)),
-   pp_mask("Implication Rule",MM,=>(_,_)),
-   pp_mask("Bi-conditional Rule",MM,<=>(_,_)),
-   pp_mask("Negative Fact",MM,(~(_))),
-  % pp_mask("Material-impl Rule",MM,<=(_,_)),
- % pp_mask("Prolog Rule",MM,:-(_,_)),
+   pp_mask("Forward Rule",MM:'==>'(_,_)),
+   pp_mask("Bidirectional Rule",MM:'<==>'(_,_)),
+   pp_mask("Backchaining Rule",MM:'<-'(_,_)),
+   pp_mask("Implication Rule",MM:'=>'(_,_)),
+   pp_mask("Bi-conditional Rule",MM:'<=>'(_,_)),
+   pp_mask("Negative Fact",MM:('~'(_))),
+   pp_mask("Prolog Rule",MM:spft((H:-B),_,_),(H:-B)),
+  % pp_mask("Material-impl Rule",MM:<=(_,_)),
+ % pp_mask("Prolog Rule",MM::-(_,_)),
  !.
 
 
 pp_db_triggers(MM):- 
- pp_mask("Positive trigger",MM,pt(_,_)),
- pp_mask("Negative trigger",MM,nt(_,_,_)),
- pp_mask("Goal trigger",MM,bt(_,_)),!.
+ pp_mask("Positive trigger",MM:pt(_,_)),
+ pp_mask("Negative trigger",MM:nt(_,_,_)),
+ pp_mask("Goal trigger",MM:bt(_,_)),!.
 
 pp_db_supports(MM):-
   % temporary hack.
@@ -2920,7 +2933,7 @@ list_unique_1([X|Xs], So_far, [X|Us]) :-
     list_unique_1(Xs, [X|So_far], Us).
 
 
-%%	memberchk_variant(+Val, +List)
+% %%	memberchk_variant(+Val, +List)
 %
 %	Deterministic check of membership using =@= rather than
 %	unification.
@@ -2938,7 +2951,7 @@ lookup_kb(MM,MHB):- strip_module(MHB,M,HB),
       clause_property(Ref,module(MM)).
 
 
-%% has_cl( +H) is semidet.
+% %% has_cl( +H) is semidet.
 %
 % Has Clause.
 %
@@ -2946,7 +2959,7 @@ has_cl(H):-predicate_property(H,number_of_clauses(_)).
 
 
 
-%% clause_or_call( +H, ?B) is semidet.
+% %% clause_or_call( +H, ?B) is semidet.
 %
 % Clause Or Call.
 %
@@ -2964,13 +2977,13 @@ clause_or_call(H,B):- predicate_property(H,number_of_clauses(C)),predicate_prope
 
 % as opposed to simply using clause(H,true).
 
-%% should_call_for_facts( +H) is semidet.
+% %% should_call_for_facts( +H) is semidet.
 %
 % Should Call For Facts.
 %
 should_call_for_facts(H):- get_functor(H,F,A),call_u(should_call_for_facts(H,F,A)).
 
-%% should_call_for_facts( +VALUE1, ?F, ?VALUE3) is semidet.
+% %% should_call_for_facts( +VALUE1, ?F, ?VALUE3) is semidet.
 %
 % Should Call For Facts.
 %
@@ -2983,7 +2996,7 @@ should_call_for_facts(_,F,_):- \+ a(pfcControlled,F),!.
 
        */
 
-%% no_side_effects( +P) is semidet.
+% %% no_side_effects( +P) is semidet.
 %
 % No Side Effects.
 %
@@ -2991,9 +3004,6 @@ should_call_for_facts(_,F,_):- \+ a(pfcControlled,F),!.
 
 pfc_facts_in_kb(MM,P,C,L):- with_exact_kb(MM,setof_or_nil(P,pfcFact(P,C),L)).
 
-call_u(G):-call(G).
-must_ex(X):-must(X).
-quietly_ex(X):-call(X).
 
 lookup_spft(P,F,T):-pfcGetSupport(P,(F,T)).
 % why_dmsg(Why,Msg):- with_current_why(Why,dmsg_pretty(Msg)).
@@ -3003,7 +3013,7 @@ u_to_uu(U,U):- nonvar(U),U=(_,_),!.
 u_to_uu([U|More],UU):-list_to_conjuncts([U|More],C),!,u_to_uu(C,UU).
 u_to_uu(U,(U,ax)):-!.
 
-%% get_source_uu( :TermU) is det.
+% %% get_source_uu( :TermU) is det.
 %
 % Get Source Ref (Current file or User)
 %
@@ -3045,7 +3055,7 @@ get_first_user_reason0(_,(M,ax)):-get_source_mfl(M).
 
 %:- export(pfc_at_box:defaultAssertMt/1).
 %:- system:import(defaultAssertMt/1).
-%:- pfc_lib:import(pfc_at_box:defaultAssertMt/1).
+%:- import(pfc_at_box:defaultAssertMt/1).
 
 :- module_transparent((get_source_mfl)/1).
 get_source_mfl(M):- current_why(M), nonvar(M) , M =mfl4(_VarNameZ,_,_,_).
@@ -3098,7 +3108,7 @@ pfc_pp_db_justifications2(Prefix,[C|Rest],JustNo,StepNo):-
 pfcWhy_sub_sub(P):-
   justifications(P,Js),
   clear_proofs,
-  % retractall_u(t_l:whybuffer(_,_)),
+  % retractall(t_l:whybuffer(_,_)),
   (nb_hasval('$last_printed',P)-> dmsg_pretty(hasVal(P)) ;
    ((
   assertz(t_l:whybuffer(P,Js)),
@@ -3127,7 +3137,7 @@ lookup_spft_match_first(A,B,C):- nonvar(A),!,
 lookup_spft_match_first(A,B,C):- lookup_spft(A,B,C).
 
 
-%% pfc_is_info( :TermC) is semidet.
+% %% pfc_is_info( :TermC) is semidet.
 %
 % PFC If Is A Info.
 %
@@ -3147,25 +3157,25 @@ is_pfc_chained(fwc).
 is_pfc_chained(bwc).
 is_pfc_chained(wac).
 
-%% cwc is det.
+% %% cwc is det.
 %
 % Cwc.
 %
 cwc:-true.
 
-%% fwc is det.
+% %% fwc is det.
 %
 % Fwc.
 %
 fwc:-true.
 
-%% bwc is semidet.
+% %% bwc is semidet.
 %
 % Bwc.
 %
 bwc:-true.
 
-%% wac is semidet.
+% %% wac is semidet.
 %
 % Wac.
 %
@@ -3205,14 +3215,14 @@ find_hb_mfl(H,B,_,mfl4(VarNameZ,M,F,L)):- lookup_spft_match_first( (H:-B),mfl4(V
 find_hb_mfl(H,B,_Ref,mfl4(VarNameZ,M,F,L)):- lookup_spft_match_first(H,mfl4(VarNameZ,M,F,L),_),ground(B).
 find_hb_mfl(H,_B,uses_call_only(H),MFL):- !,call_only_based_mfl(H,MFL).
 
-%% pfc_facts_and_universe( +P) is semidet.
+% %% pfc_facts_and_universe( +P) is semidet.
 %
 % PFC Facts And Universe.
 %
 pfc_facts_and_universe(P):- (is_ftVar(P)->pred_head_all(P);true),call_u(P). % (meta_wrapper_rule(P)->call_u(P) ; call_u(P)).
 
 
-%% repropagate( :TermP) is semidet.
+% %% repropagate( :TermP) is semidet.
 %
 % Repropagate.
 %
@@ -3235,7 +3245,7 @@ predicate_to_goal(P,Goal):-atom(P),get_arity(P,F,A),functor(Goal,F,A).
 predicate_to_goal(PF/A,Goal):-atom(PF),get_arity(PF,F,A),functor(Goal,F,A).
 predicate_to_goal(G,G):-compound(G),!.
 
-%% repropagate_0( +P) is semidet.
+% %% repropagate_0( +P) is semidet.
 %
 % repropagate  Primary Helper.
 %
@@ -3244,7 +3254,7 @@ repropagate_0(P):- loop_check(call_u(repropagate_1(P)),true).
 :- thread_local t_l:is_repropagating/1.
 
 
-%% repropagate_1( +P) is semidet.
+% %% repropagate_1( +P) is semidet.
 %
 % repropagate  Secondary Helper.
 %
@@ -3258,7 +3268,7 @@ repropagate_1(P):- call_u(repropagate_2(P)).
 :- export(repropagate_2/1).
 :- module_transparent(repropagate_2/1).
 
-%% repropagate_2( +P) is semidet.
+% %% repropagate_2( +P) is semidet.
 %
 % repropagate  Extended Helper.
 %
@@ -3268,14 +3278,14 @@ repropagate_2(P):-
 
 % repropagate_meta_wrapper_rule(P==>_):- !, repropagate(P).
 
-%% repropagate_meta_wrapper_rule( +P) is semidet.
+% %% repropagate_meta_wrapper_rule( +P) is semidet.
 %
 % Repropagate Meta Wrapper Rule.
 %
 repropagate_meta_wrapper_rule(P):-repropagate_1(P).
 
 
-%% fwd_ok( :TermP) is semidet.
+% %% fwd_ok( :TermP) is semidet.
 %
 % Forward Repropigated Ok.
 %
@@ -3301,7 +3311,7 @@ same_functors(Head1,Head2):-must_det(get_unnegated_functor(Head1,F1,A1)),must_de
 
 
 
-%% pfc_facts_only( +P) is semidet.
+% %% pfc_facts_only( +P) is semidet.
 %
 % PFC Facts Only.
 %
@@ -3320,17 +3330,17 @@ check_context_module.
 
 
 
-is_pfc_module_file(M):- is_pfc_module_file(M,F,TF),!, (F \== (-)), TF = true.
 
-is_pfc_module_file(M,F,TF):- (module_property(M,file(F)),pfc_lib:is_pfc_file(F)) *-> TF=true ; 
+is_pfc_file(M,F,TF):- (module_property(M,file(F)),is_pfc_file(F)) *-> TF=true ; 
   (module_property(M,file(F))*->TF=false ; (F= (-), TF=false)).
 
-maybe_ensure_abox(M):- is_pfc_module_file(M,F,_), (F \== (-)), !,   
-  (pfc_lib:is_pfc_file(F)->show_call(pfc_lib:is_pfc_file(F),ensure_abox(M));dmsg_pretty(not_is_pfc_module_file(M,F))).
+maybe_ensure_abox(M):- is_pfc_file(M,F,_), (F \== (-)), !,   
+  (is_pfc_file(F)->show_call(is_pfc_file(F),ensure_abox(M));dmsg_pretty(not_is_pfc_file(M,F))).
 maybe_ensure_abox(M):- show_call(not_is_pfc_file,ensure_abox(M)).
 
 
 :- module_transparent((ensure_abox)/1).
+ensure_abox(_):-!.
 ensure_abox(M):- 
   ignore(((M==user;M==baseKB)->true;nop(add_import_module(M,pfc_lib,end)))),
   dynamic(M:defaultTBoxMt/1),
@@ -3348,7 +3358,7 @@ ensure_abox_support(M,TBox):-
   must(setup_module_ops(M)),!.
   
 ensure_abox_support(M,TBox):- 
-       % system:add_import_module(M,user,end),
+       system:add_import_module(M,user,end),
        must(ignore(system:delete_import_module(M,system))),
        must(ignore(system:delete_import_module(M,baseKB))),
        system:add_import_module(M,system,end),
@@ -3385,21 +3395,21 @@ pfc_op_each(OpEach):-
 
 in_dialect_pfc:- is_pfc_file. % \+ current_prolog_flag(dialect_pfc,cwc),!.
 
-%is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_toplevel)),!.
-%is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_mod)),!,baseKB:mtCanAssert(SM).
+is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_toplevel)),!.
+is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_mod)),!,clause_b(mtCanAssert(SM)).
 is_pfc_module(SM):- clause_b(mtHybrid(SM)).
 
 can_extreme_debug :- \+ in_pengines.
 
-:- pfc_lib:export(pfc_lib:is_pfc_file/0).
-is_pfc_file:- can_extreme_debug, current_prolog_flag(expect_pfc_file,always),!,(is_pfc_file_notrace  ; (nop((dumpST,sleep(1),break,rtrace(is_pfc_file_notrace),break)),fail)),!.
-is_pfc_file:- can_extreme_debug, current_prolog_flag(expect_pfc_file,never),!,(\+is_pfc_file_notrace->fail;nop((dumpST,sleep(1),break,rtrace(\+is_pfc_file_notrace),break))),!.
+%is_pfc_file:- can_extreme_debug, current_prolog_flag(expect_pfc_file,always),!,(is_pfc_file_notrace  ; (nop((dumpST,sleep(1),break,rtrace(is_pfc_file_notrace),break)),fail)),!.
+%is_pfc_file:- can_extreme_debug, current_prolog_flag(expect_pfc_file,never),!,(\+is_pfc_file_notrace->fail;nop((dumpST,sleep(1),break,rtrace(\+is_pfc_file_notrace),break))),!.
 is_pfc_file:- quietly(is_pfc_file_notrace),!.
 
-:- system:import(pfc_lib:is_pfc_file/0).
+:- export(is_pfc_file/0).
+:- system:import(is_pfc_file/0).
 %:- header_sane:import(is_pfc_file/0).
 
-:- pfc_lib:export(pfc_lib:is_pfc_file_notrace/0).
+:- export(is_pfc_file_notrace/0).
 is_pfc_file_notrace:- notrace(( prolog_load_context(source, SFile), 
                        (prolog_load_context(file,File);source_location(File,_W)))),
               is_pfc_filename(File,SFile),!.
@@ -3407,16 +3417,17 @@ is_pfc_file_notrace:- notrace(( prolog_load_context(source, SFile),
 is_pfc_file_notrace:- current_source_file(FileL),(FileL=File:_),!,is_pfc_file(File),!.
 
  %is_pfc_file_notrace:- \+ , prolog_load_context(module, M),M\==baseKB,is_pfc_module(M),!,clause_b(mtHybrid(M)).
-:- system:import(pfc_lib:is_pfc_file_notrace/0).
+:- system:import(is_pfc_file_notrace/0).
 
-is_pfc_file(File):- is_pfc_filename(File,File).
+is_pfc_file(File):- is_pfc_filename(File,File),!.
+is_pfc_file(M):- is_pfc_file(M,F,TF),!, (F \== (-)), TF = true.
 % First checks to confirm there is nothing inhibiting
 is_pfc_filename(File,_):- (atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File)),!.
-is_pfc_filename(File,_):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
+%is_pfc_filename(File,_):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
 %is_pfc_filename(File,_):- check_how_virtualize_file(false,File),!,fail.
 is_pfc_filename(File,_):- baseKB:how_virtualize_file(heads,File,0),!.
 is_pfc_filename(File,File):-!,fail.
-is_pfc_filename(_,File):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
+%is_pfc_filename(_,File):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
 is_pfc_filename(_,File):- check_how_virtualize_file(heads,File),!.
 is_pfc_filename(_,File):- check_how_virtualize_file(false,File),!,fail.
 %is_pfc_filename(_,File):- atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File),!.
@@ -3430,13 +3441,13 @@ is_pfc_filename(_,File):- check_how_virtualize_file(false,File),!,fail.
 :- dynamic(lmcache:has_pfc_database_preds/1).
 
 
-%% assert_setting01( ?X) is semidet.
+% %% assert_setting01( ?X) is semidet.
 % :- srtrace.
 assert_setting01(M:P):-safe_functor(P,_,A),dupe_term(P,DP),setarg(A,DP,_),system:retractall(M:DP),system:asserta(M:P).
 
 % :- break.
 
-%% which_file( ?F) is semidet.
+% %% which_file( ?F) is semidet.
 %
 % Which File.
 %
@@ -3445,7 +3456,7 @@ which_file(F):- prolog_load_context(source,F) -> true; once(loading_source_file(
 % :- '$hide'(defaultAssertMt(_)).
 
 
-%% get_file_type_local( ?File, ?Type) is det.
+% %% get_file_type_local( ?File, ?Type) is det.
 %
 % Get File Type.
 %
@@ -3464,13 +3475,13 @@ mtCanAssert(user):-  is_user_pfc.
 mtCanAssert(Module):-  module_property(Module,file(_)),!,fail.
 mtCanAssert(Module):- (loading_source_file(File),get_file_type_local(File,pfc),prolog_load_context(module,Module)).
 mtCanAssert(Module):- clause_b(mtProlog(Module)),!,fail.
-mtCanAssert(Module):- \+ pfc_lib:is_code_module(Module),!.
+mtCanAssert(Module):- \+ is_code_module(Module),!.
 
 is_user_pfc:- clause_b(mtHybrid(user)).
 
 
 
-%% fileAssertMt(-ABox) is det.
+% %% fileAssertMt(-ABox) is det.
 %
 % Gets ABox is an "assertion component" Prolog Module
 % within a knowledge base.
@@ -3491,7 +3502,7 @@ fileAssertMt0(M):- must(get_fallBackAssertMt(M)),!.
 :- initialization(fix_baseKB_imports,now).
 
 
-%% set_fileAssertMt( ABox) is semidet.
+% %% set_fileAssertMt( ABox) is semidet.
 %
 % Sets the File''s Module.
 %
@@ -3499,17 +3510,17 @@ fileAssertMt0(M):- must(get_fallBackAssertMt(M)),!.
 % set_fileAssertMt(M):- '$current_source_module'(M),!.
 set_fileAssertMt(M):-
  ensure_abox(M),
-  % ignore(show_failure(clause_b(mtCanAssert(M)))),
-  sanity(mtCanAssert(M)),
+  ignore(show_failure(clause_b(mtCanAssert(M)))),
+ % sanity(mtCanAssert(M)),
   
   must(which_file(File)),
   assert_setting(baseKB:file_to_module(File,M)),
   assert_setting(lmcache:pfc_directive_value(File,module,M)),
   asserta_until_eof(t_l:current_defaultAssertMt(M)),!,
-  ((pfc_lib:is_pfc_file) -> must(set_current_modules_until_eof(M)) ; true).
+  ((is_pfc_file) -> must(set_current_modules_until_eof(M)) ; true).
 
 
-%:- import(pfc_lib:is_pfc_file/0).
+%:- import(is_pfc_file/0).
 % :- '$hide'(set_fileAssertMt(_)).
 
 
@@ -3518,7 +3529,7 @@ set_current_modules_until_eof(M):-
  '$current_source_module'(SM),'$set_source_module'(M),call_on_eof('$set_source_module'(SM)).
 
 
-%% set_defaultAssertMt( ?M) is semidet.
+% %% set_defaultAssertMt( ?M) is semidet.
 %
 % Sets Current Module.
 %
@@ -3533,7 +3544,7 @@ set_defaultAssertMt(M):-
 
 
 
-%% defaultAssertMt(-Ctx) is det.
+% %% defaultAssertMt(-Ctx) is det.
 %
 % M is an "assertion component" Prolog Module
 % within a knowledge base.
@@ -3607,7 +3618,7 @@ pfc_ain(G):- pfcAdd(G).
 mpred_ain(G):- pfcAdd(G).
 pfc_unload_file:-!.
 file_begin(_).
-%% neg_in_code( +G) is semidet.
+% %% neg_in_code( +G) is semidet.
 %
 % Negated In Code.
 %
@@ -3636,7 +3647,7 @@ neg_in_code0(G):- loop_check(neg_may_naf(G)), \+ loop_check(G),!.
 :- module_transparent(neg_may_naf/1).
 :- export(neg_may_naf/1).
 
-%% neg_may_naf( :GoalP) is semidet.
+% %% neg_may_naf( :GoalP) is semidet.
 %
 % Negated May Negation-by-faliure.
 %
@@ -3645,7 +3656,7 @@ neg_may_naf(P):- is_ftCompound(P),is_never_pfc(P).
 
 
 
-%% if_missing_mask( +Q, ?R, ?Test) is semidet.
+% %% if_missing_mask( +Q, ?R, ?Test) is semidet.
 %
 % If Missing Mask.
 %
@@ -3665,7 +3676,7 @@ if_missing_mask(Q,R,Test):-
 
 if_missing_mask(ISA, ~ ISA, \+ ISA).
 
-%% if_missing_n_mask( +Q, ?N, ?R, ?Test) is semidet.
+% %% if_missing_n_mask( +Q, ?N, ?R, ?Test) is semidet.
 %
 % If Missing Mask.
 %
@@ -3685,26 +3696,26 @@ if_missing_mask(Q,N,R,dif:dif(Was,NEW)):-
 */
 
 
-%% which_missing_argnum( +VALUE1, ?VALUE2) is semidet.
+% %% which_missing_argnum( +VALUE1, ?VALUE2) is semidet.
 %
 % Which Missing Argnum.
 %
 which_missing_argnum(Q,N):- compound(Q),\+ compound_name_arity(Q,_,0),
  must((acyclic_term(Q),is_ftCompound(Q),get_functor(Q,F,A))),
  F\=t,
-  (call_u(singleValuedInArg(F,N)) -> true; which_missing_argnum(Q,F,A,N)).
+  (pfc_call(singleValuedInArg(F,N)) -> true; which_missing_argnum(Q,F,A,N)).
 
 which_missing_argnum(_,_,1,_):-!,fail.
 which_missing_argnum(Q,_F,A,N):- between(A,1,N),get_assertion_head_arg(N,Q,Was),is_ftNonvar(Was).
 
 
-%% is_reprop( +X) is semidet.
+% %% is_reprop( +X) is semidet.
 %
 % If Is A Reprop.
 %
 is_reprop(X):- compound(X),is_reprop_0(X).
 
-%% is_reprop_0( +X) is semidet.
+% %% is_reprop_0( +X) is semidet.
 %
 % If Is A reprop  Primary Helper.
 %
@@ -3712,7 +3723,7 @@ is_reprop_0(~(X)):-!,is_reprop(X).
 is_reprop_0(X):-get_functor(X,repropagate,_).
 
 
-%% pfc_non_neg_literal( +X) is semidet.
+% %% pfc_non_neg_literal( +X) is semidet.
 %
 % PFC Not Negated Literal.
 %
@@ -3761,7 +3772,7 @@ cna_functor_safe(P,F,A):- compound(P) -> compound_name_arity(P,F,A) ; functor(P,
 
 
 :- export(any_to_number/2).
-%% any_to_value( ?Var, ?Var) is semidet.
+% %% any_to_value( ?Var, ?Var) is semidet.
 %
 % Any Converted To Value.
 %
@@ -3771,7 +3782,7 @@ any_to_value(A,V):-any_to_number(A,V).
 any_to_value(A,A).
 
 
-%% any_to_number( :TermN, ?N) is semidet.
+% %% any_to_number( :TermN, ?N) is semidet.
 %
 % Any Converted To Number.
 %
@@ -3780,7 +3791,7 @@ any_to_number(ftDiceFn(A,B,C),N):- ground(A),if_defined(roll_dice(A,B,C,N)),!.
 any_to_number(A,N):-atom(A),atom_to_value(A,V),A\=V,any_to_number(V,N).
 any_to_number(A,N):- catch(number_string(N,A),_,fail).
 
-%% atom_to_value( ?V, :TermTerm) is semidet.
+% %% atom_to_value( ?V, :TermTerm) is semidet.
 %
 % Atom Converted To Value.
 %
@@ -3793,7 +3804,7 @@ atom_to_value(V,ftDiceFn(T1,T2,-T3)):- atomic_list_concat_safe([D1,'d',D2,'-',D3
 
 
 
-%% is_ftText( ?Arg) is semidet.
+% %% is_ftText( ?Arg) is semidet.
 %
 % If Is A Format Type Text.
 %
@@ -3806,7 +3817,8 @@ is_ftText(Arg):- text_to_string_safe(Arg,_),!.
 is_ftText(Arg):- safe_functor(Arg,S,_), ereq(resultIsa(S,ftText)).
 
 :- kb_global(baseKB:ftText/1).
-:-ain(baseKB:(ftText(A):- !, if_defined(term_is_ft(A, ftText),is_ftText(A)),!)).
+:-prolog_load_context(module,M),
+  ain(baseKB:(ftText(A):- !, if_defined(term_is_ft(A, ftText),M:is_ftText(A)),!)).
 
 % =======================================================
 % term utils
@@ -3816,7 +3828,7 @@ is_ftText(Arg):- safe_functor(Arg,S,_), ereq(resultIsa(S,ftText)).
 
 
 
-%% inverse_args( ?AR, ?GS) is semidet.
+% %% inverse_args( ?AR, ?GS) is semidet.
 %
 % Inverse Arguments.
 %
@@ -3829,7 +3841,7 @@ inverse_args([P,A,R,G,S],[S,A,R,G,P]):-!.
 
 
 
-%% same_vars( ?T1, ?T2) is semidet.
+% %% same_vars( ?T1, ?T2) is semidet.
 %
 % Same Variables.
 %
@@ -3838,7 +3850,7 @@ same_vars(T1,T2):-term_variables(T1,V1),term_variables(T2,V2),!,V1==V2.
 
 
 
-%% replace_arg( ?C, :PRED3A, ?VAR, ?CC) is semidet.
+% %% replace_arg( ?C, :PRED3A, ?VAR, ?CC) is semidet.
 %
 % Replace Argument.
 %
@@ -3856,13 +3868,13 @@ replace_arg(C,A,VAR,CC):- C=..FARGS,replace_nth_arglist(FARGS,A,VAR,FARGO),!,CC=
 
 % :- pfc_trace_nochilds(replace_arg/4).
 
-%% replace_nth_arglist(+List, +Index, +Element, -NewList) is det[private]
+% %% replace_nth_arglist(+List, +Index, +Element, -NewList) is det[private]
 % Replace the Nth (1-based) element of a list.
 % :- pfc_trace_nochilds(replace_nth_arglist/4).
 
 
 
-%% replace_nth_arglist( :TermARG1, ?VALUE2, ?VAR, :TermVAR) is semidet.
+% %% replace_nth_arglist( :TermARG1, ?VALUE2, ?VAR, :TermVAR) is semidet.
 %
 % Replace Nth Arglist.
 %
@@ -3875,7 +3887,7 @@ replace_nth_arglist([T|FARGS],A,VAR,[T|FARGO]):-
 
 
 
-%% replace_nth_ref( :TermARG1, ?N, ?OldVar, ?NewVar, :TermARG5) is semidet.
+% %% replace_nth_ref( :TermARG1, ?N, ?OldVar, ?NewVar, :TermARG5) is semidet.
 %
 % Replace Nth Ref.
 %
@@ -3890,7 +3902,7 @@ replace_nth_ref([Carry|ARGS],Which,OldVar,NewVar,[Carry|NEWARGS]):-
 
 
 
-%% update_value( ?OLD, ?NEW, ?NEXT) is semidet.
+% %% update_value( ?OLD, ?NEW, ?NEXT) is semidet.
 %
 % Update Value.
 %
@@ -3905,7 +3917,7 @@ update_value(_,NEW,NEWV):- compute_value_no_dice(NEW,NEWV),!.
 
 
 
-%% flatten_append( ?First, ?Last, ?Out) is semidet.
+% %% flatten_append( ?First, ?Last, ?Out) is semidet.
 %
 % Flatten Append.
 %
@@ -3914,7 +3926,7 @@ flatten_append(First,Last,Out):-flatten([First],FirstF),flatten([Last],LastF),ap
 
 
 
-%% list_update_op( ?OLDI, :TermX, ?NEW) is semidet.
+% %% list_update_op( ?OLDI, :TermX, ?NEW) is semidet.
 %
 % List Update Oper..
 %
@@ -3924,7 +3936,7 @@ list_update_op(OLDI,-X,NEW):-flatten([OLDI],OLD),flatten([X],XX),!,list_differen
 
 
 
-%% compute_value_no_dice( ?NEW, ?NEW) is semidet.
+% %% compute_value_no_dice( ?NEW, ?NEW) is semidet.
 %
 % Compute Value No Dice.
 %
@@ -3935,7 +3947,7 @@ compute_value_no_dice(NEW,NEWV):-compute_value(NEW,NEWV).
 
 
 
-%% compute_value( ?NEW, ?NEWV) is semidet.
+% %% compute_value( ?NEW, ?NEWV) is semidet.
 %
 % Compute Value.
 %
@@ -3946,7 +3958,7 @@ compute_value(NEW,NEW).
 
 
 
-%% insert_into( :TermARGS, ?VALUE2, ?Insert, :TermInsert) is semidet.
+% %% insert_into( :TermARGS, ?VALUE2, ?Insert, :TermInsert) is semidet.
 %
 % Insert Converted To.
 %
@@ -3966,7 +3978,7 @@ insert_into([Carry|ARGS],After,Insert,[Carry|NEWARGS]):-
 
 %= 	 	 
 
-%% into_plist( ?In, ?Out) is semidet.
+% %% into_plist( ?In, ?Out) is semidet.
 %
 % Converted To Plist.
 %
@@ -3976,7 +3988,7 @@ into_plist(In,Out):-into_plist_arities(2,12,In,Out).
 
 %= 	 	 
 
-%% into_plist_arities( ?Min, ?Max, ?PLIST, ?PLISTO) is semidet.
+% %% into_plist_arities( ?Min, ?Max, ?PLIST, ?PLISTO) is semidet.
 %
 % Converted To Plist Arities.
 %
@@ -3990,7 +4002,7 @@ into_plist_arities(_,_,Call,PLIST):- Call=..PLIST. % finally the fallthrue
 
 %= 	 	 
 
-%% never_pfc_tcall( ?VALUE1) is semidet.
+% %% never_pfc_tcall( ?VALUE1) is semidet.
 %
 % Never Managed Predicate Managed Predicate.
 %
@@ -4013,7 +4025,7 @@ local_qh_pfc_prop(M,F,A,C):- call_u(mpred_prop(M,F,A,C)).
 
 %= 	 	 
 
-%% if_result( :GoalTF, :Goal) is semidet.
+% %% if_result( :GoalTF, :Goal) is semidet.
 %
 % If Result.
 %
@@ -4027,7 +4039,7 @@ if_result(TF,Call):-(TF->Call;true).
 
 %= 	 	 
 
-%% pfc_plist_t( ?P, :TermLIST) is semidet.
+% %% pfc_plist_t( ?P, :TermLIST) is semidet.
 %
 % Managed Predicate Plist True Stucture.
 %
@@ -4050,7 +4062,7 @@ pfc_plist_t(P,LIST):- CALL=..[t,P|LIST],on_x_debug(CALL).
 
 %= 	 	 
 
-%% pfc_fa_call( ?F, ?UPARAM2, :Goal) is semidet.
+% %% pfc_fa_call( ?F, ?UPARAM2, :Goal) is semidet.
 %
 % Managed Predicate Functor-arity Call.
 %
@@ -4065,11 +4077,11 @@ pfc_fa_call(F,_,Call):-F\==t,current_predicate(F,M:_OtherCall),!,M:Call.
 
 %= 	 	 
 
-%% pfc_fact_arity( ?VALUE1, ?VALUE2) is semidet.
+% %% pfc_fact_arity( ?VALUE1, ?VALUE2) is semidet.
 %
 % Managed Predicate Fact Arity.
 %
-pfc_fact_arity(F,A):- call_u(arity(F,A)),
+pfc_fact_arity(F,A):- pfc_call(arity(F,A)),
   suggest_m(M),
   once(local_qh_pfc_prop(M,F,A,prologHybrid);
      local_qh_pfc_prop(M,F,A,pfcControlled);
@@ -4079,7 +4091,7 @@ pfc_fact_arity(F,A):- call_u(arity(F,A)),
 
 %= 	 	 
 
-%% prologHybridFact( ?G) is semidet.
+% %% prologHybridFact( ?G) is semidet.
 %
 % Prolog Hybrid Fact.
 %
@@ -4087,9 +4099,6 @@ prologHybridFact(G):- (var(G)->(pfc_fact_arity(F,A),safe_functor(G,F,A));true),i
 
 
 
-:- user:consult('../pfclib/system_autoexec_3_0.pfc').
-:- check:list_undefined.
-:- fixup_exports.
 
 :- dynamic prolog:make_hook/2.
 :- multifile prolog:make_hook/2.
@@ -4099,3 +4108,112 @@ prolog:make_hook(after, _C) :- nodebug(codewalk).
 
 :- nodebug(codewalk).
 :- nodebug(codewalk(trace)).
+
+
+% if the correct flag is set, dtrace exection of Pfc
+pfc_trace_msg(_):- current_prolog_flag(set_pfc_silent,true).
+pfc_trace_msg(Info):- not_not_ignore_quietly_ex(((((clause_asserted(pfc_is_tracing_exec);tracing)->(show_wdmsg(Info));true)))).
+pfc_trace_msg(Format,Args):- not_not_ignore_quietly_ex((((clause_asserted(pfc_is_tracing_exec);tracing)-> (show_wdmsg(Format,Args))))),!.
+% pfc_trace_msg(Format,Args):- not_not_ignore_quietly_ex((((format_to_message(Format,Args,Info),pfc_trace_msg(Info))))).
+
+show_wdmsg(A,B):- current_prolog_flag(set_pfc_silent,true)-> true; wdmsg_pretty(A,B).
+show_wdmsg(A):- current_prolog_flag(set_pfc_silent,true)-> true; wdmsg_pretty(A).
+
+
+:- use_module(library(pfc_test)).
+:- dynamic(lmcache:pfc_is_spying_pred/2).
+
+% %%  pfc_set_warnings(+TF) is det.
+%   true = sets flag to cause Pfc warning messages to print.
+%   false = sets flag to cause Pfc warning messages not to print.
+%
+pfc_set_warnings(False):- False == false, !,
+  retractall(pfcWarnings(_)).
+pfc_set_warnings(True):-
+  retractall(pfcWarnings(_)),
+  assert(pfcWarnings(True)).
+
+
+pfc_trace_all:- pfc_trace_exec,pfcTrace,pfc_set_warnings(true),set_pfc_silent(false).
+pfc_notrace_all:- pfc_notrace_exec,pfc_notrace,pfc_set_warnings(false).
+pfc_notrace_exec:- retractall(pfc_is_tracing_exec).
+
+
+% %% pfc_is_silent is det.
+%
+% If Is A Silient.
+%
+pfc_is_silent :- t_l:hide_pfc_trace_exec,!, \+ tracing.
+pfc_is_silent :- quietly_ex(( \+ t_l:pfc_debug_local, \+ lookup_u(pfc_is_tracing_exec), \+ lookup_u(lmcache:pfc_is_spying_pred(_,_)),
+  current_prolog_flag(debug,false), is_release)) ,!.
+
+oinfo(O):- xlisting((O, - spft, - ( ==> ), - pt , - nt , - bt , - mdefault, - lmcache)).
+
+
+/*
+pfc_load_term(:- module(_,L)):-!, call_u_no_bc(maplist(export,L)).
+pfc_load_term(:- TermO):- call_u_no_bc(TermO).
+pfc_load_term(TermO):-pfc_ain_object(TermO).
+
+*/
+
+
+% not_not_ignore_quietly_ex(G):- ignore(quietly(\+ \+ G)).
+% not_not_ignore_quietly_ex(G):- ignore( \+ (G)).
+not_not_ignore_quietly_ex(G):- notrace(ignore(quietly_ex(\+ \+ G))).
+
+% needed:  pfc_trace_rule(Name)  ...
+
+set_pfc_silent(TF):-set_prolog_flag(set_pfc_silent,TF).
+
+
+pfc_nowatch:-  pfc_notrace_exec.
+
+pfc_trace_exec:- assert(pfc_is_tracing_exec),set_pfc_silent(false).
+pfc_notrace:- pfc_untrace.
+pfc_untrace:- pfc_untrace(_).
+pfc_untrace(Form0):- get_head_term(Form0,Form), retractall(lmcache:pfc_is_spying_pred(Form,print)).
+
+
+
+
+:- thread_local(t_l:hide_pfc_trace_exec/0).
+
+
+set_file_abox_module(User):- '$set_typein_module'(User), '$set_source_module'(User),
+  set_fileAssertMt(User).
+
+set_file_abox_module_wa(User):- set_file_abox_module(User),set_defaultAssertMt(User).
+
+
+:- thread_local(t_l:pfc_debug_local).
+
+  
+% %% get_pfc_is_tracing(:PRED) is semidet.
+%
+% PFC If Is A Tracing.
+%
+get_pfc_is_tracing(_):-!,fail.
+get_pfc_is_tracing(Form0):- get_head_term(Form0,Form), t_l:hide_pfc_trace_exec,!,
+  \+ \+ ((quietly_ex(call(lmcache:pfc_is_spying_pred(Form,print))))).
+get_pfc_is_tracing(Form0):- get_head_term(Form0,Form),
+  once(t_l:pfc_debug_local ; tracing ; clause_asserted(pfc_is_tracing_exec) ;
+     call(lmcache:pfc_is_spying_pred(Form,print))).
+
+:- prolog_load_context(module,M),declare_pfc_support(M).
+%:- import_everywhere(BaseKB).
+
+pfc_load_lib:- consult(library('pfclib/system_autoexec_3_0.pfc')).
+:- fixup_exports.
+
+
+:- export(pfc_term_expansion/2).
+:- system:import(pfc_term_expansion/2).
+:- multifile(system:term_expansion/4).
+:- dynamic(system:term_expansion/4).
+:- module_transparent(system:term_expansion/4).
+system:term_expansion(I,S0,O,S1):-
+  notrace( \+ current_prolog_flag(xref, true) -> prolog_load_context(term,T)->T==I)->pfc_term_expansion(I,O)->I\=@=O->S0=S1.
+
+
+

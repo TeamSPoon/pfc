@@ -1,5 +1,0 @@
-:- include(library(pfc_header_3_0)).
-
-==> parent(adam,abel).
-==> parent(abel,enoch).
-==> gender(abel,male).

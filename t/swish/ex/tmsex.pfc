@@ -1,9 +1,0 @@
-:- include(library(pfc_header_3_0)).
-
-p(X) ==> q(X).
-q(X), r(X) ==> s(X).
-s(X) ==> t.
-
-==> p(1).
-==> r(1).
-==> s(2).

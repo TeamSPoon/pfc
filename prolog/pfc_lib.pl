@@ -21,9 +21,13 @@
 :- if(current_prolog_flag(pfc_version,1.2)).
 :- include(pfc_lib_1_2).
 :- else.
+:- if((current_prolog_flag(pfc_version,Was),Was\==2.0)).
+:- baseKB:use_module(library(pfc)).
+:- else.
 % this is 2.0
 :- set_prolog_flag(pfc_version,2.0).
 :- include(pfc_lib_2_0).
+:- endif.
 :- endif.
 :- endif.
 

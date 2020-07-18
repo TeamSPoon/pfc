@@ -160,6 +160,7 @@ kb_global_w(M:F/A):-
 
 :- dynamic(rdf_rewrite:(~)/1).
 :- kb_global_w(rdf_rewrite:arity/2).
+/*
 :- kb_global_w(baseKB:genlMt/2).
 :- kb_global_w(baseKB:predicateTriggerType/1).
 :- kb_global_w(baseKB:mtHybrid/1).
@@ -188,7 +189,7 @@ kb_global_w(M:F/A):-
 :- kb_global_w(baseKB:nt/3).
 :- kb_global_w(baseKB:pt/2).
 :- kb_global_w(baseKB:spft/3).
-
+        */
 /*
 
 WILL BE ..

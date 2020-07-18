@@ -53,6 +53,8 @@
 % clause types: (:-)/1, (:-)/2, (=>)/1,  (=>)/2,  (==>)/1,  (==>)/2, (<-)/1,  (<-)/2, (<==>)/2, fact/1
 %
 */
+:- prolog_load_context(file,File),unload_file(File).
+
 % :- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
 module_pfc_expansion:- fail, nop(module(pfc_expansion,
           [ a/2,
@@ -190,6 +192,7 @@ module_pfc_expansion:- fail, nop(module(pfc_expansion,
 
 :- use_module(library(apply)).
 :- use_module(library(logicmoo/attvar_serializer)).
+
 
 %= :- kb_shared(was_chain_rule/1).
 %= :- kb_shared(baseKB:rtReformulatorDirectivePredicate/1).
@@ -2938,6 +2941,7 @@ full_transform(Why,MH,MHH):-
 same_modules(MH,MHH):- strip_module(MH,HM,_),strip_module(MHH,HHM,_),!,
    HM==HHM.
 
+:- system:import(full_transform/3).
 
 
 %% sub_term_eq( +H, ?HH) is semidet.
