@@ -50,12 +50,11 @@ mpred_why_2(Conseq,Ante):- var(Conseq),!,mpred_children(Ante,Conseq).
 mpred_why_2(Conseq,Ante):- justifications(Conseq,Ante).
 
 
+mpred_info(O):-call_u(mpred_info0(O)).
 
-mpred_info(O):-
+mpred_info0(O):-
  with_output_to(user_error,
- ((dmsg_pretty("======================================================================="),
-  listing(O),
-  dmsg_pretty("======================================================================="),
+ ((dmsg_pretty("======================================================================="),  
   quietly(call_with_inference_limit(ignore(on_xf_cont(deterministically_must(mpred_why_1(O)))),4000,_)),
   dmsg_pretty("======================================================================="),
   must_maplist(mp_printAll(O),
@@ -67,25 +66,26 @@ mpred_info(O):-
       mpred_supported(local,O),
       mpred_supported(cycles,O),
       mpred_assumption(O),
+      call(listing(O)),
       get_mpred_is_tracing(O)]),
  dmsg_pretty("=======================================================================")))).
 
 mp_printAll(S,+(O)):- subst(O,v,V,CALL),CALL\==O,!,
   subst(O,S,s,NAME),safe_functor(O,F,_),!,
   nl,flush_output, fmt("=================="),wdmsg_pretty(NAME),wdmsg_pretty("---"),flush_output,!,
-  doall(((flush_output,(CALL),flush_output)*->fmt9(V);(fail=F))),nl,fmt("=================="),nl,flush_output.
+  doall(((flush_output,call_u(CALL),flush_output)*->fmt9(V);(fail=F))),nl,fmt("=================="),nl,flush_output.
 mp_printAll(S,call(O)):- !,
   subst(O,S,s,NAME),
   nl,flush_output,fmt("=================="),wdmsg_pretty(NAME),wdmsg_pretty("---"),flush_output,!,
-  doall(((flush_output,deterministically_must(O),flush_output)*->true;wdmsg_pretty(false=NAME))),fmt("=================="),nl,flush_output.
+  doall(((flush_output,deterministically_must(call_u(O)),flush_output)*->true;wdmsg_pretty(false=NAME))),fmt("=================="),nl,flush_output.
 mp_printAll(S,(O)):- subst(O,v,V,CALL),CALL\==O,!,
   subst(O,S,s,NAME),safe_functor(O,F,_),
   nl,flush_output, fmt("=================="),wdmsg_pretty(NAME),wdmsg_pretty("---"),flush_output,!,
-  doall(((flush_output,deterministically_must(CALL),flush_output)*->fmt9(V);(fail=F))),nl,fmt("=================="),nl,flush_output.
+  doall(((flush_output,deterministically_must(call_u(CALL)),flush_output)*->fmt9(V);(fail=F))),nl,fmt("=================="),nl,flush_output.
 mp_printAll(S,(O)):-  !,  safe_functor(O,F,A),mp_nnvv(S,O,F,A),flush_output.
-mp_nnvv(_,(O),F,1):- !, doall(((flush_output,deterministically_must(O),flush_output)*->wdmsg_pretty(+F);wdmsg_pretty(-F))).
+mp_nnvv(_,(O),F,1):- !, doall(((flush_output,deterministically_must(call_u(O)),flush_output)*->wdmsg_pretty(+F);wdmsg_pretty(-F))).
 mp_nnvv(S,(O),_,_):- !, subst(O,S,s,NAME), !,
-  doall(((flush_output,deterministically_must(O),flush_output)*->wdmsg_pretty(-NAME);wdmsg_pretty(+NAME))).
+  doall(((flush_output,deterministically_must(call_u(O)),flush_output)*->wdmsg_pretty(-NAME);wdmsg_pretty(+NAME))).
 
 
 

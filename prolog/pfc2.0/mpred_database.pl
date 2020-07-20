@@ -179,9 +179,9 @@ functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_d
  :- meta_predicate mpred_get_support_one(0,*).
  :- meta_predicate mpred_get_support_precanonical_plus_more(0,*).
  % :- meta_predicate '__aux_maplist/2_cnstrn0+1'(*,0).
- :- meta_predicate repropagate_1(*).
+ :- meta_predicate repropagate_0(*).
  :- meta_predicate trigger_supporters_list(0,*).
- :- meta_predicate repropagate_meta_wrapper_rule(*).
+ :- meta_predicate repropagate_meta_wrapper(*).
  :- meta_predicate repropagate_0(*).
 
 
@@ -1285,7 +1285,7 @@ user_atom(s(_)).
 % PFC Deep Support.
 %
 mpred_deep_support(_How,unbound):-!,fail.
-mpred_deep_support(How,M):-nr_lc_ex(mpred_deep_support0(How,M),fail).
+mpred_deep_support(How,M):-nr_lc_ex(mpred_deep_support0(How,M)).
 
 
 %% mpred_deep_support0( +U, ?U) is semidet.
@@ -2099,63 +2099,37 @@ mpred_facts_and_universe(P):- (is_ftVar(P)->pred_head_all(P);true),call_u(P). % 
 %
 % Repropagate.
 %
-repropagate(_):-  check_context_module,fail.
+repropagate(_):-  notrace((check_context_module,fail)).
+repropagate(P):-  repropagate_0(P).
 %repropagate(P):-  check_real_context_module,fail.
 
-repropagate(P):-  is_ftVar(P),!.
-repropagate(==>P):- !,repropagate(P).
-repropagate(P):-  meta_wrapper_rule(P),!,call_u(repropagate_meta_wrapper_rule(P)).
-repropagate(P):-  \+ predicate_property(P,_),'$find_predicate'(P,PP),PP\=[],!,forall(member(M:F/A,PP),
-                                                          must((functor(Q,F,A),repropagate_1(M:Q)))).
-repropagate(F/A):- is_ftNameArity(F,A),!,functor(P,F,A),!,repropagate(P).
-repropagate(F/A):- atom(F),is_ftVar(A),!,repropagate(F).
+repropagate_0(P):-  notrace(is_ftVar(P)),!.
+repropagate_0(USER:P):- USER==user,!,repropagate_0(P).
+repropagate_0(==>P):- !,repropagate_0(P).
+repropagate_0(P):-  meta_wrapper_rule(P),!,call_u(repropagate_meta_wrapper(P)).
+repropagate_0(P):-  \+ predicate_property(P,_),'$find_predicate'(P,PP),PP\=[],!,
+     forall(member(M:F/A,PP),must((functor(Q,F,A),repropagate_0(M:Q)))).
+repropagate_0(F/A):- is_ftNameArity(F,A),!,functor(P,F,A),!,repropagate_0(P).
+repropagate_0(F/A):- atom(F),is_ftVar(A),!,repropagate_0(F).
+repropagate_0(P):-  notrace((\+ predicate_property(_:P,_),dmsg_pretty(undefined_repropagate(P)))),dumpST,dtrace,!,fail.
+repropagate_0(P):- repropagate_meta_wrapper(P).
 
-repropagate(P):-  \+ predicate_property(_:P,_),dmsg_pretty(undefined_repropagate(P)),dumpST,dtrace,!,fail.
-repropagate(P):-  call_u(repropagate_0(P)).
+:- export(repropagate_meta_wrapper/1).
+:- module_transparent(repropagate_meta_wrapper/1).
+
+:- thread_local(t_l:is_repropagating/1).
+%% repropagate_meta_wrapper( +P) is semidet.
+%
+% Repropagate Meta Wrapper Rule.
+%
+repropagate_meta_wrapper(P):-
+ call_u(doall((no_repeats((mpred_facts_and_universe(P))),
+    locally_tl(is_repropagating(P),ignore((once(show_failure(fwd_ok(P))),show_call(mpred_fwc(P)))))))).
 
 
 predicate_to_goal(P,Goal):-atom(P),get_arity(P,F,A),functor(Goal,F,A).
 predicate_to_goal(PF/A,Goal):-atom(PF),get_arity(PF,F,A),functor(Goal,F,A).
 predicate_to_goal(G,G):-compound(G),!.
-
-%% repropagate_0( +P) is semidet.
-%
-% repropagate  Primary Helper.
-%
-repropagate_0(P):- nr_lc_ex(call_u(repropagate_1(P)),true).
-
-:- thread_local t_l:is_repropagating/1.
-
-
-%% repropagate_1( +P) is semidet.
-%
-% repropagate  Secondary Helper.
-%
-repropagate_1(P):- is_ftVar(P),!.
-repropagate_1(==>P):- !,repropagate_1(P).
-repropagate_1(USER:P):- USER==user,!,repropagate_1(P).
-%repropagate_1((P/_)):-!,repropagate_1(P).
-
-repropagate_1(P):- call_u(repropagate_2(P)).
-
-:- export(repropagate_2/1).
-:- module_transparent(repropagate_2/1).
-
-%% repropagate_2( +P) is semidet.
-%
-% repropagate  Extended Helper.
-%
-repropagate_2(P):-
- call_u(doall((no_repeats((mpred_facts_and_universe(P))),
-    locally_tl(is_repropagating(P),ignore((once(show_failure(fwd_ok(P))),show_call(mpred_fwc(P)))))))).
-
-% repropagate_meta_wrapper_rule(P==>_):- !, repropagate(P).
-
-%% repropagate_meta_wrapper_rule( +P) is semidet.
-%
-% Repropagate Meta Wrapper Rule.
-%
-repropagate_meta_wrapper_rule(P):-repropagate_1(P).
 
 
 %% fwd_ok( :TermP) is semidet.
@@ -2307,7 +2281,7 @@ retract_mu((H:-B)):-!, clause_u(H,B,R),erase(R).
  :- meta_predicate mpred_facts_and_universe(*).
  :- meta_predicate {*}.
  :- meta_predicate neg_in_code0(*).
- :- meta_predicate repropagate_2(*).
+ :- meta_predicate repropagate_meta_wrapper(*).
  :- meta_predicate mpred_get_support_via_sentence(*,*).
 
 :- dynamic(infoF/1).
