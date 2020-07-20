@@ -631,7 +631,7 @@ demodulize(Op,H,HH):- H  univ_safe  [F|HL],must_maplist(demodulize(Op),HL,HHL),H
 % lmcache:completely_expanded
 
 
-
+old_is_stripped_module(_):-!,fail.
 old_is_stripped_module(user).
 old_is_stripped_module(baseKB).
 %= 	 	 
@@ -908,6 +908,7 @@ fully_expand_real(Op,Sent,SentO):-
 %
 %  Is a stripped Module (Meaning it will be found via inheritance)
 %
+is_stripped_module(_):-!,fail.
 is_stripped_module(A):-var(A),!,fail.
 is_stripped_module(Mt):- call_u(mtExact(Mt)),!,fail.
 %is_stripped_module(Inherited):-'$current_source_module'(E), default_module(E,Inherited).
@@ -1716,6 +1717,7 @@ db_expand_0(Op,KB:Term,KB:O):- atom(KB),!,locally_tl(caller_module(prolog,KB),db
 
 % db_expand_0(query(HLDS,Must),props(Obj,Props)):- is_ftNonvar(Obj),is_ftVar(Props),!,gather_props_for(query(HLDS,Must),Obj,Props).
 
+replaced_module(_,_,_):-!, fail.
 replaced_module(_,V,_):- \+ atom(V),!,fail.
 replaced_module(_,umt,ABox):-defaultAssertMt(ABox).
 replaced_module(_,abox,ABox):-defaultAssertMt(ABox).
@@ -1741,6 +1743,9 @@ predicateSystemCode(P,PP):-strip_module(P,_,PP),predicate_property(system:PP,def
 %
 % Re-Modulize.
 %
+
+remodulize(_, H,H):-!.
+
 remodulize(_, H,H):- is_ftVar(H),!.
 remodulize(_, H,H):- \+ compound(H),!. % this disables the two next rules
 remodulize(Op, H,HH):- atom(H),strip_module(H,FROM,_HHH),convention_to_symbolic_mt(FROM,Op,H,0,M),maybe_prepend_mt(M,H,HH).
