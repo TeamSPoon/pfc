@@ -268,7 +268,7 @@ must_ex(G):- (catch(quietly(G),Error,(wdmsg(error_must_ex(G,Error)),fail))*->tru
 
 must_notrace_pfc(G):- must_ex((G)).
 
-:- thread_local(t_l:assert_to/1).
+:- thread_local(t_l:assert_dir/1).
 
 /*
 
@@ -895,6 +895,7 @@ clause_u((H:-B),BB,Ref):- is_true(B),!, trace_or_throw_ex(malformed(clause_u((H:
 clause_u(H,B,R):-clause_u_visible(H,B,R),B \= inherit_above(_,_).
 
 module_clause(MHB):- strip_module(MHB,M,HB), expand_to_hb(HB,H,B),clause(M:H,B,R),clause_property(R,module(CM)),CM==M.
+module_clause(MHH,BM):- strip_module(MHH,M,HH), HB=(HH:-BM), expand_to_hb(HB,H,B),clause(M:H,B,R),clause_property(R,module(CM)),CM==M.
 
 clause_u_visible(M:H,B,R):- !, clause_i(M:H,B,R),clause_ref_module(R). % need? \+ reserved_body_helper(B) 
 clause_u_visible(MH,B,R):- Why = clause(clause,clause_u),
@@ -1101,15 +1102,15 @@ ain_expanded(IIIOOO,S):- mpred_ain((IIIOOO),S).
 %
 % PFC Ainz.
 %
-mpred_ainz(G):- locally_tl(assert_to(z),mpred_ain(G)).
-mpred_ainz(G,S):- locally_tl(assert_to(z),mpred_ain(G,S)).
+mpred_ainz(G):- locally_tl(assert_dir(z),mpred_ain(G)).
+mpred_ainz(G,S):- locally_tl(assert_dir(z),mpred_ain(G,S)).
 
 %% mpred_aina(+G, ?S) is semidet.
 %
 % PFC Aina.
 %
-mpred_aina(G):- locally_tl(assert_to(a),mpred_ain(G)).
-mpred_aina(G,S):- locally_tl(assert_to(a),mpred_ain(G,S)).
+mpred_aina(G):- locally_tl(assert_dir(a),mpred_ain(G)).
+mpred_aina(G,S):- locally_tl(assert_dir(a),mpred_ain(G,S)).
 
 %%  mpred_ain(P,S)
 %
@@ -1657,7 +1658,7 @@ assert_u_confirmed_was_missing(P):-
 (nonvar(PP) -> true ; must_ex((P=@=PP,clause_asserted_u(PP),P=@=PP))),!.
 
 assert_to_mu(P):-
-  (t_l:assert_to(Where) ->
+  (t_l:assert_dir(Where) ->
    (Where = a -> asserta_mu(P); assertz_mu(P));
   assert_mu(P)).
 

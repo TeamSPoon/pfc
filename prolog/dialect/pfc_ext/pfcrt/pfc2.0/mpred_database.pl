@@ -1648,7 +1648,7 @@ maybeSupport(P,S):-
 maybeMaybeAdd(P,_):- \+ predicate_property(P,dynamic),!.
 maybeMaybeAdd(P,_):- \+ \+ clause_u(P,true),!.
 maybeMaybeAdd(P,S):- 
- locally_tl(assert_to(a),
+ locally_tl(assert_dir(a),
     assert_u_confirmed_was_missing(P)),
    mpred_trace_op(add,P,S),
    mpred_enqueue(P,S).
@@ -2200,7 +2200,7 @@ assertz_mu(MH):- fix_mp(clause(assert,assertz_u),MH,M,H),assertz_mu(M,H).
 
 
 % :- kb_shared(baseKB:singleValuedInArg/2).
-:- thread_local(t_l:assert_to/1).
+:- thread_local(t_l:assert_dir/1).
 
 %% assert_mu(+Module, +Pred, ?Functor, ?Arity) is semidet.
 %
@@ -2214,7 +2214,7 @@ assert_mu(M,(Pred:- (ZWC,More)),_,_):- ZWC == zwc,!,assertz_mu(M,(Pred:- (ZWC,Mo
 %assert_mu(M,Pred,F,_):- clause_b(singleValuedInArg(F,SV)),!,must(update_single_valued_arg(M,Pred,SV)),!.
 %assert_mu(M,Pred,F,A):- a(prologSingleValued,F),!,must(update_single_valued_arg(M,Pred,A)),!.
 assert_mu(M,Pred,F,_):- a(prologOrdered,F),!,assertz_mu(M,Pred).
-assert_mu(M,Pred,_,_):- t_l:assert_to(Where),!, (Where = a -> asserta_mu(M,Pred); assertz_mu(M,Pred)).
+assert_mu(M,Pred,_,_):- t_l:assert_dir(Where),!, (Where = a -> asserta_mu(M,Pred); assertz_mu(M,Pred)).
 %assert_mu(M,Pred,_,1):- !, assertz_mu(M,Pred),!.
 assert_mu(M,Pred,_,_):- assertz_mu(M,Pred).
 
