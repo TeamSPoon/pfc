@@ -958,7 +958,7 @@ triggerSupports1(_,X,[X]):- \+ mpred_db_type(X,trigger(_)).
 */
 
 % :- '$current_source_module'(M),forall(mpred_database_term(F,A,_),(abolish(pfc_lib:F/A),abolish(user:F/A),abolish(M:F/A))).
-% :- initialization(ensure_abox(baseKB)).
+% :- initialization(ensure_abox_hybrid(baseKB)).
 
 
 % % :- set_prolog_flag(mpred_pfc_file,true).
