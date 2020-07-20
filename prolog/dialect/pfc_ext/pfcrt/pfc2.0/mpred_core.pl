@@ -1220,7 +1220,7 @@ mpred_ain_now(PIn,S):-
 
 mpred_ain_now(P,S):- mpred_warn("mpred_ain(~p,~p) failed",[P,S]),!,fail.
 
-
+:- thread_local(t_l:is_repropagating/1).
 ain_fast(P):-  \+ t_l:is_repropagating(_),clause_asserted(P),!.
 ain_fast(P):- call_u((( get_source_uu(UU), ain_fast(P,UU)))).
 

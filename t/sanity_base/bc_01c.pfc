@@ -37,7 +37,7 @@ bc_p(b).
 % Are we cleaning up backchains?
 
 
-:- mpred_info((((bc_q(N) <- bc_p(N))))).
+:- ignore((mpred_info((((bc_q(N) <- bc_p(N))))))).
 
 
 :- mpred_info(((bt(bc_q(_6600462), pt(bc_p(_6600462), rhs([bc_q(_6600462)])))))).

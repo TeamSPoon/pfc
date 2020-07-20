@@ -11,8 +11,6 @@
 % :- set_prolog_flag(lm_pfc_lean,true).
 :- mpred_trace_exec.
 
-genlMt(header_sane,baseKB).
-
 a11 ==> b11.
 a11.
 
