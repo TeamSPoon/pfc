@@ -54,7 +54,7 @@
 % Douglas Miles
 */
 
-:- use_module(library(pfc_test)).
+%:- use_module(library(pfc_test)).
 
 :- set_prolog_flag(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
 
@@ -169,7 +169,7 @@ predicateTriggerType(Type) ==>
 
 :- else.
 
-:- break.
+%:- break.
 (genlMt(C,P)/(C\=baseKB)) ==> {doall(((pred_decl_kb_mfa_type(P,F,A,Type)),C:call(Type,C:F/A)))}.
 :- endif.
 
@@ -199,6 +199,7 @@ ttTypeType(TT)==>functorDeclares(TT).
 
 ==>ttTypeType(ttModuleType,mudToCyc('MicrotheoryType')).
 typeGenls(ttModuleType,tMicrotheory).
+% :- break.
 ==>ttModuleType(tSourceCode,mudToCyc('tComputerCode'),comment("Source code files containing callable features")).
 ==>ttModuleType(tSourceData,mudToCyc('iboPropositionalInformationThing'),comment("Source data files containing world state information")).
 
@@ -266,7 +267,7 @@ compilerDirective(F)==>{kb_shared(F/0)}.
                   prologNegByFailure,
                   prologIsFlag,
                   tFunction
-                  ]),ain(ttRelationType(PredType))).
+                  ]),must_or_rtrace(ain(ttRelationType(PredType)))).
 
 
 

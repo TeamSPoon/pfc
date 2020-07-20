@@ -58,11 +58,12 @@ test_header_include.
 
 %:- set_stream(user_input,tty(false)).
 
-
-% :- ensure_loaded(library(pfc_lib)).
-%:- if(( \+ current_module(pfc_lib) )).
 :- use_module(library(pfc)).
-%:- endif.
+
+:- if(( \+ current_module(pfc_lib) )).
+:- ensure_loaded(library(pfc_lib)).
+%:- use_module(library(pfc)).
+:- endif.
 
 
 :- ensure_loaded(library(pfc_test)).
@@ -81,15 +82,12 @@ test_header_include.
 
 :- '$current_source_module'(W), '$set_typein_module'(W).
 
-:- sanity(
+:- must(
  ((fileAssertMt(Mt2),
 (defaultAssertMt(Mt1),
     %fileAssertMt(Mt2),
    source_module(Mt3))),
   sanity((Mt1==Mt2,Mt1==Mt3)))).
-
-
-
 
 
 

@@ -53,8 +53,8 @@
 % clause types: (:-)/1, (:-)/2, (=>)/1,  (=>)/2,  (==>)/1,  (==>)/2, (<-)/1,  (<-)/2, (<==>)/2, fact/1
 %
 */
-% :- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
-module_mpred_expansion:- fail, nop(module(mpred_expansion,
+:- if(current_prolog_flag(xref,true)).
+:- module(mpred_expansion,
           [ a/2,
             acceptable_xform/2,
             additiveOp/1,
@@ -167,11 +167,11 @@ module_mpred_expansion:- fail, nop(module(mpred_expansion,
          % expand_kif_string/3,
          is_elist_functor/1
           
-          ])).
+          ]).
+:- endif.
 
 :- include('mpred_header.pi').
 
-% :- endif.
 
 
 :- meta_predicate 
@@ -197,7 +197,8 @@ module_mpred_expansion:- fail, nop(module(mpred_expansion,
 :- dynamic(baseKB:col_as_isa/1).
 :- dynamic(baseKB:col_as_unary/1).
 
-:- kb_shared(baseKB:wid/3).
+%:- rtrace.
+%:- kb_shared(baseKB:wid/3).
 
 :- style_check(+singleton).
 
@@ -1130,7 +1131,7 @@ as_is_term(Op,_,[_]):- infix_op(Op,_).
 
 :- mpred_trace_none(as_is_term(_)).
 :- '$set_predicate_attribute'(as_is_term(_), hide_childs, 1).
-:- lock_predicate(as_is_term(_)).
+%:- lock_predicate(as_is_term(_)).
 
 %=  :- was_export(infix_op/2).
 
@@ -2215,7 +2216,7 @@ linearize_headvar_dupes(Equ,P,PO,Left,Connector):-P  univ_safe  [F|M],
  linearize_headvar_dupes(Equ,M,POL,Left,Connector),PO  univ_safe  [F|POL].
 
 
-fixed_syntax(I,O):- compound(I), with_vars_locked(I,fix_syntax(I,O))->I\=@=O.
+fixed_syntax(I,O):- notrace((compound(I), with_vars_locked(I,fix_syntax(I,O))))->I\=@=O.
 
 fix_syntax(P0,P0):- \+ compound(P0),!.
 fix_syntax(I,O):-sub_compound_of(I,~(P/Cond)), !,O= preventedWhen(P,{Cond}).
@@ -2239,7 +2240,7 @@ sub_compound_of(I,Of):- compound(I),compound(Of),compound_name_arity(I,IN,IA),co
    (IA\==OA ; IN\==ON),!,fail.  
 sub_compound_of(I,Of):- \+ \+ (numbervars(I,99,_,[attvar(bind)]),I=Of ), I = Of.
 
-fixed_negations(I,O):- compound(I), with_some_vars_locked(I,fix_negations(I,O))->I\=@=O.
+fixed_negations(I,O):- notrace(( compound(I), with_some_vars_locked(I,fix_negations(I,O))))->I\=@=O.
 
 fix_negations(P0,P0):- not_ftCompound(P0),!.
 fix_negations(~(P0),~(P0)):- not_ftCompound(P0),!.

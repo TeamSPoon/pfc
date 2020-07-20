@@ -82,7 +82,7 @@ move(world(CL,ML,right,CR,MR),world(CL2,ML,left,CR2,MR)):-
 % Recursive call to solve the problem
 path(world(CL1,ML1,B1,CR1,MR1),world(CL2,ML2,B2,CR2,MR2),Explored,MovesList) :- 
    move(world(CL1,ML1,B1,CR1,MR1),world(CL3,ML3,B3,CR3,MR3)), 
-   \+ member(world(CL3,ML3,B3,CR3,MR3),Explored),
+   not(member(world(CL3,ML3,B3,CR3,MR3),Explored)),
    path(world(CL3,ML3,B3,CR3,MR3),world(CL2,ML2,B2,CR2,MR2),[world(CL3,ML3,B3,CR3,MR3)|Explored],
     [ [ world(CL3,ML3,B3,CR3,MR3), world(CL1,ML1,B1,CR1,MR1)] | MovesList ]).
 

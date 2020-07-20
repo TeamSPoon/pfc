@@ -13,7 +13,10 @@
 
 %:- throw(module(pfcumt,[umt/1])).
 
-%:- module(mpred_justify, []).
+:- if(current_prolog_flag(xref,true)).  % XREF
+:- module(mpred_justify, []).
+:- set_module(class(library)).
+:- endif.
 
 %:- use_module(mpred_kb_ops).
 %:- use_module(library(util_varnames)).
@@ -220,8 +223,8 @@ bagof_or_nil(T,G,B):- (bagof_nr(T,G,B) *-> true; B=[]).
 
 
 :- meta_predicate(sanity_check(0,0)).
-sanity_check(When,Must):- When,Must,!.
-sanity_check(When,Must):- must_ex((show_call(When),Must)),!.
+sanity_check(When,Must):- notrace(catch((When,Must),_,fail)),!.
+sanity_check(When,Must):- must_or_rtrace((show_call(When),must(Must))),!.
 
 %
 %  predicates for manipulating support relationships
@@ -241,10 +244,10 @@ mpred_add_support(P,(Fact,Trigger)):-
 
 %  mpred_add_support_fast(+Fact,+Support)
 mpred_add_support_fast(P,(Fact,Trigger)):-
-      MSPFT = spft(P,Fact,Trigger),
+  must(( MSPFT = spft(P,Fact,Trigger),
        fix_mp(mpred_add_support,MSPFT,M,SPFT),
    M:notify_if_neg_trigger(SPFT),
-   M:sanity_check(assertz_mu(SPFT),clause_asserted_u(SPFT)).
+   M:sanity_check(assertz_mu(SPFT),clause_asserted_u(SPFT)))).
 
 
                                                                 
@@ -533,7 +536,7 @@ pfcShowJustification1(J,N) :-
 incrStep(StepNo,Step):-arg(1,StepNo,Step),X is Step+1,nb_setarg(1,StepNo,X).
 
 pfcShowSingleJust(JustNo,StepNo,C):- is_ftVar(C),!,incrStep(StepNo,Step),
-  ansi_format([fg(cyan)],"~N    ~w.~w ~w ",[JustNo,Step,C]),!.
+  ansi_term:ansi_format([fg(cyan)],"~N    ~w.~w ~w ",[JustNo,Step,C]),!.
 pfcShowSingleJust(_JustNo,_StepNo,[]):-!.
 pfcShowSingleJust(JustNo,StepNo,(P,T)):-!, 
   pfcShowSingleJust(JustNo,StepNo,P),
@@ -584,20 +587,20 @@ pfcShowSingleJust1(JustNo,StepNo,C):- unwrap_litr(C,CC),!,pfcShowSingleJust4(Jus
 pfcShowSingleJust4(_,_,_,CC):- t_l:shown_why(C),C=@=CC,!.
 pfcShowSingleJust4(JustNo,StepNo,C,CC):- assert(t_l:shown_why(CC)),!,
    incrStep(StepNo,Step),
-   ansi_format([fg(cyan)],"~N    ~w.~w ~@ ",[JustNo,Step,fmt_cl(C)]),   
+   ansi_term:ansi_format([fg(cyan)],"~N    ~w.~w ~@ ",[JustNo,Step,fmt_cl(C)]),   
    pfcShowSingleJust_C(C),!.
 
 pfcShowSingleJust_C(C):-is_file_ref(C),!.
 pfcShowSingleJust_C(C):-find_mfl(C,MFL),assert(t_l:shown_why(MFL)),!,pfcShowSingleJust_MFL(MFL).
-pfcShowSingleJust_C(_):-ansi_format([hfg(black)]," % [no_mfl] ",[]),!.
+pfcShowSingleJust_C(_):-ansi_term:ansi_format([hfg(black)]," % [no_mfl] ",[]),!.
 
 short_filename(F,FN):- atomic_list_concat([_,FN],'/pack/',F),!.
 short_filename(F,FN):- atomic_list_concat([_,FN],swipl,F),!.
 short_filename(F,FN):- F=FN,!.
 
 pfcShowSingleJust_MFL(MFL):- MFL=mfl4(VarNameZ,_M,F,L),atom(F),short_filename(F,FN),!,varnames_load_context(VarNameZ),
-   ansi_format([hfg(black)]," % [~w:~w] ",[FN,L]).
-pfcShowSingleJust_MFL(MFL):- ansi_format([hfg(black)]," % [~w] ",[MFL]),!.
+   ansi_term:ansi_format([hfg(black)]," % [~w:~w] ",[FN,L]).
+pfcShowSingleJust_MFL(MFL):- ansi_term:ansi_format([hfg(black)]," % [~w] ",[MFL]),!.
 
 pfcAsk(Msg,Ans) :-
   format("~n~w",[Msg]),
@@ -711,7 +714,7 @@ mpred_pp_db_justifications2(Prefix,[C|Rest],JustNo,StepNo):-
 (nb_hasval('$last_printed',C)-> dmsg_pretty(chasVal(C)) ;
 (
  (StepNo==1->fmt('~N~n',[]);true),
-  sformat(LP,' ~w.~p.~p',[Prefix,JustNo,StepNo]),
+  format(string(LP),' ~w.~p.~p',[Prefix,JustNo,StepNo]),
   nb_pushval('$last_printed',LP),
   format("~N  ~w ~p",[LP,C]),
   ignore(loop_check(mpred_why_sub_sub(C))),

@@ -10,14 +10,13 @@
 :- endif.
 
 
-%:- module(baseKB).
-:- consult(library(pfc)).
-%:- set_fileAssertMt(baseKB).
+:- module(baseKB).
+:- use_module(library(pfc)).
+:- set_fileAssertMt(baseKB).
 
 :- begin_pfc.
 % :- mpred_trace_exec.
 
-%:- rtrace.
 notice_fc(P) ==>  ( P ==> {wdmsg(notice_fc(P))}).
 
 

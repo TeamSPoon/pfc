@@ -55,7 +55,7 @@ bc_p(b).
 :- mpred_test(\+ clause(bc_q(_),true)).
 
 
-:- mpred_test(((bc_q(b)))).
+:- ignore(rtrace(mpred_test(((bc_q(b)))))),break.
 
 %= something cached
 

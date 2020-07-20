@@ -1,3 +1,4 @@
+/*
 :- if((set_prolog_flag(expect_pfc_file,always), current_prolog_flag(xref,true) ;  current_prolog_flag(pfc_booted,false) )).
 %:- module(system_autoexec,[]).
 :- else.
@@ -5,7 +6,7 @@
 :- set_fileAssertMt(baseKB).
 % :- '$set_source_module'(baseKB).
 :- endif.
-
+*/ 
 /** <module> system_autoexec
 % =============================================
 % File 'system_autoexec.pfc'
@@ -138,13 +139,19 @@ first_std_provider/3)).
 :- system:use_module(library(dif)).
 :- dynamic(mpred_unload_option/2).
 
+%:- rtrace.
 assert_if_newt(G):- (cwc,(clause_asserted_i(G)->true;call(assert,G))).
+%:- break.
+%:- nortrace,notrace.
+:- sleep(1.0).
 
 :-if(exists_file(bkb_neever)).
 
 :- [bkb].
 
 :- else.
+
+:- flag(auto_exec_loaded,N,N+1),( N==0 -> true ; (dumpST,break)).
 
 :- baseKB:ensure_loaded('system_base.pfc').
 

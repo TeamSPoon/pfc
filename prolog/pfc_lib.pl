@@ -2,7 +2,7 @@
 :- endif.
 
 :- if((prolog_load_context(source,File),prolog_load_context(file,File))).
-:- module(pfc_lib,[]).
+:- module(pfc_lib_v,[]).
 :- occurs:use_module(library(occurs),[sub_term/2]).
 /*
 :- use_module(library(random)).
@@ -22,11 +22,11 @@
 :- include(pfc_lib_1_2).
 :- else.
 :- if((current_prolog_flag(pfc_version,Was),Was\==2.0)).
-:- baseKB:use_module(library(pfc)).
+%:- use_module(library(pfc)).
 :- else.
 % this is 2.0
 :- set_prolog_flag(pfc_version,2.0).
-:- include(pfc_lib_2_0).
+:- reexport(pfc_lib_2_0).
 :- endif.
 :- endif.
 :- endif.
