@@ -1,5 +1,5 @@
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_terms.pl
-%:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
+:- if(current_prolog_flag(xref,true)).
 :- module(mpred_terms,
           [ 
           any_to_number/2,
@@ -8,7 +8,6 @@
           atom_to_value/2
           ]).
 
-:- include('mpred_header.pi').
 
 /** <module> mpred_terms
 % Provides a common set of operators in translation between the several logical languages
@@ -18,7 +17,8 @@
 % Dec 13, 2035
 %
 */
-
+:- include('mpred_header.pi').
+:-endif.
 
 :- export(any_to_number/2).
 %% any_to_value( ?Var, ?Var) is semidet.
@@ -66,7 +66,7 @@ is_ftText(Arg):- text_to_string_safe(Arg,_),!.
 is_ftText(Arg):- safe_functor(Arg,S,_), ereq(resultIsa(S,ftText)).
 
 :- kb_global(baseKB:ftText/1).
-:-ain(baseKB:(ftText(A):- !, if_defined(term_is_ft(A, ftText),is_ftText(A)),!)).
+baseKB:ftText(A):- !, if_defined(term_is_ft(A, ftText),is_ftText(A)),!.
 
 % =======================================================
 % term utils

@@ -4,16 +4,16 @@
 % Douglas Miles
 
 */
-
-:- if((current_prolog_flag(pfc_version,2.0),reexport(pfc_lib_2_0))).
+:- if(set_prolog_flag(pfc_version,2.0)).
 :- endif.
-
 :- if(\+ current_prolog_flag(xref,true)).
 
-:- if(('$current_source_module'(SM),
-       SM:use_module(library(logicmoo_utils)),
-       SM:use_module(library(pfc_iri_resource)),
-       add_pfc_to_module(SM))).
+:- if(('$current_source_module'(M),
+      M:use_module( library(logicmoo_utils)),
+      M:use_module( library(pfc_iri_resource)),
+      M:reexport(library(pfc_lib_2_0)),
+      % M:include_into_module(library('pfc2.0/pfc_2_0_includes'),M),
+      add_pfc_to_module(M))).
 :-else. % add_pfc_to_module
 % Bad!
    :- if(('$current_typein_module'(TM),'$current_source_module'(SM),'context_module'(CM),Info = ('FAILED'(TM,SM,CM,pfc_mod)),
@@ -22,14 +22,13 @@
 :- endif. % add_pfc_to_module
 :- endif. % \+ current_prolog_flag(xref,true)
 
-:- if((prolog_load_context(source,File),prolog_load_context(file,File))).
+:- if((prolog_load_context(source,File),prolog_load_context(file,File),unload_file(File))).
 :- module(pfc_mod,[]).
-:- prolog_load_context(file,File),unload_file(File).
 :- endif. % Sourced directly
-
+   
 :- if(current_prolog_flag(xref,true)).
-:- include(library('pfc3.0/pfc_3_0_full')).
+:- rexport(library('pfc_lib')).
 :- else.
-:- check:list_undefined.
+%:- pldoc_http:import(prolog_edit:edit/1).
+%:- check:list_undefined.
 :- endif.
-

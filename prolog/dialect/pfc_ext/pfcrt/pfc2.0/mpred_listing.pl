@@ -11,8 +11,8 @@
 */
 % =======================================================
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_list_triggers.pl
-:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
-mpred_listing_module:- nop( module(mpred_listing,
+:- if(current_prolog_flag(xref,true)).  % XREF
+:- module(mpred_listing,
           [ draw_line/0,
             loop_check_just/1,
             pinfo/1,
@@ -46,7 +46,7 @@ mpred_listing_module:- nop( module(mpred_listing,
             show_pred_info/1,
             show_pred_info_0/1,
             mpred_listing_file/0
-          ])).
+          ]).
 
 :- include('mpred_header.pi').
 
@@ -151,7 +151,7 @@ pp_item(MM,pt(F0,Body)):- F = (_KB:F0),             !,fmt('~w p-trigger:~n', [MM
 pp_item(MM,bt(F0,Body)):- F = (_KB:F0),             !,fmt('~w b-trigger:~n', [MM]), pp_item('',(F:-Body)).
 
 
-pp_item(MM,U:W):- !,sformat(S,'~w  ~w:',[MM,U]),!, pp_item(S,W).
+pp_item(MM,U:W):- !,format(string(S),'~w  ~w:',[MM,U]),!, pp_item(S,W).
 pp_item(MM,H):- \+ \+ (( get_clause_vars_for_print(H,HH),fmt("~w ~p~N",[MM,HH]))).
 
 

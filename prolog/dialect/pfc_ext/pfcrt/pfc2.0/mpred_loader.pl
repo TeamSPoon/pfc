@@ -8,8 +8,8 @@
 */
 
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_loader.pl
-:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
-mpred_loader_module:- fail, nop(module(mpred_loader,
+:- if(current_prolog_flag(xref,true)).  % XREF
+:- module(mpred_loader,
           [ add_from_file/1,
           % unused_assertion/1,
           mpred_ops/0,
@@ -193,7 +193,7 @@ mpred_loader_module:- fail, nop(module(mpred_loader,
             mpred_loader_file/0,
             mpred_unload_file/0,
             mpred_unload_file/1
-          ])).
+          ]).
 
 :- include('mpred_header.pi').
 :- use_module(library(dictoo_lib)).
@@ -324,6 +324,8 @@ mpred_loader_module_transparent(F/A):-!, module_transparent(F/A).
 :- thread_local(t_l:mpred_already_in_file_expansion/1).
 
 
+
+:- dynamic(lmcache:mpred_directive_value/3).
 
 
 %% mpred_prolog_only_file( ?File) is det.

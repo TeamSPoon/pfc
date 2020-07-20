@@ -9,6 +9,7 @@
 %  was_module(sanity,[]).
 
 :- include(test_header).
+%:- baseKB:use_module(library(pfc)).
 
 :- begin_pfc.
 
@@ -25,6 +26,8 @@
 :- dynamic(most/1).
 
 :- begin_pfc.
+
+:- mpred_trace_exec.
 
 meta_argtypes(most(ftAssertable)).
 

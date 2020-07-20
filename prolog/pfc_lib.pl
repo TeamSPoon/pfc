@@ -10,11 +10,7 @@
 
 
 */
-:- if(('$current_source_module'(SM),'context_module'(M),'$current_typein_module'(CM),asserta(baseKB:'using_pfc'(M,CM,SM,pfc_lib)))).
-:- endif.
-:- if((prolog_load_context(source,File),prolog_load_context(file,File))).
 :- module(pfc_lib,[]).
-:- endif.
 %:- set_prolog_flag(gc,false).
 :- set_prolog_flag(pfc_version,2.0).
 
@@ -64,6 +60,8 @@ kb_global_w(M:F/A):-
    M:export(M:F/A),
    do_import(system,M,F,A),
    do_import(user,M,F,A),
+   do_import(rtrace,M,F,A),
+   do_import(ucatch,M,F,A),
    do_import(pfc_lib,M,F,A),
    do_import(header_sane,M,F,A),
    M:kb_global(M:F/A),
@@ -130,15 +128,23 @@ kb_global_w(M:F/A):-
 :- system:use_module(library(varnumbers)).
 :- system:use_module(library(when)).
 :- system:use_module(library(writef)).
+:- system:use_module(library(threadutil)).
+:- system:use_module(library(editline)).
+:- system:use_module(library(wfs),except([op(_,_,_)])).
 :- system:use_module(library(wfs),[call_residual_program/2,call_delays/2,delays_residual_program/2,answer_residual/2]).
-
-:- if( \+ current_predicate(each_call_cleanup/3)).
-:- use_module(library(each_call_cleanup)).
-:- endif.
 
 :- abolish(system:time,1).
 :- system:use_module(library(statistics)).
 :- system:use_module(library(make)).
+:- system:use_module(library(check)).
+
+
+:- system:use_module(library(pfc_iri_resource)).
+
+:- if( \+ current_predicate(each_call_cleanup/3)).
+:- use_module(library(each_call_cleanup)).
+:- endif.
+:- system:use_module(library(dictoo_lib)).
 
 
 /*
@@ -160,7 +166,6 @@ kb_global_w(M:F/A):-
 
 :- dynamic(rdf_rewrite:(~)/1).
 :- kb_global_w(rdf_rewrite:arity/2).
-/*
 :- kb_global_w(baseKB:genlMt/2).
 :- kb_global_w(baseKB:predicateTriggerType/1).
 :- kb_global_w(baseKB:mtHybrid/1).
@@ -178,6 +183,7 @@ kb_global_w(M:F/A):-
 
 :- kb_global_w(baseKB:mpred_prop/4).
 
+/*
 :- kb_global_w(baseKB:pk/3).
 :- kb_global_w(baseKB:hs/1).
 :- kb_global_w(baseKB:que/2).
@@ -189,8 +195,6 @@ kb_global_w(M:F/A):-
 :- kb_global_w(baseKB:nt/3).
 :- kb_global_w(baseKB:pt/2).
 :- kb_global_w(baseKB:spft/3).
-        */
-/*
 
 WILL BE ..
 :- kb_global_w(baseKB:tpky/4).
@@ -342,8 +346,9 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg_pretty(visit_pfc_non
 
 :- thread_local(t_l:disable_px).
 
-:- include('pfc2.0/mpred_header.pi').
-
+:- include(library('pfc2.0/mpred_header.pi')).
+% M:include_into_module(library('pfc2.0/pfc_2_0_includes'),M),
+%:- include(library('pfc2.0/pfc_2_0_includes')).
 /*
 :- nop(kb_shared((
    bkch/2, %basePFC
@@ -427,7 +432,7 @@ baseKB:mpred_skipped_module(eggdrop).
 :- dynamic baseKB:prologBuiltin/1.
 
 :- set_prolog_flag(expect_pfc_file,never).
-
+/*
 :- pfc_lib:consult(library('pfc2.0/mpred_at_box.pl')).
 :- pfc_lib:consult(library('pfc2.0/mpred_justify.pl')).
 :- pfc_lib:consult(library('pfc2.0/mpred_core.pl')).
@@ -438,7 +443,7 @@ baseKB:mpred_skipped_module(eggdrop).
 :- pfc_lib:consult(library('pfc2.0/mpred_listing.pl')).
 :- pfc_lib:consult(library('pfc2.0/mpred_prolog_file.pl')).
 :- pfc_lib:consult(library('pfc2.0/mpred_terms.pl')).
-
+*/
 
 %:- autoload([verbose(false)]).
 
@@ -523,7 +528,8 @@ maybe_should_rename(O,O).
 
 % file late late joiners
 :- if( \+ prolog_load_context(reload,true)).
-:- source_location(File, _)-> before_boot(((set_how_virtualize_file(false,File)))).
+:- source_location(File, _)-> during_boot(((set_how_virtualize_file(false,File)))),
+    before_boot(((set_how_virtualize_file(false,File)))).
 :- doall((module_property(M,file(File)),module_property(M,class(CT)),memberchk(CT,[library,system]),(set_how_virtualize_file(false,File)))).
 %:- doall((source_file(File),(set_how_virtualize_file(false,File)))).
 %base_kb_dynamic(F,A):- ain(mpred_prop(M,F,A,prologHybrid)),kb_shared(F/A).
@@ -538,7 +544,7 @@ in_dialect_pfc:- is_pfc_file. % \+ current_prolog_flag(dialect_pfc,cwc),!.
 %is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_mod)),!,baseKB:mtCanAssert(SM).
 is_pfc_module(SM):- clause_b(mtHybrid(SM)).
 
-can_extreme_debug :- \+ in_pengines.
+can_extreme_debug :- fail, notrace(( \+ in_pengines)).
 
 :- pfc_lib:export(pfc_lib:is_pfc_file/0).
 is_pfc_file:- can_extreme_debug, current_prolog_flag(expect_pfc_file,always),!,(is_pfc_file_notrace  ; (nop((dumpST,sleep(1),break,rtrace(is_pfc_file_notrace),break)),fail)),!.
@@ -557,6 +563,8 @@ is_pfc_file_notrace:- current_source_file(FileL),(FileL=File:_),!,is_pfc_file(Fi
 
  %is_pfc_file_notrace:- \+ , prolog_load_context(module, M),M\==baseKB,is_pfc_module(M),!,clause_b(mtHybrid(M)).
 :- system:import(pfc_lib:is_pfc_file_notrace/0).
+
+:- dynamic(lmcache:mpred_directive_value/3).
 
 is_pfc_file(File):- is_pfc_filename(File,File).
 % First checks to confirm there is nothing inhibiting
@@ -582,8 +590,8 @@ only_expand(I,OO):- quietly(must_pfc(I,M)),
   conjuncts_to_list(M,O), !, %  [I]\=@=O,
   make_load_list(O,S,OO).
 
-make_load_list([C|O],S,[baseKB:spft(C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):- clause_asserted(C),!, make_load_list(O,S,OO).
-make_load_list([C|O],S,[C, baseKB:spft(C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):-  is_loadin(C),!,make_load_list(O,S,OO).
+make_load_list([C|O],S,[spft(C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):- clause_asserted(C),!, make_load_list(O,S,OO).
+make_load_list([C|O],S,[C, spft(C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):-  is_loadin(C),!,make_load_list(O,S,OO).
 make_load_list(_,_,[]):-!.  
 
 cna_functor_safe(P,F,A):- compound(P) -> compound_name_arity(P,F,A) ; functor(P,F,A).
@@ -618,6 +626,7 @@ must_pfc_p(F):- \+ compound(F),!,atom(F),must_pfc_mfa(_,F,0),!.
 must_pfc_p(':-'(_,(CWC,_))):- atom(CWC),arg(_,v(cwc),CWC),!,in_dialect_pfc.
 must_pfc_p(':-'(_,(OWC,_))):- atom(OWC),arg(_,v(bwc,fwc,awc,zwc),OWC),!.
 must_pfc_p(':-'(Head,_)):- \+ is_pfc_file_notrace, !, p_to_mfa(Head,M,F,A), always_pfc_mfa(M,F,A).
+must_pfc_p(M:(':-'(Head,_))):- \+ is_pfc_file_notrace, !, p_to_mfa(Head,_,F,A), always_pfc_mfa(M,F,A).
 must_pfc_p(':-'(Head,_)):- !, must_pfc_p(Head).
 must_pfc_p('->'(_,_)).
 % must_pfc_p('=>'(_,_)).
@@ -636,18 +645,19 @@ maybe_pfc_mfa(_,F,2):- sub_atom(F,'='),  (atom_concat(_,'>',F);atom_concat('<',_
 always_pfc_p(M:P):- !,nonvar(P),cna_functor_safe(P,F,A),always_pfc_mfa(M,F,A).
 always_pfc_p(P):- cna_functor_safe(P,F,A), always_pfc_mfa(_,F,A).
 
-always_pfc_mfa(M,F,A):- clause_b(mpred_prop(M,F,A,prologHybrid)).
-always_pfc_mfa(_,F,A):- mpred_database_term(F,A,_).
-always_pfc_mfa(_,F,_):- pfc_hybrid_type(F).
 always_pfc_mfa(_,'==>',2).
 always_pfc_mfa(_,'==>',1).
 always_pfc_mfa(_,'<==>',2).
 always_pfc_mfa(_,'<==',2).
 always_pfc_mfa(_,'t',_).
+always_pfc_mfa(_,'\\+',_).
 always_pfc_mfa(_,'<-',2).
 always_pfc_mfa(_,'<--',2).
 always_pfc_mfa(_,'~',1).
 always_pfc_mfa(_,'===>',2).
+always_pfc_mfa(M,F,A):- clause_b(mpred_prop(M,F,A,prologHybrid)).
+always_pfc_mfa(_,F,A):- mpred_database_term(F,A,_).
+always_pfc_mfa(_,F,_):- pfc_hybrid_type(F).
 
 pfc_hybrid_type(prologHybrid).
 pfc_hybrid_type(prologKIF).
@@ -708,6 +718,7 @@ base_clause_expansion('?=>'(I), ':-'('?=>'(I))):- !.
 base_clause_expansion(':-'(In),':-'(Out)):- in_dialect_pfc,fully_expand(In,Out),!.
 base_clause_expansion(':-'(I),':-'(I)):- !.
 
+base_clause_expansion(':-'(H,(CWC,B)),(H:-B)):- atom(CWC),arg(_,v(cwc),CWC), \+ in_dialect_pfc, !.
 base_clause_expansion(IN, Out):- must_pfc(IN,ASSERT),!,make_ain(ASSERT,Out).
 %base_clause_expansion(IN, Out):- simple_IM(IN),!,make_ain(==>(IN),Out). 
 base_clause_expansion(NeverPFC, EverPFC):- is_never_pfc(NeverPFC),!,NeverPFC=EverPFC.
@@ -763,7 +774,7 @@ term_expansion_UNUSED(:-module(M,List),Pos,ExportList,Pos):- nonvar(Pos),
 
 
 pfc_clause_expansion(I,O):- 
-  nonvar(I), I\==end_of_file,  
+  nonvar(I), I\==end_of_file,  I\==begin_of_file,  
   base_clause_expansion(I,M),!,I\=@=M,
    ((
       maybe_should_rename(M,MO), 
@@ -855,6 +866,9 @@ pfc_may_see_module(M):- import_module(M,pfc_lib).
 :- endif.
 
 
+:- if(\+ current_predicate(mpred_child/2)).
+  :- include(library('pfc2.0/pfc_2_0_includes.pl')).
+:- endif.
 
 
 :- multifile(system:goal_expansion/4).
@@ -895,3 +909,8 @@ system:clause_expansion(I,O):-
 :-hook_database:export(pfc_lib:mpred_ain/1).
 :-hook_database:export(pfc_lib:mpred_aina/1).
 :-hook_database:export(pfc_lib:mpred_ainz/1).
+
+:- fixundef_later.
+
+
+

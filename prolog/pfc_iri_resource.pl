@@ -1,6 +1,7 @@
 
 :- module('pfc_iri',
           [ add_pfc_to_module/1,
+            include_module_file/2,
             open_pfc_resource/2,            % +Name, -Stream
             open_pfc_resource/3,            % +Name, +RW, -Stream
             current_pfc_resource/2          % :Name, ?File            
@@ -235,7 +236,11 @@ pfc_zip_prop_arg(offset, 6).
 %
 %       Open PFC non-file sources.
 
+:- if(current_prolog_flag(pfc_version,3.0)).
 pfc_lib_name(library('pfc3.0/pfc_3_0_full')).
+:- else.
+pfc_lib_name(library('pfc2.0/pfc_2_0_includes')).
+:- endif.
 
 :- multifile prolog_clause:open_source/2.
 
@@ -257,16 +262,28 @@ pfc_incl_module_source(Module, Source):-
   pfc_lib_name(LibName),
   format(string(Source),":- module(~q,[]). :- include(~q).",[Module, LibName]).
 
-add_pfc_to_module(Module):- 
-   '$current_typein_module'(TM),
-   '$current_source_module'(CSM),
-   %'context_module'(CM),
-   Info = 'using_pfc'(TM,Module,CSM,pfc_load),
-   dmsg(Info), 
+:- meta_predicate(include_module_file(:,+)).
+
+include_module_file(M:PfcInclFile,Module):- 
+   absolute_file_name(PfcInclFile,FullName,[access(read),file_type(prolog)]), 
+   %time_file(FullName,Time),
+   open(FullName, read, Stream),
+   M:load_files(FullName,[
+      module(Module),
+      if(always),
+      stream(Stream), 
+      register(false),
+      must_be_module(false),
+      reexport(true),
+      silent(false)]),!,
+   close(Stream).
+
+
+include_pfc_res(Module,PfcInclFile):- 
    % Version 3.0
    % atom_concat('pfc://', Module, PfcInclFile),
    absolute_file_name(pfc_res(Module),PfcInclFile),
-   asserta(Module:'$does_use_pfc'(Module,PfcInclFile,Info)),
+   
    prolog_clause:open_source(PfcInclFile, Stream),    
    pfc_lib_name(LibName),
    absolute_file_name(LibName,FullName,[access(read),file_type(prolog)]), time_file(FullName,Time),
@@ -276,9 +293,19 @@ add_pfc_to_module(Module):-
      stream(Stream), % register(false),
      must_be_module(false),
      reexport(true),
-     silent(false)]),          
+     silent(false)]),!.          
+
+
+add_pfc_to_module(Module):- 
+   '$current_typein_module'(TM),
+   '$current_source_module'(CSM),
+   %'context_module'(CM),
+   Info = 'using_pfc'(TM,Module,CSM,pfc_load),
+   dmsg(Info), 
+   %include_pfc_res(Module,PfcInclFile),
+   %asserta(Module:'$does_use_pfc'(Module,PfcInclFile,Info)),
    % Version 2.0
-   % Module:reexport(pfc_lib_2_0),
-   % maybe_ensure_abox(Module),
+   Module:reexport(pfc_lib_2_0),
+   maybe_ensure_abox(Module),
    asserta(baseKB:Info).
 

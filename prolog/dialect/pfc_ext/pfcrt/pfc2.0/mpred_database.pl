@@ -14,11 +14,10 @@
 */
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/mpred/mpred_kb_ops.pl
 %:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
-hide_this_mpred_kb_ops :- fail, nop( module(mpred_kb_ops,[])).
-
-
+:- if(current_prolog_flag(xref,true)).
+:- module(mpred_kb_ops,[]).
 :- include('mpred_header.pi').
-
+:- endif.
 
 :- user:use_module(library(clpfd),['#='/2]).
 %% get_arity( :TermTerm, ?F, ?A) is semidet.
@@ -27,8 +26,8 @@ hide_this_mpred_kb_ops :- fail, nop( module(mpred_kb_ops,[])).
 %
 get_arity(Term,F,A):- atom(Term),F=Term,!,ensure_arity(F,A).
 get_arity(F/A,F,A):-!,atom(F),ensure_arity(F,A),!,(A>0).
-get_arity(F // A,F,A2):- must(integer(A)),!, atom(F), is(A2 , A+2), ensure_arity(F,A2),!,(A2>0).
-get_arity(F // A,F,A2):- use_module(library(clpfd),['#='/2]),!, atom(F), clpfd:call(#=(A2 , A+2)), ensure_arity(F,A2),!,(A2>0).
+get_arity('//'(F , A),F,A2):- must(integer(A)),!, atom(F), is(A2 , A+2), ensure_arity(F,A2),!,(A2>0).  
+get_arity('//'(F , A),F,A2):- use_module(library(clpfd),['#='/2]),!, atom(F), clpfd:call('#='(A2 , A+2)), ensure_arity(F,A2),!,(A2>0). 
 get_arity(M:FA,F,A):-atom(M),!,get_arity(FA,F,A).
 get_arity(FA,F,A):- get_functor(FA,F,A),must(A>0).
 
@@ -170,7 +169,7 @@ functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_d
       ain_minfo_2(1,*),
       ain_minfo(1,*),                                    
 %      whenAnd(0,0),
-      mpred_call_0(*),
+      % mpred_call_0(*),
       mpred_bc_only(*),
       mpred_bc_only0(*),
       mpred_prove_neg(*),
@@ -1286,7 +1285,7 @@ user_atom(s(_)).
 % PFC Deep Support.
 %
 mpred_deep_support(_How,unbound):-!,fail.
-mpred_deep_support(How,M):-loop_check(mpred_deep_support0(How,M),fail).
+mpred_deep_support(How,M):-nr_lc_ex(mpred_deep_support0(How,M),fail).
 
 
 %% mpred_deep_support0( +U, ?U) is semidet.
@@ -1382,7 +1381,7 @@ mpred_get_support_precanonical(F,Sup):-fully_expand(mpred_get_support_precanonic
 %
 
 spft_precanonical(F,SF,ST):- fully_expand(spft_precanonical,F,P),!,mpred_get_support(P,(SF,ST)).
-
+                                                      
 
 %% trigger_supporters_list( +U, :TermARG2) is semidet.
 %
@@ -1414,22 +1413,22 @@ mpred_retry(G):- fail; quietly(G).
 %
 :- meta_predicate neg_in_code(*).
 :- export(neg_in_code/1).
-neg_in_code(G):- no_repeats(loop_check(neg_in_code0(G))).
-
-:- kb_shared(baseKB:proven_neg/1).
+neg_in_code(G):- nr_lc_ex((neg_in_code0(G))).
+                                                   
+% :- kb_shared(baseKB:proven_neg/1).
 
 :- meta_predicate neg_in_code0(*).
 :- export(neg_in_code0/1).
 /*
-neg_in_code0(G):- cwc, loop_check(proven_neg(G)).
-neg_in_code0(G):- cwc, var(G),!,loop_check(lookup_u(~ G)).
+neg_in_code0(G):- cwc, nr_lc_ex(proven_neg(G)).
+neg_in_code0(G):- cwc, var(G),!,nr_lc_ex(lookup_u(~ G)).
 neg_in_code0(call_u(G)):- !,neg_in_code0(G).
-neg_in_code0(~(G)):- nonvar(G),!,  \+ loop_check(~G) ,!.
+neg_in_code0(~(G)):- nonvar(G),!,  \+ nr_lc_ex(~G) ,!.
 neg_in_code0(G):-  is_ftNonvar(G), a(prologSingleValued,G),
       must((if_missing_mask(G,R,Test),nonvar(R),nonvar(Test))),call_u(R),!,call_u(Test).
 neg_in_code0(G):- cwc, clause(~G,Call)*-> call_u(Call).
 */
-neg_in_code0(G):- loop_check(neg_may_naf(G)), \+ loop_check(G),!.
+neg_in_code0(G):- nr_lc_ex(neg_may_naf(G)), \+ nr_lc_ex(G),!.
 % neg_in_code0(_:G):-!,baseKB:neg_in_code0(G).
 
 
@@ -1443,13 +1442,13 @@ neg_in_code0(G):- loop_check(neg_may_naf(G)), \+ loop_check(G),!.
 %
 neg_may_naf(P):- mpred_non_neg_literal(P),get_functor(P,F),clause_u(prologNegByFailure(F),true),!.
 neg_may_naf(P):- is_ftCompound(P),is_never_pfc(P).
-
+                                          
 
 %% call_u_req( +G) is semidet.
 %
 % Req.
 %
-call_u_req(G):- loop_check(mpred_call_0(G),fail).
+call_u_req(G):- nr_lc_ex(call_u(G)).
 
 
 %% mpred_call_only_facts(:Fact) is nondet.
@@ -1463,83 +1462,15 @@ call_u_req(G):- loop_check(mpred_call_0(G),fail).
 % assigning them support from God. (g,ax)
 %
 mpred_call_only_facts(_Why,Clause):- mpred_call_only_facts(Clause).
-mpred_call_only_facts(Clause) :-  strip_module(Clause,_,ClauseF), on_x_debug(no_repeats(loop_check(mpred_call_0(ClauseF),fail))). 
+mpred_call_only_facts(Clause) :-  
+   strip_module(Clause,_,H), 
+   on_x_debug(nr_lc_ex(locally_tl(infAssertedOnly(H),call_u(H)))). 
 
 
-%% mpred_call_0( +Var) is semidet.
-%
-% PFC call  Primary Helper.
-%
-mpred_call_0(Var):-is_ftVar(Var),!,mpred_call_with_no_triggers(Var).
-mpred_call_0(M):-fixed_negations(M,O),!,mpred_call_0(O).
-mpred_call_0(U:X):-U==user,!,mpred_call_0(X).
-mpred_call_0(t(A,B)):-(atom(A)->true;(no_repeats(arity_no_bc(A,1)),atom(A))),ABC=..[A,B],mpred_call_0(ABC).
-mpred_call_0(isa(B,A)):-(atom(A)->true;(call_u(tCol(A)),atom(A))),ABC=..[A,B],mpred_call_0(ABC).
-%mpred_call_0(t(A,B)):-!,(atom(A)->true;(no_repeats(arity_no_bc(A,1)),atom(A))),ABC=..[A,B],mpred_call_0(ABC).
-mpred_call_0(t(A,B,C)):-!,(atom(A)->true;(no_repeats(arity_no_bc(A,2)),atom(A))),ABC=..[A,B,C],mpred_call_0(ABC).
-mpred_call_0(t(A,B,C,D)):-!,(atom(A)->true;(no_repeats(arity_no_bc(A,3)),atom(A))),ABC=..[A,B,C,D],mpred_call_0(ABC).
-mpred_call_0(t(A,B,C,D,E)):-!,(atom(A)->true;(no_repeats(arity_no_bc(A,4)),atom(A))),ABC=..[A,B,C,D,E],mpred_call_0(ABC).
-mpred_call_0((C1,C2)):-!,mpred_call_0(C1),mpred_call_0(C2).
-mpred_call_0((C1;C2)):-!,(mpred_call_0(C1);mpred_call_0(C2)).
-mpred_call_0((C1->C2;C3)):-!,(mpred_call_0(C1)->mpred_call_0(C2);mpred_call_0(C3)).
-mpred_call_0((C1*->C2;C3)):-!,(mpred_call_0(C1)*->mpred_call_0(C2);mpred_call_0(C3)).
-mpred_call_0((C1->C2)):-!,(mpred_call_0(C1)->mpred_call_0(C2)).
-mpred_call_0((C1*->C2)):-!,(mpred_call_0(C1)*->mpred_call_0(C2)).
-mpred_call_0(call(X)):- !, mpred_call_0(X).
-mpred_call_0(call_u(X)):- !, mpred_call_0(X).
-mpred_call_0(\+(X)):- !, \+ mpred_call_0(X).
-mpred_call_0(call_u(X)):- !, mpred_call_0(X).
-mpred_call_0(clause(H,B,Ref)):-!,clause_u(H,B,Ref).
-mpred_call_0(clause(H,B)):-!,clause_u(H,B).
-mpred_call_0(clause(HB)):-expand_to_hb(HB,H,B),!,clause_u(H,B).
-mpred_call_0(asserta(X)):- !, mpred_aina(X).
-mpred_call_0(assertz(X)):- !, mpred_ainz(X).
-mpred_call_0(assert(X)):- !, mpred_ain(X).
-mpred_call_0(retract(X)):- !, mpred_prolog_retract(X).
-mpred_call_0(retractall(X)):- !, mpred_prolog_retractall(X).
 
 % TODO: test removal
 %mpred_call_0(prologHybrid(H)):-get_functor(H,F),!,isa_asserted(F,prologHybrid).
 
-mpred_call_0((H)):- !, call(H).
-
-mpred_call_0((H)):- is_static_predicate(H),!,call(H).
-mpred_call_0((H)):- is_static_predicate(H),!,show_pred_info(H),dtrace(mpred_call_0((H))).
-
-%mpred_call_0(HB):-quietly((full_transform_warn_if_changed(mpred_call_0,HB,HHBB))),!,mpred_call_0(HHBB).
-mpred_call_0(H):- !, locally_tl(infAssertedOnly(H),call_u(H)).
-%mpred_call_0(argIsa(mpred_isa,2,mpred_isa/2)):-  trace_or_throw_ex(mpred_call_0(argIsa(mpred_isa,2,mpred_isa/2))),!,fail.
-% TODO: test removal
-% mpred_call_0(isa(H,B)):-!,isa_asserted(H,B).
-
-
-
-mpred_call_0(M:P):-!,sanity(nonvar(P)),functor(P,F,_),mpred_call_1(M,P,F).
-mpred_call_0(G):- strip_module(G,M,P),sanity(nonvar(P)),functor(P,F,_),mpred_call_1(M,P,F).
-
-
-
-%% mpred_call_1( +VALUE1, ?G, ?VALUE3) is semidet.
-%
-% PFC call  Secondary Helper.
-%
-mpred_call_1(_,G,_):- is_side_effect_disabled,!,mpred_call_with_no_triggers(G).
-
-mpred_call_1(M,G,F):- sanity(\+  is_side_effect_disabled),
-               (ground(G); \+ current_predicate(_,M:G) ; \+ (predicate_property(M:G,number_of_clauses(CC)),CC>1)), 
-    
-                ignore((loop_check(call_with_bc_triggers(M:G)),maybeSupport(G,(g,ax)),fail)),
-                 \+ current_predicate(F,M:G),\+ current_predicate(_,_:G),
-                 doall(show_call(predicate_property(_UM:G,_PP))),
-                 debug_logicmoo(logicmoo(_)),
-                 fail,
-                 %TODO remove this failure
-                 must(show_call(kb_shared(M:G))),
-                 kb_shared(M:G),!,fail.
-mpred_call_1(_,G,_):- mpred_call_with_no_triggers(G).
-
-
-:- thread_local t_l:infBackChainPrevented/1.
 
 
 %% call_with_bc_triggers( +MP) is semidet.
@@ -1553,12 +1484,14 @@ call_with_bc_triggers(MP) :- strip_module(MP,_,P), functor(P,F,A), \+ t_l:infBac
   locally_tl(infBackChainPrevented(F/A),mpred_eval_lhs(Trigger,S)).
 
 
+:- thread_local t_l:infBackChainPrevented/1.
+
 %% mpred_call_with_no_triggers( +Clause) is semidet.
 %
 % PFC Call Using No Triggers.
 %
 mpred_call_with_no_triggers(Clause) :-  strip_module(Clause,_,F),
-  %= this (is_ftVar(F)) is probably not advisable due to extreme inefficiency.
+  % = this (is_ftVar(F)) is probably not advisable due to extreme inefficiency.
   (is_ftVar(F)    ->  mpred_facts_and_universe(F) ;
      mpred_call_with_no_triggers_bound(F)).
 
@@ -1586,24 +1519,9 @@ mpred_call_with_no_triggers_uncaugth(Clause) :-  strip_module(Clause,_,F),
 % PFC Backchaining Only.
 %
 
-%mpred_bc_only(G):- !,defaultAssertMt(W), loop_check(mpred_BC_w_cache(W,G)).
-%mpred_bc_only(M:G):- !, loop_check(with_umt(M,mpred_bc_only0(G))).
-mpred_bc_only(G):- no_repeats(loop_check(mpred_bc_only0(G))).
-
-%% mpred_bc_only( +M) is semidet.
-%
-% PFC Backchaining + FACTS + Inheritance.
-%
-mpred_bc_and_with_pfc(G):- no_repeats(loop_check(mpred_bc_and_with_pfc_0(G))).
-
-mpred_bc_and_with_pfc_0(G):- mpred_call_only_facts(G). % was missing
-mpred_bc_and_with_pfc_0(G):- mpred_bc_only0(G).
-mpred_bc_and_with_pfc_0(G):- strip_module(G,M,P),inherit_above(M,P).
-
-
-
-
-% % :- '$set_source_module'(mpred_kb_ops).
+%mpred_bc_only(G):- !,defaultAssertMt(W), nr_lc_ex(mpred_BC_w_cache(W,G)).
+%mpred_bc_only(M:G):- !, nr_lc_ex(with_umt(M,mpred_bc_only0(G))).
+mpred_bc_only(G):- nr_lc_ex((mpred_bc_only0(G))).
 
 %% mpred_bc_only0( +G) is semidet.
 %
@@ -1614,6 +1532,22 @@ mpred_bc_only0(G):- mpred_unnegate(G,Pos),!, show_call(why,\+ mpred_bc_only(Pos)
 mpred_bc_only0(G):- mpred_BC_w_cache(G,G).
 
 % mpred_bc_only0(G):- mpred_call_only_facts(G).
+
+
+%% mpred_bc_and_with_pfc( +M) is semidet.
+%
+% PFC Backchaining + FACTS + Inheritance.
+%
+mpred_bc_and_with_pfc(G):- mpred_bc_and_with_pfc_0(G).
+
+mpred_bc_and_with_pfc_0(G):- loop_check(mpred_call_only_facts(G)). % was missing
+mpred_bc_and_with_pfc_0(G):- mpred_bc_only0(G).
+mpred_bc_and_with_pfc_0(G):- strip_module(G,M,P),inherit_above(M,P).
+
+
+
+
+% % :- '$set_source_module'(mpred_kb_ops).
 
 %%
 %= pfcBC_NoFacts(F) is true iff F is a fact available for backward chaining ONLY.
@@ -1695,7 +1629,7 @@ mpred_why_all(Call):-
 % Prolog Forward Chaining Backtackable Class Cache.
 %
 pfcBC_Cache(F) :- mpred_call_only_facts(pfcBC_Cache,F),
-   ignore((ground(F),( (\+mpred_call_0(F)), maybeSupport(F,(g,ax))))).
+   ignore((ground(F),( (\+call_u(F)), maybeSupport(F,(g,ax))))).
 
 
 
@@ -2188,7 +2122,7 @@ predicate_to_goal(G,G):-compound(G),!.
 %
 % repropagate  Primary Helper.
 %
-repropagate_0(P):- loop_check(call_u(repropagate_1(P)),true).
+repropagate_0(P):- nr_lc_ex(call_u(repropagate_1(P)),true).
 
 :- thread_local t_l:is_repropagating/1.
 
@@ -2366,7 +2300,7 @@ retract_mu((H:-B)):-!, clause_u(H,B,R),erase(R).
 :- retractall(t_l:mpred_debug_local).
 :- thread_local(t_l:in_rescan_mpred_hook/0).
 
-:- module_transparent(mpred_call_0/1).
+%:- module_transparent(mpred_call_0/1).
 
  :- meta_predicate update_single_valued_arg(+,+,*).
  :- meta_predicate assert_mu(*,+,*,*).

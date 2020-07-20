@@ -15,8 +15,9 @@
 % Dec 13, 2035
 % Douglas Miles
 */
-%:- if(( ( \+ ((current_prolog_flag(logicmoo_include,Call),Call))) )).
-hide_this_mpred_at_box :- fail, nop( module(mpred_at_box,[
+:- if(current_prolog_flag(xref,true)).  % XREF
+
+:- module(mpred_at_box,[
          assert_setting01/1,
          make_module_name_local/2,
          make_module_name_local0/2,
@@ -68,12 +69,9 @@ hide_this_mpred_at_box :- fail, nop( module(mpred_at_box,[
 
 
          which_file/1
-    ])).
-
-
-
-%:- endif.
+    ]).
 :- set_module(class(library)).
+:- endif.
 
 :- module_transparent((
      baseKB_hybrid_support/2,
@@ -186,6 +184,7 @@ box_type(_,_,abox).
 
 
 
+:- dynamic(lmcache:mpred_directive_value/3).
 
 
 % :- '$hide'(defaultAssertMt(_)).
@@ -195,7 +194,7 @@ box_type(_,_,abox).
 %
 % Get File Type.
 %
-get_file_type_local(File,Type):-var(File),!,quietly_must(loading_source_file(File)),get_file_type_local(File,Type),!.
+get_file_type_local(File,Type):-var(File),!,quietly_must_ex(loading_source_file(File)),get_file_type_local(File,Type),!.
 get_file_type_local(File,pfc):-file_name_extension(_,'.pfc.pl',File),!.
 get_file_type_local(File,pfc):-file_name_extension(_,'.clif',File),!.
 get_file_type_local(File,Type):-file_name_extension(_,Type,File),!.
@@ -206,11 +205,11 @@ mtCanAssert(Module):- clause_b(mtNonAssertable(Module)),!,fail.
 mtCanAssert(ABox):- \+ \+ (ABox=abox),!,trace_or_throw_ex(mtCanAssert(ABox)),fail.
 mtCanAssert(Module):- clause_b(mtHybrid(Module)).
 mtCanAssert(user):-  is_user_pfc.
-% mtCanAssert(Module):- clause_b(mtExact(Module)).
-mtCanAssert(Module):-  module_property(Module,file(_)),!,fail.
+mtCanAssert(Module):- \+ pfc_lib:is_code_module(Module),!.
+ % mtCanAssert(Module):- clause_b(mtExact(Module)).
+% mtCanAssert(Module):-  module_property(Module,file(_)),!,fail.
 mtCanAssert(Module):- (loading_source_file(File),get_file_type_local(File,pfc),prolog_load_context(module,Module)).
 mtCanAssert(Module):- clause_b(mtProlog(Module)),!,fail.
-mtCanAssert(Module):- \+ pfc_lib:is_code_module(Module),!.
 
 is_user_pfc:- clause_b(mtHybrid(user)).
 
@@ -243,6 +242,7 @@ fileAssertMt0(M):- must(get_fallBackAssertMt(M)),!.
 %
 
 % set_fileAssertMt(M):- '$current_source_module'(M),!.
+set_fileAssertMt(M):-  (M==user;M==system;M==pfc_lib),!,set_fileAssertMt(baseKB).
 set_fileAssertMt(M):-
  ensure_abox(M),
   sanity(mtCanAssert(M)),
@@ -266,6 +266,7 @@ set_current_modules_until_eof(M):-
 %
 % Sets Current Module.
 %
+set_defaultAssertMt(M):-  (M==user;M==system;M==pfc_lib),!,set_defaultAssertMt(baseKB).
 set_defaultAssertMt(M):-
   ignore(show_failure(mtCanAssert(M))),
    ensure_abox(M),!,
@@ -349,9 +350,27 @@ ensure_abox(M):-
   ignore(((M==user;M==baseKB)->true;nop(add_import_module(M,pfc_lib,end)))),
   dynamic(M:defaultTBoxMt/1),
   must(ensure_abox_support(M,baseKB)),!.
+  
+setup_database_term(M:F/A):-dynamic(M:F/A),multifile(M:F/A),public(M:F/A),module_transparent(M:F/A),
+  discontiguous(M:F/A),
+  ignore((M\==baseKB,functor(P,F,A),assertz_new(M:(P :- zwc, inherit_above(M, P))))).
+
 :- module_transparent((ensure_abox_support)/2).
-ensure_abox_support(M,TBox):- clause_b(M:defaultTBoxMt(TBox)),!.
 ensure_abox_support(M,TBox):- 
+  % NEW
+   (M==user;M==system;M==pfc_lib),!,ensure_abox_support(baseKB,TBox).
+ensure_abox_support(M,TBox):- clause_b(M:defaultTBoxMt(TBox)),!.
+ensure_abox_support(M,TBox):- % NEW  
+   asserta(M:defaultTBoxMt(TBox)),
+   set_prolog_flag(M:unknown,error),  
+   must(forall(mpred_database_term(F,A,_Type), setup_database_term(M:F/A))),
+   must(M:ain(TBox:mtHybrid(M))),
+   must(system:add_import_module(M,system,end)),
+   (M\==user->must(ignore(system:delete_import_module(M,user)));true),!,
+   must(setup_module_ops(M)),
+   (M == baseKB -> true ; ensure_abox_support_pt2_non_baseKB(M)).
+   
+ensure_abox_support(M,TBox):- % OLD 
 	% asserta(M:defaultTBoxMt(TBox)),
    set_prolog_flag(M:unknown,error),  
   must(forall(mpred_database_term(F,A,_Type),
@@ -370,6 +389,15 @@ ensure_abox_support(M,TBox):-
        throw(failed_ensure_abox_support(M,TBox)).
 
 
+ensure_abox_support_pt2_non_baseKB(M):-
+   must(ain(genlMt(M,baseKB))),
+   '$current_typein_module'(TM),
+   '$current_source_module'(SM),
+   '$set_typein_module'(M),
+   '$set_source_module'(M),
+   pfc_iri:include_module_file(M:library('pfclib/system_each_module.pfc'),M),!,
+   '$set_typein_module'(TM),
+   '$set_source_module'(SM),!.
    
 
 setup_module_ops(M):- mpred_op_each(mpred_op_unless(M)).
@@ -379,6 +407,7 @@ mpred_op_unless(M,A,B,C):- op_safe(A,B,M:C).
 mpred_op_each(OpEach):-
             call(OpEach,1199,fx,('==>')), % assert
             call(OpEach,1199,fx,('?->')), % ask
+            call(OpEach,1199,fx,('?=>')),
             call(OpEach,1190,xfy,('::::')), % Name something
             call(OpEach,1180,xfx,('==>')), % Forward chaining
             call(OpEach,1170,xfx,('<==>')), % Forward and backward chaining
@@ -551,7 +580,7 @@ fixup_modules:-  trace_or_throw_ex(unexpected(fixup_modules)),
 %
 % Correct Module.
 %
-correct_module(M,G,T):-safe_functor(G,F,A),quietly_must(correct_module(M,G,F,A,T)),!.
+correct_module(M,G,T):-safe_functor(G,F,A),quietly_must_ex(correct_module(M,G,F,A,T)),!.
 
 %% correct_module( ?M, ?Goal, ?F, ?A, ?T) is semidet.
 %
@@ -676,7 +705,7 @@ make_shared_multifile(_CallerMt,PredMt,F,A):-!,
 % Make Reachable.
 %
 make_reachable(_,Test):- \+ \+ ((Test= (_:F/_), is_ftVar(F))),!.
-make_reachable(CM,M:F/A):-  atom(CM),ignore(CM=M),quietly_must(atom(CM)),quietly_must(atom(M)),
+make_reachable(CM,M:F/A):-  atom(CM),ignore(CM=M),quietly_must_ex(atom(CM)),quietly_must_ex(atom(M)),
    safe_functor(G,F,A),
    correct_module(M,G,F,A,TT), !,import_predicate(CM,TT:F/A).
 
