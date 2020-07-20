@@ -350,10 +350,6 @@ mpred_prop(M,F,A,pfcCallCode)/predicate_is_undefined_fa(F,A)
 mpred_prop(M,F,A,pfcCallCode)/predicate_is_undefined_fa(F,A)
     ==> mpred_prop(M,F,A,pfcWatches).
 */
-
-:- if(\+ current_prolog_flag(retry_undefined,_)).
-:- endif.
-
 genlPreds(pfcRHS,pfcControlled).
 
 genlPreds(prologSideEffects,rtNotForUnboundPredicates).

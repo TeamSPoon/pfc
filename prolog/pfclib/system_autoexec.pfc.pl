@@ -127,7 +127,7 @@ rtUnaryPredicate/1,
 first_std_provider/3)).
 */
 
-%:- ensure_abox(baseKB).
+%:- ensure_abox_hybrid(baseKB).
 
 :- set_fileAssertMt(baseKB).
 
