@@ -556,8 +556,8 @@ without_depth_limit(G):-
       call_cleanup(G,'$depth_limit'(Was,_,_))))).
 */
 
-~(singleValuedInArg(arity,_)).
-~(singleValuedInArg(support_hilog,_)).
+~ singleValuedInArg(arity,_).
+~ singleValuedInArg(support_hilog,_).
 
 
 %:- rtrace,dtrace.

@@ -1874,6 +1874,8 @@ remove_selection(P):-
 select_next_fact(P):-  
   lookup_u(baseKB:mpred_select_hook(P)),
   !.
+select_next_fact(P):-  
+  call_u(pfcSelect(P)), !.
 select_next_fact(P):-
   defaultmpred_select(P),
   !.
@@ -1881,8 +1883,11 @@ select_next_fact(P):-
 % the default selection predicate takes the item at the froint of the queue.
 defaultmpred_select(P):- lookup_m(que(P,_)),!.
 
+pfcQueue(Q):- lookup_m(que(P,_)).
+
 % mpred_halt stops the forward chaining.
 mpred_halt:-  mpred_halt(anonymous(mpred_halt)).
+pfcHalt:- mpred_halt.
 
 mpred_halt(Format,Args):- format_to_message(Format,Args,Info), mpred_halt(Info).
 
@@ -3285,8 +3290,11 @@ mpred_compile_rhs_term(Sup,I,O):- quietly(mpred_compile_rhs_term_consquent(Sup,I
 
      mpred_literal(X):- notrace((is_ftVar(X); mpred_negated_literal(X);mpred_positive_literal(X))).
 
+     pfcAtom(P):- mpred_literal(P).
+
      mpred_literal_nonvar(X):- notrace((\+ is_ftVarq(X),!,(mpred_negated_literal(X);mpred_positive_literal(X)))).
 
+     
      mpred_positive_literal(X):-
       notrace(( is_ftNonvar(X),
        X \= ~(_), % MAYBE COMMENT THIS OUT
