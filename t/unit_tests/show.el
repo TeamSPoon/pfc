@@ -1,7 +1,5 @@
 (provide 'show)
 
-:- use_module(library(pfc)).
-
 (save-excursion 
   (set-buffer (get-buffer-create "prolog-database"))
   (newline))
