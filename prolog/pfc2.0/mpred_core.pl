@@ -1133,6 +1133,7 @@ mpred_add(P):- mpred_ain(P).
 decl_assertable_module(AM):- nop((must_ex(dynamic(AM:spft/3)))).
 
 % mpred_ain_cm(SM:(==>(AM:P)),P,AM,SM):- SM\==AM, current_predicate(SM:spft/3),!,decl_assertable_module(SM).
+mpred_ain_cm(AM:P,P,AM,SM):- nonvar(P),nonvar(P),decl_assertable_module(AM),guess_pos_source_to(SM),!.
 mpred_ain_cm(SM:(==>(AM:P)),==>P,AM,SM):- AM==SM,!,decl_assertable_module(AM).
 mpred_ain_cm(SM:(==>(_:(AM:P :- B))),==>(AM:P :- SM:B),AM,SM):- nonvar(P), decl_assertable_module(AM).
 mpred_ain_cm(SM:(==>(AM:P)),==>P,AM,AM):- decl_assertable_module(AM),!,decl_assertable_module(SM).
@@ -1146,9 +1147,9 @@ mpred_ain_cm(   P,P,SM,AM):- get_assert_to(AM), safe_context_module(SM).
 
 
 guess_pos_assert_to(ToMt):- 
-  notrace((  ((guess_pos_source_to(ToMt), \+ is_code_module(ToMt), mtCanAssert(ToMt))*-> true; 
+  notrace((  ((guess_pos_source_to(ToMt), \+ is_code_module(ToMt), is_mtCanAssert(ToMt))*-> true; 
     ((guess_pos_source_to(ToMt), \+ is_code_module(ToMt))*-> true ;
-    ((guess_pos_source_to(ToMt), mtCanAssert(ToMt))*-> true;    
+    ((guess_pos_source_to(ToMt), is_mtCanAssert(ToMt))*-> true;    
     guess_pos_source_to(ToMt)))))).
 
 :- dynamic(baseKB:mtExact/1).
@@ -3714,7 +3715,7 @@ mpred_assertz_w_support(P,Support):-
 :- module_transparent(clause_asserted_call/2).
 clause_asserted_call(H,B):-clause_asserted(H,B).
 
-clause_asserted_u(P):- call_u(clause_asserted_i(P)),!.
+clause_asserted_u(P):- call_u(clause_asserted(P)),!.
   
 
 /*

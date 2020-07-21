@@ -542,7 +542,7 @@ maybe_should_rename(O,O).
 in_dialect_pfc:- is_pfc_file. % \+ current_prolog_flag(dialect_pfc,cwc),!.
 
 %is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_toplevel)),!.
-%is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_mod)),!,baseKB:mtCanAssert(SM).
+%is_pfc_module(SM):- clause_b(using_pfc(SM,_, SM, pfc_mod)),!,baseKB:is_mtCanAssert(SM).
 is_pfc_module(SM):- clause_b(mtHybrid(SM)).
 
 can_extreme_debug :- fail, notrace(( \+ in_pengines)).
