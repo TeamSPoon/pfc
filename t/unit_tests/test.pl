@@ -1,6 +1,7 @@
-%% some simple tests to see if Pfc is working properly
+% -*-Prolog-*-
 
 :- use_module(library(pfc)).
+%% some simple tests to see if Pfc is working properly
 
 
 time(Call,Time) :-

@@ -1,4 +1,4 @@
-
+% -*-Prolog-*-
 
 :- use_module(library(pfc)).
 % this example works in a serial Pfc, but has problems in a parallel one.

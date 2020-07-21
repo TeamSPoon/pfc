@@ -9,7 +9,7 @@
 
 value(X) ==> {addToSum(X)}.
 
-fcUndoMethod(addToSum(X), subFromSum(X)).
+do_and_undo(addToSum(X), subFromSum(X)).
 
 addToSum(X) :-
   retract(sum(S)),

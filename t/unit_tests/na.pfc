@@ -103,4 +103,4 @@ inspect(T) :-
   format("~n  values: ~w",[Vs]).
 
 bag(Template,Goal,List) :-
-  bagof(Template,Goal,List) -> true ;  List=[].
+  bagof(Template,Goal,List) *-> true ;  List=[].

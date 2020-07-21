@@ -1,3 +1,5 @@
+%% some simple tests to see if Pfc is working properly
+
 :- dynamic ('-->>'/2).
 
 :- use_module(library(pfc)).

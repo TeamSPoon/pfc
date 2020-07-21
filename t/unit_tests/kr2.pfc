@@ -1,7 +1,5 @@
-
-
-:- use_module(library(pfc)).
 % -*-Prolog-*-
+:- use_module(library(pfc)).
 
 % A company is a kind of business entity with at least one officer.  Known
 % companies include XYZ_CORP and ABC_CORP.  All of a company's officers

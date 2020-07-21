@@ -1,5 +1,7 @@
-=> parent(adam,abel).
+% -*-Prolog-*-
 
 :- use_module(library(pfc)).
-=> parent(abel,enoch).
-=> gender(abel,male).
+
+==> parent(adam,abel).
+==> parent(abel,enoch).
+==> gender(abel,male).
