@@ -11,10 +11,15 @@
 
 */
 :- module(pfc_lib,[]).
-%:- set_prolog_flag(gc,false).
-:- set_prolog_flag(pfc_version,2.0).
-
+:- set_module(class(library)).
 :- set_prolog_flag(retry_undefined, none).
+:- system:use_module(library(logicmoo_utils)).
+:- system:use_module(library(logicmoo/predicate_inheritance)).
+:- system:use_module(library(pfc_iri_resource)).
+:- if( \+ current_predicate(each_call_cleanup/3)).
+:- use_module(library(each_call_cleanup)).
+:- endif.
+:- use_module(library(dictoo_lib)).
 
 :- if( \+ current_prolog_flag(xref,true)).
 
@@ -66,15 +71,6 @@ kb_global_w(M:F/A):-
    do_import(header_sane,M,F,A),
    M:kb_global(M:F/A),
    system:import(M:F/A).
-
-:- use_module(library(logicmoo_utils)).
-:- system:use_module(library(logicmoo/predicate_inheritance)).
-:- system:use_module(library(pfc_iri_resource)).
-
-:- if( \+ current_predicate(each_call_cleanup/3)).
-:- use_module(library(each_call_cleanup)).
-:- endif.
-:- use_module(library(dictoo_lib)).
 
 
 /*
@@ -311,6 +307,8 @@ intern_predicate(To,From:F/A):-!,
   user:export(From:F/A),user:export(From:F/A),
   baseKB:export(From:F/A),baseKB:export(From:F/A),
   system:export(From:F/A),system:export(From:F/A),!.
+:- intern_predicate(system,intern_predicate/1).
+:- intern_predicate(system,intern_predicate/2).
 
 
 scan_missed_source:-!.
@@ -334,10 +332,6 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg_pretty(visit_pfc_non
 
 
 
-:- intern_predicate(system,intern_predicate/1).
-
-:- intern_predicate(system,intern_predicate/2).
-
 '?='(ConsqIn):- fully_expand(ConsqIn,Consq),call_u(Consq),forall(mpred_why(Consq,Ante),dmsg_pretty(Ante)).
 '?=>'(AnteIn):- fully_expand(AnteIn,Ante),call_u(Ante),forall(mpred_why(Consq,Ante),dmsg_pretty(Consq)).
 
@@ -345,23 +339,6 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg_pretty(visit_pfc_non
 :- lock_predicate(pfc:'?=>'/1).
 
 :- thread_local(t_l:disable_px).
-
-% M:include_into_module(library('pfc2.0/pfc_2_0_includes'),M),
-%:- include(library('pfc2.0/pfc_2_0_includes')).
-/*
-:- nop(kb_shared((
-   bkch/2, %basePFC
-   hs/1, %basePFC
-   tneg/3, %basePFC
-   tpky/3, %basePFC
-   tpky/2, %basePFC
-   que/1, %basePFC
-   pm/1, %basePFC
-   spft/3, %basePFC
-   tms/1 %basePFC
-   ))).
-:- nop(kb_shared( ('~') /1)).
-*/
 
 %:- include(library('dialect/pfc_ext/mpred_header.pi')).
 :- set_prolog_flag_until_eof(access_level,system).
@@ -375,23 +352,6 @@ disable_yall:- multifile(yall:lambda_functor/1),
 
 :- disable_yall.
 */
-
-/*
-% baseKB:startup_option(datalog,sanity). %  Run datalog sanity tests while starting
-% baseKB:startup_option(clif,sanity). %  Run datalog sanity tests while starting
-:- set_prolog_flag(fileerrors,false).
-%:- set_prolog_flag(gc,false).
-:- set_prolog_flag(gc,true).
-:- set_prolog_flag(optimise,false).
-:- set_prolog_flag(last_call_optimisation,false).
-:- set_prolog_flag(debug,true).
-:- debug.
-*/
-%:- guitracer.
-%:- set_prolog_flag(access_level,system).
-
-% :- set_prolog_flag(logicmoo_autoload,false).
-% :- set_prolog_flag(logicmoo_autoload,true).
 
 % must be xref-ing or logicmoo_autoload or used as include file
 :- set_prolog_flag(logicmoo_include,lmbase:skip_module_decl).
@@ -867,9 +827,9 @@ pfc_may_see_module(M):- import_module(M,pfc_lib).
 :- endif.
 
 
-:- if(\+ current_predicate(mpred_child/2)).
-  :- include(library(dialect/pfc_ext/pfc_2_0_includes)).
-:- endif.
+%:- if(\+ current_predicate(mpred_child/2)).
+:- include(library(dialect/pfc_ext/pfc_2_0_includes)).
+%:- endif.
 
 
 :- multifile(system:goal_expansion/4).
@@ -897,7 +857,7 @@ system:clause_expansion(I,O):-
 :- set_prolog_flag(retry_undefined, module).
 
 :- set_prolog_flag(expect_pfc_file,unknown).
-:- baseKB:consult('pfclib/system_autoexec.pfc').
+:- baseKB:consult(library('pfclib/system_autoexec.pfc')).
 :- set_prolog_flag(expect_pfc_file,never).
 :- set_prolog_flag(pfc_booted,true).
 

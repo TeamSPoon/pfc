@@ -1141,11 +1141,8 @@ mpred_ain_cm(SM:(==>(_:(AM:P :- B))),==>(AM:P :- SM:B),AM,SM):- nonvar(P), decl_
 mpred_ain_cm(SM:(==>(AM:P)),==>P,AM,AM):- decl_assertable_module(AM),!,decl_assertable_module(SM).
 mpred_ain_cm((==>(AM:P)),==>P,AM,AM):- decl_assertable_module(AM),!.
 mpred_ain_cm((==>(P)),==>P,AM,SM):- get_assert_to(AM), guess_pos_source_to(SM),!.
-mpred_ain_cm(M:(==>(P)),==>P,AM,AM):- safe_context_module(M),get_assert_to(AM),!. %  guess_pos_source_to(SM).
 mpred_ain_cm(AM:(==>(P)),==>P,AM,AM):- !.
-
-mpred_ain_cm(AM:P,P,SM,AM):- !, safe_context_module(SM).
-mpred_ain_cm(   P,P,SM,AM):- get_assert_to(AM), safe_context_module(SM).
+mpred_ain_cm(P,P,AM,SM):- get_assert_to(AM), guess_pos_source_to(SM),!.
 
 
 guess_pos_assert_to(ToMt):- 
@@ -1161,18 +1158,15 @@ as_safe_cm(M,M).
 
 to_osm(OSM):- prolog_load_context(module,M),( (M==user;M==system;M==pfc_lib)->OSM=baseKB;OSM=M).
 
-safe_context_module(ToMt):- context_module(UToMt),as_safe_cm(UToMt,ToMt),!.
 
 % guess_pos_source_to(ToMt):- t_l:current_defaultAssertMt(ToMt).
 
 guess_pos_source_to(ToMt):- no_repeats(ToMt,(guess_pos_source_to0(UToMt),as_safe_cm(UToMt,ToMt))).
 
 guess_pos_source_to0(ToMt):- t_l:current_defaultAssertMt(ToMt).
+guess_pos_source_to0(ToMt):- '$current_typein_module'(ToMt), ToMt\==user. 
 guess_pos_source_to0(ToMt):- '$current_source_module'(ToMt).
-guess_pos_source_to0(ToMt):- safe_context_module(ToMt).
-guess_pos_source_to0(ToMt):- '$current_typein_module'(ToMt).
 guess_pos_source_to0(ToMt):- guess_pfc_file(File),module_property(ToMt,file(File)),File\==ToMt.
-guess_pos_source_to0(ToMt):- prolog_load_context(module,ToMt).
 guess_pos_source_to0(ToMt):- defaultAssertMt(ToMt).
 guess_pos_source_to0(baseKB).
 

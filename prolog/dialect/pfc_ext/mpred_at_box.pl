@@ -350,7 +350,7 @@ is_pfc_module_file(M,F,TF):- (module_property(M,file(F)),pfc_lib:is_pfc_file(F))
 
 maybe_ensure_abox(M):- is_pfc_module_file(M,F,_), (F \== (-)), !,   
   (pfc_lib:is_pfc_file(F)->show_call(pfc_lib:is_pfc_file(F),ensure_abox_hybrid(M));dmsg_pretty(not_is_pfc_module_file(M,F))).
-maybe_ensure_abox(M):- show_failure(not_is_pfc_file,ensure_abox_hybrid(M)).
+maybe_ensure_abox(M):- show_call(not_is_pfc_file,ensure_abox_hybrid(M)).
 
 
 :- module_transparent((ensure_abox_hybrid)/1).
@@ -371,18 +371,19 @@ setup_database_term(M:F/A):-dynamic(M:F/A),multifile(M:F/A),public(M:F/A),module
 %ensure_abox_support(M):- module_property(M,class(library)),!.
 ensure_abox_support(M,TBox):- (M==user;M==system;M==pfc_lib),!,ensure_abox_support(baseKB,TBox).
 ensure_abox_support(M,TBox):- clause_bq(M:defaultTBoxMt(TBox)),!.
-ensure_abox_support(M,TBox):- 
+ensure_abox_support(M,TBox):- ignore((system:delete_import_module(pfc_lib,user))),
+   system:add_import_module(pfc_lib,system, end),
    asserta(M:defaultTBoxMt(TBox)),
    set_prolog_flag(M:unknown,error),  
    must(forall(mpred_database_term(F,A,_PType), setup_database_term(M:F/A))),
-   must(system:add_import_module(M,system,end)),
-   (M\==user->must(ignore(system:delete_import_module(M,user)));true),!,
+   must(system:add_import_module(M,system,end)),   
+   (M\==user->must(ignore(show_call(system:delete_import_module(M,user))));true),!,
    must(setup_module_ops(M)),
    (M == baseKB -> true ; ensure_abox_support_pt2_non_baseKB(M)).
    
 ensure_abox_support(M,TBox):- 
        % system:add_import_module(M,user,end),
-       must(ignore(system:delete_import_module(M,system))),
+       %must(ignore(system:delete_import_module(M,system))),
        must(ignore(system:delete_import_module(M,baseKB))),
        system:add_import_module(M,system,end),
        retractall(M:defaultTBoxMt(TBox)),

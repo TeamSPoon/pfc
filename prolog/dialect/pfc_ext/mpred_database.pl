@@ -2107,12 +2107,18 @@ repropagate_0(P):-  notrace(is_ftVar(P)),!.
 repropagate_0(USER:P):- USER==user,!,repropagate_0(P).
 repropagate_0(==>P):- !,repropagate_0(P).
 repropagate_0(P):-  meta_wrapper_rule(P),!,call_u(repropagate_meta_wrapper(P)).
-repropagate_0(P):-  \+ predicate_property(P,_),'$find_predicate'(P,PP),PP\=[],!,
-     forall(member(M:F/A,PP),must((functor(Q,F,A),repropagate_0(M:Q)))).
 repropagate_0(F/A):- is_ftNameArity(F,A),!,functor(P,F,A),!,repropagate_0(P).
 repropagate_0(F/A):- atom(F),is_ftVar(A),!,repropagate_0(F).
+repropagate_0(P0):- p0_to_mp(P0,P),
+     
+     \+ predicate_property(P,_),'$find_predicate'(P0,PP),PP\=[],!,
+     forall(member(M:F/A,PP),must((functor(Q,F,A),repropagate_0(M:Q)))).
 repropagate_0(P):-  notrace((\+ predicate_property(_:P,_),dmsg_pretty(undefined_repropagate(P)))),dumpST,dtrace,!,fail.
 repropagate_0(P):- repropagate_meta_wrapper(P).
+
+p0_to_mp(MP,SM:P0):- 
+  strip_module(MP,M0,P0),
+  ((M0==query;M0==pfc_lib;is_code_module(M0))-> (get_query_from(SM),sanity(pfc_lib\==SM));SM=M0).
 
 :- export(repropagate_meta_wrapper/1).
 :- module_transparent(repropagate_meta_wrapper/1).
