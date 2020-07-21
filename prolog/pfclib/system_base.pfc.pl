@@ -149,7 +149,7 @@ pfcSanityA.
 :- rtrace:import(baseKB:prologOrdered/1).
 ((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C),(C==user->dmsg_pretty(warn(mtHybrid(C)));true)}).
 
-:- wdmsg(loading_system_base()).
+%:- wdmsg(loading_system_base()).
 
 predicateTriggerType(kb_local).
 predicateTriggerType(kb_shared).
@@ -180,7 +180,9 @@ predicateTriggerType(Type) ==>
 %((mtHybrid(C),{is_ftNonvar(C)},{ensure_abox_hybrid(C)}, \+ mtProlog(C)) <==> (genlMt(C,baseKB),{is_ftNonvar(C)}, \+ mtProlog(C))).
 
 %
-mtProlog(C) ==> {decl_assertable_module(C)}. % , \+ mtHybrid(C). 
+% mtProlog(C) ==> {decl_assertable_module(C)}. % , \+ mtHybrid(C). 
+
+mtHybrid(C) ==> {decl_assertable_module(C)}. % , \+ mtProlog(C). 
 %(predicateConventionMt(F,MT),arity(F,A))==>{(MT==baseKB;mtProlog(MT))->kb_shared(MT:F/A);kb_shared(MT:F/A)}.
 % :- break.
 % predicateConventionMt(predicateConventionMt,baseKB).

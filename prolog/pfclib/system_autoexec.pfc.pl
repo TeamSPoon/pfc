@@ -155,7 +155,7 @@ assert_if_newt(G):- (cwc,(clause_asserted_i(G)->true;call(assert,G))).
 
 :- baseKB:ensure_loaded('system_base.pfc').
 
-mtHybrid(M) ==> {wdmsg(note_mtHybrid(M))}.
+%mtHybrid(M) ==> {wdmsg(note_mtHybrid(M))}.
 
 % ensure this file does not get unloaded with mpred_reset
 %:- mpred_trace_exec.

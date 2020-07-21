@@ -29,16 +29,16 @@ user:message_hook(check(undefined_procedures,List),_Type,_Warn):-
    fail.
 % ===================================================
 
-:- include(library('pfc2.0/mpred_at_box.pl')).
-:- include(library('pfc2.0/mpred_justify.pl')).
-:- include(library('pfc2.0/mpred_core.pl')).
-%:- include(library('pfc2.0/mpred_gvars.pl')).
-:- include(library('pfc2.0/mpred_expansion.pl')).
-:- include(library('pfc2.0/mpred_loader.pl')).
-:- include(library('pfc2.0/mpred_database.pl')).
-:- include(library('pfc2.0/mpred_listing.pl')).
-%:- include(library('pfc2.0/mpred_prolog_file.pl')).
-:- include(library('pfc2.0/mpred_terms.pl')).
+:- include(('mpred_at_box.pl')).
+:- include(('mpred_justify.pl')).
+:- include(('mpred_core.pl')).
+%:- include(('mpred_gvars.pl')).
+:- include(('mpred_expansion.pl')).
+:- include(('mpred_loader.pl')).
+:- include(('mpred_database.pl')).
+:- include(('mpred_listing.pl')).
+%:- include(('mpred_prolog_file.pl')).
+:- include(('mpred_terms.pl')).
 
 :- fixup_exports.
 

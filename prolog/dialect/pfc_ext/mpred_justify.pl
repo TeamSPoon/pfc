@@ -596,11 +596,11 @@ pfcShowSingleJust_C(C):-is_file_ref(C),!.
 pfcShowSingleJust_C(C):-find_mfl(C,MFL),assert(t_l:shown_why(MFL)),!,pfcShowSingleJust_MFL(MFL).
 pfcShowSingleJust_C(_):-ansi_term:ansi_format([hfg(black)]," % [no_mfl] ",[]),!.
 
-short_filename(F,FN):- atomic_list_concat([_,FN],'/pack/',F),!.
-short_filename(F,FN):- atomic_list_concat([_,FN],swipl,F),!.
-short_filename(F,FN):- F=FN,!.
+pfc_short_filename(F,FN):- atomic_list_concat([_,FN],'/pack/',F),!.
+pfc_short_filename(F,FN):- atomic_list_concat([_,FN],swipl,F),!.
+pfc_short_filename(F,FN):- F=FN,!.
 
-pfcShowSingleJust_MFL(MFL):- MFL=mfl4(VarNameZ,_M,F,L),atom(F),short_filename(F,FN),!,varnames_load_context(VarNameZ),
+pfcShowSingleJust_MFL(MFL):- MFL=mfl4(VarNameZ,_M,F,L),atom(F),pfc_short_filename(F,FN),!,varnames_load_context(VarNameZ),
    ansi_term:ansi_format([hfg(black)]," % [~w:~w] ",[FN,L]).
 pfcShowSingleJust_MFL(MFL):- ansi_term:ansi_format([hfg(black)]," % [~w] ",[MFL]),!.
 

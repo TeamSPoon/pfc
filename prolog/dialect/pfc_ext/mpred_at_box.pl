@@ -232,7 +232,7 @@ is_user_pfc:- clause_bq(mtHybrid(user)).
 fileAssertMt(M):- nonvar(M), fileAssertMt(ABoxVar),!,M=@=ABoxVar.
 fileAssertMt(M):- loading_source_file(File),clause_bq(baseKB:file_to_module(File,M)),!.
 fileAssertMt(M):- loading_source_file(File),clause_bq(lmcache:mpred_directive_value(File,module,M)),!.
-fileAssertMt(M):- fileAssertMt0(M), (source_location(_,_)->show_call(set_fileAssertMt(M));true).
+fileAssertMt(M):- fileAssertMt0(M), (source_location(_,_)->must(set_fileAssertMt(M));true).
 
 fileAssertMt0(M):- prolog_load_context(module,M),is_mtCanAssert(M),!.
 fileAssertMt0(M):- '$current_typein_module'(M),is_mtCanAssert(M),!.
@@ -350,7 +350,7 @@ is_pfc_module_file(M,F,TF):- (module_property(M,file(F)),pfc_lib:is_pfc_file(F))
 
 maybe_ensure_abox(M):- is_pfc_module_file(M,F,_), (F \== (-)), !,   
   (pfc_lib:is_pfc_file(F)->show_call(pfc_lib:is_pfc_file(F),ensure_abox_hybrid(M));dmsg_pretty(not_is_pfc_module_file(M,F))).
-maybe_ensure_abox(M):- show_call(not_is_pfc_file,ensure_abox_hybrid(M)).
+maybe_ensure_abox(M):- show_failure(not_is_pfc_file,ensure_abox_hybrid(M)).
 
 
 :- module_transparent((ensure_abox_hybrid)/1).
@@ -368,6 +368,7 @@ setup_database_term(M:F/A):-dynamic(M:F/A),multifile(M:F/A),public(M:F/A),module
   ignore((M\==baseKB,functor(P,F,A),assertz_new(M:(P :- zwc, inherit_above(M, P))))).
 
 :- module_transparent((ensure_abox_support)/2).
+%ensure_abox_support(M):- module_property(M,class(library)),!.
 ensure_abox_support(M,TBox):- (M==user;M==system;M==pfc_lib),!,ensure_abox_support(baseKB,TBox).
 ensure_abox_support(M,TBox):- clause_bq(M:defaultTBoxMt(TBox)),!.
 ensure_abox_support(M,TBox):- 
@@ -387,7 +388,8 @@ ensure_abox_support(M,TBox):-
        retractall(M:defaultTBoxMt(TBox)),
        throw(failed_ensure_abox_support(M,TBox)).
 
-
+%ensure_abox_support_pt2_non_baseKB(M):- module_property(M,class(system)),!.
+%ensure_abox_support_pt2_non_baseKB(M):- module_property(M,class(library)),!.
 ensure_abox_support_pt2_non_baseKB(M):-
    M:use_module(library(pfc_lib)),
    '$current_typein_module'(TM),

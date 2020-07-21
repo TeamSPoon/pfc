@@ -153,7 +153,7 @@ functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_d
 %      mpred_op(?, ?),
       mpred_facts_only(*),
       map_unless(1,:,*,*),      
-      is_callable(*),     
+      pfc_is_callable(*),     
 %      deducedSimply(*),
       cnstrn0(:,+),
       cnstrn(*),
@@ -211,7 +211,7 @@ once(A,B,C,D):-trace_or_throw_ex(once(A,B,C,D)).
 
 
 % ================================================
-% is_callable/call_u/naf
+% pfc_is_callable/call_u/naf
 % ================================================
 
 %:- was_dynamic(naf/1).
@@ -226,16 +226,16 @@ once(A,B,C,D):-trace_or_throw_ex(once(A,B,C,D)).
 %
 naf(Goal):- (\+ call_u(Goal)).
 
-:- meta_predicate(is_callable(*)).
-:- was_export(is_callable/1).
+:- meta_predicate(pfc_is_callable(*)).
+:- was_export(pfc_is_callable/1).
 
 
 
-%% is_callable( :GoalC) is semidet.
+%% pfc_is_callable( :GoalC) is semidet.
 %
 % If Is A Callable.
 %
-is_callable(C):-current_predicate(_,C),!.
+pfc_is_callable(C):-current_predicate(_,C),!.
 
 
 :- style_check(+singleton).

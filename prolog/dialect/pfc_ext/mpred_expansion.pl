@@ -929,7 +929,7 @@ expand_isEach_or_fail(Sent,SentO):- expand_isEach_or_fail_real(Sent,SentO),!,thr
 
 expand_isEach_or_fail_real(Sent,SentO):- compound(Sent),
     \+ (Sent  univ_safe  [_,I],atomic(I)), bagof(O,do_expand_args(isEach,Sent,O),L),!,L\=@=[Sent],SentO=L,!.
-expand_isEach_or_fail_conj(Sent,SentO):- expand_isEach_or_fail_real(Sent,SentM),list_to_conj(SentM,SentO).
+expand_isEach_or_fail_conj(Sent,SentO):- expand_isEach_or_fail_real(Sent,SentM),pfc_list_to_conj(SentM,SentO).
 
 %% expand_kif_string_or_fail( ++Op, ++Sent, --SentO) is semidet.
 %
@@ -1090,10 +1090,10 @@ recommify(A,((X,B),C),D):- !, recommify(A,X,AX),recommify(AX,(B,C),D).
 recommify(A,(B,C),D):- !, conjoin(A,B,AB), recommify(AB,C,D).
 recommify(A,PredArgs,C):- PredArgs  univ_safe  [P|Args],maplist(recommify,Args,AArgs),B  univ_safe  [P|AArgs],conjoin(A,B,C),!.
 
-list_to_conj([], true).
-list_to_conj([C], C) :- !.
-list_to_conj([H|T], (H,C)) :-
-    list_to_conj(T, C).
+pfc_list_to_conj([], true).
+pfc_list_to_conj([C], C) :- !.
+pfc_list_to_conj([H|T], (H,C)) :-
+    pfc_list_to_conj(T, C).
 
 const_or_var(I):- \+ atom(I), (var(I);I='$VAR'(_);(atomic(I),\+ string(I))),!.
 

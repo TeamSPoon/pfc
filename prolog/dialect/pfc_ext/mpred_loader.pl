@@ -214,7 +214,7 @@
 % Avoid Warning: mpred_loader:prolog_load_context(reload,true), which is called from
 mpred_unload_file:- prolog_load_context(reload,true),!.
 mpred_unload_file:- source_location(File,_),mpred_unload_file(File).
-mpred_unload_file(File):- dmsg(nop(mpred_unload_file(File))),!.
+mpred_unload_file(File):- nop(dmsg(mpred_unload_file(File))),!.
 mpred_unload_file(File):-
   findall(
     mpred_withdraw(Data,(mfl4(VarNameZ,Module, File, LineNum),AX)),

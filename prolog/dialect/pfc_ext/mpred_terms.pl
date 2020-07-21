@@ -20,6 +20,7 @@
 :- include('mpred_header.pi').
 :-endif.
 
+
 :- export(any_to_number/2).
 %% any_to_value( ?Var, ?Var) is semidet.
 %

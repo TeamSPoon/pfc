@@ -510,7 +510,7 @@ call_in_thread_code(M,G,Why,TN):-
 
 u_to_uu(U,(U,ax)):- var(U),!.
 u_to_uu(U,U):- nonvar(U),U=(_,_),!.
-u_to_uu([U|More],UU):-list_to_conj([U|More],C),!,u_to_uu(C,UU).
+u_to_uu([U|More],UU):- pfc_list_to_conj([U|More],C),!,u_to_uu(C,UU).
 u_to_uu(U,(U,ax)):-!.
 
 %% get_source_uu( :TermU) is det.

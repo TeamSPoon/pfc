@@ -67,8 +67,18 @@ kb_global_w(M:F/A):-
    M:kb_global(M:F/A),
    system:import(M:F/A).
 
-:- use_module(library(logicmoo_utils_all)).
+:- use_module(library(logicmoo_utils)).
 :- system:use_module(library(logicmoo/predicate_inheritance)).
+:- system:use_module(library(pfc_iri_resource)).
+
+:- if( \+ current_predicate(each_call_cleanup/3)).
+:- use_module(library(each_call_cleanup)).
+:- endif.
+:- use_module(library(dictoo_lib)).
+
+
+/*
+
 
 :- system:use_module(library(apply)).
 :- system:use_module(library(assoc)).
@@ -140,16 +150,6 @@ kb_global_w(M:F/A):-
 :- system:use_module(library(make)).
 :- system:use_module(library(check)).
 
-
-:- system:use_module(library(pfc_iri_resource)).
-
-:- if( \+ current_predicate(each_call_cleanup/3)).
-:- use_module(library(each_call_cleanup)).
-:- endif.
-:- system:use_module(library(dictoo_lib)).
-
-
-/*
 :- use_module(library(file_scope)).
 :- set_prolog_flag_until_eof(access_level,system).
 
@@ -180,7 +180,6 @@ kb_global_w(M:F/A):-
 :- kb_global_w(baseKB:rtArgsVerbatum/1).
 :- kb_global_w(baseKB:prologHybridType/3).
 :- kb_global_w(baseKB:mpred_skipped_module/1).
-
 
 :- kb_global_w(baseKB:mpred_prop/4).
 
@@ -347,7 +346,6 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg_pretty(visit_pfc_non
 
 :- thread_local(t_l:disable_px).
 
-:- include(library('pfc2.0/mpred_header.pi')).
 % M:include_into_module(library('pfc2.0/pfc_2_0_includes'),M),
 %:- include(library('pfc2.0/pfc_2_0_includes')).
 /*
@@ -365,6 +363,8 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg_pretty(visit_pfc_non
 :- nop(kb_shared( ('~') /1)).
 */
 
+%:- include(library('dialect/pfc_ext/mpred_header.pi')).
+:- set_prolog_flag_until_eof(access_level,system).
 /*
 % Make YALL require ">>" syntax (the problem was it autoloads when its sees PFC code containing "/" and gripes all the time)
 
@@ -375,8 +375,6 @@ disable_yall:- multifile(yall:lambda_functor/1),
 
 :- disable_yall.
 */
-
-:- set_prolog_flag_until_eof(access_level,system).
 
 /*
 % baseKB:startup_option(datalog,sanity). %  Run datalog sanity tests while starting
@@ -866,14 +864,11 @@ pfc_may_see_module(M):- import_module(M,pfc_lib).
 :- if(exists_source(library(logicmoo/retry_undefined))).
 :- pfc_lib:consult(library(logicmoo/retry_undefined)).
 :- install_retry_undefined(baseKB,kb_shared).
-
-:- else.
-
 :- endif.
 
 
 :- if(\+ current_predicate(mpred_child/2)).
-  :- include(library('pfc2.0/pfc_2_0_includes.pl')).
+  :- include(library(dialect/pfc_ext/pfc_2_0_includes)).
 :- endif.
 
 
@@ -891,9 +886,6 @@ system:clause_expansion(I,O):-
 
 % :- current_predicate(system:F/A),cna_functor_safe(PI,F,A),
 % \+ predicate_property(system:PI,imported_from(_)).
-
-
-
 
 %:- set_prolog_flag(read_attvars,false).
 
@@ -916,8 +908,7 @@ system:clause_expansion(I,O):-
 :-hook_database:export(pfc_lib:mpred_aina/1).
 :-hook_database:export(pfc_lib:mpred_ainz/1).
 
-:- fixundef_later.
+%:- fixundef_later.
 %:- set_prolog_flag(retry_undefined, kb_shared).
-
 
 

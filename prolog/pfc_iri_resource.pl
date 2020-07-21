@@ -295,8 +295,8 @@ include_pfc_res(Module,PfcInclFile):-
      reexport(true),
      silent(false)]),!.          
 
-
-add_pfc_to_module(Module):- 
+add_pfc_to_module(Module):- module_property(Module,class(library)),!.
+add_pfc_to_module(Module):-
    '$current_typein_module'(TM),
    '$current_source_module'(CSM),
    %'context_module'(CM),
@@ -305,7 +305,7 @@ add_pfc_to_module(Module):-
    %include_pfc_res(Module,PfcInclFile),
    %asserta(Module:'$does_use_pfc'(Module,PfcInclFile,Info)),
    % Version 2.0
-   Module:reexport(pfc_lib_2_0),
+   Module:reexport(library(pfc_lib)),
    maybe_ensure_abox(Module),
    asserta(baseKB:Info).
 
