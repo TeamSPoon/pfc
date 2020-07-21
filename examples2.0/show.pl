@@ -12,7 +12,7 @@ hide_pfc_fact(P) :- send_editor(['(hide-assertion "',P,'")']).
 
 demons(P, WhenAdded, WhenRemoved) ==>
   (P ==> {WhenAdded}),
-  fcUndoMethod(WhenAdded,WhenRemoved).
+  do_and_undo(WhenAdded,WhenRemoved).
 
 show(P) ==> demons(P,show_pfc_fact(P),hide_pfc_fact(P)).
 

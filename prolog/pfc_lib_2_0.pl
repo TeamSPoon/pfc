@@ -166,7 +166,6 @@ kb_global_w(M:F/A):-
 :- use_module(library(logicmoo/attvar_serializer)).
 */
 
-:- dynamic(rdf_rewrite:(~)/1).
 :- kb_global_w(rdf_rewrite:arity/2).
 :- kb_global_w(baseKB:genlMt/2).
 :- kb_global_w(baseKB:predicateTriggerType/1).
