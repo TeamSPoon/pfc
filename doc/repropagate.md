@@ -1,3 +1,4 @@
+````prolog
 
 (base) root@gitlab:/opt/logicmoo_workspace/packs_sys/pfc/t/sanity_base# swipl
 Welcome to SWI-Prolog (threaded, 64 bits, version 8.3.2-27-gca64f340a)
@@ -57,4 +58,5 @@ true.
 
 foo:  ?-
 
+````
 
