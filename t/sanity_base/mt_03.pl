@@ -1,8 +1,8 @@
 /* <module>
 %
-%  PFC is a language extension for prolog.
+%  PFC is codeA language extension for prolog.
 %
-%  It adds a new type of module inheritance
+%  It adds codeA new type of module inheritance
 %
 % Dec 13, 2035
 % Douglas Miles
@@ -18,45 +18,50 @@
 
 :- begin_pfc.
 
-mtProlog(code1).
-mtHybrid(kb2).
+:- mpred_trace_exec.
+
+mtProlog(modA).
+mtProlog(modB).
 
 
 
+modA: (codeA:- printAll('$current_source_module'(_M)),codeB).
 
-code1: (a:- printAll('$current_source_module'(_M)),b).
+modB: (codeB).
 
-kb2: (b).
+%:- \+ modA:codeA.
 
-genlMt(kb2,code1).
+genlMt(modA,modB).
 
-% before test, to make sure a was not accdently defined in kb2
-:- sanity(\+ module_clause(kb2:a,_)).
+% before test, to make sure codeA was not accdently defined in modB
+:- sanity(\+ module_clause(modB:codeA,_)).
+:- sanity(\+ module_clause(modA:codeB,_)).
 
-% before test, genlMt makes the rule available and should not corrupt the code1 module
-:- warn_fail_TODO(clause_u(code1:b,_)).
+:- sanity( module_clause(modA:codeA,_)).
+:- sanity( module_clause(modB:codeB,_)).
+
+% before test, genlMt makes the rule available and should not corrupt the modA module
+:- warn_fail_TODO(clause_u(modA:codeB,_)).
 
 % make sure genlMt didnt unassert 
-:- sanity(clause_u(kb2:b,_)).
+:- sanity(clause_u(modB:codeB,_)).
 
 
 
 % run the test
-kb2: (:- a).
+modA: (:- codeA).
 
 
+% to make codeB sure  is available in modA
+:- mpred_must( clause_u(modA:codeB,_)).
 
+% to make sure codeA does not get accdently defined in modB
+:- mpred_must(\+ ((clause_u(modB:codeA,B,Ref),B\=inherit_above(modB, codeA), clause_property(Ref,module(modB))))).
 
-% to make sure  is available in kb2
-:- mpred_must( clause_u(kb2:a,_)).
-
-% to make sure a does not get accdently defined in kb2
-:- mpred_must(\+ ((clause_u(kb2:a,B,Ref),B\=inherit_above(kb2, a), clause_property(Ref,module(kb2))))).
-
-% genlMt makes the rule available and should not corrupt the code1 module
-:- warn_fail_TODO(clause(code1:b,_)).
+% genlMt makes the rule available and should not corrupt the modA module
+:- warn_fail_TODO(clause(modA:codeB,_)).
 
 % genlMt 
 
-:- warn_fail_TODO( clause_u(code1:b,_)).
+:- warn_fail_TODO( clause_u(modA:codeB,_)).
 

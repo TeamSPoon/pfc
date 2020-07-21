@@ -27,12 +27,14 @@ baseKB:mtHybrid(socialMt).
 :- debug(mpred).
 :- debug(mpred(_)).
 
+:- call_u(mpred_prop(M,mtHybrid,1,pfcLHS)),writeln(mpred_prop(M,mtHybrid,1,pfcLHS)).
+:- xlisting(mtHybrid).
+
 baseKB:mtHybrid(socialMt).
 
 :- must(baseKB:mtHybrid(socialMt)).
 
 :- header_sane:listing(mtHybrid/1).
-
 
 :- set_defaultAssertMt(myMt).
 :- set_fileAssertMt(myMt).
@@ -41,7 +43,9 @@ baseKB:mtHybrid(socialMt).
 
 baseKB:arity(loves,2).
 
-:- ((ain(baseKB:predicateConventionMt(loves,socialMt)))).
+:- ain(baseKB:predicateConventionMt(loves,socialMt)).
+
+:- header_sane:listing(mtHybrid/1).
 
 :- user:listing(socialMt:loves/2).
 
@@ -56,7 +60,7 @@ loves(sally,joe).
 
 baseKB:genlMt(myMt,socialMt).
 
-:- listing(myMt:_).
+%:- listing(myMt:_).
 
 :- mpred_test(clause_u(socialMt:loves(_,_))).
 
@@ -66,7 +70,7 @@ baseKB:genlMt(myMt,socialMt).
 
 :- pfc_test_feature(localMt,myMt:loves(_,_)).
 
-:- listing(myMt:_).
+%:- listing(myMt:_).
 
 :- mpred_test(clause(myMt:loves(_,_),_B,_R)).
 

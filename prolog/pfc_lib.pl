@@ -130,6 +130,7 @@ kb_global_w(M:F/A):-
 :- system:use_module(library(writef)).
 :- system:use_module(library(threadutil)).
 :- system:use_module(library(editline)).
+:- system:use_module(library(memfile)).
 :- system:use_module(library(wfs),except([op(_,_,_)])).
 :- system:use_module(library(wfs),[call_residual_program/2,call_delays/2,delays_residual_program/2,answer_residual/2]).
 
@@ -568,23 +569,24 @@ is_pfc_file_notrace:- current_source_file(FileL),(FileL=File:_),!,is_pfc_file(Fi
 
 is_pfc_file(File):- is_pfc_filename(File,File).
 % First checks to confirm there is nothing inhibiting
-is_pfc_filename(File,_):- (atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File)),!.
 is_pfc_filename(File,_):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
+is_pfc_filename(_,File):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
+is_pfc_filename(File,_):- (atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File)),!.
 %is_pfc_filename(File,_):- check_how_virtualize_file(false,File),!,fail.
 is_pfc_filename(File,_):- baseKB:how_virtualize_file(heads,File,0),!.
 is_pfc_filename(File,File):-!,fail.
-is_pfc_filename(_,File):- call(call,lmcache:mpred_directive_value(File, language, Lang)),!,(Lang==pfc;Lang==clif;Lang==fwd).
 is_pfc_filename(_,File):- check_how_virtualize_file(heads,File),!.
 is_pfc_filename(_,File):- check_how_virtualize_file(false,File),!,fail.
 %is_pfc_filename(_,File):- atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File),!.
 
+notrace_ex(X):- catch(notrace(X),_,rtrace(X)).
 
 :- fixup_exports.
 
 sub_atom(F,C):- sub_atom(F,_,_,_,C).
 
 only_expand(':-'(I), ':-'(M)):- !,in_dialect_pfc,fully_expand(I,M),!.
-only_expand(I,OO):- quietly(must_pfc(I,M)),  
+only_expand(I,OO):- notrace_ex(must_pfc(I,M)),  
   % current_why(S),!,
   S= mfl4(_VarNameZ,Module, File, Line),source_location(File,Line),prolog_load_context(module,Module),
   conjuncts_to_list(M,O), !, %  [I]\=@=O,
@@ -703,7 +705,7 @@ is_never_pfc_sys(P):- predicate_property(P,system),cna_functor_safe(P,F,2),curre
    is_pfc_file_notrace,
    fileAssertMt(CMt),
    CMt:clause_b(mtHybrid(CMt)),
-   CMt:ensure_abox(M),
+   CMt:ensure_abox_hybrid(M),
    CMt:ain(genlMt(CMt,M)),!,fail.
 */
 make_ain(ASSERT,Out) :- get_source_uu(S),Out = ':-'(mpred_ain(ASSERT,S)).
@@ -719,8 +721,12 @@ base_clause_expansion(':-'(In),':-'(Out)):- in_dialect_pfc,fully_expand(In,Out),
 base_clause_expansion(':-'(I),':-'(I)):- !.
 
 base_clause_expansion(':-'(H,(CWC,B)),(H:-B)):- atom(CWC),arg(_,v(cwc),CWC), \+ in_dialect_pfc, !.
-base_clause_expansion(IN, Out):- must_pfc(IN,ASSERT),!,make_ain(ASSERT,Out).
+base_clause_expansion(IN, Out):- notrace_ex(must_pfc(IN,ASSERT)),!,make_ain(ASSERT,Out).
 %base_clause_expansion(IN, Out):- simple_IM(IN),!,make_ain(==>(IN),Out). 
+
+% @TODO 
+% base_clause_expansion(NeverPFC, EverPFC):- mpred_prop(baseKB, mtHybrid, 1, pfcWatches), in_dialect_pfc.
+
 base_clause_expansion(NeverPFC, EverPFC):- is_never_pfc(NeverPFC),!,NeverPFC=EverPFC.
 base_clause_expansion(In,Out):- in_dialect_pfc,dmsg(warning(in_dialect_pfc+base_clause_expansion(In))), fully_expand(In,Out),!.
 base_clause_expansion(M:In,M:Out):- !,base_clause_expansion(In,Out).
@@ -911,6 +917,7 @@ system:clause_expansion(I,O):-
 :-hook_database:export(pfc_lib:mpred_ainz/1).
 
 :- fixundef_later.
+%:- set_prolog_flag(retry_undefined, kb_shared).
 
 
 
