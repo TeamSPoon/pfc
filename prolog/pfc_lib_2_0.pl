@@ -68,6 +68,7 @@ kb_global_w(M:F/A):-
    system:import(M:F/A).
 
 :- use_module(library(logicmoo_utils_all)).
+:- system:use_module(library(logicmoo/predicate_inheritance)).
 
 :- system:use_module(library(apply)).
 :- system:use_module(library(assoc)).
@@ -557,7 +558,7 @@ is_pfc_file:- quietly(is_pfc_file_notrace),!.
 
 :- pfc_lib:export(pfc_lib:is_pfc_file_notrace/0).
 is_pfc_file_notrace:- notrace(( prolog_load_context(source, SFile), 
-                       (prolog_load_context(file,File);source_location(File,_W)))),
+                       (source_location(File,_W);prolog_load_context(file,File)))),!,
               is_pfc_filename(File,SFile),!.
 
 is_pfc_file_notrace:- current_source_file(FileL),(FileL=File:_),!,is_pfc_file(File),!.
