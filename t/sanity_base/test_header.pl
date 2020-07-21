@@ -4,6 +4,8 @@
 
 :- wdmsg(reload_of_test_header).
 
+:- use_module(library(pfc)).
+
 :- mpred_reset.
 
 :- else.
@@ -48,40 +50,34 @@ test_header_include.
 :- if(exists_source(library(editline))).
 :- use_module(library(editline)).
 :- else.
-:- if(exists_source(library(editline))).
+:- if(exists_source(library(readerline))).
 :- use_module(library(readline)).
 :- endif.
 :- endif.
+
 :-  '$toplevel':setup_history.
 
 
 
 %:- set_stream(user_input,tty(false)).
 
-:- use_module(library(pfc)).
-
-:- if(( \+ current_module(pfc_lib) )).
-:- ensure_loaded(library(pfc_lib)).
-%:- use_module(library(pfc)).
-:- endif.
-
-
-:- ensure_loaded(library(pfc_test)).
 
 %:- endif. % current_prolog_flag(test_header,_).
 
+:- ensure_loaded(library(pfc)).
 
 :- prolog_load_context(source,File),!,
-   ignore((((atom_contains(File,'.pfc')-> sanity(/**pfc_lib:**/is_pfc_file) ; sanity( \+ /**pfc_lib:**/is_pfc_file))))),!.
+   ignore((((atom_contains(File,'.pfc')-> sanity(is_pfc_file) ; sanity( \+ is_pfc_file))))),!.
+
+%:- '$current_source_module'(W), '$set_typein_module'(W).
 
 :- mpred_trace_exec.
 
 
-:- set_prolog_flag(debug, true).
+%:- set_prolog_flag(debug, true).
 %:- set_prolog_flag(gc, false).
 
-:- '$current_source_module'(W), '$set_typein_module'(W).
-
+/*
 :- must(
  ((fileAssertMt(Mt2),
 (defaultAssertMt(Mt1),
@@ -89,5 +85,9 @@ test_header_include.
    source_module(Mt3))),
   sanity((Mt1==Mt2,Mt1==Mt3)))).
 
+
+*/
+
+:- ensure_loaded(library(pfc_test)).
 
 
