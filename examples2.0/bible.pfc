@@ -1,0 +1,5 @@
+=> parent(adam,abel).
+
+:- use_module(library(pfc)).
+=> parent(abel,enoch).
+=> gender(abel,male).

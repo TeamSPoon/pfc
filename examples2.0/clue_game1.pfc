@@ -1,0 +1,7 @@
+player(tim).
+
+:- use_module(library(pfc)).
+player(janet).
+player(katie).
+player(peter).
+
