@@ -20,7 +20,7 @@ resolveConflict(C) :-
 pfcSelect(conflict(X)) :- pfcQueue(conflict(X)).
   
 % a pretty basic conflict.
-~(P), P ==> conflict(P).
+~P, P ==> conflict(P).
 
 
 % Devices behave as intended unless they are faulty.
