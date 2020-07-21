@@ -606,7 +606,7 @@ fix_mp0(Why,(G :- B),M,( GO :- B)):- !, fix_mp0(Why,G,M,GO).
 % fix_mp0(Why,(G <- B),M,( GO <- B)):- !, fix_mp0(Why,G,M,GO).
 fix_mp0(Why,CM:(G :- B),M,( GO :- B)):- !, CM:fix_mp0(Why,G,M,GO).
 
-fix_mp0(_Why,spft(P,(mfl4(VarNameZ,FromMt,File,Lineno),UserWhy)),FromMt,spft(P,(mfl4(VarNameZ,FromMt,File,Lineno),UserWhy))):-!.
+%fix_mp0(_Why,spft(P,(mfl4(VarNameZ,FromMt,File,Lineno),UserWhy)),FromMt,spft(P,(mfl4(VarNameZ,FromMt,File,Lineno),UserWhy))):-!.
 
 fix_mp0(Why,M:P,MT,P):- to_real_mt(Why,M,MT)->M\==MT,!,fix_mp0(Why,MT:P,MT,P).
 
@@ -1189,8 +1189,9 @@ is_code_module0(system).
 is_code_module0(user).
 is_code_module0(baseKB):-!,fail.
 is_code_module0(pfc_lib).
-is_code_module0(M):- clause_bq(mtProlog(M)),!,fail.
 is_code_module0(M):- clause_bq(mtHybrid(M)),!,fail.
+is_code_module0(M):- clause_bq(mtProlog(M)),!.
+
 is_code_module0(M):- module_property(M,class(system)).
 is_code_module0(M):- module_property(M,file(FileName)), sub_string(FileName, _, _, _, '.pfc'), !, fail.
 is_code_module0(M):- module_property(M,class(library)).
@@ -3971,11 +3972,11 @@ to_u(S,U):-S=(U),!.
 mpred_trace_maybe_break(Add,P0,_ZS):-
   get_head_term(P0,P),
    (
-  \+ call_u(lmcache:mpred_is_spying_pred(P,Add)) -> true;
+  \+ call(lmcache:mpred_is_spying_pred(P,Add)) -> true;
    (wdmsg_pretty("~NBreaking on ~p(~p)",[Add,P]),
     break)).
 
-
+:- dynamic(lmcache:mpred_is_spying_pred/2).
 
 pfc_hide(P):-call(P).
 
@@ -3990,10 +3991,10 @@ mpred_trace(Form0):-  get_head_term(Form0,Form),
 %
 get_mpred_is_tracing(_):-!,fail.
 get_mpred_is_tracing(Form0):- get_head_term(Form0,Form), t_l:hide_mpred_trace_exec,!,
-  \+ \+ ((quietly_ex(call_u(lmcache:mpred_is_spying_pred(Form,print))))).
+  \+ \+ ((quietly_ex(call(lmcache:mpred_is_spying_pred(Form,print))))).
 get_mpred_is_tracing(Form0):- get_head_term(Form0,Form),
   once(t_l:mpred_debug_local ; tracing ; clause_asserted_u(mpred_is_tracing_exec) ;
-     call_u(lmcache:mpred_is_spying_pred(Form,print))).
+     call(lmcache:mpred_is_spying_pred(Form,print))).
 
 
 %% mpred_trace(+Form, ?Condition) is semidet.
@@ -4012,7 +4013,7 @@ mpred_spy(Form0,List,Condition):- is_list(List),!,get_head_term(Form0,Form),
 
 mpred_spy(Form0,Mode,Condition):- get_head_term(Form0,Form),
   mpred_spy1(Condition,Form,Mode).
-
+ 
 mpred_spy1(Condition,Form0,Mode):- get_head_term(Form0,Form),
   assert_u_no_dep((lmcache:mpred_is_spying_pred(Form,Mode):- Condition)).
 
@@ -4021,14 +4022,14 @@ mpred_nospy:- mpred_nospy(_,_,_).
 mpred_nospy(Form):- mpred_nospy(Form,_,_).
 
 mpred_nospy(Form0,Mode,Condition):- get_head_term(Form0,Form),
-  clause_u(lmcache:mpred_is_spying_pred(Form,Mode), Condition, Ref),
+  clause(lmcache:mpred_is_spying_pred(Form,Mode), Condition, Ref),
   erase(Ref),
   fail.
 mpred_nospy(_,_,_).
 
 mpred_notrace:- mpred_untrace.
 mpred_untrace:- mpred_untrace(_).
-mpred_untrace(Form0):- get_head_term(Form0,Form), retractall_u(lmcache:mpred_is_spying_pred(Form,print)).
+mpred_untrace(Form0):- get_head_term(Form0,Form), retractall(lmcache:mpred_is_spying_pred(Form,print)).
 
 
 % not_not_ignore_quietly_ex(G):- ignore(quietly(\+ \+ G)).
@@ -4128,7 +4129,7 @@ show_if_debug(A):-  get_mpred_is_tracing(A) -> show_call(mpred_is_tracing,call_u
 % If Is A Silient.
 %
 mpred_is_silent :- t_l:hide_mpred_trace_exec,!, \+ tracing.
-mpred_is_silent :- quietly_ex(( \+ t_l:mpred_debug_local, \+ lookup_u(mpred_is_tracing_exec), \+ lookup_u(lmcache:mpred_is_spying_pred(_,_)),
+mpred_is_silent :- quietly_ex(( \+ t_l:mpred_debug_local, \+ lookup_u(mpred_is_tracing_exec), \+ call(lmcache:mpred_is_spying_pred(_,_)),
   current_prolog_flag(debug,false), is_release)) ,!.
 
 oinfo(O):- xlisting((O, - spft, - ( ==> ), - pt , - nt , - bt , - mdefault, - lmcache)).
