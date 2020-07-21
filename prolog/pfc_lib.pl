@@ -14,7 +14,7 @@
 %:- set_prolog_flag(gc,false).
 :- set_prolog_flag(pfc_version,2.0).
 
-:- set_prolog_flag(retry_undefined, kb_shared).
+:- set_prolog_flag(retry_undefined, none).
 
 :- if( \+ current_prolog_flag(xref,true)).
 
