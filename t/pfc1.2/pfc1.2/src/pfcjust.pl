@@ -6,8 +6,10 @@
 %   Status: more or less working.
 %   Bugs:
 
-%% *** predicates for exploring supports of a fact *****
+%= *** predicates for exploring supports of a fact *****
 
+:- module(pfcjust, []).
+:- use_module(library(pfc_pack_xform)).
 
 :- use_module(library(lists)).
 
@@ -39,9 +41,20 @@ bases([X|Rest],L) :-
   bases(Rest,Br),
   pfcUnion(Bx,Br,L).
 	
+%- axiom(F) :- 
+%-  pfcGetSupport(F,(user,user)); 
+%-  pfcGetSupport(F,(god,god)).
+
 axiom(F) :- 
-  pfcGetSupport(F,(user,user)); 
-  pfcGetSupport(F,(god,god)).
+ umt(((pfcGetSupport(F,UU),
+   \+ \+ is_axiom_support(UU)))).
+
+pfcCurrentUserSupport(UU):- get_source_ref(UU).
+%pfcCurrentUserSupport((user,user)).
+
+%is_axiom_support(UU):- pfcCurrentUserSupport(UU).
+is_axiom_support((_,AX)):- atomic(AX).
+
 
 %% an assumption is a failed goal, i.e. were assuming that our failure to 
 %% prove P is a proof of not(P)
@@ -71,18 +84,20 @@ assumptions1([X|Rest],L) :-
 %%          [J11, J12,... J1n]      a list of proof trees.
 
 
-% pfcChild(P,Q) is true iff P is an immediate justifier for Q.
-% mode: pfcChild(+,?)
+%% mpred_child(+P,?Q) is nondet.
+%
+% mpred_child(P,Q) is true iff P is an immediate justifier for Q.
+%
 
-pfcChild(P,Q) :-
+mpred_child(P,Q) :-
   pfcGetSupport(Q,(P,_)).
 
-pfcChild(P,Q) :-
+mpred_child(P,Q) :-
   pfcGetSupport(Q,(_,Trig)),
   pfcType(Trig,trigger),
-  pfcChild(P,Trig).
+  mpred_child(P,Trig).
 
-pfcChildren(P,L) :- bagof(C,pfcChild(P,C),L).
+mpred_children(P,L) :- bagof(C,mpred_child(P,C),L).
 
 % pfcDescendant(P,Q) is true iff P is a justifier for Q.
 
@@ -90,7 +105,7 @@ pfcDescendant(P,Q) :-
    pfcDescendant1(P,Q,[]).
 
 pfcDescendant1(P,Q,Seen) :-
-  pfcChild(X,Q),
+  mpred_child(X,Q),
   (\+ member(X,Seen)),
   (P=X ; pfcDescendant1(P,X,[X|Seen])).
   

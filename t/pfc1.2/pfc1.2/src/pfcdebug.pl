@@ -6,16 +6,20 @@
 %   Purpose: provides predicates for examining the database and debugginh 
 %   for Pfc.
 
+:- module(pfcdebug, []).
+:- use_module(library(pfc_pack_xform)).
+
 :- dynamic pfcTraced/1.
 :- dynamic pfcSpied/2.
 :- dynamic pfcTraceExecution/0.
 :- dynamic   pfcWarnings/1.
 
-:- pfcDefault(pfcWarnings(_), pfcWarnings(true)).
+
+:- initialization(pfcDefault(pfcWarnings(_), pfcWarnings(true))).
 
 %% predicates to examine the state of pfc
 
-pfcQueue :- listing(pfcQueue/1).
+pfcQueue :- umt(( listing(pfcQueue/2))).
 
 pfcPrintDB :-
   pfcPrintFacts,
@@ -32,19 +36,20 @@ pfcPrintFacts(Pattern) :- pfcPrintFacts(Pattern,true).
 pfcPrintFacts(P,C) :-
   pfcFacts(P,C,L),
   pfcClassifyFacts(L,User,Pfc,_Rule),
-  format("~n~nUser added facts:",[]),
+  ansi_format([underline],"~N~nUser added facts: ",[]),
   pfcPrintitems(User),
-  format("~n~nPfc added facts:",[]),
+  ansi_format([underline],"~N~nPfc added facts: ",[]),
   pfcPrintitems(Pfc).
 
 
-%% printitems clobbers it's arguments - beware!
 
-pfcPrintitems([]).
-pfcPrintitems([H|T]) :-
+pfcPrintitems(List):- \+ \+ umt((pfcPrintitems0(List))).
+%- printitems0 clobbers it's arguments - beware!
+pfcPrintitems0([]).
+pfcPrintitems0([H|T]) :-
   numbervars(H,0,_),
-  format("~n  ~w",[H]),
-  pfcPrintitems(T).
+  ansi_format([bold],"~N  ~p",[H]),
+  pfcPrintitems0(T).
 
 pfcClassifyFacts([],[],[],[]).
 
@@ -54,7 +59,9 @@ pfcClassifyFacts([H|T],User,Pfc,[H|Rule]) :-
   pfcClassifyFacts(T,User,Pfc,Rule).
 
 pfcClassifyFacts([H|T],[H|User],Pfc,Rule) :-
-  pfcGetSupport(H,(user,user)),
+  pfcGetSupport(H,UU),
+  get_first_real_user_reason(H,UU),
+  is_axiom_support(UU),
   !,
   pfcClassifyFacts(T,User,Pfc,Rule).
 
@@ -62,21 +69,21 @@ pfcClassifyFacts([H|T],User,[H|Pfc],Rule) :-
   pfcClassifyFacts(T,User,Pfc,Rule).
 
 pfcPrintRules :-
-  bagof((P=>Q),clause((P=>Q),true),R1),
+  bagof((P==>Q),clause((P==>Q),true),R1),
   pfcPrintitems(R1),
-  bagof((P<=>Q),clause((P<=>Q),true),R2),
+  bagof((P<==>Q),clause((P<==>Q),true),R2),
   pfcPrintitems(R2),
-  bagof((P<=Q),clause((P<=Q),true),R3),
+  bagof((P<-Q),clause((P<-Q),true),R3),
   pfcPrintitems(R3).
 
 pfcPrintTriggers :-
-  format("Positive triggers...~n",[]),
+  ansi_format([underline],"~NPositive triggers...~n",[]),
   bagof(pt(T,B),pfcGetTrigger(pt(T,B)),Pts),
   pfcPrintitems(Pts),
-  format("Negative triggers...~n",[]),
+  ansi_format([underline],"~NNegative triggers...~n",[]),
   bagof(nt(A,B,C),pfcGetTrigger(nt(A,B,C)),Nts),
   pfcPrintitems(Nts),
-  format("Goal triggers...~n",[]),
+  ansi_format([underline],"~NGoal triggers...~n",[]),
   bagof(bt(A,B),pfcGetTrigger(bt(A,B)),Bts),
   pfcPrintitems(Bts).
 
@@ -110,7 +117,7 @@ pfcFacts(P,L) :- pfcFacts(P,true,L).
 
 pfcFacts(P,C,L) :- setof(P,pfcFact(P,C),L).
 
-brake(X) :-  X, break.
+brake(X) :-  pfc(X), break.
 
 %%
 %%
@@ -124,7 +131,7 @@ pfcTraceAdd(P) :-
 pfcTraceAdd(pt(_,_),_) :-
   % hack for now - never trace triggers.
   !.
-pfcTraceAdd(nt(_,_),_) :-
+pfcTraceAdd(nt(_,_,_),_) :-
   % hack for now - never trace triggers.
   !.
 
@@ -134,38 +141,38 @@ pfcTraceAdd(P,S) :-
    
 
 pfcTraceAddPrint(P,S) :-
-  pfcTraced(P),
+  umt(pfcTraced(P)),
   !,
   copy_term(P,Pcopy),
   numbervars(Pcopy,0,_),
-  (S=(user,user)
-       -> format("~nAdding (u) ~w",[Pcopy])
-        ; format("~nAdding ~w",[Pcopy])).
+  (pfcCurrentUserSupport(S)
+       -> ansi_format([fg(green)],"~NAdding (u) ~p~n",[Pcopy])
+        ; ansi_format([fg(green)],"~NAdding ~p~n",[Pcopy])).
 
 pfcTraceAddPrint(_,_).
 
 
 pfcTraceBreak(P,_S) :-
-  pfcSpied(P,add) -> 
+  umt(pfcSpied(P,add)) -> 
    (copy_term(P,Pcopy),
     numbervars(Pcopy,0,_),
-    format("~nBreaking on add(~w)",[Pcopy]),
+    ansi_format([fg(yellow)],"~N~nBreaking on add(~p)~n",[Pcopy]),
     break)
    ; true.
 
 pfcTraceRem(pt(_,_)) :-
   % hack for now - never trace triggers.
   !.
-pfcTraceRem(nt(_,_)) :-
+pfcTraceRem(nt(_,_,_)) :-
   % hack for now - never trace triggers.
   !.
 
 pfcTraceRem(P) :-
-  (pfcTraced(P) 
-     -> format('~nRemoving ~w.',[P])
+  (umt(pfcTraced(P))
+     -> ansi_format([fg(cyan)],'~NRemoving ~p.',[P])
       ; true),
-  (pfcSpied(P,rem)
-   -> (format("~nBreaking on rem(~w)",[P]),
+  (umt(pfcSpied(P,rem))
+   -> (ansi_format([fg(yellow)],"~NBreaking on rem(~p)",[P]),
        break)
    ; true).
 
@@ -176,7 +183,7 @@ pfcTrace(Form) :-
   assert(pfcTraced(Form)).
 
 pfcTrace(Form,Condition) :- 
-  assert((pfcTraced(Form) :- Condition)).
+  assert((pfcTraced(Form) :- umt(Condition))).
 
 pfcSpy(Form) :- pfcSpy(Form,[add,rem],true).
 
@@ -191,14 +198,14 @@ pfcSpy(Form,Mode,Condition) :-
   pfcSpy1(Form,Mode,Condition).
 
 pfcSpy1(Form,Mode,Condition) :-
-  assert((pfcSpied(Form,Mode) :- Condition)).
+  assert((pfcSpied(Form,Mode) :- umt(Condition))).
 
 pfcNospy :- pfcNospy(_,_,_).
 
 pfcNospy(Form) :- pfcNospy(Form,_,_).
 
 pfcNospy(Form,Mode,Condition) :- 
-  clause(pfcSpied(Form,Mode), Condition, Ref),
+  clause(pfcSpied(Form,Mode), umt(Condition), Ref),
   erase(Ref),
   fail.
 pfcNospy(_,_,_).
@@ -210,12 +217,21 @@ pfcUntrace(Form) :- retractall(pfcTraced(Form)).
 % needed:  pfcTraceRule(Name)  ...
 
 
+pfc_trace_msg(Msg) :- pfc_trace_msg('TRACE:','~N~p~N', Msg),!.
 % if the correct flag is set, trace exection of Pfc
-pfc_trace_msg(Msg,Args) :-
-    pfcTraceExecution,
+pfc_trace_msg(Msg,Args) :- pfc_trace_msg('       TRACE:',Msg,Args).
+pfc_trace_msg(PreMsg,Msg,Args) :-
+    umt(pfcTraceExecution),
     !,
-    format(user_output, Msg, Args).
-pfc_trace_msg(_Msg,_Args).
+    ansi_format([fg(green)], '~N~n', []),!,
+    ansi_format([fg(green)], PreMsg, []),!,
+    ansi_format([fg(yellow)], Msg, Args),!.
+pfc_trace_msg(_PreMsg,_Msg,_Args).
+
+
+mpred_notrace_exec:- pfcNoWatch.
+
+mpred_trace_exec:- pfcWatch.
 
 pfcWatch :- assert(pfcTraceExecution).
 
@@ -224,8 +240,9 @@ pfcNoWatch :-  retractall(pfcTraceExecution).
 pfcError(Msg) :-  pfcError(Msg,[]).
 
 pfcError(Msg,Args) :- 
-  format("~nERROR/Pfc: ",[]),
-  format(Msg,Args).
+  ansi_format([fg(red)],"~N~nERROR/Pfc: ",[]),
+  ansi_format([fg(red),bold],Msg,Args),
+  ansi_format([underline],"~N",[]).
 
 
 %%
@@ -246,13 +263,14 @@ nopfcWarn :-
   retractall(pfcWarnings(_)),
   assert(pfcWarnings(false)).
  
-pfcWarn(Msg) :-  pfcWarn(Msg,[]).
+pfcWarn(Msg) :-  pfcWarn('~p',[Msg]).
 
 pfcWarn(Msg,Args) :- 
-  pfcWarnings(true),
+  umt(pfcWarnings(true)),
   !,
-  format("~nWARNING/Pfc: ",[]),
-  format(Msg,Args).
+  ansi_format([fg(red)],"~N~nWARNING/Pfc: ",[]),
+  ansi_format([fg(yellow)],Msg,Args),
+  ansi_format([underline],"~N",[]).
 pfcWarn(_,_).
 
 %%
@@ -267,3 +285,4 @@ pfcWarnings :-
 pfcNoWarnings :- 
   retractall(pfcWarnings(_)).
 
+:- fixup_exports.

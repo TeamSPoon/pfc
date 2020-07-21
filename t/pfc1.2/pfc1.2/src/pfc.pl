@@ -3,20 +3,20 @@
 %   Updated: 10/11/87, ...
 %   Purpose: consult system file for ensure
 
-pfcVersion(1.2).
+mpred_Version(2.2).
 
-pfcFile('pfcsyntax').	% operator declarations.
-pfcFile('pfccore').	% core of Pfc.
-pfcFile('pfcsupport').	% support maintenance
-pfcFile('pfcdb').	% predicates to manipulate database.
-pfcFile('pfcdebug').	% debugging aids (e.g. tracing).
-pfcFile('pfcjust').	% predicates to manipulate justifications.
-pfcFile('pfcwhy').	% interactive exploration of justifications.
+mpred_File('pfcsyntax').	% operator declarations.
+mpred_File('pfccore').	% core of Pfc.
+mpred_File('pfcsupport').	% support maintenance
+mpred_File('pfcdb').	% predicates to manipulate database.
+mpred_File('pfcdebug').	% debugging aids (e.g. tracing).
+mpred_File('pfcjust').	% predicates to manipulate justifications.
+mpred_File('pfcwhy').	% interactive exploration of justifications.
 
-pfcLoad :- pfcFile(F), ensure_loaded(F), fail.
+pfcLoad :- mpred_File(F), ensure_loaded(F), fail.
 pfcLoad.
 
-pfcFcompile :- pfcFile(F), fcompile(F), fail.
+pfcFcompile :- mpred_File(F), fcompile(F), fail.
 pfcFcompile.
 
 :- pfcLoad.

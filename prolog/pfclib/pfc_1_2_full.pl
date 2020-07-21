@@ -109,7 +109,7 @@ add(P,S) :-
   pfcRun.
 
 %add(_,_).
-%add(P,S) :- pfcWarn("add(~p,~p) failed",[P,S]).
+%add(P,S) :- pfcWarn("add(~w,~w) failed",[P,S]).
 
 
 % post(+Ps,+S) tries to add a fact or set of fact to the database.  For
@@ -139,7 +139,7 @@ post1(P,S) :-
   !.
 
 post1(_,_).
-%%post1(P,S) :-  pfcWarn("add(~p,~p) failed",[P,S]).
+%%post1(P,S) :-  pfcWarn("add(~w,~w) failed",[P,S]).
 
 %%
 %% pfcAddDbToHead(+P,-NewP) talkes a fact P or a conditioned fact
@@ -159,19 +159,16 @@ pfcUnique((Head:-Tail)) :-
   !, 
   \+ clause(Head,Tail).
 pfcUnique(P) :-
+  !,
   \+ clause(P,true).
 
 
-%% pfcEnqueue(P,Q) is det.
-% 
-% Enqueu according to settings
-%
 pfcEnqueue(P,S) :-
   pfcSearch(Mode) 
     -> (Mode=direct  -> fc(P) ;
 	Mode=depth   -> pfcAsserta(pfcQueue(P),S) ;
 	Mode=breadth -> pfcAssert(pfcQueue(P),S) ;
-	else         -> pfcWarn("Unrecognized pfcSearch mode: ~p", Mode))
+	else         -> pfcWarn("Unrecognized pfcSearch mode: ~w", Mode))
      ; pfcWarn("No pfcSearch mode").
 
 
@@ -181,7 +178,7 @@ pfcRemoveOldVersion((Identifier::::Body)) :-
   % this should never happen.
   var(identifier),
   !,
-  pfcWarn("variable used as an  rule name in ~p :::: ~p",
+  pfcWarn("variable used as an  rule name in ~w :::: ~w",
           [Identifier,Body]).
 
   
@@ -235,7 +232,7 @@ remove_selection(P) :-
   pfcRemoveSupportsQuietly(pfcQueue(P)),
   !.
 remove_selection(P) :-
-  brake(format("~Npfc:get_next_fact - selected fact not on Queue: ~p",
+  brake(format("~Npfc:get_next_fact - selected fact not on Queue: ~w",
                [P])).
 
 
@@ -297,7 +294,7 @@ pfcAddTrigger(bt(Trigger,Body),Support) :-
   pfcBtPtCombine(Trigger,Body).
 
 pfcAddTrigger(X,_Support) :-
-  pfcWarn("Unrecognized trigger to pfcAddtrigger: ~p",[X]).
+  pfcWarn("Unrecognized trigger to pfcAddtrigger: ~w",[X]).
 
 
 pfcBtPtCombine(Head,Body,Support) :- 
@@ -346,7 +343,7 @@ pfcRetractType(rule,X) :-
 pfcRetractType(trigger,X) :- 
   retract(X)
     -> unFc(X)
-     ; pfcWarn("Trigger not found to retract: ~p",[X]).
+     ; pfcWarn("Trigger not found to retract: ~w",[X]).
 
 pfcRetractType(action,X) :- pfcRemActionTrace(X).
   
@@ -392,11 +389,11 @@ remlist([H|T]) :-
   remlist(T).
 
 rem(P,S) :-
-  % pfcDebug(format("~Nremoving support ~p from ~p",[S,P])),
+  % pfcDebug(format("~Nremoving support ~w from ~w",[S,P])),
   pfc_trace_msg('~n    Removing support: ~q from ~q~n',[S,P]),
   pfcRemSupport(P,S)
      -> removeIfUnsupported(P)
-      ; pfcWarn("rem/2 Could not find support ~p to remove from fact ~p",
+      ; pfcWarn("rem/2 Could not find support ~w to remove from fact ~w",
                 [S,P]).
 
 %%
@@ -427,7 +424,7 @@ remove(F) :-
 
 pfcRemoveSupports(F) :- 
   pfcRemSupport(F,S),
-  pfcWarn("~p was still supported by ~p",[F,S]),
+  pfcWarn("~w was still supported by ~w",[F,S]),
   fail.
 pfcRemoveSupports(_).
 
@@ -450,14 +447,14 @@ fcUndo(pt(Key,Head,Body)) :-
   !,
   (retract(pt(Key,Head,Body))
     -> unFc(pt(Head,Body))
-     ; pfcWarn("Trigger not found to retract: ~p",[pt(Head,Body)])).
+     ; pfcWarn("Trigger not found to retract: ~w",[pt(Head,Body)])).
 
 fcUndo(nt(Head,Condition,Body)) :-  
   % undo a negative trigger.
   !,
   (retract(nt(Head,Condition,Body))
     -> unFc(nt(Head,Condition,Body))
-     ; pfcWarn("Trigger not found to retract: ~p",[nt(Head,Condition,Body)])).
+     ; pfcWarn("Trigger not found to retract: ~w",[nt(Head,Condition,Body)])).
 
 fcUndo(Fact) :-
   % undo a random fact, printing out the trace, if relevant.
@@ -642,9 +639,9 @@ fcnt(_,_).
 %%
 
 pfcDefineBcRule(Head,_Body,ParentRule) :-
-  (\+ pfcLiteral(Head)),
-  pfcWarn("Malformed backward chaining rule.  ~p not atomic.",[Head]),
-  pfcWarn("rule: ~p",[ParentRule]),
+  (\+ pfcAtom(Head)),
+  pfcWarn("Malformed backward chaining rule.  ~w not atomic.",[Head]),
+  pfcWarn("rule: ~w",[ParentRule]),
   !,
   fail.
 
@@ -684,7 +681,7 @@ fcEvalLHS(X,Support) :-
 %  fcEvalLHS(X,Support).
 
 fcEvalLHS(X,_) :-
-  pfcWarn("Unrecognized item found in trigger body, namely ~p.",[X]).
+  pfcWarn("Unrecognized item found in trigger body, namely ~w.",[X]).
 
 
 %%
@@ -719,7 +716,7 @@ pfc_eval_rhs1(Assertion,Support) :-
 
 
 pfc_eval_rhs1(X,_) :-
-  pfcWarn("Malformed rhs of a rule: ~p",[X]).
+  pfcWarn("Malformed rhs of a rule: ~w",[X]).
 
 
 %%
@@ -813,12 +810,12 @@ pfc_nf1(P,[P]) :- var(P), !.
 
 pfc_nf1(P/Cond,[(\+P)/Cond]) :- pfcNegatedLiteral(P), !.
 
-pfc_nf1(P/Cond,[P/Cond]) :-  pfcLiteral(P), !.
+pfc_nf1(P/Cond,[P/Cond]) :-  pfcAtom(P), !.
 
 %% handle a negated form
 
 pfc_nf1(NegTerm,NF) :-
-  pfc_unnegate(NegTerm,Term),
+  pfc_negation(NegTerm,Term),
   !,
   pfc_nf1_negation(Term,NF).
 
@@ -840,12 +837,12 @@ pfc_nf1((P,Q),NF) :-
 %% handle a random atom.
 
 pfc_nf1(P,[P]) :- 
-  pfcLiteral(P), 
+  pfcAtom(P), 
   !.
 
 %%% shouln't we have something to catch the rest as errors?
 pfc_nf1(Term,[Term]) :-
-  pfcWarn("pfc_nf doesn't know how to normalize ~p",[Term]).
+  pfcWarn("pfc_nf doesn't know how to normalize ~w",[Term]).
 
 
 %% pfc_nf1_negation(P,NF) is true if NF is the normal form of \+P.
@@ -881,7 +878,7 @@ pfc_nf_negations([H1|T1],[H2|T2]) :-
   pfc_nf_negation(H1,H2),
   pfc_nf_negations(T1,T2).
 
-pfc_nf_negation(Form,{\+ X}) :-
+pfc_nf_negation(Form,{\+ X}) :- 
   nonvar(Form),
   Form=(~({X})),
   !.
@@ -909,21 +906,21 @@ pfcCompileRhsTerm((P/C),((P:-C))) :- !.
 pfcCompileRhsTerm(P,P).
 
 
-%% pfc_unnegate(N,P) is true if N is a negated term and P is the term
+%% pfc_negation(N,P) is true if N is a negated term and P is the term
 %% with the negation operator stripped.
 
-pfc_unnegate((~P),P).
-pfc_unnegate((-P),P).
-pfc_unnegate((\+(P)),P).
+pfc_negation((~P),P).
+pfc_negation((-P),P).
+pfc_negation((\+(P)),P).
 
 pfcNegatedLiteral(P) :- 
-  pfc_unnegate(P,Q),
-  pfcPositiveLiteral(Q).
+  pfc_negation(P,Q),
+  pfcPositiveAtom(Q).
 
-pfcLiteral(X) :- pfcNegatedLiteral(X).
-pfcLiteral(X) :- pfcPositiveLiteral(X).
+pfcAtom(X) :- pfcNegatedLiteral(X).
+pfcAtom(X) :- pfcPositiveAtom(X).
 
-pfcPositiveLiteral(X) :-  
+pfcPositiveAtom(X) :-  
   functor(X,F,_), 
   \+ pfcConnective(F).
 
@@ -957,13 +954,13 @@ buildTrigger([V|Triggers],Consequent,pt(V,X)) :-
   buildTrigger(Triggers,Consequent,X).
 
 buildTrigger([(T1/Test)|Triggers],Consequent,nt(T2,Test2,X)) :-
-  pfc_unnegate(T1,T2),
+  pfc_negation(T1,T2),
   !, 
   buildNtTest(T2,Test,Test2),
   buildTrigger(Triggers,Consequent,X).
 
 buildTrigger([(T1)|Triggers],Consequent,nt(T2,Test,X)) :-
-  pfc_unnegate(T1,T2),
+  pfc_negation(T1,T2),
   !,
   buildNtTest(T2,true,Test),
   buildTrigger(Triggers,Consequent,X).
@@ -1007,13 +1004,8 @@ buildTest(Test,Test).
 %%
 
 
-%% pfcType(+VALUE1, ?Type) is semidet.
-%
-% PFC Database Type.
-%
-%  simple typeing for Pfc objects
-%
 
+%% simple typeing for pfc objects
 
 pfcType(('=>'(_,_)),Type) :- !, Type=rule.
 pfcType(('<=>'(_,_)),Type) :- !, Type=rule.
@@ -1179,7 +1171,7 @@ pfcPrintFacts(P,C) :-
 pfcPrintitems([]).
 pfcPrintitems([H|T]) :-
   numbervars(H,0,_),
-  format("~n  ~p",[H]),
+  format("~n  ~w",[H]),
   pfcPrintitems(T).
 
 pfcClassifyFacts([],[],[],[]).
@@ -1275,8 +1267,8 @@ pfcTraceAddPrint(P,S) :-
   copy_term(P,Pcopy),
   numbervars(Pcopy,0,_),
   (S=(user,user)
-       -> format("~nAdding (u) ~p",[Pcopy])
-        ; format("~nAdding ~p",[Pcopy])).
+       -> format("~nAdding (u) ~w",[Pcopy])
+        ; format("~nAdding ~w",[Pcopy])).
 
 pfcTraceAddPrint(_,_).
 
@@ -1285,7 +1277,7 @@ pfcTraceBreak(P,_S) :-
   pfcSpied(P,add) -> 
    (copy_term(P,Pcopy),
     numbervars(Pcopy,0,_),
-    format("~nBreaking on add(~p)",[Pcopy]),
+    format("~nBreaking on add(~w)",[Pcopy]),
     break)
    ; true.
 
@@ -1298,10 +1290,10 @@ pfcTraceRem(nt(_,_)) :-
 
 pfcTraceRem(P) :-
   (pfcTraced(P) 
-     -> format('~nRemoving ~p.',[P])
+     -> format('~nRemoving ~w.',[P])
       ; true),
   (pfcSpied(P,rem)
-   -> (format("~nBreaking on rem(~p)",[P]),
+   -> (format("~nBreaking on rem(~w)",[P]),
        break)
    ; true).
 
@@ -1382,7 +1374,7 @@ nopfcWarn :-
   retractall(pfcWarnings(_)),
   assert(pfcWarnings(false)).
  
-pfcWarn(Msg) :-  pfcWarn('~p',[Msg]).
+pfcWarn(Msg) :-  pfcWarn(Msg,[]).
 
 pfcWarn(Msg,Args) :- 
   pfcWarnings(true),
@@ -1411,7 +1403,7 @@ pfcNoWarnings :-
 %   Status: more or less working.
 %   Bugs:
 
-%= *** predicates for exploring supports of a fact *****
+%% *** predicates for exploring supports of a fact *****
 
 
 :- use_module(library(lists)).
@@ -1451,7 +1443,7 @@ axiom(F) :-
 %% an assumption is a failed goal, i.e. were assuming that our failure to 
 %% prove P is a proof of not(P)
 
-assumption(P) :- pfc_unnegate(P,_).
+assumption(P) :- pfc_negation(P,_).
    
 %% assumptions(X,As) if As is a set of assumptions which underly X.
 
@@ -1637,15 +1629,15 @@ pfcWhyCommand(u,_,_) :-
 pfcCommand(N,_,_) :-
   integer(N),
   !,
-  format("~n~p is a yet unimplemented command.",[N]),
+  format("~n~w is a yet unimplemented command.",[N]),
   fail.
 
 pfcCommand(X,_,_) :-
- format("~n~p is an unrecognized command, enter h. for help.",[X]),
+ format("~n~w is an unrecognized command, enter h. for help.",[X]),
  fail.
   
 pfcShowJustifications(P,Js) :-
-  format("~nJustifications for ~p:",[P]),
+  format("~nJustifications for ~w:",[P]),
   pfcShowJustification1(Js,1).
 
 pfcShowJustification1([],_).
@@ -1662,12 +1654,12 @@ pfcShowJustifications2([],_,_).
 pfcShowJustifications2([C|Rest],JustNo,StepNo) :- 
   copy_term(C,CCopy),
   numbervars(CCopy,0,_),
-  format("~n    ~p.~p ~p",[JustNo,StepNo,CCopy]),
+  format("~n    ~w.~w ~w",[JustNo,StepNo,CCopy]),
   StepNext is 1+StepNo,
   pfcShowJustifications2(Rest,JustNo,StepNext).
 
 pfcAsk(Msg,Ans) :-
-  format("~n~p",[Msg]),
+  format("~n~w",[Msg]),
   read(Ans).
 
 pfcSelectJustificationNode(Js,Index,Step) :-
