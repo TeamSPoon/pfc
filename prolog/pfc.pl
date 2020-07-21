@@ -31,7 +31,7 @@
 %
 hello_there_xref.
 :- endif. % Sourced directly
-
+:- prolog_load_context(file,File),unload_file(File).
 :- if(current_prolog_flag(xref,true)).
 :- rexport(library('pfc_lib')).
 :- else.
