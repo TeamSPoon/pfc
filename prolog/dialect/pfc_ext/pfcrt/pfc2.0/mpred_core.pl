@@ -1130,7 +1130,7 @@ mpred_add(P):- mpred_ain(P).
 %  asserts P into the dataBase with support from S.
 %
 
-decl_assertable_module(AM):- nop((must_ex(dynamic(AM:spft/3)))).
+decl_assertable_module(AM):-  must_ex(ensure_abox_support(AM,baseKB)).
 
 % mpred_ain_cm(SM:(==>(AM:P)),P,AM,SM):- SM\==AM, current_predicate(SM:spft/3),!,decl_assertable_module(SM).
 mpred_ain_cm(AM:P,P,AM,SM):- nonvar(P),nonvar(P),decl_assertable_module(AM),guess_pos_source_to(SM),!.
@@ -1190,7 +1190,7 @@ is_code_module0(user).
 is_code_module0(baseKB):-!,fail.
 is_code_module0(pfc_lib).
 is_code_module0(M):- clause_bq(mtProlog(M)),!,fail.
-is_code_module0(Mt):- clause_bq(mtHybrid(Mt)),!,fail.
+is_code_module0(M):- clause_bq(mtHybrid(M)),!,fail.
 is_code_module0(M):- module_property(M,class(system)).
 is_code_module0(M):- module_property(M,file(FileName)), sub_string(FileName, _, _, _, '.pfc'), !, fail.
 is_code_module0(M):- module_property(M,class(library)).
