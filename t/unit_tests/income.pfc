@@ -14,7 +14,7 @@
 
 income(Person,Source,Year,Dollars) ==> {increment_income(Person,Year,Dollars)}.
 
-==> fcUndoMethod(increment_income(P,Y,D),decrement_income(P,Y,D)).
+==> do_and_undo(increment_income(P,Y,D),decrement_income(P,Y,D)).
 
 increment_income(P,Y,D) :-
   (retract(total_income(P,Y,Old)) -> New is Old+D ; New = D),

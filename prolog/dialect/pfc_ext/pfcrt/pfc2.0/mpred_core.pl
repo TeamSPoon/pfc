@@ -361,9 +361,11 @@ mpred_core_database_term(actn,1,state).
 mpred_core_database_term(que,2,state).
 mpred_core_database_term(hs,1,state).
 
+
+
 % forward,backward settings
 mpred_core_database_term(mpred_current_db,1,setting).
-mpred_core_database_term(mpred_select_hook,1,setting).
+mpred_core_database_term(pfcSelect,1,setting).
 mpred_core_database_term(tms,1,setting).
 mpred_core_database_term(pm,1,setting).
 
@@ -1870,12 +1872,9 @@ remove_selection(P):-
 % select_next_fact(P) identifies the next fact to reason from.
 % It tries the user defined predicate first and, failing that,
 %  the default mechanism.
-:- dynamic(baseKB:mpred_select_hook/1).
 select_next_fact(P):-  
-  lookup_u(baseKB:mpred_select_hook(P)),
+  lookup_u(pfcSelect(P)),
   !.
-select_next_fact(P):-  
-  call_u(pfcSelect(P)), !.
 select_next_fact(P):-
   defaultmpred_select(P),
   !.
@@ -1883,7 +1882,7 @@ select_next_fact(P):-
 % the default selection predicate takes the item at the froint of the queue.
 defaultmpred_select(P):- lookup_m(que(P,_)),!.
 
-pfcQueue(Q):- lookup_m(que(P,_)).
+pfcQueue(P):- lookup_m(que(P,_)).
 
 % mpred_halt stops the forward chaining.
 mpred_halt:-  mpred_halt(anonymous(mpred_halt)).

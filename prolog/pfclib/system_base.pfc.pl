@@ -561,7 +561,7 @@ without_depth_limit(G):-
 
 
 %:- rtrace,dtrace.
-% ==>(prologBuiltin(mpred_select_hook/1)).
+% ==>(prologBuiltin(pfcSelect/1)).
 % :- nortrace,quietly.
 
 :- kb_shared(conflict/1).
@@ -571,7 +571,7 @@ conflict(C) ==> {must(with_mpred_trace_exec((resolveConflict(C),\+conflict(C))))
 
 % meta rules to schedule inferencing.
 % resolve conflicts asap
-baseKB:mpred_select_hook(conflict(X)) :- cwc, que(conflict(X),_Why).
+pfcSelect(conflict(X)) :- cwc, que(conflict(X),_Why).
 
 
 %tPred(t,prologDynamic).
