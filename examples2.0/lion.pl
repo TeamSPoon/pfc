@@ -1,12 +1,14 @@
-%% this is a planning problem from C. Elkan,  "Incremental Approximate
+% -*-Prolog-*-
 
 :- use_module(library(pfc)).
+%% this is a planning problem from C. Elkan,  "Incremental Approximate
 %% Planning: Abductive Default Reasoning, AAAI Spring Symposium on
 %% Automated Abduction, 1990.
 
 %% holds(proposition,state).
 %% causes(action,state,new_state).
 %% can(action,state).
+
 
 
 %% initial state of the world.
