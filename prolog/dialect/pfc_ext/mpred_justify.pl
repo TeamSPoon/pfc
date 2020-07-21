@@ -240,7 +240,7 @@ mpred_add_support(P,(Fact,Trigger)):-
   MSPFT = spft(P,Fact,Trigger),
    fix_mp(mpred_add_support,MSPFT,M,SPFT),
    M:notify_if_neg_trigger(SPFT),
-  M:(clause_asserted_u(SPFT)-> true; sanity_check(assertz_mu(SPFT),clause_asserted_u(SPFT))).
+  M:(clause_asserted_u(SPFT)-> true; sanity_check(assertz_mu(SPFT),call(M:clause_asserted(SPFT)))),!.
 
 %  mpred_add_support_fast(+Fact,+Support)
 mpred_add_support_fast(P,(Fact,Trigger)):-
@@ -249,7 +249,7 @@ mpred_add_support_fast(P,(Fact,Trigger)):-
        fix_mp(mpred_add_support3,MSPFT,M,SPFT),
    M:notify_if_neg_trigger(SPFT),
    
-   M:sanity_check(M:assertz_mu(SPFT),call(M:clause_asserted(SPFT))))).
+   M:sanity_check(M:assertz_mu(SPFT),call(M:clause_asserted(SPFT))))),!.
 
 
                                                                 
