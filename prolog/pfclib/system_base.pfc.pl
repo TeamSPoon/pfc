@@ -173,14 +173,14 @@ predicateTriggerType(Type) ==>
 (genlMt(C,P)/(C\=baseKB)) ==> {doall(((pred_decl_kb_mfa_type(P,F,A,Type)),C:call(Type,C:F/A)))}.
 :- endif.
 
-(genlMt(C,P)/(is_ftNonvar(C),is_ftNonvar(P),P\==baseKB,(mtProlog(C);mtProlog(P))) ==> {P\==user,catch(nop(add_import_module(C,P,end)),error(_,_),dmsg_pretty(error(add_import_module(C,P,end))))}).
+(genlMt(C,P)/(is_ftNonvar(C),is_ftNonvar(P),P\==baseKB,(mtProlog(P))) ==> {P\==user,catch((add_import_module(C,P,end)),error(_,_),dmsg_pretty(error(add_import_module(C,P,end))))}).
 
 %(do_import_modules,genlMt(C,P),mtHybrid(C),mtProlog(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg_pretty(error(add_import_module(C,P,end))))}.
 %(do_import_modules,genlMt(C,P),mtProlog(C),mtHybrid(P)) ==>  {catch(add_import_module(C,P,end),error(_,_),dmsg_pretty(error(add_import_module(C,P,end))))}.
-%((mtHybrid(C),{is_ftNonvar(C)},{ensure_abox(C)}, \+ mtProlog(C)) <==> (genlMt(C,baseKB),{is_ftNonvar(C)}, \+ mtProlog(C))).
+%((mtHybrid(C),{is_ftNonvar(C)},{ensure_abox_hybrid(C)}, \+ mtProlog(C)) <==> (genlMt(C,baseKB),{is_ftNonvar(C)}, \+ mtProlog(C))).
 
 %
-%mtProlog(C) ==> {decl_assertable_module(C)}. % , \+ mtHybrid(C). 
+mtProlog(C) ==> {decl_assertable_module(C)}. % , \+ mtHybrid(C). 
 %(predicateConventionMt(F,MT),arity(F,A))==>{(MT==baseKB;mtProlog(MT))->kb_shared(MT:F/A);kb_shared(MT:F/A)}.
 % :- break.
 % predicateConventionMt(predicateConventionMt,baseKB).
