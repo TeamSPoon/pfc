@@ -14,7 +14,7 @@
 :- else.  % \+ current_prolog_flag(xref,true)
 */
 :- if(('$current_source_module'(M),
-      M:use_module( library(pfc_lib)),
+      M:reexport(library(pfc_lib)),
       add_pfc_to_module(M))).
 /*
 :-else. % add_pfc_to_module
@@ -23,7 +23,8 @@
          dmsg(Info),throw(Info))).
 */
 :- endif. % add_pfc_to_module
-:- module(pfc_mod,[hello_there_xref/0]).
+:- module(pfc_mod,
+  [hello_there_xref/0]).
 %! hello_there_xref is det.
 % 
 %  This is only seen by XREF 
