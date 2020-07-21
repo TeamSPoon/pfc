@@ -224,7 +224,7 @@ bagof_or_nil(T,G,B):- (bagof_nr(T,G,B) *-> true; B=[]).
 
 :- meta_predicate(sanity_check(0,0)).
 sanity_check(When,Must):- notrace(catch((When,Must),_,fail)),!.
-sanity_check(When,Must):- must_or_rtrace((show_call(When),must(Must))),!.
+sanity_check(When,Must):- show_call(When),!,must_or_rtrace(Must),!.
 
 %
 %  predicates for manipulating support relationships
@@ -244,10 +244,12 @@ mpred_add_support(P,(Fact,Trigger)):-
 
 %  mpred_add_support_fast(+Fact,+Support)
 mpred_add_support_fast(P,(Fact,Trigger)):-
-  must(( MSPFT = spft(P,Fact,Trigger),
-       fix_mp(mpred_add_support,MSPFT,M,SPFT),
+  must_or_rtrace(( MSPFT = spft(P,Fact,Trigger),      
+      % copy_term(MSPFT,SPFTC),
+       fix_mp(mpred_add_support3,MSPFT,M,SPFT),
    M:notify_if_neg_trigger(SPFT),
-   M:sanity_check(assertz_mu(SPFT),clause_asserted_u(SPFT)))).
+   
+   M:sanity_check(M:assertz_mu(SPFT),call(M:clause_asserted(SPFT))))).
 
 
                                                                 
