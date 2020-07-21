@@ -3714,7 +3714,7 @@ mpred_assertz_w_support(P,Support):-
 :- module_transparent(clause_asserted_call/2).
 clause_asserted_call(H,B):-clause_asserted(H,B).
 
-clause_asserted_u(P):- call_u(clause_asserted(P)),!.
+clause_asserted_u(P):- call_u(clause_asserted_i(P)),!.
   
 
 /*
