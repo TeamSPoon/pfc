@@ -20,7 +20,7 @@
 %:- dynamic '<==>'/2.
 :- dynamic 'pt'/2.
 :- dynamic 'nt'/3.
-:- dynamic 'bt'/2.
+:- dynamic 'bct'/2.
 :- dynamic fcUndoMethod/2.
 :- dynamic fcAction/2.
 :- dynamic fcTmsMode/1.
@@ -274,9 +274,9 @@ pfcAddTrigger(nt(Trigger,Test,Body),Support) :-
   \+ call(Test),
   fcEvalLHS(Body,((\+Trigger),nt(TriggerCopy,Test,Body))).
 
-pfcAddTrigger(bt(Trigger,Body),Support) :-
+pfcAddTrigger(bct(Trigger,Body),Support) :-
   !,
-  pfcAssert(bt(Trigger,Body),Support),
+  pfcAssert(bct(Trigger,Body),Support),
   pfcBtPtCombine(Trigger,Body,Support).
 
 pfcAddTrigger(X,_Support) :-
@@ -284,8 +284,8 @@ pfcAddTrigger(X,_Support) :-
 
 
 pfcBtPtCombine(Head,Body,Support) :- 
-  %% a backward trigger (bt) was just added with head and Body and support Support
-  %% find any pt's with unifying heads and add the instantied bt body.
+  %% a backward trigger (bct) was just added with head and Body and support Support
+  %% find any pt's with unifying heads and add the instantied bct body.
   pfcGetTriggerQuick(pt(Head,_PtBody)),
   fcEvalLHS(Body,Support),
   fail.
@@ -633,7 +633,7 @@ fcnt(_,_).
 
 %%
 %% pfcDefineBcRule(+Head,+Body,+ParentRule) - defines a backeard
-%% chaining rule and adds the corresponding bt triggers to the database.
+%% chaining rule and adds the corresponding bct triggers to the database.
 %%
 
 pfcDefineBcRule(Head,_Body,ParentRule) :-
@@ -649,7 +649,7 @@ pfcDefineBcRule(Head,Body,ParentRule) :-
   buildRhs(Head,Rhs),
   forall(pfc_nf(Body,Lhs),
           ignore((buildTrigger(Lhs,rhs(Rhs),Trigger),
-           add(bt(Head,Trigger),(ParentRuleCopy,U))))).
+           add(bct(Head,Trigger),(ParentRuleCopy,U))))).
  
 
 
@@ -762,8 +762,8 @@ trigger_trigger1(Trigger,Body) :-
 
 pfc(P) :-
   % trigger any bc rules.
-  pfcGetTriggerQuick(bt(P,Trigger)),
-  pfcGetSupport(bt(P,Trigger),S),
+  pfcGetTriggerQuick(bct(P,Trigger)),
+  pfcGetSupport(bct(P,Trigger),S),
   fcEvalLHS(Trigger,S),
   fail.
 
@@ -1030,7 +1030,7 @@ mpred_db_type((':-'(_,_)),Type):- !, Type=rule(cwc).
 mpred_db_type(pt(_,_,_),Type):- !, Type=trigger.
 mpred_db_type(pt(_,_),Type):- !, Type=trigger.
 mpred_db_type(nt(_,_,_),Type):- !,  Type=trigger.
-mpred_db_type(bt(_,_),Type):- !,  Type=trigger.
+mpred_db_type(bct(_,_),Type):- !,  Type=trigger.
 mpred_db_type(actn(_),Type):- !, Type=action.
 mpred_db_type((('::::'(_,X))),Type):- !, mpred_db_type(X,Type).
 mpred_db_type(_,fact(_FT)):-
@@ -1175,7 +1175,7 @@ pfcType(('<-'(_,_)),Type) :- !, Type=rule.
 pfcType(pt(_,_,_),Type) :- !, Type=trigger.
 pfcType(pt(_,_),Type) :- !, Type=trigger.
 pfcType(nt(_,_,_),Type) :- !,  Type=trigger.
-pfcType(bt(_,_),Type) :- !,  Type=trigger.
+pfcType(bct(_,_),Type) :- !,  Type=trigger.
 pfcType(pfcAction(_),Type) :- !, Type=action.
 pfcType((('::::'(_,X))),Type) :- !, pfcType(X,Type).
 pfcType(_,fact) :-

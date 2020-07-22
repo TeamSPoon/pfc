@@ -25,5 +25,5 @@ a(1).
 
 most(c(X) ==> b(X)) .
 
-:- listing([a/1,b/1,c/1,(==>)/2,most/1,pt,nt,bt]).
+:- listing([a/1,b/1,c/1,(==>)/2,most/1,pt,nt,bct]).
 

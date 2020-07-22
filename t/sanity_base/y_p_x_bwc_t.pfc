@@ -46,11 +46,11 @@ oops at regression.. getting one extra result
 root@gitlab:/home/prologmud_server/lib/swipl/pack/pfc/n3/sanity_base# swipl -f y_p_x_bwc.pfc
 % /home/prologmud_server/lib/swipl/pack/pfc/n3/sanity_base/y_p_x_bwc.pfc:22
 % mpred_fwc1((n3(_56492, p, _56496)<-n3(_56496, p, _56510), n3(_56510, p, _56492))).
-% mpred_fwc1(bt(n3(_10898, p, _10902), pt(n3(_10902, p, _10916), pt(n3(_10916, p, _10898), rhs([n3(_10898, p, _10902)]))))).
-%       Found positive trigger: bt(n3(_1702,p,_1706),pt(n3(_1706,p,_1720),pt(n3(_1720,p,_1702),rhs([n3(_1702,p,_1706)]))))
+% mpred_fwc1(bct(n3(_10898, p, _10902), pt(n3(_10902, p, _10916), pt(n3(_10916, p, _10898), rhs([n3(_10898, p, _10902)]))))).
+%       Found positive trigger: bct(n3(_1702,p,_1706),pt(n3(_1706,p,_1720),pt(n3(_1720,p,_1702),rhs([n3(_1702,p,_1706)]))))
 %               body: nonvar(n3(_1702,p,_1706))*->rhs([(n3(_1702,p,_1706):-mpred_bc_only(n3(_1702,p,_1706)))])
 %       RHS-Post1: n3(_1702,p,_1706):-mpred_bc_only(n3(_1702,p,_1706))
-%       Support: bt(n3(_1510,p,_1514),pt(n3(_1514,p,_1528),pt(n3(_1528,p,_1510),rhs([n3(_1510,p,_1514)])))),pt(bt(n3(_1702,p,_1706),pt(n3(_1706,p,_1720),pt(n3(_1720,p,_1702),rhs([n3(_1702,p,_1706)])))),(nonvar(n3(_1702,p,_1706))*->rhs([(n3(_1702,p,_1706):-mpred_bc_only(n3(_1702,p,_1706)))])))
+%       Support: bct(n3(_1510,p,_1514),pt(n3(_1514,p,_1528),pt(n3(_1528,p,_1510),rhs([n3(_1510,p,_1514)])))),pt(bct(n3(_1702,p,_1706),pt(n3(_1706,p,_1720),pt(n3(_1720,p,_1702),rhs([n3(_1702,p,_1706)])))),(nonvar(n3(_1702,p,_1706))*->rhs([(n3(_1702,p,_1706):-mpred_bc_only(n3(_1702,p,_1706)))])))
 n3(':B', p, ':A').
 % /home/prologmud_server/lib/swipl/pack/pfc/n3/sanity_base/y_p_x_bwc.pfc:24
 % mpred_fwc1(n3(':C', p, ':A')).

@@ -27,7 +27,7 @@
 bc_q(N) <- bc_p(N).
 
 
-:- listing(bt/2).
+:- listing(bct/2).
 :- listing(pt/2).
 
 :- listing(bc_q/1).

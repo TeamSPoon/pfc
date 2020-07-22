@@ -62,7 +62,7 @@ a(1).
 
 \+ b(1).
 
-:- listing([(==>)/2,most/1,pt,nt,bt,a/1,b/1,c/1,(~)/1]).
+:- listing([(==>)/2,most/1,pt,nt,bct,a/1,b/1,c/1,(~)/1]).
 
 :- mpred_test( ~ b(1) ).
 

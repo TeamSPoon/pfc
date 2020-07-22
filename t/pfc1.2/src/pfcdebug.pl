@@ -84,7 +84,7 @@ pfcPrintTriggers :-
   bagof(nt(A,B,C),pfcGetTrigger(nt(A,B,C)),Nts),
   pfcPrintitems(Nts),
   ansi_format([underline],"~NGoal triggers...~n",[]),
-  bagof(bt(A,B),pfcGetTrigger(bt(A,B)),Bts),
+  bagof(bct(A,B),pfcGetTrigger(bct(A,B)),Bts),
   pfcPrintitems(Bts).
 
 pfcPrintSupports :- 

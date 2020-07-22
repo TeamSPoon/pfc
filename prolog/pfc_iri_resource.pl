@@ -1,6 +1,6 @@
 
 :- module('pfc_iri',
-          [ add_pfc_to_module/3,
+          [ % add_pfc_to_module/1,
             include_pfc_res/2,
             include_module_file/2,
             open_pfc_resource/2,            % +Name, -Stream
@@ -297,24 +297,5 @@ include_pfc_res(Module,PfcInclFile):-
      silent(false)]),!.          
 
 % add_pfc_to_module(Module):- module_property(Module,class(library)),!.
-
-   
-add_pfc_to_module(SM,TM,CM):- 
-    Info = 'using_pfc'(SM,TM,CM,pfc_load),
-   '$current_typein_module'(CTM),
-   '$current_source_module'(CSM),
-   %'context_module'(CM),
-   '$set_typein_module'(TM),
-   '$set_source_module'(SM),   
-   %dmsg(add_pfc_to_module(Info,CSM,CTM)), 
-   %include_pfc_res(Module,PfcInclFile),
-   %asserta(Module:'$does_use_pfc'(Module,PfcInclFile,Info)),
-   % Version 2.0
-   SM:reexport(library(pfc_lib)),
-   maybe_ensure_abox(SM),
-   asserta(baseKB:Info),
-   '$set_typein_module'(CTM),
-   '$set_source_module'(CSM),!,
-   dmsg(add_pfc_to_module(Info,CSM,CTM)),!.
 
 

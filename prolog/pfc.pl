@@ -69,7 +69,9 @@ user:prolog_load_file(ModuleSpec, Options):-
   '$current_typein_module'(TM),
   strip_module(ModuleSpec,Module,Spec),
   (exists_source(Spec, Path)->true;Path=Spec),    
-  (lmcache:pfc_mod_filename(Path);(atom(Path),sub_string(Path, _, _, _, '.pfc'));lmcache:pfc_decl_filename(Path)),
+  (lmcache:pfc_mod_filename(Path);
+   % (atom(Path),sub_string(Path, _, _, _, '.pfc'));
+    lmcache:pfc_decl_filename(Path)),
   % wdmsg(pfc_load_file(sm=Module,tm=TM,path=Path,opts=Options)),
   select(if(not_loaded),Options,Removed),!,
   TM:load_files(Module:Spec,[if(always)|Removed]).

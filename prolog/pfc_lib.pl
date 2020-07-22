@@ -187,7 +187,7 @@ kb_global_w(M:F/A):-
 :- kb_global_w(baseKB:tms/1).
 
 :- kb_global_w(baseKB:do_and_undo/2).
-:- kb_global_w(baseKB:bt/2).
+:- kb_global_w(baseKB:bct/2).
 :- kb_global_w(baseKB:nt/3).
 :- kb_global_w(baseKB:pt/2).
 :- kb_global_w(baseKB:spft/3).
@@ -537,6 +537,7 @@ is_pfc_filename(_,File):- check_how_virtualize_file(heads,File),!.
 is_pfc_filename(_,File):- check_how_virtualize_file(false,File),!,fail.
 %is_pfc_filename(_,File):- atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File),!.
 
+notrace_ex(X):- !,X,!.
 notrace_ex(X):- catch(notrace(X),_,rtrace(X)).
 
 :- fixup_exports.

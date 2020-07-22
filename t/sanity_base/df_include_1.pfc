@@ -23,7 +23,7 @@ a(X) ==> c(X).
 most(c(X) ==> b(X)) .
 a(1).
 
-:- listing(header_sane:[a/1,b/1,c/1,header_sane:(==>)/2,most/1,header_sane:pt/2,header_sane:nt,header_sane:bt]).
+:- listing(header_sane:[a/1,b/1,c/1,header_sane:(==>)/2,most/1,header_sane:pt/2,header_sane:nt,header_sane:bct]).
 
 :- mpred_test(b(1)).
 

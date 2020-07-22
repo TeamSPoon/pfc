@@ -250,7 +250,7 @@ fileAssertMt0(M):- must(get_fallBackAssertMt(M)),!.
 %
 
 % set_fileAssertMt(M):- '$current_source_module'(M),!.
-set_fileAssertMt(M):-  (M==user;M==system;M==pfc_lib),!,set_fileAssertMt(baseKB).
+set_fileAssertMt(M):-  (M==system;M==pfc_lib),!,set_fileAssertMt(baseKB).
 set_fileAssertMt(M):-
   ensure_abox_hybrid(M),
   sanity(is_mtCanAssert(M)),
@@ -306,7 +306,7 @@ get_fallBackAssertMt(M):- guess_maybe_assertMt(M),is_mtCanAssert(M),!.
 get_fallBackAssertMt(M):- guess_maybe_assertMt(M).
 
 guess_maybe_assertMt(M):- '$current_source_module'(M).
-guess_maybe_assertMt(M):- context_module(M).
+%guess_maybe_assertMt(M):- context_module(M).
 guess_maybe_assertMt(M):- loading_source_file(File),clause_bq(baseKB:file_to_module(File,M)).
 guess_maybe_assertMt(M):- loading_source_file(File),clause_bq(lmcache:mpred_directive_value(File,module,M)).
 guess_maybe_assertMt(M):-  which_file(File)->current_module(M),module_property(M,file(File)),File\==M.
@@ -332,13 +332,20 @@ defaultQueryMt0(M):- guess_maybe_assertMt(M).
 
 
 
+/*
+system imports system
+user imports system
+pfc_lib imports system
+baseKB imports system
 
+in user we assert 
+baseKB->system
 
 
 
 % baseKB:mtGlobal
 % mtCore
-
+      */
 
 
 makeConstant(_Mt).
@@ -349,7 +356,8 @@ is_pfc_module_file(M,F,TF):- (module_property(M,file(F)),pfc_lib:is_pfc_file(F))
   (module_property(M,file(F))*->TF=false ; (F= (-), TF=false)).
 
 maybe_ensure_abox(M):- is_pfc_module_file(M,F,_), (F \== (-)), !,   
-  (pfc_lib:is_pfc_file(F)->show_call(pfc_lib:is_pfc_file(F),ensure_abox_hybrid(M));dmsg_pretty(not_is_pfc_module_file(M,F))).
+  (pfc_lib:is_pfc_file(F)->show_call(pfc_lib:is_pfc_file(F),ensure_abox_hybrid(M));
+     (dmsg_pretty(not_is_pfc_module_file(M,F)),ensure_abox_support(M,baseKB))).
 maybe_ensure_abox(M):- show_call(not_is_pfc_file,ensure_abox_hybrid(M)).
 
 
@@ -362,29 +370,69 @@ ensure_abox(M):-
   ignore(((M==user;M==pfc_lib;M==baseKB)->true;add_import_module(M,pfc_lib,end))),
   dynamic(M:defaultTBoxMt/1),
   must(ensure_abox_support(M,baseKB)),!.
-  
-setup_database_term(M:F/A):-dynamic(M:F/A),multifile(M:F/A),public(M:F/A),module_transparent(M:F/A),
+
+%setup_database_term(_:F/A):- F\==spft, current_predicate(system:F/A),!.
+setup_database_term(_:(==>)/1):- !.
+setup_database_term(M:F/A):-  
+  dynamic(M:F/A),multifile(M:F/A),public(M:F/A),module_transparent(M:F/A),
   discontiguous(M:F/A),
   ignore((M\==baseKB,functor(P,F,A),assertz_new(M:(P :- zwc, inherit_above(M, P))))).
 
+:- dynamic(lmconfig:pfc_module_prop/3).
+pfc_set_module(M,Pred,Q):- retractall(lmconfig:pfc_module_prop(M,Pred,_)),assert(lmconfig:pfc_module_prop(M,Pred,Q)).
+
+pfc_module_expand(typein,M):-!, '$current_typein_module'(M).
+pfc_module_expand(source,M):-!, '$current_source_module'(S), '$current_typein_module'(T), ((S==user,S\==T)-> M = T ; M = S).
+pfc_module_expand(pfc_lib,M):-!, pfc_module_expand(source,M).
+pfc_module_expand(system,M):-!, pfc_module_expand(source,M).
+pfc_module_expand(M,M).
+
+pfc_get_module(M,Pred,V):- lmconfig:pfc_module_prop(M,Pred,Q), Q\=(_>_), pfc_module_expand(Q,V).
+pfc_get_module(M,Pred,V):- pfc_module_expand(M,O),M\==O,!, pfc_get_module(O,Pred,V).
+pfc_get_module(M,Pred,V):- lmconfig:pfc_module_prop(M,Pred,(O>P)),pfc_module_expand(O,OM),
+  ((OM\==M)-> pfc_get_module(OM,P,V) ; V = OM),!.
+pfc_get_module(M,Pred,V):- pfc_module_expand(source,O),M\==O,pfc_get_module(O,Pred,V).
+pfc_get_module(M,_,M).
+
+ensure_module_inheritances:-
+   clear_import_modules(pfc_lib),
+   clear_import_modules(baseKB),
+   clear_import_modules(user),!,
+   pfc_set_module(baseKB,call,typein>call),
+   pfc_set_module(baseKB,assert,typein>assert),
+   pfc_set_module(user,call,typein>assert),
+   pfc_set_module(user,assert,typein>call),!.
+   
+
+clear_import_modules(M):-   
+  findall(I,system:default_module(M,I),LS),
+  list_to_set(LS,Set),
+  forall(member(I, Set),system:ignore(system:delete_import_module(M,I))),
+  (M == pfc_lib -> system:add_import_module(M,system,end); system:add_import_module(M,pfc_lib,end)),  
+  findall(D,system:default_module(M,D),List),
+  must(List=[M,pfc_lib,system];List=[M,system]).
+
+
 :- module_transparent((ensure_abox_support)/2).
 %ensure_abox_support(M):- module_property(M,class(library)),!.
-ensure_abox_support(M,TBox):- (M==user;M==system;M==pfc_lib),!,ensure_abox_support(baseKB,TBox).
+ensure_abox_support(M,TBox):- (M==system;M==pfc_lib),break,!,ensure_abox_support(baseKB,TBox).
 ensure_abox_support(M,TBox):- clause_bq(M:defaultTBoxMt(TBox)),!.
-ensure_abox_support(M,TBox):- ignore((system:delete_import_module(pfc_lib,user))),
-   system:add_import_module(pfc_lib,system, end),
+ensure_abox_support(M,TBox):- 
+   ensure_module_inheritances, 
+   clear_import_modules(M),
    asserta(M:defaultTBoxMt(TBox)),
    set_prolog_flag(M:unknown,error),  
    must(forall(mpred_database_term(F,A,_PType), setup_database_term(M:F/A))),
    must(system:add_import_module(M,system,end)),   
    (M\==user->must(ignore(show_call(system:delete_import_module(M,user))));true),!,
    must(setup_module_ops(M)),
-   (M == baseKB -> true ; ensure_abox_support_pt2_non_baseKB(M)).
+   (M == baseKB -> true ; ensure_abox_support_pt2_non_baseKB(M)),!.
    
 ensure_abox_support(M,TBox):- 
+       throw(failed_ensure_abox_support(M,TBox)),
        % system:add_import_module(M,user,end),
        %must(ignore(system:delete_import_module(M,system))),
-       must(ignore(system:delete_import_module(M,baseKB))),
+       %must(ignore(system:delete_import_module(M,baseKB))),
        system:add_import_module(M,system,end),
        retractall(M:defaultTBoxMt(TBox)),
        throw(failed_ensure_abox_support(M,TBox)).
@@ -392,7 +440,7 @@ ensure_abox_support(M,TBox):-
 %ensure_abox_support_pt2_non_baseKB(M):- module_property(M,class(system)),!.
 %ensure_abox_support_pt2_non_baseKB(M):- module_property(M,class(library)),!.
 ensure_abox_support_pt2_non_baseKB(M):-
-   M:use_module(library(pfc_lib)),
+  % M:use_module(library(pfc_lib)),
    '$current_typein_module'(TM),
    '$current_source_module'(SM),
    '$set_typein_module'(M),

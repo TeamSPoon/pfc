@@ -40,7 +40,7 @@ bc_p(b).
 :- ignore((mpred_info((((bc_q(N) <- bc_p(N))))))).
 
 
-:- mpred_info(((bt(bc_q(_6600462), pt(bc_p(_6600462), rhs([bc_q(_6600462)])))))).
+:- mpred_info(((bct(bc_q(_6600462), pt(bc_p(_6600462), rhs([bc_q(_6600462)])))))).
 
 :- mpred_test(((mpred_withdraw(((bc_q(N) <- bc_p(N))))),\+ clause(bc_q(_),true))).
 

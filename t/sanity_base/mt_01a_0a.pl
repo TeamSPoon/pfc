@@ -36,6 +36,9 @@ baseKB:mtHybrid(socialMt).
 
 :- header_sane:listing(mtHybrid/1).
 
+:- break.
+
+:- rtrace.
 :- set_defaultAssertMt(myMt).
 :- set_fileAssertMt(myMt).
 
@@ -76,8 +79,10 @@ baseKB:genlMt(myMt,socialMt).
 
 :- mpred_test(clause_u(myMt:loves(_,_))).
 
-:- mpred_test(myMt:loves(_,_)).
 
+:- rtrace.
+
+:- mpred_test(myMt:loves(_,_)).
 
 :- mpred_test((ain(genlMt(tooLazyMt,socialMt)),clause(tooLazyMt:loves(_,_),_B,_R))).
 

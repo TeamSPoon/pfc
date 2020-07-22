@@ -511,8 +511,8 @@ rtArgsVerbatum(second_order).
 
 %prologBuiltin(resolveConflict/1).
 
-% :- kb_shared(bt/2).
-(bt(P,_)/(nonvar(P),must(get_bc_clause(P,Post)))) ==> ({ignore(kb_shared(P))},Post).
+% :- kb_shared(bct/2).
+(bct(P,_)/(nonvar(P),must(get_bc_clause(P,Post)))) ==> ({ignore(kb_shared(P))},Post).
 
 %redundantMaybe ==> ((prologHybrid(F),arity(F,A))==>mpred_prop(M,F,A,pfcVisible)).
 %redundantMaybe ==> (mpred_prop(M,F,A,pfcVisible)==>prologHybrid(F),arity(F,A)).
@@ -650,7 +650,6 @@ preventedWhen(P,{Cond})/mpred_positive_fact(P)==> ((~P) :- cwc, Cond).
 %
 %
 
-%:- rtrace.
 :- call(assertz_if_new,(((~(G):-  (cwc, neg_in_code(G)))))).
 
 % :- pfcNoWatch.

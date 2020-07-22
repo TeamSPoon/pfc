@@ -155,14 +155,14 @@ functor_check_univ(G1,F,List):-must_det(compound(G1)),must_det(G1 \= _:_),must_d
       map_unless(1,:,*,*),      
       pfc_is_callable(*),     
 %      deducedSimply(*),
-      cnstrn0(:,+),
+      cnstrn0(*,+),
       cnstrn(*),
-      cnstrn(+,:),
+      cnstrn(+,*),
       attvar_op(*,*),
       % clause_u(+,+,-),
       % call_u(+),
-      assertz_mu(+),      
-      assertz_mu(+,+),
+      assertz_mu(*),      
+      assertz_mu(*,+),
       if_missing1(*),
       assert_mu(+),
       assert_mu(+,+,+,+),
@@ -732,7 +732,7 @@ mpred_rule_hb_0((Ante1 , Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> !
 mpred_rule_hb_0((Outcome<==>Ante1),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0((Ante1<==>Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0(_::::Outcome,OutcomeO,Ante2):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb_0(Outcome,OutcomeO,Ante2).
-mpred_rule_hb_0(bt(Outcome,Ante1),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
+mpred_rule_hb_0(bct(Outcome,Ante1),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0(pt(Ante1,Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0(pk(Ante1a,Ante1b,Outcome),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0(nt(Ante1a,Ante1b,Outcome),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
@@ -764,7 +764,7 @@ ain_minfo(How,((A;B):-INFOC)):-mpred_is_info(INFOC),(is_ftNonvar(A);is_ftNonvar(
 ain_minfo(How,(-(A):-infoF(C))):-is_ftNonvar(C),is_ftNonvar(A),!,ain_minfo(How,((A):-infoF((C)))). % attvar_op(How,(-(A):-infoF(C))).
 ain_minfo(How,(~(A):-infoF(C))):-is_ftNonvar(C),is_ftNonvar(A),!,ain_minfo(How,((A):-infoF((C)))). % attvar_op(How,(-(A):-infoF(C))).
 ain_minfo(How,(A:-INFOC)):- is_ftNonvar(INFOC), get_bc_clause(A,AA,INFOCC),A=AA,INFOC==INFOCC,!,attvar_op(How,(A:-INFOC)),!.
-ain_minfo(How,bt(_ABOX,H,_)):-!,get_bc_clause(H,Post),attvar_op(How,Post).
+ain_minfo(How,bct(_ABOX,H,_)):-!,get_bc_clause(H,Post),attvar_op(How,Post).
 ain_minfo(How,nt(H,Test,Body)):-!,attvar_op(How,(H:-fail,nt(H,Test,Body))).
 ain_minfo(How,pt(H,Body)):-!,attvar_op(How,(H:-fail,pt(H,Body))).
 ain_minfo(How,(A0:-INFOC0)):- mpred_is_info(INFOC0), copy_term_and_varnames((A0:-INFOC0),(A:-INFOC)),!,must((mpred_rewrap_h(A,AA),imploded_copyvars((AA:-INFOC),ALLINFO), attvar_op(How,(ALLINFO)))),!.
@@ -1012,12 +1012,12 @@ map_unless(Test,Pred,[H|T],S):-!, apply(Pred,[H|S]), map_unless(Test,Pred,T,S).
 map_unless(Test,Pred,H,S):-H=..List,!,map_unless(Test,Pred,List,S),!.
 
 
-:- meta_predicate(map_first_arg(:,+)).
+:- meta_predicate(map_first_arg(*,+)).
 %% map_first_arg( +Pred, ?List) is semidet.
 %
 % PFC Maptree.
 %
-map_first_arg(CM:Pred,List):-map_first_arg(CM,Pred,List,[]).
+map_first_arg(CMPred,List):- strip_module(CMPred,CM,Pred), map_first_arg(CM,Pred,List,[]).
 
 :- meta_predicate(map_first_arg(+,*,+,+)).
 %% map_first_arg( +Pred, :TermH, ?S) is semidet.
@@ -1478,8 +1478,8 @@ mpred_call_only_facts(Clause) :-
 % Call Using Backchaining Triggers.
 %
 call_with_bc_triggers(MP) :- strip_module(MP,_,P), functor(P,F,A), \+ t_l:infBackChainPrevented(F/A), 
-  lookup_u(bt(P,Trigger)),
-  no_repeats(mpred_get_support(bt(P,Trigger),S)),
+  lookup_u(bct(P,Trigger)),
+  no_repeats(mpred_get_support(bct(P,Trigger),S)),
   once(no_side_effects(P)),
   locally_tl(infBackChainPrevented(F/A),mpred_eval_lhs(Trigger,S)).
 
@@ -1601,10 +1601,10 @@ pfcBC_NoFacts_TRY(F) :- no_repeats(ruleBackward(F,Condition,Support)),
   no_repeats(F,call_u(Condition)),  
   maybe_support_bt(F,CCondition,SupportC).
 
-maybe_support_bt(P,_,_):-mpred_ignored(P),!.
+maybe_support_bt(P,_,_):-mpred_ignored_bt(P),!.
 maybe_support_bt(F,Condition,Support):-  
-  doall((no_repeats(Why,call_u(bt(F,pt(A,Why)))) *-> mpred_add_support_fast(F,(A,Why)))),
-  doall((no_repeats(Why,call_u(bt(F,Why))) *-> mpred_add_support_fast(F,(bt(F,Why),Support)))),
+  doall((no_repeats(Why,call_u(bct(F,pt(A,Why)))) *-> mpred_add_support_fast(F,(A,Why)))),
+  doall((no_repeats(Why,call_u(bct(F,Why))) *-> mpred_add_support_fast(F,(bct(F,Why),Support)))),
   ignore((maybeSupport(F,(Condition,Support)))).
 
 :- meta_predicate mpred_why_all(*).
@@ -1637,7 +1637,7 @@ pfcBC_Cache(F) :- mpred_call_only_facts(pfcBC_Cache,F),
 %
 % Maybe Support.
 %
-maybeSupport(P,_):-mpred_ignored(P),!.
+maybeSupport(P,_):-mpred_ignored_bt(P),!.
 maybeSupport(P,S):- fail, ( \+ ground(P)-> true;
   (predicate_property(P,dynamic)->mpred_post(P,S);true)).
 
@@ -1654,18 +1654,18 @@ maybeMaybeAdd(P,S):-
    mpred_enqueue(P,S).
 
 
-%% mpred_ignored( :TermC) is semidet.
+%% mpred_ignored_bt( :TermC) is semidet.
 %
 % PFC Ignored.
 %
-mpred_ignored(argIsa(F, A, argIsaFn(F, A))).
-mpred_ignored(genls(A,A)).
-mpred_ignored(isa(tCol,tCol)).
-%mpred_ignored(isa(W,tCol)):-mreq(baseKB:hasInstance_dyn(tCol,W)).
-mpred_ignored(isa(W,_)):-is_ftCompound(W),call_u(isa(W,meta_argtypes)).
-mpred_ignored(C):-clause_safe(C,true). 
-mpred_ignored(isa(_,Atom)):-atom(Atom),atom_concat(ft,_,Atom),!.
-mpred_ignored(isa(_,argIsaFn(_, _))).
+mpred_ignored_bt(argIsa(F, A, argIsaFn(F, A))).
+mpred_ignored_bt(genls(A,A)).
+mpred_ignored_bt(isa(tCol,tCol)).
+%mpred_ignored_bt(isa(W,tCol)):-mreq(baseKB:hasInstance_dyn(tCol,W)).
+mpred_ignored_bt(isa(W,_)):-is_ftCompound(W),call_u(isa(W,meta_argtypes)).
+mpred_ignored_bt(C):-clause_safe(C,true). 
+mpred_ignored_bt(isa(_,Atom)):-atom(Atom),atom_concat(ft,_,Atom),!.
+mpred_ignored_bt(isa(_,argIsaFn(_, _))).
 
 
 
@@ -1961,7 +1961,7 @@ pred_head_all(P):- pred_head(pred_all,P).
 %
 nonfact_metawrapper(~(_)).
 nonfact_metawrapper(pt(_,_)).
-nonfact_metawrapper(bt(_,_,_)).
+nonfact_metawrapper(bct(_,_,_)).
 nonfact_metawrapper(nt(_,_)).
 nonfact_metawrapper(spft(_,_,_)).
 nonfact_metawrapper(added(_)).
@@ -2042,7 +2042,7 @@ has_db_clauses(PI):-modulize_head(PI,P),
 %
 pred_t0(P):-mreq('==>'(P)).
 pred_t0(P):-mreq(pt(P,_)).
-pred_t0(P):-mreq(bt(P,_)).
+pred_t0(P):-mreq(bct(P,_)).
 pred_t0(P):-mreq(nt(P,_,_)).
 pred_t0(P):-mreq(spft(P,_,_)).
 
@@ -2098,7 +2098,7 @@ mpred_facts_and_universe(P):- (is_ftVar(P)->pred_head_all(P);true),call_u(P). % 
 %% repropagate( :TermP) is semidet.
 %
 % Repropagate.
-%
+%                                   
 repropagate(_):-  notrace((check_context_module,fail)).
 repropagate(P):-  repropagate_0(P).
 %repropagate(P):-  check_real_context_module,fail.
@@ -2108,13 +2108,19 @@ repropagate_0(USER:P):- USER==user,!,repropagate_0(P).
 repropagate_0(==>P):- !,repropagate_0(P).
 repropagate_0(P):-  meta_wrapper_rule(P),!,call_u(repropagate_meta_wrapper(P)).
 repropagate_0(F/A):- is_ftNameArity(F,A),!,functor(P,F,A),!,repropagate_0(P).
-repropagate_0(F/A):- atom(F),is_ftVar(A),!,repropagate_0(F).
+repropagate_0(F/A):- atom(F),is_ftVar(A),!,repropagate_atom(F).
+repropagate_0(F):- atom(F),!,repropagate_atom(F).
 repropagate_0(P0):- p0_to_mp(P0,P),
-     
-     \+ predicate_property(P,_),'$find_predicate'(P0,PP),PP\=[],!,
+     \+ predicate_property(P,_),catch('$find_predicate'(P0,PP),_,fail),PP\=[],!,
      forall(member(M:F/A,PP),must((functor(Q,F,A),repropagate_0(M:Q)))).
 repropagate_0(P):-  notrace((\+ predicate_property(_:P,_),dmsg_pretty(undefined_repropagate(P)))),dumpST,dtrace,!,fail.
 repropagate_0(P):- repropagate_meta_wrapper(P).
+
+
+repropagate_atom(F):- 
+     guess_pos_assert_to(ToMt),
+     ToMt:catch('$find_predicate'(F,PP),_,fail),PP\=[],!,
+     forall(member(M:F/A,PP),must((functor(Q,F,A),repropagate_0(M:Q)))).
 
 p0_to_mp(MP,SM:P0):- 
   strip_module(MP,M0,P0),
