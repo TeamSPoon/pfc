@@ -1396,7 +1396,7 @@ transform_opers(LANG,PFCM,PFCO):- quietly((locally(t_l:current_lang(LANG),((tran
 :- op(1150,xfx,'=>').
 :- op(1140,xfx,'<=').
 :- op(1130,xfx,'<=>').
-:- op(1100,fx,('nesc')).
+%:- op(1100,fx,('nesc')).
 :- op(300,fx,'-').
 :- op(300,fx,'~').
 :- op(600,yfx,'&'). 
