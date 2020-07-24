@@ -974,7 +974,7 @@ triggerSupports1(_,X,[X]):- \+ mpred_db_type(X,trigger(_)).
 % % :- set_prolog_flag(mpred_pfc_file,true).
 % local_testing
 
-:- fixup_exports.
+%:- fixup_exports.
 
 :- set_prolog_flag(expect_pfc_file,unknown).
 

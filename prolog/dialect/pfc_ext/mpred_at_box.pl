@@ -117,6 +117,7 @@ baseKB:mtNoPrologCode(mpred_userkb).
 :- kb_global(baseKB:mtProlog/1).
 baseKB:mtProlog(Mt):- baseKB_mtProlog(Mt).
 
+:- expose_api(baseKB_mtProlog/1).
 %:- kb_global(lmcache:mpred_is_spying_pred/2).
 
 baseKB_mtProlog(Mt):- \+ atom(Mt),!,var(Mt),!,current_module(Mt),baseKB:mtProlog(Mt).
@@ -151,7 +152,7 @@ which_file(F):- prolog_load_context(source,F) -> true; once(loading_source_file(
 
          defaultAssertMt/1,
          set_defaultAssertMt/1,
-         with_no_retry_undefined/1,
+         %with_no_retry_undefined/1,
          which_file/1,
          fileAssertMt/1,
          set_fileAssertMt/1,
@@ -250,6 +251,7 @@ fileAssertMt0(M):- must(get_fallBackAssertMt(M)),!.
 %
 
 % set_fileAssertMt(M):- '$current_source_module'(M),!.
+:- expose_api(set_fileAssertMt/1).
 set_fileAssertMt(M):-  (M==system;M==pfc_lib),!,set_fileAssertMt(baseKB).
 set_fileAssertMt(M):-
   ensure_abox_hybrid(M),
@@ -367,7 +369,7 @@ ensure_abox_prolog(M):- ensure_abox(M),must(ain(baseKB:mtProlog(M))).
 
 ensure_abox(M):- clause_bq(M:defaultTBoxMt(_)),!.
 ensure_abox(M):- 
-  ignore(((M==user;M==pfc_lib;M==baseKB)->true;add_import_module(M,pfc_lib,end))),
+  %ignore(((M==user;M==pfc_lib;M==baseKB)->true;add_import_module(M,pfc_lib,end))),
   dynamic(M:defaultTBoxMt/1),
   must(ensure_abox_support(M,baseKB)),!.
 
@@ -408,7 +410,7 @@ clear_import_modules(M):-
   findall(I,system:default_module(M,I),LS),
   list_to_set(LS,Set),
   forall(member(I, Set),system:ignore(system:delete_import_module(M,I))),
-  (M == pfc_lib -> system:add_import_module(M,system,end); system:add_import_module(M,pfc_lib,end)),  
+  (M == pfc_lib -> system:add_import_module(M,system,end);  system:add_import_module(M,system,end)),  
   findall(D,system:default_module(M,D),List),
   must(List=[M,pfc_lib,system];List=[M,system]).
 
@@ -419,12 +421,12 @@ ensure_abox_support(M,TBox):- (M==system;M==pfc_lib),break,!,ensure_abox_support
 ensure_abox_support(M,TBox):- clause_bq(M:defaultTBoxMt(TBox)),!.
 ensure_abox_support(M,TBox):- 
    ensure_module_inheritances, 
+   (M\==user->must(ignore((system:delete_import_module(M,user))));true),!,
    clear_import_modules(M),
    asserta(M:defaultTBoxMt(TBox)),
    set_prolog_flag(M:unknown,error),  
-   must(forall(mpred_database_term(F,A,_PType), setup_database_term(M:F/A))),
-   must(system:add_import_module(M,system,end)),   
-   (M\==user->must(ignore(show_call(system:delete_import_module(M,user))));true),!,
+   must(forall(mpred_database_term(F,A,_PType), setup_database_term(M:F/A))),   
+   system:add_import_module(M,pfc_lib,end),
    must(setup_module_ops(M)),
    (M == baseKB -> true ; ensure_abox_support_pt2_non_baseKB(M)),!.
    
@@ -448,7 +450,29 @@ ensure_abox_support_pt2_non_baseKB(M):-
    pfc_iri:include_module_file(M:library('pfclib/system_each_module.pfc'),M),!,
    '$set_typein_module'(TM),
    '$set_source_module'(SM),!.
-   
+
+
+
+add_pfc_to_module(SM,TM,CM):- 
+   Info = 'using_pfc'(SM,TM,CM,pfc_load),
+   '$current_typein_module'(CTM),
+   '$current_source_module'(CSM),
+   %'context_module'(CCM),
+   '$set_typein_module'(TM),
+   '$set_source_module'(SM),   
+   %dmsg(add_pfc_to_module(Info,CSM,CTM)), 
+   %include_pfc_res(Module,PfcInclFile),
+   %asserta(Module:'$does_use_pfc'(Module,PfcInclFile,Info)),
+   % Version 2.0
+   %SM:use_module( library(logicmoo_utils)),
+   %SM:use_module( library(pfc_iri_resource)),
+   wdmsg(add_pfc_to_module(Info)),
+   maybe_ensure_abox(SM),
+   asserta(baseKB:Info),
+   '$set_typein_module'(CTM),
+   '$set_source_module'(CSM),!,
+   !.
+
 
 setup_module_ops(M):- mpred_op_each(mpred_op_unless(M)).
 
@@ -775,5 +799,5 @@ system:body_expansion(T,(mpred_at_box:defaultAssertMt(NewVar),NewT)):- current_p
 */
 
 
-:- fixup_exports.
+%:- fixup_exports.
 

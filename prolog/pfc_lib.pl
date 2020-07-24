@@ -12,10 +12,30 @@
 */
 :- module(pfc_lib,[]).
 :- set_module(class(library)).
+
+
+:- multifile(user:prolog_load_file/2).
+:- dynamic(user:prolog_load_file/2).      
+%! prolog_load_file( ?ModuleSpec, ?Options) is semidet.
+%
+% Hook To [user:prolog_load_file/2] For PFC Modules
+% Prolog Load File.
+%
+user:prolog_load_file(ModuleSpec, Options):-
+  \+ current_prolog_flag(xref,true),
+  strip_module(ModuleSpec,Module,Spec),
+  (exists_source(Spec, Path)->sub_string(Path, _, _, _, '.pfc')),
+  select(if(not_loaded),Options,Removed),!,
+  load_files(Module:Spec,[if(always)|Removed]).
+
+%user:prolog_load_file(_,_):- get_lang(pl),!,fail.
+%user:prolog_load_file(_,_):- set_file_lang(pl),set_lang(pl),fail.
+
+
 :- set_prolog_flag(retry_undefined, none).
-:- system:use_module(library(logicmoo_utils)).
-:- system:use_module(library(logicmoo/predicate_inheritance)).
-:- system:use_module(library(pfc_iri_resource)).
+:- use_module(library(logicmoo_utils)).
+:- use_module(library(logicmoo/predicate_inheritance)).
+:- use_module(library(pfc_iri_resource)).
 :- if( \+ current_predicate(each_call_cleanup/3)).
 :- use_module(library(each_call_cleanup)).
 :- endif.
@@ -37,41 +57,9 @@
 
 :- set_prolog_flag(subclause_expansion,false).
 
-:- multifile(baseKB:agent_call_command/2).
-:- dynamic(baseKB:agent_call_command/2).
-:- baseKB:export(baseKB:agent_call_command/2).
-:- system:import(baseKB:agent_call_command/2).
-:- user:import(baseKB:agent_call_command/2).
-
-:- multifile(baseKB:isa/2).
-:- dynamic(baseKB:isa/2).
-:- baseKB:export(baseKB:isa/2).
-:- system:import(baseKB:isa/2).
-:- user:import(baseKB:isa/2).
-
-:- multifile(baseKB:tSet/1).
-:- dynamic(baseKB:tSet/1).
-:- baseKB:export(baseKB:tSet/1).
-:- system:import(baseKB:tSet/1).
-:- user:import(baseKB:tSet/1).
 
 :- set_prolog_flag(expect_pfc_file,unknown).
 :- set_prolog_flag(expect_pfc_file,never).
-
-kb_global_w(M:F/A):- 
-   M:multifile(M:F/A),
-   M:module_transparent(M:F/A),
-   M:dynamic(M:F/A),
-   M:export(M:F/A),
-   do_import(system,M,F,A),
-   do_import(user,M,F,A),
-   do_import(rtrace,M,F,A),
-   do_import(ucatch,M,F,A),
-   do_import(pfc_lib,M,F,A),
-   do_import(header_sane,M,F,A),
-   M:kb_global(M:F/A),
-   system:import(M:F/A).
-
 
 /*
 
@@ -162,22 +150,42 @@ kb_global_w(M:F/A):-
 :- use_module(library(logicmoo/attvar_serializer)).
 */
 
-:- kb_global_w(rdf_rewrite:arity/2).
+kb_global_w(M:F/A):- 
+   M:multifile(M:F/A),
+   M:module_transparent(M:F/A),
+   M:dynamic(M:F/A),
+   M:export(M:F/A),
+   do_import(system,M,F,A),
+  % do_import(user,M,F,A),
+  % do_import(rtrace,M,F,A),
+  % do_import(ucatch,M,F,A),
+  % do_import(pfc_lib,M,F,A),
+  % do_import(header_sane,M,F,A),
+   M:kb_global(M:F/A),
+  % system:import(M:F/A),
+   !.
+
+:- kb_global_w(baseKB:agent_call_command/2).
+:- kb_global_w(baseKB:isa/2).
+:- kb_global_w(baseKB:tSet/1).
+:- kb_global_w(baseKB:tCol/1).
+% :- kb_global_w(rdf_rewrite:arity/2).
+:- kb_global_w(baseKB:arity/2).
 :- kb_global_w(baseKB:genlMt/2).
 :- kb_global_w(baseKB:predicateTriggerType/1).
 :- kb_global_w(baseKB:mtHybrid/1).
 :- kb_global_w(baseKB:mtProlog/1).
-:- kb_global_w(baseKB:tCol/1).
-:- kb_global_w(baseKB:mpred_database_term/3).
-:- kb_global_w(baseKB:mtNoPrologCode/1).
-:- kb_global_w(baseKB:ftText/1).
 :- kb_global_w(baseKB:mtNotInherits/1).
 :- kb_global_w(baseKB:mtInherits/1).
+:- kb_global_w(baseKB:mtNoPrologCode/1).
+:- kb_global_w(baseKB:prologHybrid/1).
+:- kb_global_w(baseKB:prologBuiltin/1).
+:- kb_global_w(baseKB:ftText/1).
 :- kb_global_w(baseKB:rtArgsVerbatum/1).
 :- kb_global_w(baseKB:prologHybridType/3).
 :- kb_global_w(baseKB:mpred_skipped_module/1).
-
 :- kb_global_w(baseKB:mpred_prop/4).
+:- kb_global_w(baseKB:mpred_database_term/3).
 
 /*
 :- kb_global_w(baseKB:pk/3).
@@ -212,14 +220,10 @@ WILL BE ..
 :- kb_shared(baseKB:never_retract_u/2).
 
 
-
-
-
-
 %:- listing(arity/2).
 %:- listing(baseKB:_).
 
-:- set_prolog_flag_until_eof(debug,true).
+%:- set_prolog_flag_until_eof(debug,true).
 
 :- if(\+ current_prolog_flag(lm_no_autoload,_)).
 :- set_prolog_flag(lm_no_autoload,true).
@@ -239,9 +243,6 @@ kb_local_base(FA):-kb_local(baseKB:FA).
 kb_global_base(M:FA):-!,kb_global(M:FA).
 kb_global_base(FA):- kb_local(baseKB:FA).
 
-
-
-% :- kb_global_base(baseKB:genlMt/2).
 
 % :- kb_shared(baseKB:mpred_prop/4).
 
@@ -294,21 +295,26 @@ pfc_rescan_autoload_pack_packages_part_2 :- pack_autoload_packages(true).
 input_from_file:- prolog_load_context(stream,Stream),current_input(Stream).
 
 
-:- module_transparent(intern_predicate/1).
-:- module_transparent(intern_predicate/2).
-intern_predicate(MFA):- '$current_typein_module'(To),intern_predicate(To,MFA).
-intern_predicate(To,F/A):- !, '$current_source_module'(M),intern_predicate(To,M:F/A).
-intern_predicate(To,From:F/A):-!,
+:- module_transparent(expose_api/1).
+:- meta_predicate(expose_api(:)).
+:- module_transparent(expose_api/2).
+:- meta_predicate(expose_api(+,:)).
+expose_api(MFA):- expose_api(system,MFA).
+expose_api(To,From:F/A):-!,
   From:module_transparent(From:F/A),
-  From:export(From:F/A),To:export(From:F/A),To:export(From:F/A),
-  From:compile_predicates([F/A]),system:lock_predicate(From:F/A),
-  export(From:F/A),export(From:F/A),
-  pfc:export(From:F/A),pfc:export(From:F/A),
-  user:export(From:F/A),user:export(From:F/A),
-  baseKB:export(From:F/A),baseKB:export(From:F/A),
-  system:export(From:F/A),system:export(From:F/A),!.
-:- intern_predicate(system,intern_predicate/1).
-:- intern_predicate(system,intern_predicate/2).
+  
+  %  From:compile_predicates([F/A])
+  (From==baseKB-> true ;
+  ((predicate_property(From:F/A,dynamic)->true;system:lock_predicate(From:F/A)),
+  (mpred_database_term(F,A,_) -> system:lock_predicate(From:F/A);
+  (From:export(From:F/A),To:import(From:F/A),To:export(From:F/A))))),
+ % pfc:import(From:F/A),pfc:export(From:F/A),
+ % user:import(From:F/A),user:export(From:F/A),
+ % baseKB:import(From:F/A),baseKB:export(From:F/A),
+ % system:import(From:F/A),system:export(From:F/A),
+  !.
+:- expose_api(system,expose_api/1).
+:- expose_api(system,expose_api/2).
 
 
 scan_missed_source:-!.
@@ -317,8 +323,8 @@ scan_missed_source:-
   prolog_load_context(source,SFile),!,
   (SFile==File-> true; scan_missed_source(SFile)).
 
-:- export(pfc_lib:scan_missed_source/0).
-:- system:import(pfc_lib:scan_missed_source/0).
+:- export(scan_missed_source/0).
+:- system:import(scan_missed_source/0).
 
 scan_missed_source(SFile):-prolog_load_context(module,M),
    forall(source_file(Pred,SFile),scan_missed_source(M,Pred,SFile)).
@@ -335,8 +341,8 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg_pretty(visit_pfc_non
 '?='(ConsqIn):- fully_expand(ConsqIn,Consq),call_u(Consq),forall(mpred_why(Consq,Ante),dmsg_pretty(Ante)).
 '?=>'(AnteIn):- fully_expand(AnteIn,Ante),call_u(Ante),forall(mpred_why(Consq,Ante),dmsg_pretty(Consq)).
 
-:- lock_predicate(pfc:'?='/1).
-:- lock_predicate(pfc:'?=>'/1).
+:- lock_predicate(pfc_lib:'?='/1).
+:- lock_predicate(pfc_lib:'?=>'/1).
 
 :- thread_local(t_l:disable_px).
 
@@ -382,13 +388,6 @@ baseKB:mpred_skipped_module(eggdrop).
 :- dmsg_pretty("Ensuring PFC Loaded").
 :- endif.
 
-
-%:- user:pfc_lib:consult(library('file_scope')).
-% :- set_how_virtualize_file(bodies).
-:- module_transparent(baseKB:prologBuiltin/1).
-:- multifile baseKB:prologBuiltin/1.
-:- discontiguous baseKB:prologBuiltin/1.
-:- dynamic baseKB:prologBuiltin/1.
 
 :- set_prolog_flag(expect_pfc_file,never).
 /*
@@ -540,7 +539,7 @@ is_pfc_filename(_,File):- check_how_virtualize_file(false,File),!,fail.
 notrace_ex(X):- !,X,!.
 notrace_ex(X):- catch(notrace(X),_,rtrace(X)).
 
-:- fixup_exports.
+%:- fixup_exports.
 
 sub_atom(F,C):- sub_atom(F,_,_,_,C).
 
@@ -819,7 +818,7 @@ pfc_may_see_module(M):-clause_b(mtHybrid(M)).
 pfc_may_see_module(baseKB).
 pfc_may_see_module(M):- import_module(M,pfc_lib).
 
-:- fixup_exports.
+%:- fixup_exports.
 
 
 :- if(exists_source(library(logicmoo/retry_undefined))).
@@ -831,6 +830,14 @@ pfc_may_see_module(M):- import_module(M,pfc_lib).
 %:- if(\+ current_predicate(mpred_child/2)).
 :- include(library(dialect/pfc_ext/pfc_2_0_includes)).
 %:- endif.
+
+
+nt(A,B,C):- throw(nt(A,B,C)).
+pt(A,B):- throw(pt(A,B)).
+bct(A,B):- throw(bct(A,B)).
+:- lock_predicate('nt'/3).
+:- lock_predicate('pt'/2).
+:- lock_predicate('bct'/2).
 
 
 :- multifile(system:goal_expansion/4).
@@ -868,6 +875,19 @@ system:clause_expansion(I,O):-
 :-hook_database:export(pfc_lib:mpred_ain/1).
 :-hook_database:export(pfc_lib:mpred_aina/1).
 :-hook_database:export(pfc_lib:mpred_ainz/1).
+
+:- expose_api(add_pfc_to_module/3).
+:- module_transparent(export_most/1).
+:- meta_predicate(export_most(:)).
+export_most(M:F/A):- 
+  ignore((\+ atom_concat('$',_,F),
+  expose_api(M:F/A))).
+
+%:- module_property(pfc_lib,exports(PredList)),
+   %writeq(exports(PredList)),
+   %maplist(export_most,PredList).
+:- M=pfc_lib, forall(source_file(M:P,_),(cna_functor_safe(P,F,A),export_most(M:F/A))).
+   
 
 %:- fixundef_later.
 %:- set_prolog_flag(retry_undefined, kb_shared).

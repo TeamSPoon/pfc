@@ -2328,7 +2328,7 @@ pop_predicates(M:F/A,STATE):- functor(H,F,A),forall(member((H:-B),STATE),M:asser
 
 
 
-:- fixup_exports.
+%:- fixup_exports.
 
 mpred_loader_file.
 

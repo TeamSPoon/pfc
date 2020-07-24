@@ -345,6 +345,6 @@ prologHybridFact(G):- (var(G)->(mpred_fact_arity(F,A),safe_functor(G,F,A));true)
 
 
 
-:- fixup_exports.
+%:- fixup_exports.
 
 

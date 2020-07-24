@@ -228,6 +228,7 @@ load_file_some_type(M:File,Options):- call_from_module(M,must(load_files(M:File,
 % Prolog Load File.
 %
 
+% for loading wildcards
 maybe_load_pfc_files(Module:Spec, Options):- 
    \+ exists_source(Spec),
    findall(SpecO,(logicmoo_util_filesystem:filematch(Module:Spec,SpecO),exists_file(SpecO)),SpecOList),!,
@@ -244,7 +245,7 @@ maybe_load_pfc_files(Module:Spec, Options):- fail,
 %user:prolog_load_file(_,_):- set_file_lang(pl),set_lang(pl),fail.
 
 
-:- fixup_exports.
+%:- fixup_exports.
 
 :- module_transparent(user:prolog_load_file/1).
 

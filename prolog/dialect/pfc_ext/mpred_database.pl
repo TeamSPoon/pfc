@@ -1031,7 +1031,7 @@ map_first_arg(CM,Pred,(H;T),S):-!, map_first_arg(CM,Pred,H,S) ; map_first_arg(CM
 map_first_arg(CM,Pred,[H|T],S):-!, CM:apply(Pred,[H|S]), map_first_arg(CM,Pred,T,S).
 map_first_arg(CM,Pred,H,S):- CM:apply(Pred,[H|S]). 
 
-:- fixup_exports.
+%:- fixup_exports.
 
 % % :- ensure_loaded(logicmoo(util/rec_lambda)).
 
@@ -2100,7 +2100,8 @@ mpred_facts_and_universe(P):- (is_ftVar(P)->pred_head_all(P);true),call_u(P). % 
 % Repropagate.
 %                                   
 repropagate(_):-  notrace((check_context_module,fail)).
-repropagate(P):-  repropagate_0(P).
+repropagate(P):-  quietly(repropagate_0(P)).
+
 %repropagate(P):-  check_real_context_module,fail.
 
 repropagate_0(P):-  notrace(is_ftVar(P)),!.
@@ -2302,7 +2303,7 @@ retract_mu((H:-B)):-!, clause_u(H,B,R),erase(R).
 
 mpred_kb_ops_file.
 
-:- fixup_exports.
+%:- fixup_exports.
 
 
 

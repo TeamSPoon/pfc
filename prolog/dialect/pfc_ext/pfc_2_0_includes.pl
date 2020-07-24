@@ -40,7 +40,7 @@ user:message_hook(check(undefined_procedures,List),_Type,_Warn):-
 %:- include(('mpred_prolog_file.pl')).
 :- include(('mpred_terms.pl')).
 
-:- fixup_exports.
+%:- fixup_exports.
 
 % premodule(pldoc_man 0.00 sec, 2 clauses
 % premodule(gvlib).

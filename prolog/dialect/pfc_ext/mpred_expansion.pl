@@ -2584,7 +2584,7 @@ into_functor_form(Dbase_t,_X,F,A,Call):-Call  univ_safe  [Dbase_t,F|A].
 % these do not get defined!?%= :- kb_shared user_db:assert_user/2, user_db:grant_openid_server/2, user_db:retractall_grant_openid_server/2, user_db:retractall_user/2, user_db:assert_grant_openid_server/2.
 
 
-:- fixup_exports.
+%:- fixup_exports.
 
 :- export(mpred_expansion_file/0).
 mpred_expansion_file.

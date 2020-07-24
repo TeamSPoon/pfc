@@ -599,7 +599,7 @@ pp_db_supports(MM):-
 
 
 
-:- fixup_exports.
+%:- fixup_exports.
 
 mpred_listing_file.
 

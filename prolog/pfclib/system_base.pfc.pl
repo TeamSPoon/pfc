@@ -461,8 +461,9 @@ alwaysGaf(pfcLHS).
 %arity(is_never_type,1).
 %arity(prologSingleValued,1).
 %arity(Prop,1):- cwc, clause_b(ttRelationType(Prop)).
-arity(F,A):- cwc, is_ftNameArity(F,A), current_predicate(F/A),A>1.
-arity(F,1):- cwc, call_u(ttRelationType(F)). % current_predicate(F/1)).  % is_ftNameArity(F,1), , (col_as_unary(F);ttTypeType(F)), \+((call((dif:dif(Z,1))), arity(F,Z))).
+% :- rtrace.
+arity(F,A):- cwc,((is_ftNameArity(F,A), current_predicate(F/A),A>1)).
+arity(F,1):- cwc,((call_u(ttRelationType(F)))). % current_predicate(F/1)).  % is_ftNameArity(F,1), , (col_as_unary(F);ttTypeType(F)), \+((call((dif:dif(Z,1))), arity(F,Z))).
 
 
 arity(rtArgsVerbatum,1).

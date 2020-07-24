@@ -615,7 +615,7 @@ fix_mp(Why,I,UO):- quietly_must_ex(fix_mp(Why,I,U,O)),maybe_prepend_mt(U,O,UO).
 
 
 fix_mp(Why,G,M,GOO):-
-  must_ex((quietly_ex((fix_mp0(Why,G,M,GO),strip_module(GO,_,GOO))))).
+  ((quietly_ex((fix_mp0(Why,G,M,GO),strip_module(GO,_,GOO))))).
 
 meta_split(PQ,P,OP,Q):-PQ  univ_safe [OP,P,Q],arg(_,v('<-','==>','<==>','==>',(','),(';')),OP).
 
@@ -4263,7 +4263,7 @@ mpred_trigger_key(X,X).
 
 :- set_prolog_flag(expect_pfc_file,never).
 
-:- fixup_exports.
+%:- fixup_exports.
 %:- prolog_load_context(module,M),declare_pfc_support(M).
 %:- import_everywhere(baseKB).
 
