@@ -466,7 +466,7 @@ add_pfc_to_module(SM,TM,CM):-
    % Version 2.0
    %SM:use_module( library(logicmoo_utils)),
    %SM:use_module( library(pfc_iri_resource)),
-   wdmsg(add_pfc_to_module(Info)),
+   dmsg(add_pfc_to_module(Info)),
    maybe_ensure_abox(SM),
    asserta(baseKB:Info),
    '$set_typein_module'(CTM),
@@ -753,7 +753,7 @@ make_shared_multifile(CallerMt,PredMt,F,A):-
   make_shared_multifile(CallerMt,HomeM,F,A).
 
 make_shared_multifile(CallerMt,Home,F,A):- clause_bq(mtProlog(Home)),!,
-     wdmsg_pretty(mtSharedPrologCodeOnly_make_shared_multifile(CallerMt,Home:F/A)),!.
+     dmsg_pretty(mtSharedPrologCodeOnly_make_shared_multifile(CallerMt,Home:F/A)),!.
 
 make_shared_multifile(_CallerMt, baseKB,F,A):-  kb_global(baseKB:F/A),!.
 

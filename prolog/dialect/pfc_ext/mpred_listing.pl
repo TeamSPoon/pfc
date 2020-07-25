@@ -288,14 +288,18 @@ loop_check_just(G):-loop_check(G,ignore(arg(1,G,[]))).
 %
 % Show Predicate Info.
 %
-show_pred_info(PI):-
+show_pred_info(MPI):- catch(show_pred_info_0(MPI),E,wdmsg(cant_show_pred_info_0(E,MPI))).
+show_pred_info_0(MPI):-
+
    ((
-       pi_to_head_l(PI,Head),      
+      strip_module(MPI,M0,PI),
+      (PI==MPI->true;M=M0),
+       first:pi_to_head_l(PI,Head),      
        % doall(show_call(why,call_u(isa(Head,_)))),
         safe_functor(Head,F,_),
         doall(show_call(why,call_u(isa(F,_)))),
        ((current_predicate(_,M:Head), (\+ predicate_property(M:Head,imported_from(_))))
-          -> show_pred_info_0(M:Head); 
+          -> show_pred_info_00(M:Head); 
              wdmsg_pretty(cannot_show_pred_info(Head))))),!.
 
 
@@ -305,7 +309,7 @@ show_pred_info(PI):-
 %
 % show Predicate info  Primary Helper.
 %
-show_pred_info_0(Head):- 
+show_pred_info_00(Head):- 
         doall(show_call(why,predicate_property(Head,_))),
         (has_cl(Head)->doall((show_call(why,clause(Head,_))));quietly((listing(Head)))),!.
 

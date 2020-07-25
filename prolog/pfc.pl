@@ -8,7 +8,7 @@
   dynamic(baseKB:'using_pfc'/4),
   '$current_source_module'(SM),context_module(CM),'$current_typein_module'(TM),
   (Info='using_pfc'(SM,TM,CM,pfc_mod)), 
-  writeln(Info),
+  % writeln(Info),
   asserta(baseKB:Info))).
 :- endif.
 :- module(pfc_mod, [using_pfc_mod/0,
@@ -35,6 +35,7 @@
    prolog_load_context(file,File),
    asserta(lmcache:pfc_mod_filename(File)).
 
+:- create_prolog_flag(dmsg_level,never,[type(term),keep(true)]).
 :- use_module(library(pfc_lib)).
 
 
@@ -56,7 +57,7 @@ user:prolog_load_file(ModuleSpec, _Options):-
   '$current_typein_module'(TM),
   context_module(CM),
   Info='using_pfc'(SM,TM,CM,pfc_mod), 
-  writeln(Info),
+  % writeln(Info),
   asserta(baseKB:Info),
   add_pfc_to_module(SM,TM,CM))),
   fail.

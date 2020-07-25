@@ -1401,7 +1401,7 @@ temp_comp(H,B,PRED,OUT):- nonvar(H),term_variables(B,Vs1),Vs1\==[], term_attvars
 
 
 :- discontiguous db_expand_0/3.
-
+:- discontiguous(pfc_lib:db_expand_0/3).
 %% db_expand_0( ?Op, ^ Sent, -- SentO) is semidet.
 %
 % Database expand  Primary Helper.

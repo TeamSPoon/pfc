@@ -19,7 +19,8 @@
 :- include('mpred_header.pi').
 :- endif.
 
-:- user:use_module(library(clpfd),['#='/2]).
+%:- user:use_module(library(clpfd),['#='/2]).
+
 %% get_arity( :TermTerm, ?F, ?A) is semidet.
 %
 % Get Arity.
@@ -27,7 +28,10 @@
 get_arity(Term,F,A):- atom(Term),F=Term,!,ensure_arity(F,A).
 get_arity(F/A,F,A):-!,atom(F),ensure_arity(F,A),!,(A>0).
 get_arity('//'(F , A),F,A2):- must(integer(A)),!, atom(F), is(A2 , A+2), ensure_arity(F,A2),!,(A2>0).  
-get_arity('//'(F , A),F,A2):- use_module(library(clpfd),['#='/2]),!, atom(F), clpfd:call('#='(A2 , A+2)), ensure_arity(F,A2),!,(A2>0). 
+get_arity('//'(F , A),F,A2):- 
+  use_module(library(clpfd),['#='/2]),!, 
+  atom(F), clpfd:call('#='(A2 , A+2)), 
+  ensure_arity(F,A2),!,(A2>0). 
 get_arity(M:FA,F,A):-atom(M),!,get_arity(FA,F,A).
 get_arity(FA,F,A):- get_functor(FA,F,A),must(A>0).
 
@@ -2117,11 +2121,25 @@ repropagate_0(P0):- p0_to_mp(P0,P),
 repropagate_0(P):-  notrace((\+ predicate_property(_:P,_),dmsg_pretty(undefined_repropagate(P)))),dumpST,dtrace,!,fail.
 repropagate_0(P):- repropagate_meta_wrapper(P).
 
+predicates_from_atom(Mt,F,P):- var(Mt),!,
+  ((guess_pos_assert_to(Mt),Mt:current_predicate(F,M:P0)) *-> ((Mt==M)->P=P0;P=M:P0) ; 
+    ('$find_predicate'(F,PP),member(Mt:F/A,PP),functor(P0,F,A),P=Mt:P0)).
 
+predicates_from_atom(Mt,F,P):- 
+    (Mt:current_predicate(F,M:P0)*->true;
+      (catch('$find_predicate'(F,PP),_,fail),PP\=[],member(Mt:F/A,PP),accessable_mt(Mt,M),functor(P0,F,A))),
+      ((Mt==M)->P=P0;P=M:P0).
+
+accessable_mt(Mt,M):- M=Mt.
+accessable_mt(Mt,M):- clause_b(genlMt(Mt,M)).
+%accessable_mt(_Mt,baseKB).
+                             
+                                                                
 repropagate_atom(F):- 
      guess_pos_assert_to(ToMt),
-     ToMt:catch('$find_predicate'(F,PP),_,fail),PP\=[],!,
-     forall(member(M:F/A,PP),must((functor(Q,F,A),repropagate_0(M:Q)))).
+     forall(predicates_from_atom(ToMt,F,P),repropagate_0(P)).
+     %ToMt:catch('$find_predicate'(F,PP),_,fail),PP\=[],!,
+     %forall(member(M:F/A,PP),must((functor(Q,F,A),repropagate_0(M:Q)))).
 
 p0_to_mp(MP,SM:P0):- 
   strip_module(MP,M0,P0),

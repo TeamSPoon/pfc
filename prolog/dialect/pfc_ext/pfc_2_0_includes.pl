@@ -5,7 +5,7 @@ fixundef_call(G):- format(string(Out),'% Need   ~q.~n',[:- G]), wdmsg(Out), (gro
 module_of_pred(F/A,M,File):-
  with_no_retry_undefined(( current_module(M),
   current_predicate(M:F/A), functor(P,F,A), \+  /*ex*/predicate_property(M:P,imported_from(_)),!,
-  ignore(source_file(M:P,File)))).
+  ignore((source_file(M:P,File)->true;module_property(M,file(File)))))).
 
 fixundef([]):-!.                                                       
 fixundef([H|T]):- fixundef(H),fixundef(T).
@@ -13,10 +13,10 @@ fixundef(((M1:F2/A2) - Refs)):- !, %  clause_property(Ref,module(M1)), %  clause
    P2 = F2/A2,fixundef(undef(M1:P2,Refs)).
 
 fixundef(Info):-    
-   Info = undef(M1:P2,_Refs),
+   Info = undef(M1:P2,_Refs),                        
    (module_of_pred(P2,M2,File2) ->
      maplist(fixundef_call,[M2:export(M2:P2),M1:import(M2:P2),M1:autoload(File2,[P2])]);
-     (format(string(Out),'% ~q~n',[undef(M1:P2)]),wdmsg(Out),assert_if_new(fixundef_later(Info)))).
+     (format(string(Out),'% ~q~n',[undef(M1:P2)]),dmsg(Out),assert_if_new(fixundef_later(Info)))).
 
 fixundef_later:- with_no_retry_undefined((forall(retract(fixundef_later(M1P2)),fixundef(M1P2)),check:list_undefined)).
 
@@ -24,7 +24,8 @@ fixundef_later:- with_no_retry_undefined((forall(retract(fixundef_later(M1P2)),f
 :- multifile message_hook/3.
 :- module_transparent message_hook/3.
 
-user:message_hook(check(undefined_procedures,List),_Type,_Warn):-
+user:message_hook(check(undefined_procedures,List),_Type,_Warn):- fail, 
+   rtrace,
    once(fixundef(List)),
    fail.
 % ===================================================
@@ -34,7 +35,7 @@ user:message_hook(check(undefined_procedures,List),_Type,_Warn):-
 :- include(('mpred_core.pl')).
 %:- include(('mpred_gvars.pl')).
 :- include(('mpred_expansion.pl')).
-:- include(('mpred_loader.pl')).
+:- include(('mpred_loader.pl')).                                                        
 :- include(('mpred_database.pl')).
 :- include(('mpred_listing.pl')).
 %:- include(('mpred_prolog_file.pl')).

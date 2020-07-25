@@ -848,7 +848,7 @@ listing_i(MP):- % strip_module(MP,M,P),!,
 %  unify_listing_header(MMPI),prolog_listing_list_clauses(MMPI, none),!.
 %listing_mpi(_MP,MMPI):- !,unify_listing_header(MMPI), 
 %   prolog_listing:list_clauses(MMPI, none).
-listing_mpi(_MP,MM:PI):- forall(clause_u(MM:PI,B,R),foo:once(portray_hbr(MM:PI,B,R))).
+listing_mpi(_MP,MM:PI):- forall(clause_u(MM:PI,B,R),foo:once(xlisting_console:portray_hbr(MM:PI,B,R))).
 
 listing_u(P):-call_u_no_bc(xlisting((P,-lmcache,/*-spft,*/-xlisting))),!.
 
@@ -1612,7 +1612,7 @@ reduce_to_mfl((MFL,_),MFLO):- !,reduce_to_mfl(MFL,MFLO).
 mpred_post_update4(Was,P,S,What):-
   not_not_ignore_quietly_ex(( (get_mpred_is_tracing(P);get_mpred_is_tracing(S)),
   fix_mp(change(assert,post),P,M,PP),
-  must_ex(S=(F,T)),wdmsg_pretty(call_mpred_post4:- (Was,post1=M:PP,fact=F,trig=T,What)))),
+  must_ex(S=(F,T)),dmsg_pretty(call_mpred_post4:- (Was,post1=M:PP,fact=F,trig=T,What)))),
   fail.
 
 mpred_post_update4(identical,_P,_S,exact):-!.
@@ -2927,12 +2927,12 @@ mpred_call_1(_,G,_):- mpred_call_with_no_triggers(G).
 
 
 
-make_visible(R,M:F/A):- wdmsg_pretty(make_visible(R,M:F/A)),fail.
+make_visible(R,M:F/A):- dmsg_pretty(make_visible(R,M:F/A)),fail.
 make_visible(_,_):- !.
 make_visible(M,M:F/A):- quietly_ex(M:export(M:F/A)).
 make_visible(R,M:F/A):- must_det_l((M:export(M:F/A),R:import(M:F/A),R:export(M:F/A))).
 
-make_visible(R,M,F,A):- wdmsg_pretty(make_visible(R,M,F,A)),fail.
+make_visible(R,M,F,A):- dmsg_pretty(make_visible(R,M,F,A)),fail.
 make_visible(system,M,F,A):- trace_or_throw_ex(unexpected(make_visible(system,M,F,A))).
 make_visible(user,M,F,A):- trace_or_throw_ex(unexpected(make_visible(user,M,F,A))).
 make_visible(TM,M,F,A):- 
@@ -3887,7 +3887,7 @@ mpred_reseted_kb_check(Module):- with_exact_kb(Module,mpred_reseted_kb_check_0(M
 mpred_reseted_kb_check_0(Module):- \+ mpred_database_item(Module,_),!,mpred_trace_msg("Reset DB complete for ~p",[Module]).
 mpred_reseted_kb_check_0(Module):- mpred_trace_msg("Couldn't full mpred_reseted_kb_check(~w).~n",[Module]),
   pp_DB,mpred_database_item(Module,T),
-  wdmsg_pretty(mpred_database_item(Module,T)),!.
+  dmsg_pretty(mpred_database_item(Module,T)),!.
   %mpred_warn("Pfc database [~w] not empty: ~p.~n",[Module,T]),!,
   %mpred_error("Pfc database [~w] not empty: ~p.~n",[Module,T]),!.
   

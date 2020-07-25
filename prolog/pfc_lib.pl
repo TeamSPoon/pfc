@@ -128,8 +128,7 @@ user:prolog_load_file(ModuleSpec, Options):-
 :- system:use_module(library(memfile)).
 :- system:use_module(library(wfs),except([op(_,_,_)])).
 :- system:use_module(library(wfs),[call_residual_program/2,call_delays/2,delays_residual_program/2,answer_residual/2]).
-
-:- abolish(system:time,1).
+                                           abolish(system:time,1).
 :- system:use_module(library(statistics)).
 :- system:use_module(library(make)).
 :- system:use_module(library(check)).
@@ -865,7 +864,6 @@ system:clause_expansion(I,O):-
 :- set_prolog_flag(retry_undefined, module).
 
 :- set_prolog_flag(expect_pfc_file,unknown).
-:- baseKB:consult(library('pfclib/system_autoexec.pfc')).
 :- set_prolog_flag(expect_pfc_file,never).
 :- set_prolog_flag(pfc_booted,true).
 
@@ -888,6 +886,7 @@ export_most(M:F/A):-
    %maplist(export_most,PredList).
 :- M=pfc_lib, forall(source_file(M:P,_),(cna_functor_safe(P,F,A),export_most(M:F/A))).
    
+:- baseKB:ensure_loaded(library('pfclib/system_autoexec.pfc')).
 
 %:- fixundef_later.
 %:- set_prolog_flag(retry_undefined, kb_shared).

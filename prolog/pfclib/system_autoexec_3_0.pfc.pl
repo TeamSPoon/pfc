@@ -153,7 +153,7 @@ pfcSanityA.
 :- rtrace:import(baseKB:prologOrdered/1).
 ((mtHybrid(C)/(C\=baseKB)) ==> genlMt(C,baseKB),{ensure_abox(C),(C==user->dmsg_pretty(warn(mtHybrid(C)));true)}).
 
-:- wdmsg(loading_system_base()).
+:- dmsg(loading_system_base()).
 
 predicateTriggerType(kb_local).
 predicateTriggerType(kb_shared).

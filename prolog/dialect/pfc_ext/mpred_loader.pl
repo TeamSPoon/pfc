@@ -1053,7 +1053,7 @@ is_compiling:-is_compiling_clause;compiling.
 :- style_check(+discontiguous).
 :- style_check(-discontiguous).
 
-
+unload_this_file(File):- throw(unload_this_file(File)).
 unload_this_file(File):- 
    ignore((
    source_file(M:P,File),
