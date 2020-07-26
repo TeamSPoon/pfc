@@ -228,7 +228,7 @@ disable_yall:- multifile(yall:lambda_functor/1),
 :- disable_yall.
 */
 
-:- set_prolog_flag_until_eof(access_level,system).
+%:- set_prolog_flag_until_eof(access_level,system).
 
 /*
 % baseKB:startup_option(datalog,sanity). %  Run datalog sanity tests while starting
