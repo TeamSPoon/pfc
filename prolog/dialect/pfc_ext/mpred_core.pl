@@ -934,10 +934,18 @@ clause_u(H,B,R):-clause_u_visible(H,B,R),B \= inherit_above(_,_).
 module_clause(MHB):- strip_module(MHB,M,HB), expand_to_hb(HB,H,B),clause(M:H,B,R),clause_property(R,module(CM)),CM==M.
 module_clause(MHH,BM):- strip_module(MHH,M,HH), HB=(HH:-BM), expand_to_hb(HB,H,B),clause(M:H,B,R),clause_property(R,module(CM)),CM==M.
 
-clause_u_visible(M:H,B,R):- !, clause_i(M:H,B,R),clause_ref_module(R). % need? \+ reserved_body_helper(B) 
-clause_u_visible(MH,B,R):- Why = clause(clause,clause_u),
- quietly_ex(fix_mp(Why,MH,M,H)),
-   (clause(M:H,B,R)*->true;clause_i(M:H,B,R)).
+clause_u_visible(M:H, B, R) :-  
+    !, % need? \+ reserved_body_helper(B) 
+    clause_i(M:H, B, R),
+    clause_ref_module(R).
+clause_u_visible(MH, B, R) :-
+    Why=clause(clause, clause_u),
+    quietly_ex(fix_mp(Why, MH, M, H)),
+    (   clause(M:H, B, R)
+    *-> true
+    ;   clause_i(M:H, B, R)
+    ).
+
    
 % clause_u(H,B,Why):- has_cl(H),clause_u(H,CL,R),mpred_pbody(H,CL,R,B,Why).
 %clause_u(H,B,backward(R)):- R=(<-(H,B)),clause_u(R,true).
