@@ -628,6 +628,7 @@ never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
  %(P ,{mpred_positive_fact(P)})==>  \+ ~ P.
 %:- break.
 
+:- rtrace.
 
 P/mpred_positive_fact(P) ==> \+ ~P.
 (~P)/mpred_positive_fact(P) ==> (\+ P, nesc(~P)).

@@ -2267,7 +2267,7 @@ convert_side_effect_0a(I,I).
 %
 % Convert Side Effect 0b.
 %
-convert_side_effect_0b((OpData:-TRUE),Result):- is_true(TRUE),!,convert_side_effect_0a(OpData,Result),!.
+convert_side_effect_0b((OpData:-TRUE),Result):- is_src_true(TRUE),!,convert_side_effect_0a(OpData,Result),!.
 convert_side_effect_0b(suppose(OpData),Result):-!,convert_side_effect_0a(OpData,Result),!.
 convert_side_effect_0b(baseKB:OpData,Reproduce):- !,convert_side_effect_0a(OpData,Reproduce),!.
 convert_side_effect_0b(( :- OpData),( ( (Result)))):-!,convert_side_effect_0a(OpData,Result),!.

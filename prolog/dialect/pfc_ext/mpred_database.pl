@@ -637,7 +637,7 @@ pfc_provide_storage_op(change(retract,all),FactOrRule):- loop_check_nr(mpred_rem
 %
 %mpred_pbody(H,B,_R,fail,deduced(backchains)):- get_bc_clause(H,_H,B),!.
 %mpred_pbody(H,infoF(INFO),R,B,Why):-!,mpred_pbody_f(H,INFO,R,B,Why).
-%mpred_pbody(H,B,R,BIn,WHY):- is_true(B),!,BIn=B,get_why(H,H,R,WHY).
+%mpred_pbody(H,B,R,BIn,WHY):- is_src_true(B),!,BIn=B,get_why(H,H,R,WHY).
 %mpred_pbody(H,B,R,B,asserted(R,(H:-B))).
 
 
@@ -759,7 +759,7 @@ ain_minfo(G):-ain_minfo(assertz_if_new,G).
 % Assert If New Metainformation.
 %
 :- module_transparent(ain_minfo/2).
-ain_minfo(How,(H:-True)):-is_true(True),must(is_ftNonvar(H)),!,ain_minfo(How,H).
+ain_minfo(How,(H:-True)):-is_src_true(True),must(is_ftNonvar(H)),!,ain_minfo(How,H).
 ain_minfo(How,(H<-B)):- !,ain_minfo(How,(H:-infoF(H<-B))),!,get_bc_clause(H,Post),ain_minfo(How,Post),ain_minfo_2(How,(B:-infoF(H<-B))).
 ain_minfo(How,(B==>H)):- !,ain_minfo(How,(H:-infoF(B==>H))),!,ain_minfo_2(How,(B:-infoF(B==>H))).
 ain_minfo(How,(B<==>H)):- !,ain_minfo(How,(H:-infoF(B<==>H))),!,ain_minfo(How,(B:-infoF(B<==>H))),!.
@@ -1581,13 +1581,13 @@ mpred_slow_search.
 %
 ruleBackward(R,Condition):- call_u(( ruleBackward0(R,Condition),functor(Condition,F,_),
   \+ consequent_arg(_,v(call_u_no_bc,call,call_u),F))).
-%ruleBackward0(F,Condition):-clause_u(F,Condition),\+ (is_true(Condition);mpred_is_info(Condition)).
+%ruleBackward0(F,Condition):-clause_u(F,Condition),\+ (is_src_true(Condition);mpred_is_info(Condition)).
 
 %% ruleBackward0( +F, ?Condition) is semidet.
 %
 % Rule Backward Primary Helper.
 %
-ruleBackward0(F,Condition):- call_u((  '<-'(F,Condition),\+ (is_true(Condition);mpred_is_info(Condition)) )).
+ruleBackward0(F,Condition):- call_u((  '<-'(F,Condition),\+ (is_src_true(Condition);mpred_is_info(Condition)) )).
 
 %{X}:-dmsg_pretty(legacy({X})),call_u(X).
 */
@@ -2212,7 +2212,7 @@ ruleBackward(R,Condition,Support):- ruleBackward0(R,Condition,Support),
 % Rule Backward Primary Helper.
 %
 ruleBackward0(F,Condition,Support):- call_u('<-'(FF,Condition)),copy_term('<-'(FF,Condition),Support),FF=F.
-%ruleBackward0(F,Condition,(F :- Condition)):- clause_u(F,Condition),\+ (is_true(Condition);mpred_is_info(Condition)).
+%ruleBackward0(F,Condition,(F :- Condition)):- clause_u(F,Condition),\+ (is_src_true(Condition);mpred_is_info(Condition)).
 
 
 % ======================= 

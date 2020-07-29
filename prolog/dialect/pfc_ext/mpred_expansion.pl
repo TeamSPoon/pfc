@@ -613,7 +613,7 @@ instTypePropsToType(instTypeProps,ttSpatialType222).
 reduce_clause(Op,C,HB):-must(nonvar(C)),quietly_must(demodulize(Op,C,CB)),CB\=@=C,!,reduce_clause(Op,CB,HB).
 reduce_clause(_,C,C):- t_l:into_goal_code,!.
 reduce_clause(Op,clause(C, B),HB):-!,reduce_clause(Op,(C :- B),HB).
-reduce_clause(Op,(C:- B),HB):- is_true(B),!,reduce_clause(Op,C,HB).
+reduce_clause(Op,(C:- B),HB):- is_src_true(B),!,reduce_clause(Op,C,HB).
 reduce_clause(_,C,C).
 
 
@@ -1037,7 +1037,7 @@ fully_expand_clause(Op,Sent,SentO):- string(Sent),expand_kif_string_or_fail(Op,S
 fully_expand_clause(Op, HB, OUT):- 
   to_reduced_hb(Op,HB,H,B) ->
   (fully_expand_head(Op,H,HH) ->
-  (is_true(B) -> HH = OUT ;
+  (is_src_true(B) -> HH = OUT ;
     ( must(fully_expand_goal(Op,B,BB)),
       ((HH \= (_,_)) -> reduce_clause(Op,(HH:-BB),OUT) ;
          reduce_clause(Op,(H:-BB),OUT))))).
@@ -1285,7 +1285,7 @@ db_expand_final(_ ,isa(Args,Meta_argtypes),  meta_argtypes(Args)):-Meta_argtypes
 % covered db_expand_final(Op,Sent,Sent):- Sent  univ_safe  [_,A],atom(A),!.
 %db_expand_final(_,PARSE,ISA):- PARSE  univ_safe  [t,C,I],atom(C),atom(I),ISA  univ_safe  [C,I],!.
 % covered db_expand_final(_ ,NC,NC):-safe_functor(NC,_,1),arg(1,NC,T),(not_ftCompound(T)),!.
-db_expand_final(_, Sent,Sent):-is_true(Sent).
+db_expand_final(_, Sent,Sent):-is_src_true(Sent).
 % covered db_expand_final(_,Term,Term):- is_ftCompound(Term),safe_functor(Term,F,_),(cheaply_u(prologBuiltin(F));cheaply_u(rtArgsVerbatum(F))).
 % covered db_expand_final(_, arity(F,A),arity(F,A)):- not_ftCompound(F),not_ftCompound(A),!, (maybe_ain_arity(F,A)).
 %unused db_expand_final(_, tPred(V),tPred(V)):-!,fail, not_ftCompound(V),!.
@@ -1357,12 +1357,12 @@ db_expand_chain(_,V,_):-var(V),!,fail.
 db_expand_chain(_,M:PO,PO) :- atom(M),!.
 db_expand_chain(_,isa(I,Not),INot):-Not==not,!,INot   univ_safe   [Not,I].
 db_expand_chain(_,_,_):- t_l:into_goal_code,!,fail.
-db_expand_chain(_,(P:-B),P) :-is_true(B),!.
-db_expand_chain(_,B=>P,P) :-is_true(B),!.
-db_expand_chain(_,<=(P,B),P) :-is_true(B),!.
-db_expand_chain(_,P<==>B,P) :-is_true(B),!.
-db_expand_chain(_,B<==>P,P) :-is_true(B),!.
-db_expand_chain(_,P<-B,P) :-is_true(B),!.
+db_expand_chain(_,(P:-B),P) :-is_src_true(B),!.
+db_expand_chain(_,B=>P,P) :-is_src_true(B),!.
+db_expand_chain(_,<=(P,B),P) :-is_src_true(B),!.
+db_expand_chain(_,P<==>B,P) :-is_src_true(B),!.
+db_expand_chain(_,B<==>P,P) :-is_src_true(B),!.
+db_expand_chain(_,P<-B,P) :-is_src_true(B),!.
 %db_expand_chain(_,P,PE):-fail,cyc_to_clif_entry(P,PE).
 %db_expand_chain(_,('nesc'(P)),P) :- !.
 

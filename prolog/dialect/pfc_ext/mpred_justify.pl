@@ -447,7 +447,7 @@ mpred_why_try_each(P):- mpred_why_try_each_0(P),!.
 mpred_why_try_each(P):- mpred_why_sub(P),!.
 mpred_why_try_each(M:P :- B):- atom(M),call_from_module(M,mpred_why_try_each_0(P:-B)),!.
 mpred_why_try_each(M:P):- atom(M),call_from_module(M,mpred_why_try_each_0(P)),!.
-mpred_why_try_each(P :- B):- is_true(B),!,mpred_why_try_each(P ).
+mpred_why_try_each(P :- B):- is_src_true(B),!,mpred_why_try_each(P ).
 mpred_why_try_each(M:H):- strip_module(H,Ctx,P),P==H,Ctx==M,!,mpred_why_try_each(H).
 mpred_why_try_each(_):- format("~N No justifications. ~n").
 
