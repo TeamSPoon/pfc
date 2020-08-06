@@ -874,7 +874,7 @@ system:clause_expansion(I,O):-
 :-hook_database:export(pfc_lib:mpred_aina/1).
 :-hook_database:export(pfc_lib:mpred_ainz/1).
 
-:- expose_api(add_pfc_to_module/3).
+:- expose_api(add_pfc_to_module/6).
 :- module_transparent(export_most/1).
 :- meta_predicate(export_most(:)).
 export_most(M:F/A):- 

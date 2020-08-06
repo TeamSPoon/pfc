@@ -1,7 +1,7 @@
 %:- module(system_base_lite,[]).
-:- set_module(class(development)).
+%:- set_module(class(development)).
 %:- mpred_unload_file.
-%:- '$set_source_module'(baseKB).
+:- '$set_source_module'(baseKB).
 %:- ensure_abox(baseKB).
 :- baseKB:export(baseKB:never_assert_u/1).
 :- baseKB:export(baseKB:never_assert_u/2).
@@ -12,7 +12,7 @@
 :- pfc_lib:use_module(library(pfc_lib)).
 :- use_module(library(ctypes)).
 
-:- set_fileAssertMt(baseKB).
+%:- set_fileAssertMt(baseKB).
 %:- add_import_module(baseKB,pfc_lib,end).
 :- fix_baseKB_imports.
 %:- use_module(library(no_repeats)).
@@ -628,7 +628,7 @@ never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
  %(P ,{mpred_positive_fact(P)})==>  \+ ~ P.
 %:- break.
 
-:- rtrace.
+% :- rtrace.
 
 P/mpred_positive_fact(P) ==> \+ ~P.
 (~P)/mpred_positive_fact(P) ==> (\+ P, nesc(~P)).

@@ -451,13 +451,41 @@ ensure_abox_support_pt2_non_baseKB(M):-
    '$set_typein_module'(TM),
    '$set_source_module'(SM),!.
 
+pfc_loading_file(File):-
+   prolog_current_frame(Frame),
+   pfc_loading_frame_file(Frame,File),!.
 
+pfc_loading_frame_file(Frame,File):- 
+  arg(_,v(
+   system:'$compile_term'((:-use_module(_,_,_)),_,File),
+   system:'$compile_term'((:-use_module(_,_)),_,File),
+   system:'$compile_term'((:-use_module(_)),_,File),
+   system:'$compile_term'((:- _:use_module(_,_,_)),_,File),
+   system:'$compile_term'((:- _:use_module(_,_)),_,File),
+   system:'$compile_term'((:- _:use_module(_)),_,File),
 
-add_pfc_to_module(SM,TM,CM):- 
-   Info = 'using_pfc'(SM,TM,CM,pfc_load),
+   system:'$load_file'(File,_,_,_)),Try),
+  prolog_frame_attribute(Frame, parent_goal, Try),!.
+
+add_pfc_to_module(+,SM,TM,CM,File,Why):-  var(File), !,
+ ignore(pfc_loading_file(File)),
+ ignore((var(File), File = console, Module = SM)),
+ ignore((var(Module), Module=TM)),
+ add_pfc_to_module(Module,SM,TM,CM,File,Why).
+
+add_pfc_to_module(+,SM,TM,CM,File,Why):- !,
+ add_pfc_to_module(SM,SM,TM,CM,File,Why).
+
+add_pfc_to_module(Module,SM,TM,CM,File,Why):-
+    % pfc_mod:use_module(library(logicmoo_common)), 
+   ignore((var(File),pfc_loading_file(File))),
+   Info = 'using_pfc'(Module,SM,TM,CM,File,Why),
+   asserta(baseKB:Info),
+   dmsg(add_pfc_to_module(Info)),
    '$current_typein_module'(CTM),
    '$current_source_module'(CSM),
    %'context_module'(CCM),
+   
    '$set_typein_module'(TM),
    '$set_source_module'(SM),   
    %dmsg(add_pfc_to_module(Info,CSM,CTM)), 
@@ -466,11 +494,10 @@ add_pfc_to_module(SM,TM,CM):-
    % Version 2.0
    %SM:use_module( library(logicmoo_utils)),
    %SM:use_module( library(pfc_iri_resource)),
-   dmsg(add_pfc_to_module(Info)),
-   maybe_ensure_abox(SM),
-   asserta(baseKB:Info),
+   maybe_ensure_abox(Module),
    '$set_typein_module'(CTM),
    '$set_source_module'(CSM),!,
+   
    !.
 
 

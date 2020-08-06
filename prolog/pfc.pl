@@ -5,9 +5,9 @@
 
 */
 :- if((\+ current_prolog_flag(xref,true),
-  dynamic(baseKB:'using_pfc'/4),
+  dynamic(baseKB:'using_pfc'/6),
   '$current_source_module'(SM),context_module(CM),'$current_typein_module'(TM),
-  (Info='using_pfc'(SM,TM,CM,pfc_mod)), 
+  (Info='using_pfc'(+,SM,TM,CM,_,pfc_mod)), 
   % writeln(Info),
   asserta(baseKB:Info))).
 :- endif.
@@ -56,10 +56,8 @@ user:prolog_load_file(ModuleSpec, _Options):-
   '$current_source_module'(SM),
   '$current_typein_module'(TM),
   context_module(CM),
-  Info='using_pfc'(SM,TM,CM,pfc_mod), 
-  % writeln(Info),
-  asserta(baseKB:Info),
-  add_pfc_to_module(SM,TM,CM))),
+  prolog_load_context(file,File),
+  add_pfc_to_module(+,SM,TM,CM,File,pfc_mod))),
   fail.
 
 %! using_pfc_mod is det.
@@ -68,5 +66,6 @@ user:prolog_load_file(ModuleSpec, _Options):-
 %
 using_pfc_mod.
 
-:- baseKB:'using_pfc'(SM,TM,CM,pfc_mod) -> add_pfc_to_module(SM,TM,CM); true.
+:- baseKB:'using_pfc'(Mod,SM,TM,CM,File,Why) -> 
+   add_pfc_to_module(Mod,SM,TM,CM,File,Why); true.
 
