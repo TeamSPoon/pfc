@@ -470,7 +470,8 @@ pfc_loading_frame_file(Frame,File):-
 add_pfc_to_module(+,SM,TM,CM,File,Why):-  var(File), !,
  ignore(pfc_loading_file(File)),
  ignore((var(File), File = console, Module = SM)),
- ignore((var(Module), Module=TM)),
+ ignore((var(Module), Module=SM)),
+ dmsg(guessing_pfc(Module)),
  add_pfc_to_module(Module,SM,TM,CM,File,Why).
 
 add_pfc_to_module(+,SM,TM,CM,File,Why):- !,

@@ -2563,22 +2563,32 @@ expanded_different_1(G0,G1):- G0 \= G1,!.
 %
 % Converted To Functor Form.
 %
-into_functor_form(HFDS,M:X,M:O):- atom(M),! ,into_functor_form(HFDS,X,O),!.
-into_functor_form(HFDS,X,O):-call((( X  univ_safe  [F|A],into_functor_form(HFDS,X,F,A,O)))),!.
+into_functor_form(DBase_t,P,PO):- into_functor_form(call,=,DBase_t,P,PO).
+
+into_functor_form(call,V,T,M:P,M:PO):- atom(M),! ,into_functor_form(call,V,T,P,PO),!.
+into_functor_form(call,V,T,P,PO):- var(P),O univ_safe [T,P], call(V,O,PO).
+into_functor_form(_,_,T,P,PO):- var(P),PO univ_safe [T,P].
+into_functor_form(call,V,T,P,PO):- is_list(P),O univ_safe [T|P], call(V,O,PO).
+into_functor_form(C,V,T,P,PO):- is_list(P),maplist(into_functor_form(C,V,T),P,PO).
+
+into_functor_form(call,V,_,P,PO):- atomic(P),callable(P),O=P,call(V,O,PO).
+into_functor_form(_,_,_,P,PO):- \+ callable(P),P=PO.
+into_functor_form(C,V,T,P,PO):-must((( P  univ_safe [F|Args],into_functor_form(C,V,T,P,F,Args,PO)))),!.
 
 % TODO finish negations
 
 %= 	 	 
 
-%% into_functor_form( ?Dbase_t, ?X, ?Dbase_t, ?A, ?X) is semidet.
+%% into_functor_form( ?T, ?X, ?T, ?A, ?X) is semidet.
 %
 % Converted To Functor Form.
 %
-into_functor_form(Dbase_t,X,Dbase_t,_A,X):-!.
-into_functor_form(Dbase_t,_X,holds_t,A,Call):-Call  univ_safe  [Dbase_t|A].
-into_functor_form(Dbase_t,_X,t,A,Call):-Call  univ_safe  [Dbase_t|A].
-% into_functor_form(Dbase_t,_X,HFDS,A,Call):- a(is_holds_true,HFDS), Call  univ_safe  [Dbase_t|A].
-into_functor_form(Dbase_t,_X,F,A,Call):-Call  univ_safe  [Dbase_t,F|A].
+into_functor_form(_,_,T,P,F,_Args,P):- F==T,!.
+into_functor_form(_,V,T,_,F,Args,PO):- isBodyConnective(F),
+  maplist(into_functor_form(call,V,T),Args,OArgs), PO univ_safe [F|OArgs].
+into_functor_form(_,V,T,_,F,Args,PO):-is_holds_true0(F), O univ_safe  [T|Args], call(V,O,PO).
+% into_functor_form(T,_P,T,Args,Call):- a(is_holds_true,T), Call  univ_safe  [T|Args].
+into_functor_form(_,V,T,_,F,Args,PO):- O univ_safe [T,F|Args], call(V,O,PO).
 
 
 % these do not get defined!?%= :- kb_shared user_db:assert_user/2, user_db:grant_openid_server/2, user_db:retractall_grant_openid_server/2, user_db:retractall_user/2, user_db:assert_grant_openid_server/2.
