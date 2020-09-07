@@ -55,7 +55,8 @@ mpred_info(O):-call_u(mpred_info0(O)).
 mpred_info0(O):-
  with_output_to(user_error,
  ((dmsg_pretty("======================================================================="),  
-  quietly(call_with_inference_limit(ignore(on_xf_cont(deterministically_must(mpred_why_1(O)))),4000,_)),
+  %quietly(call_with_inference_limit(ignore(on_xf_cont(deterministically_must(mpred_why_1(O)))),4000,_)),
+  ignore(on_xf_cont(deterministically_must(mpred_why_1(O)))),
   dmsg_pretty("======================================================================="),
   must_maplist(mp_printAll(O),
   [   mpred_db_type(O,v),  
@@ -399,7 +400,8 @@ mpred_why_1_fallback(P):- mpred_why_sub(P).
 % mpred_why_1(N):- number(N),!, call(t_l:whybuffer(P,Js)), mpred_handle_why_command(N,P,Js).
 
 mpred_why_justs(P):- mpred_why_justs_1a(P)*->true;forall(mpred_why_justs_1b(P),true).
-  
+
+/*
 mpred_why_justs_1a(P) :-    
   color_line(green,2),!,
   findall(Js,((no_repeats(P-Js,(justifications(P,Js))),
@@ -407,11 +409,22 @@ mpred_why_justs_1a(P) :-
       ignore(pfcShowJustifications(P,Js)))))),Count),
   (Count==[]-> format("~N No justifications for ~p. ~n~n",[P]) ; true),
   color_line(green,2).
+*/
+mpred_why_justs_1a(P) :-    
+  color_line(green,2),
+  Found=fnd(0),!,
+  forall(justifications(P,Js),
+    (color_line(yellow,1),
+     nb_setarg(1,Found,1),
+     pfcShowJustifications(P,Js))),
+  (Found==fnd(0)-> format("~N No justifications for ~p. ~n~n",[P]) ; true),
+  color_line(green,2),!,
+  Found\==fnd(0).
 
 mpred_why_justs_1b(P) :- term_variables(P,VarsPC), 
-  ((call_u_no_bc(P),mpred_why_justs_1a(P))*-> 
-  (term_variables(P,VarsAC),(VarsPC==VarsAC->!;true));
-   mpred_why_justs_1a(P)).
+  ( (call_u_no_bc(P),mpred_why_justs_1a(P))
+   *-> (term_variables(P,VarsAC),(VarsPC==VarsAC->!;true))
+  ; mpred_why_justs_1a(P)).
 
 /*
 mpred_why_justs_2(P) :-    

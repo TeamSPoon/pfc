@@ -1172,10 +1172,11 @@ mpred_run_resume:- retractall(t_l:mpred_run_paused).
 
 without_running(G):- (t_l:mpred_run_paused->G;locally_tl(mpred_run_pause,G)).
 
-mpred_remove_file_support(_File):- !.
+%mpred_remove_file_support(_File):- !.
 mpred_remove_file_support(File):- 
-  forall((filematch(File,File0),freeze(Match,contains_var(File0,Match))),
-      forall(lookup_u(spft( W, Match, ax)),forall(retract_u(spft( W, Match, ax)),mpred_remove(W)))).
+  forall((must((filematch(File,File0),atom(File),freeze(Match,contains_var(File0,Match))))),
+      forall(lookup_u(spft( W, Match, AX),Ref),
+         (wdmsg(removing(spft( W, Match, AX))), erase(Ref),remove_if_unsupported(W)))).
 
 /*
 
