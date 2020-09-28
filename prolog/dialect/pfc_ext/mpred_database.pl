@@ -382,7 +382,7 @@ mpred_is_builtin(F):- current_predicate(F/A),A>0,functor(P,F,A),mpred_is_builtin
 
 
 
-:- thread_local((t_l:use_side_effect_buffer , t_l:verify_side_effect_buffer)).
+:- thread_local((t_l:use_side_effect_buffer/0 , t_l:verify_side_effect_buffer/0)).
 
 %% record_se is semidet.
 %

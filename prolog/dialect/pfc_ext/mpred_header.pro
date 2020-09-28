@@ -112,7 +112,7 @@ user:term_expansion/2,user:goal_expansion/2,system:term_expansion/2,system:goal_
 :- thread_local(t_l:in_dynamic_reader/1).
 :- thread_local(t_l:in_prolog_source_code/0).
 :- thread_local(t_l:infAssertedOnly/1).
-:- thread_local(t_l:infForward).
+:- thread_local(t_l:infForward/0).
 :- thread_local(t_l:infInstanceOnly/1).
 :- thread_local(t_l:infMustArgIsa/0).
 :- thread_local(t_l:infSecondOrder/0).

@@ -21,10 +21,10 @@
 % Hook To [user:prolog_load_file/2] For PFC Modules
 % Prolog Load File.
 %
-user:prolog_load_file(ModuleSpec, Options):-
+user:prolog_load_file(ModuleSpec, Options):- 
   \+ current_prolog_flag(xref,true),
   strip_module(ModuleSpec,Module,Spec),
-  (exists_source(Spec, Path)->sub_string(Path, _, _, _, '.pfc')),
+  catch(((exists_source(Spec, Path)->sub_string(Path, _, _, _, '.pfc'))),_,break),
   select(if(not_loaded),Options,Removed),!,
   load_files(Module:Spec,[if(always)|Removed]).
 
@@ -343,7 +343,7 @@ visit_pfc_non_file_ref(M,Ref):- system:clause(H,B,Ref),dmsg_pretty(visit_pfc_non
 :- lock_predicate(pfc_lib:'?='/1).
 :- lock_predicate(pfc_lib:'?=>'/1).
 
-:- thread_local(t_l:disable_px).
+:- thread_local(t_l:disable_px/0).
 
 %:- include(library('dialect/pfc_ext/mpred_header.pi')).
 :- set_prolog_flag_until_eof(access_level,system).

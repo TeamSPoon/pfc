@@ -367,7 +367,7 @@ mpred_contains_term(What,Inside):- (\+ \+ once((subst(Inside,What,foundZadooksy,
 %
 baseKB:hook_mpred_listing(What):- on_x_debug(mpred_list_triggers(What)).
 
-:- thread_local t_l:mpred_list_triggers_disabled.
+:- thread_local t_l:mpred_list_triggers_disabled/0.
 % listing(L):-locally(t_l:mpred_list_triggers_disabled,listing(L)).
 
 
