@@ -21,10 +21,11 @@
 % Hook To [user:prolog_load_file/2] For PFC Modules
 % Prolog Load File.
 %
-user:prolog_load_file(ModuleSpec, Options):- 
+user:prolog_load_file(ModuleSpec, Options):- fail,
   \+ current_prolog_flag(xref,true),
   strip_module(ModuleSpec,Module,Spec),
-  catch(((exists_source(Spec, Path)->sub_string(Path, _, _, _, '.pfc'))),_,break),
+  catch(exists_source(Spec, Path),error(_,_),fail),atomic(Path),
+  sub_string(Path, _, _, _, '.pfc'),
   select(if(not_loaded),Options,Removed),!,
   load_files(Module:Spec,[if(always)|Removed]).
 

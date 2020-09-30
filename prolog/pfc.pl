@@ -46,19 +46,19 @@
 % Hook To [user:prolog_load_file/2] For PFC Modules
 % Prolog Load File.
 %
-user:prolog_load_file(ModuleSpec, _Options):-
+user:prolog_load_file(ModuleSpec, _Options):-  fail,
  once((
   \+ current_prolog_flag(xref,true),
   strip_module(ModuleSpec,_Module,Spec),
-  exists_source(Spec, Path),    
+  catch(exists_source(Spec, Path),error(_,_),fail),atomic(Path),
   lmcache:pfc_mod_filename(Path),
-   \+ current_prolog_flag(xref,true),
   '$current_source_module'(SM),
   '$current_typein_module'(TM),
   context_module(CM),
   prolog_load_context(file,File),
   add_pfc_to_module(+,SM,TM,CM,File,pfc_mod))),
   fail.
+
 
 %! using_pfc_mod is det.
 % 
