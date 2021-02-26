@@ -12,15 +12,16 @@ use_old_names:- fail.
 :- meta_predicate(call_SYS(*)).
 :- meta_predicate(sys_assert(:)).
 :- meta_predicate(sys_clause(:,?)).
+:- meta_predicate(sys_clause_0(:,?)).
 :- meta_predicate(sys_clause(:,?,-)).
 :- meta_predicate(sys_asserta(:)).
 :- meta_predicate(sys_assertz(:)).
 :- meta_predicate(sys_retract(:)).
 :- meta_predicate(sys_retractall(:)).
 call_SYS(H):- call(H).
-dynamic_SYS(P):- functor(P,F,A),dynamic(F/A).
+dynamic_SYS(MP):- notrace((strip_module(MP,M,P),(P=(F/A)->true;functor(P,F,A)), M:dynamic(F/A))).
 sys_clause_0(H,B):- clause(H,B).
-sys_clause(H,B):- predicate_property(H,number_of_clauses(_)), clause(H,B).
+sys_clause(H,B):- notrace(predicate_property(H,number_of_clauses(_))), clause(H,B).
 sys_clause(H,B,R):- clause(H,B,R).
 sys_asserta(H):- asserta(H).
 sys_assertz(H):- assertz(H).

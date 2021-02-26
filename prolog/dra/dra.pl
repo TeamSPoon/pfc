@@ -64,7 +64,7 @@
           exit_dra_call/0,
           init_dra_call/0,
           process_dra_ective/1,
-					(table)/1,
+					(table_dra)/1,
 				  (coinductive0)/1,
 				  (coinductive1)/1,
           (tnot)/1,
@@ -73,7 +73,7 @@
           print_tables/0,
 
 
-          op( 1010, fy, 'table'  ),    % allow  " table p/k ,"
+          op( 1010, fy, 'table_dra'  ),    % allow  " table p/k ,"
           op( 1010, fy, 'old_first'  ),    % allow  " old_first p/k ,"
           op( 1010, fy, 'never_table'  ),    % allow  " traces  p/k ,"
           op( 1010, fy, 'coinductive0'  ),    % allow  " coinductive0 p/k ,"
@@ -138,7 +138,7 @@
    Some predicates are "tabled", because the user has declared them to be such
    by using an appropriate directive, e.g.,
 
-       :-table p/2 .
+       :-table_dra p/2 .
 
    All calls to a tabled predicate that are present in the interpreted program
    are called "tabled calls".  Instances of such calls are called "tabled
@@ -174,7 +174,7 @@
  
        a) Tabled and coinductive predicates should be declared as such in
           the program file, e.g.,
-              :-table       ancestor/2.
+              :-table_dra       ancestor/2.
               :-coinductive0  comember/2.
               :-coinductive1 comember/2.
  
@@ -412,7 +412,7 @@
            following example (which is simplistic in that the computation itself
            is trivial):
 
-               program:  :-table p/2.
+               program:  :-table_dra p/2.
                          p( A, A ).
                          p( a, b ).
 
@@ -668,7 +668,7 @@ add_clauses(H,B):- directive_source_file(File),'$compile_aux_clauses'([(H:-B)], 
 directive_source_file(File):-prolog_load_context(source,File),!.
 directive_source_file(File):-prolog_load_context(module,File),!.
 
-property_pred((table),is_tabled).
+property_pred((table_dra),is_tabled).
 property_pred(coinductive0,is_coinductive0).
 property_pred(coinductive1,is_coinductive1).
 property_pred((traces),is_traced).
@@ -678,7 +678,7 @@ property_pred(never_tabled,is_never_tabled).
 property_pred(hilog,is_hilog).
 property_pred(topl,is_topl).
 
-table(Mask):- process_dra_ective(table(Mask)).
+table_dra(Mask):- process_dra_ective(table_dra(Mask)).
 coinductive0(Mask):-process_dra_ective(coinductive0(Mask)).
 coinductive1(Mask):-process_dra_ective(coinductive1(Mask)).
 topl(Mask):-process_dra_ective(topl(Mask)).
@@ -1354,7 +1354,7 @@ abolish_tables :-                                        % invoked by top_level
 
 
 %  Administration  %
-:-op( 1010, fy, table       ).    % allow  ":-table p/k ."
+:-op( 1010, fy,table_dra       ).    % allow  ":-table_dra p/k ."
 :-op( 1010, fy, old_first    ).    % allow  ":-old_first p/k ."
 :-op( 1010, fy, never_table        ).    % allow  ":-traces  p/k ."
 :-op( 1010, fy, coinductive0  ).    % allow  ":-coinductive0 p/k ."
@@ -1372,7 +1372,7 @@ abolish_tables :-                                        % invoked by top_level
 legal_directive((coinductive( _))  ).
 % legal_directive( (coinductive0 _)  ).
 legal_directive( (coinductive1 _) ).
-legal_directive( (table _)       ).
+legal_directive( (table_dra _)       ).
 legal_directive( (dynamic _)      ).
 legal_directive( (old_first _)    ).
 legal_directive( (multifile _)    ).
@@ -2839,7 +2839,8 @@ complete_goal( Goal, Level ) :-
 
 :- endif.
 
-
+% convert 
+dra_term_expansion(replacement, (:- table(X)),(:- table_dra(X))).
 
 
 
@@ -2858,7 +2859,10 @@ complete_goal( Goal, Level ) :-
 
 :- retract(was_access_level(Was)),set_prolog_flag(access_level,Was).
 
-
+:- system:import(dra_term_expansion/2).
+system:term_expansion(I,IP,O,OP):-
+  current_prolog_flag(dra_tabling, Type),
+  dra_term_expansion(Type, I,O),IP=OP.
 
 
 :- if(fail).
@@ -2867,5 +2871,5 @@ complete_goal( Goal, Level ) :-
 :- check.
 :- gxref.
 :- listing(tnot).
-:- listing(table).
+:- listing(table_dra).
 :- endif.
