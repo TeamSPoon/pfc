@@ -340,7 +340,7 @@
    The tables (implemented as dynamic predicates of Prolog) are:
 
 
-   -- is_tabled( generic head )
+   -- is_tabled_dra( generic head )
    -- is_coinductive0( generic head )
    -- is_coinductive1( generic head )
 	 -- is_old_first( generic head )
@@ -638,8 +638,8 @@
 
 :- if(\+ current_predicate(system:'$exit_dra'/0)).
 
-system:'$exit_dra'.
-system:'$enter_dra'.
+system:'$exit_dra':-true.
+system:'$enter_dra':-true.
 
 :- endif.
 
@@ -668,7 +668,7 @@ add_clauses(H,B):- directive_source_file(File),'$compile_aux_clauses'([(H:-B)], 
 directive_source_file(File):-prolog_load_context(source,File),!.
 directive_source_file(File):-prolog_load_context(module,File),!.
 
-property_pred((table_dra),is_tabled).
+property_pred((table_dra),is_tabled_dra).
 property_pred(coinductive0,is_coinductive0).
 property_pred(coinductive1,is_coinductive1).
 property_pred((traces),is_traced).
@@ -686,7 +686,7 @@ topl(Mask):-process_dra_ective(topl(Mask)).
 make_db_pred(D,F):-
     DG=..[D,_],
     (predicate_property(M:DG,_)->true;(predicate_property(DG,imported_from(M))->true;M=system)),
-    module_transparent(M:DG), add_clauses(M:DG , process_dra_ective(DG)), 
+    module_transparent(M:F/1), add_clauses(M:DG , process_dra_ective(DG)), 
    ( \+ current_op(_,fy,user:D) -> op(1010,fy,user:D) ; true),
     dynamic(F/1),
     multifile(F/1).
@@ -726,20 +726,20 @@ set_meta(TGoal,is_coinductive1):- !,
     dra_asserta_new(is_coinductive1(TGoal)).
 
 set_meta(TGoal,is_never_tabled):- !,
-    dra_retract_all(is_tabled(TGoal)),
+    dra_retract_all(is_tabled_dra(TGoal)),
     dra_retract_all(is_old_first(TGoal)),
     dra_retract_all( (TGoal :- !, dra_call_tabled(TGoal) )),
     (is_never_tabled(TGoal)-> true ; dra_asserta_new(is_never_tabled(TGoal))).
 
-set_meta(TGoal,is_tabled):-
+set_meta(TGoal,is_tabled_dra):-
     dra_retract_all(is_never_tabled(TGoal)),
-    dra_asserta_new(is_tabled(TGoal)),
+    dra_asserta_new(is_tabled_dra(TGoal)),
     add_clauses( TGoal ,  (!, dra_call_tabled(TGoal))),
     functor(TGoal,F,A),discontiguous(F/A).    
     %interp(dra_call_tabled,TGoal).
 
 set_meta(TGoal,is_old_first):-
-    set_meta(TGoal,is_tabled),
+    set_meta(TGoal,is_tabled_dra),
     dra_asserta_new(is_old_first(TGoal)).
 
 set_meta(TGoal,Atom):- Assert=..[Atom,TGoal],
@@ -778,7 +778,7 @@ is_never_tabled(Pred):-functor(Pred,F,A),functor(TPred,F,A),asserta(is_table_ok(
 
 is_builtin(Pred) :-is_swi_builtin( Pred ).
 is_builtin(Pred) :-functor(Pred,F,_),atom_concat('$',_,F).
-% is_builtin(Pred) :-source_file(Pred,File),is_file_meta(File,is_never_tabled), \+ clause(is_tabled(Pred),true).
+% is_builtin(Pred) :-source_file(Pred,File),is_file_meta(File,is_never_tabled), \+ clause(is_tabled_dra(Pred),true).
 
 
 %------------------------------------------------------------------------------
@@ -1321,7 +1321,7 @@ is_variant_of_ancestor( Goal,
 
 :-dynamic (is_coinductive0)/1 .
 :-dynamic (is_coinductive1)/1 .
-:-dynamic (is_tabled)/1 .
+:-dynamic (is_tabled_dra)/1 .
 :-dynamic (is_old_first)/1 .
 :-dynamic (is_traced)/1.
 
@@ -1333,7 +1333,7 @@ dra_version('DRA ((c) UTD 2009) version 0.97 (beta), June 2011 - LOGICMOO').
 initialize_table:- abolish_tables,
       retractall( is_coinductive0( _ )  ),
       retractall( is_coinductive1( _ ) ),
-      retractall( is_tabled( _ )       ),
+      retractall( is_tabled_dra( _ )       ),
       retractall( is_old_first( _ )    ),
       dra_must((dra_version( Version ),
       dra_w( Version ))).
@@ -1476,7 +1476,7 @@ exit_dra_call:-
 
 
 % Print information about the number of steps and the answer table.
-print_statistics :-  quietly((      
+print_statistics :-  notrace((      
         dra_getval_flag( step_counter, NSteps ),
         dra_getval_flag( number_of_answers, NAns ),
         dra_getval_flag( old_table_size, OldNAns ),
@@ -1528,7 +1528,7 @@ print_statistics :-  quietly((
 
 
 dra_interp(CuttedOut, Goal, Stack, Hyp,  Level ):- assertion(nonvar(Goal)),
-   is_tabled(Goal),!,
+   is_tabled_dra(Goal),!,
    dra_call_tabled(Cutted, Goal, Stack, Hyp, Level ),
   ((var(Cutted);non_cutted(Goal,Cutted, CuttedOut))->true;(!,fail)).
 
@@ -1657,7 +1657,7 @@ dra_interp(CuttedOut, NeverTable, Stack, Hyp,  Level ):- % is_never_tabled(Never
 
 dra_interp(CuttedOut, Goal, Stack, Hyp,  Level ):- fail, is_cut_ok(Goal),
   % Should read the new default
-  set_meta(Goal,is_tabled),!,
+  set_meta(Goal,is_tabled_dra),!,
   dra_call_tabled(Cutted, Goal, Stack, Hyp,  Level ),
   ((var(Cutted);non_cutted(Goal,Cutted, CuttedOut))->true;(!,fail)). 
 
@@ -2870,6 +2870,6 @@ system:term_expansion(I,IP,O,OP):-
 :- make.
 :- check.
 :- gxref.
-:- listing(tnot).
-:- listing(table_dra).
+:- listing((tnot)/1).
+:- listing((table_dra)/1).
 :- endif.
