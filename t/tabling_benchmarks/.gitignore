@@ -1,0 +1,5 @@
+*~
+*.xwam
+*.qlf
+data
+times-[0-9]*.csv

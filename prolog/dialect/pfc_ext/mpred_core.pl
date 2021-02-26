@@ -445,7 +445,7 @@ decl_rt(RT) :-
    AIN = ((Head :- cwc, /* dmsg_pretty(warn(call(Head))), */ mpred_prop(M,FP,_,RT))),
    (clause_asserted(AIN) -> 
     (nop(listing(RT)),
-     sanity((predicate_property(RHead,number_of_clauses(CL)),predicate_property(RHead,number_of_rules(RL)),CL=RL)));
+     sanity(((predicate_property(RHead,number_of_clauses(CL))->true;CL=0),predicate_property(RHead,number_of_rules(RL)),CL=RL)));
      
   ((
    (current_predicate(RT/1)->
@@ -453,8 +453,8 @@ decl_rt(RT) :-
      RHead univ_safe [RT,F/A],
      forall(retract(RHead),ain(mpred_prop(M,F,A,RT))),
      forall(retract(Head),(get_arity(FP,F,A),sanity(atom(F)),sanity(integer(A)),ain(mpred_prop(M,F,A,RT)))),
-     sanity((predicate_property(RHead,number_of_clauses(CL)),CL==0)),
-     sanity((predicate_property(RHead,number_of_rules(RL)),RL==0)),
+     %sanity((predicate_property(RHead,number_of_clauses(CL)),CL==0)),
+     %sanity((predicate_property(RHead,number_of_rules(RL)),RL==0)),
      abolish(RT,1));true),
 
    asserta(AIN),
@@ -577,7 +577,8 @@ get_first_user_reason0(_,(M,ax)):-get_source_mfl(M).
 %:- pfc_lib:import(mpred_at_box:defaultAssertMt/1).
 
 :- module_transparent((get_source_mfl)/1).
-get_source_mfl(M):- current_why(M), nonvar(M) , M =mfl4(_VarNameZ,_,_,_).
+get_source_mfl(M):- current_why(M), nonvar(M), M =(mfl4(_VarNameZ,_,_,_),_).
+get_source_mfl(M):- current_why(M), nonvar(M), M =mfl4(_VarNameZ,_,_,_).
 get_source_mfl(mfl4(VarNameZ,M,F,L)):- defaultAssertMt(M), current_source_location(F,L),varnames_load_context(VarNameZ).
 
 get_source_mfl(mfl4(VarNameZ,M,F,L)):- defaultAssertMt(M), current_source_file(F:L),varnames_load_context(VarNameZ).
@@ -822,6 +823,7 @@ full_transform(Why,MH,MHH):- has_skolem_attrvars(MH),!,
 %full_transform(Op,==> CI,SentO):- nonvar(CI),!, full_transform(Op,CI,SentO).
 %full_transform(Op,isa(I,C),SentO):- nonvar(C),!,must_ex(fully_expand_real(Op,isa(I,C),SentO)),!.
 %full_transform(_,CI,SentO):- CI univ_safe [_C,I], atom(I),!,if_defined(do_renames(CI,SentO),CI=SentO),!.
+full_transform(Why,M:H,M:HH):- atom(M), !, notrace(full_transform(Why,H,HH)).
 full_transform(Why,MH,MHH):-
  must_det(fully_expand_real(change(assert,Why),MH,MHH)),!,
  nop(sanity(on_f_debug(same_modules(MH,MHH)))).
@@ -1185,13 +1187,13 @@ mpred_ain_cm(MTP,P,AM,SM):- mpred_ain_cm0(MTP,P,AM,SM),
   ((bad_assert_module(AM);bad_assert_module(SM))->(rtrace(mpred_ain_cm0(MTP,_P,_AM,_SM)),break);true).
 % mpred_ain_cm(SM:(==>(AM:P)),P,AM,SM):- SM\==AM, current_predicate(SM:spft/3),!,decl_assertable_module(SM).
 
-mpred_ain_cm0(AM:P,P,AM,SM):- nonvar(P),nonvar(P),decl_assertable_module(AM),guess_pos_source_to(SM),!.
+mpred_ain_cm0(AM:P,P,AM,SM):- nonvar(AM),nonvar(P),decl_assertable_module(AM),guess_pos_source_to(SM),!.
 mpred_ain_cm0(SM:(==>(AM:P)),==>P,AM,SM):- AM==SM,!,decl_assertable_module(AM).
 mpred_ain_cm0(SM:(==>(_:(AM:P :- B))),==>(AM:P :- SM:B),AM,SM):- nonvar(P), decl_assertable_module(AM).
 mpred_ain_cm0(SM:(==>(AM:P)),==>P,AM,AM):- decl_assertable_module(AM),!,decl_assertable_module(SM).
 mpred_ain_cm0((==>(AM:P)),==>P,AM,AM):- decl_assertable_module(AM),!.
 mpred_ain_cm0((==>(P)),==>P,AM,SM):- get_assert_to(AM), guess_pos_source_to(SM),!.
-mpred_ain_cm0(AM:(==>(P)),==>P,AM,AM):- !.
+mpred_ain_cm0(AM:(==>(P)),==>P,AM,AM):- decl_assertable_module(AM),!.
 mpred_ain_cm0(P,P,AM,SM):- get_assert_to(AM), guess_pos_source_to(SM),!.
 
 
@@ -1250,17 +1252,33 @@ mpred_ain(MTP,S):- mpred_ain_cm(MTP,P,AM,SM),
   mpred_ain_now4(SM,AM,P,S).
 
 
-mpred_ain_now4(SM,ToMt,P,(mfl4(VarNameZ,FromMt,File,Lineno),UserWhy)):- sanity(stack_check),ToMt \== FromMt,!,
+mpred_ain_now4(SM,ToMt,P,(mfl4(VarNameZ,FromMt,File,Lineno),UserWhy)):- 
+ fail,  sanity(stack_check),ToMt \== FromMt,!,
   mpred_ain_now4(SM,ToMt,P,(mfl4(VarNameZ,ToMt,File,Lineno),UserWhy)).
 
-mpred_ain_now4(SM0,AM0,PIn,S):- SM0==AM0, is_code_module(AM0),!,
+mpred_ain_now4(SM0,AM0,PIn,S):- 
+ fail, 
+  SM0==AM0, is_code_module(AM0),!,
   notrace((get_assert_to(AM),get_query_from(SM))),!,mpred_ain_now4(SM,AM,PIn,S).
-  
-mpred_ain_now4(SM,AM,PIn,S):- % module_sanity_check(SM),
-  nop(module_sanity_check(AM)),
+
+mpred_ain_now4(SM,AM,PIn,S):-   
+  true,
+  mpred_ain_now5(SM,AM,PIn,S).
+:- module_transparent(pnotrace/1).
+pnotrace(P):- !, call(P).
+pnotrace(P):- notrace(P).
+
+
+% rtrace_if_booted(G):- current_prolog_flag(pfc_booted,true),!, rtrace(G).
+rtrace_if_booted(G):- call(G).
+% trace_if_booted:- current_prolog_flag(pfc_booted,true),!,trace
+trace_if_booted:- true.
+
+mpred_ain_now5(SM,AM,PIn,S):- % module_sanity_check(SM),
   call_from_module(AM, 
     with_source_module(SM,
-      locally_tl(current_defaultAssertMt(AM), SM:mpred_ain_now(AM:PIn,S)))).
+      locally_tl(current_defaultAssertMt(AM), 
+         with_current_why(S,rtrace_if_booted(SM:mpred_ain_now(SM:PIn,S)))))).
 
 mpred_ain_now(PIn,S):-
   PIn=P, % must_ex(add_eachRulePreconditional(PIn,P)),  
