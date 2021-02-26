@@ -57,7 +57,7 @@ check_assert(MP):- strip_module(MP,M,P), pfcType(P,Type), (Type\=rule(_) -> true
 :- endif.
 */
 :- module_transparent('term_expansion_PFC'/3).
-
+:- use_module(library(dialect/pfc)).
 is_external_directive(module(_,_)).
 is_external_directive(encoding(_)).
 is_external_directive(trace).
@@ -66,10 +66,10 @@ is_exernal_term(end_of_file).
 %term_expansion_PFC('==>'(P,Q),(:- add_PFC(('<-'(Q,P))))).  % speed-up attempt
 term_expansion_PFC(_, P, _):- notrace(var(P)), !, fail.
 term_expansion_PFC(_, P, _):- is_exernal_term(P), !, fail.
-term_expansion_PFC(M, Term,(:- M:add_PFC(Term))):- pfcType(Term,rule(_)), !.
+term_expansion_PFC(M, Term, (:- M:add_PFC(Term))):- pfcType(Term,rule(_)), !.
 term_expansion_PFC(_, _, _):- \+ prolog_load_context(dialect, pfc), !, fail.
-term_expansion_PFC(M, P, _):- \+ pfctmp:module_dialect_pfc(_,_,_,M,_), !, fail, trace, throw(\+ pfctmp:module_dialect_pfc(term_expansion_PFC(M, P, _))), !, fail.
-term_expansion_PFC(M, (:- P),(:- M:call_PFC(P))):- !, \+ is_external_directive(P).
+term_expansion_PFC(M, (:- P), (:- M:call_PFC(P))):- !, \+ is_external_directive(P).
+term_expansion_PFC(M, P, _):- \+ expecting_pfc_dialect, print_message(warn, term_expansion_PFC(M, P, _)), !, fail.
 term_expansion_PFC(M, P, (:- M:add_PFC(P))).
 %   File   : pfccore.pl
 %   Author : Tim Finin, finin@prc.unisys.com
@@ -1825,5 +1825,5 @@ system:term_expansion(MIn, Out):-
    notrace(strip_module(MIn,MM,In)),
    notrace(nonvar(In)), 
    (MIn==In->prolog_load_context(module, M);MM=M),
-   term_expansion_PFC(M, In,Out).
+   term_expansion_PFC(M,In,Out).
 
