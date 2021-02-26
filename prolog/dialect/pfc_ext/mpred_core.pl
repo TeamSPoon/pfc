@@ -81,7 +81,6 @@
   mpred_remove1/2,
   check_never_assert/1,check_never_retract/1,
   oinfo/1,
-  why_was_true/1,
   mpred_fwc0/1,
   with_no_mpred_trace_exec/1,
   mpred_set_default/2,
@@ -4207,10 +4206,6 @@ oinfo(O):- xlisting((O, - spft, - ( ==> ), - pt , - nt , - bct , - mdefault, - l
 mpred_must(\+ G):-!, ( \+ call_u(G) -> true ; (log_failure(failed_mpred_test(\+ G)),!,ignore(why_was_true(G)),!,break_ex)).
 mpred_must(G):- (call_u(G) -> true ; (ignore(sanity(why_was_true(\+ G))),(log_failure(failed_mpred_test(G))),!,break_ex)).
 
-
-why_was_true((A,B)):- !,mpred_why(A),mpred_why(B).
-why_was_true(P):- predicate_property(P,dynamic),mpred_why(P),!.
-why_was_true(P):- dmsg_pretty(justfied_true(P)),!.
 
 
 mpred_load_term(:- module(_,L)):-!, call_u_no_bc(maplist(export,L)).

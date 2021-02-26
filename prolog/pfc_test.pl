@@ -13,7 +13,16 @@
 :- if((prolog_load_context(source,File),prolog_load_context(file,File));current_prolog_flag(xref,true)).
 :- module(pfc_test,[why_was_true/1,mpred_test/1]).
 :- endif.                             
-%:- use_module(library(must_trace)).
+
+:- system:use_module(library(prolog_stack)).
+:- system:use_module(library(listing)).
+:- system:use_module(library(lists)).
+:- system:use_module(library(must_trace)).
+
+:- use_module(library(prolog_stack)).
+:- use_module(library(listing)).
+:- use_module(library(lists)).
+:- use_module(library(must_trace)).
 
 %:- dumpST.
 
@@ -42,6 +51,11 @@ mpred_test(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(umt(PFC))*->true;
 mpred_why2(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(mpred_why(PFC))*->true;(test_red_lined(mpred_why(MPRED)),!,fail)).
 :- endif.
 
+:- export(why_was_true/1).
+
+why_was_true((A,B)):- !,mpred_why(A),mpred_why(B).
+why_was_true(P):- predicate_property(P,dynamic),mpred_why(P),!.
+why_was_true(P):- dmsg_pretty(justfied_true(P)),!.
 
 % mpred_test_fok(G):- source_file(_,_),!,mpred_test_fok0(G),!.
 :- meta_predicate(mpred_test_fok(:)).
