@@ -57,7 +57,7 @@ February 22, 2021
 
 ### 1 Introduction
 
-Prolog, like most logic programming languages, offers backward chaining as the only reasoning scheme. It is well known that sound and complete reasoning systems can be built using either exclusive backward chaining or exclusive forward chaining [[5](#bookmark=id.35nkun2)]. Thus, this is not a theoretical problem. It is also well understood how to ìimplementî forward reasoning using an exclusively backward chaining system and vice versa. Thus, this need not be a practical problem. In fact, many of the logic-based languages developed for AI applications [[3](#bookmark=id.1ksv4uv), [1](#bookmark=id.44sinio), [6](#bookmark=id.2jxsxqh), [2](#bookmark=id.z337ya)] allow one to build systems with both forward and backward chaining rules.
+Prolog, like most logic programming languages, offers backward chaining as the only reasoning scheme. It is well known that sound and complete reasoning systems can be built using either exclusive backward chaining or exclusive forward chaining [[5](#bookmark=id.35nkun2)]. Thus, this is not a theoretical problem. It is also well understood how to ‚Äúimplement‚Äù forward reasoning using an exclusively backward chaining system and vice versa. Thus, this need not be a practical problem. In fact, many of the logic-based languages developed for AI applications [[3](#bookmark=id.1ksv4uv), [1](#bookmark=id.44sinio), [6](#bookmark=id.2jxsxqh), [2](#bookmark=id.z337ya)] allow one to build systems with both forward and backward chaining rules.
 
 There are, however, some interesting and important issues which need to be addressed in order to provide the Prolog programmer with a practical, efficient, and well integrated facility for forward chaining. This paper describes such a facility, _Pfc_ , which we have implemented in standard Prolog.
 
@@ -129,7 +129,7 @@ In order to make this work, it is necessary to use the predicate _add/1 _rather 
 
 #### Compound Rules
 
-A slightly more complex rule is one in which the ruleís left hand side is a conjunction or disjunction of conditions:
+A slightly more complex rule is one in which the rule‚Äôs left hand side is a conjunction or disjunction of conditions:
 
 
 ```prolog
@@ -255,7 +255,7 @@ spouse(P1,P2).
 ```
 
 
-Unfortunately, this wonít work. The problem is that the conjoined condition
+Unfortunately, this won‚Äôt work. The problem is that the conjoined condition
 
 
 ```prolog
@@ -296,7 +296,7 @@ If an object is known to be at location _Loc_1 and an assertion is added that it
 
 #### The Right Hand Side
 
-The examples seen so far have shown a rules rhs as a single proposition to be ìaddedî to the database. The rhs of a _Pfc_ rule has some richness as well. The rhs of a rule is a conjunction of facts to be ìaddedî to the database and terms enclosed in brackets which represent conditions/actions which are executed. As a simple example, consider the conclusions we might draw upon learning that one person is the mother of another:
+The examples seen so far have shown a rules rhs as a single proposition to be ‚Äúadded‚Äù to the database. The rhs of a _Pfc_ rule has some richness as well. The rhs of a rule is a conjunction of facts to be ‚Äúadded‚Äù to the database and terms enclosed in brackets which represent conditions/actions which are executed. As a simple example, consider the conclusions we might draw upon learning that one person is the mother of another:
 
 
 ```prolog
@@ -318,7 +318,7 @@ spouse(X,Y), spouse(X,Z), {Y\==Z} ==>
 ```
 
 
-Each element in the rhs of a rule is processed from left to right ó assertions being added to the database with appropriate support and conditions being satisfied. If a condition can not be satisfied, the rest of the rhs is not processed.
+Each element in the rhs of a rule is processed from left to right ‚Äî assertions being added to the database with appropriate support and conditions being satisfied. If a condition can not be satisfied, the rest of the rhs is not processed.
 
 We would like to allow rules to be expressed as bi-conditional in so far a possible. Thus, an element in the lhs of a rule should have an appropriate meaning on the rhs as well. What meaning should be assigned to the conditional fact construction (e.g. _P/Q_) which can occur in a rules lhs? Such a term in the rhs of a rule is interpreted as a _conditioned assertion_. Thus the assertion _P/Q _will match a condition _P_' in the lhs of a rule only if _P _and _P_' unify and the condition _Q _is satisfiable. For example, consider the rules that says that an object being located at one place is reason to believe that it is not at any other place:
 
@@ -390,9 +390,9 @@ father(X,Y), parent(Y,Z)
 ```
 
 
-with the desired results. If we do add this rule and assert _grandfather(john,mary)_, then _Pfc_ will add the two independent assertions _father(john,_) _(i.e. ìJohn is the father of everyoneî) and _parent(_,mary) _(i.e. ìEveryone is Maryís parentî).
+with the desired results. If we do add this rule and assert _grandfather(john,mary)_, then _Pfc_ will add the two independent assertions _father(john,_) _(i.e. ‚ÄúJohn is the father of everyone‚Äù) and _parent(_,mary) _(i.e. ‚ÄúEveryone is Mary‚Äôs parent‚Äù).
 
-Another problem associated with the use of the Prolog database is that assertions containing variables actually contain ìcopiesî of the variables. Thus, when the conjunction
+Another problem associated with the use of the Prolog database is that assertions containing variables actually contain ‚Äúcopies‚Äù of the variables. Thus, when the conjunction
 
 
 ```prolog
@@ -410,19 +410,19 @@ is evaluated, the assertion `father(adam,_G032) `is added to the database, where
 
 _________________________________________________________________________________________
 
-**add_PFC(+P) **
+**)** 
 
 The fact or rule P is added to the database with support coming from the user. If the fact already exists, an additional entry will not be made (unlike Prolog). If the facts already exist with support from the user, then a warning will be printed if _pfcWarnings _is true. Add/1 always succeeds.
 
 _________________________________________________________________________________________
 
-**call_PFC(?P) **
+**)** 
 
-The predicate _call_PFC/_1 is the proper way to access terms in the _Pfc_ database. **call_PFC(P) **succeeds if **P** is a term in the current pfc database after invoking any backward chaining rules or is provable by Prolog.
+The predicate _call_PFC/_1 is the proper way to access terms in the _Pfc_ database. **)** succeeds if **P** is a term in the current pfc database after invoking any backward chaining rules or is provable by Prolog.
 
 _________________________________________________________________________________________
 
-**rem_PFC(+P) **
+**)** 
 
 The first fact (or rule) unifying with _P _has its user support removed. _rem/_1 will fail if no there are no _Pfc_ added facts or rules in the database which match. If removing the user support from a fact leaves it unsupported, then it will be removed from the database.
 
@@ -436,15 +436,15 @@ ________________________________________________________________________________
 
 .
 
-**pfcReset **
+**t** 
 
 Resets the _Pfc_ database by trying to retract all of the prolog clauses which were added by calls to add or by the forward chaining mechanism.
 
 _________________________________________________________________________________________
 
-**Term expansions **
+**s** 
 
-_Pfc_ defines term expansion procedures for the operators _=ø_, _°= _and _°=ø _so that you can have things like the following in a file to be consulted
+_Pfc_ defines term expansion procedures for the operators _=¬ø_, _¬°= _and _¬°=¬ø _so that you can have things like the following in a file to be consulted
 
 
 ```prolog
@@ -469,50 +469,50 @@ This section describes predicates to control the forward chaining search strateg
 
 _________________________________________________________________________________________
 
-**pfcSearch(P) **
+**)** 
 
 This predicate is used to set the search strategy that _Pfc_ uses in doing forward chaining. The argument should be one of direct,depth,breadth.
 
 _________________________________________________________________________________________
 
-**pfcTmsMode(Mode) **
+**)** 
 
 This predicate controls the method used for truth maintenance. The three options are none,local,cycles. Calling pfcTmsMode with an instantiated argument will set the mode to that argument.
 
 
 
-*   **none **means that no truth maintenance will be done.
-*   **local **means that limited truth maintenance will be done. Specifically, no cycles will be checked.
-*   **cycles **means that full truth maintenance will be done, including a check that all facts are well grounded.
+*   **e** means that no truth maintenance will be done.
+*   **l** means that limited truth maintenance will be done. Specifically, no cycles will be checked.
+*   **s** means that full truth maintenance will be done, including a check that all facts are well grounded.
 
 _________________________________________________________________________________________
 
-**pfcHalt **
+**t** 
 
 Immediately stop the forward chaining process.
 
 _________________________________________________________________________________________
 
-**pfcRun **
+**n** 
 
 Continue the forward chaining process.
 
 _________________________________________________________________________________________
 
-**pfcStep **
+**p** 
 
 Do one iteration of the forward chaining process.
 
 _________________________________________________________________________________________
 
-**pfcSelect(P) **
+**)** 
 
 Select next fact for forward chaining (user defined)
 
 _________________________________________________________________________________________
 
 **pfcWarnings** \
-**pfcNoWarnings **
+**s** 
 
 _________________________________________________________________________________________
 
@@ -522,27 +522,27 @@ ________________________________________________________________________________
 The following predicates are used to access the tms information associated with _Pfc_ facts.
 
 **justification_PFC(+P,-J)** \
-**justifications_PFC(+P,-Js) **
+**)** 
 
 _________________________________________________________________________________________
 
-**justification_PFC(P,J) **is true if one of the justifications for fact P is J, where J is a list of _Pfc_ facts and rules which taken together deduce P. Backtracking into this predicate can produce additional justifications. If the fact was added by the user, then one of the justifications will be the list **[user]**. **justifications_PFC(P,Js) **is provided for convenience. It binds **Js **to a list of all justifications returned by **(**justification/2).
+**)** is true if one of the justifications for fact P is J, where J is a list of _Pfc_ facts and rules which taken together deduce P. Backtracking into this predicate can produce additional justifications. If the fact was added by the user, then one of the justifications will be the list **[user]**.** justifications_PFC(P,Js) **s** Js **y** (**justification/2).
 
-**base_PFC(+P,-Ps) **
+**)** 
 
 _________________________________________________________________________________________
 
-**assumptions_PFC(+P,-Ps) **
+**)** 
 
 _________________________________________________________________________________________
 
 **pfcChild(+P,-Q)** \
-**pfcChildren(+P,-Qs) **
+**)** 
 
 _________________________________________________________________________________________
 
 **pfcDescendant(+P,-Q)** \
-**pfcDescendants(+P,-Qs) **
+**)** 
 
 _________________________________________________________________________________________
 
@@ -554,17 +554,17 @@ ________________________________________________________________________________
 **pfcTrace** \
 **pfcTrace(+Term)** \
 **pfcTrace(+Term,+Mode)** \
-**pfcTrace(+Term,+Mode,+Condition) **
+**)** 
 
 This predicate causes the addition and/or removal of _Pfc_ terms to be traced if a specified condition is met. The arguments are as follows:
 
 
 
-*   term - Specifies which terms will be traced. Defaults to **_ **(i.e. all terms).
-*   mode - Specifies whether the tracing will be done on the addition (i.e. **add**, removal (i.e. **rem**) or both (i.e. **_**) of the term. Defaults to **_**.
-*   condition - Specifies an additional condition which must be met in order for the term to be traced. For example, in order to trace both the addition and removal of assertions of the age of people just when the age is greater than 100, you can do **pfcTrace(age(_,N),_,Nø100)**.
+*   term - Specifies which terms will be traced. Defaults to **_** (i.e. all terms).
+*   mode - Specifies whether the tracing will be done on the addition (i.e. **add**.** rem**.** _**o** _**.
+*   condition - Specifies an additional condition which must be met in order for the term to be traced. For example, in order to trace both the addition and removal of assertions of the age of people just when the age is greater than 100, you can do **pfcTrace(age(_,N),_,N¬ø100)**.
 
-Thus, calling **pfcTrace **will cause all terms to be traced when they are added and removed from the database. When a fact is added or removed from the database, the lines
+Thus, calling **e** will cause all terms to be traced when they are added and removed from the database. When a fact is added or removed from the database, the lines
 
 
 ```prolog
@@ -580,15 +580,15 @@ ________________________________________________________________________________
 **pfcUntrace** \
 **pfcUntrace(+Term)** \
 **pfcUntrace(+Term,+Mode)** \
-**pfcUntrace(+Term,+Mode,+Condition) **
+**)** 
 
-The **pfcUntrace **predicate is used to stop tracing _Pfc_ facts. Calling **pfcUntrace(P,M,C) **will stop all tracing specifications which match. The arguments default as described above.
+The **e** predicate is used to stop tracing _Pfc_ facts. Calling **)** will stop all tracing specifications which match. The arguments default as described above.
 
 _________________________________________________________________________________________
 
 **pfcSpy(+Term)** \
 **pfcSpy(+Term,+Mode)** \
-**pfcSpy(+Term,+Mode,+Condition) **
+**)** 
 
 These predicates set spypoints, of a sort.
 
@@ -612,7 +612,7 @@ ________________________________________________________________________________
 
 
 
-**- showState **
+**e** 
 
 
 <p id="gdcalert2" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: Definition term(s) &uarr;&uarr; missing definition? </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert3">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
@@ -627,7 +627,7 @@ Displays the state of Pfc, including the queue, all triggers, etc.
 _________________________________________________________________________________________
 
 **pfcFact(+P)** \
-**pfcFacts(+L) **
+**)** 
 
 pfcFact(P) unifies P with a fact that has been added to the database via _Pfc_?ou can backtrack into it to find more facts. pfcFacts(L) unified L with a list of all of the facts asserted by add.
 
@@ -635,7 +635,7 @@ ________________________________________________________________________________
 
 **pfcPrintDb** \
 **pfcPrintFacts** \
-**pfcPrintRules **
+**s** 
 
 These predicates display the the entire _Pfc_ database (facts and rules) or just the facts or just the rules.
 
@@ -695,7 +695,7 @@ default((P ==> Q)),{pfcAtom(Q)} ==> (P, ~not(Q) ==> Q).
 ```
 
 
-where **pfcAtom(X) **holds if **X **is a ìlogical atomî with respect to _Pfc_ (i.e . not a conjunction, disjunction, negation, etc).
+where **)** holds if **X** is a ‚Äúlogical atom‚Äù with respect to _Pfc_ (i.e . not a conjunction, disjunction, negation, etc).
 
 One we have defined this, we can use it to state that birds fly by default, but penguins do not.
 
@@ -732,9 +732,9 @@ isa hierarchy. roles. types. classification. etc.
 
 #### 4.4 Maintaining Functional Dependencies
 
-One useful thing that _Pfc_ can be used for is to automatically maintain function Dependencies in the light of a dynamic database of fact. The builtin truth maintenance system does much of this. However, it is often useful to do more. For example, suppose we want to maintain the constraint that a particular object can only be located in one place at a given time. We might record an objects location with an assertion **at(Obj,Loc) **which states that the current location of the object **Obj **is the location **Loc**.
+One useful thing that _Pfc_ can be used for is to automatically maintain function Dependencies in the light of a dynamic database of fact. The builtin truth maintenance system does much of this. However, it is often useful to do more. For example, suppose we want to maintain the constraint that a particular object can only be located in one place at a given time. We might record an objects location with an assertion **)** which states that the current location of the object **j** is the location **Loc**.
 
-Suppose we want to define a _Pfc_ rule which will be triggered whenever an **at/2 **assertion is made and will remove any previous assertion about the same objectís location. Thus to reflect that an object has moved from location A to location B, we need merely add the new information that it is at location B. If we try to do this with the _Pfc_ rule:
+Suppose we want to define a _Pfc_ rule which will be triggered whenever an **2** assertion is made and will remove any previous assertion about the same object‚Äôs location. Thus to reflect that an object has moved from location A to location B, we need merely add the new information that it is at location B. If we try to do this with the _Pfc_ rule:
 
 
 ```prolog
@@ -746,7 +746,7 @@ at(Obj,Loc2),
 ```
 
 
-we may or may not get the desired result. This rule will in fact maintain the constraint that the database have at most one **at/2 **assertion for a given object, but whether the one kept is the old or the new depends on the particular search strategy being used by _Pfc_In fact, under the current default strategy, the new assertion will be the one retracted.
+we may or may not get the desired result. This rule will in fact maintain the constraint that the database have at most one **2** assertion for a given object, but whether the one kept is the old or the new depends on the particular search strategy being used by _Pfc_In fact, under the current default strategy, the new assertion will be the one retracted.
 
 We can achieve the desired result with the following rule:
 
@@ -759,9 +759,9 @@ at(Obj,NewLoc),
 ```
 
 
-This rule causes the following behavior. Whenever a new assertion **at(O,L) **is made, a Prolog search is made for an assertion that object O is located at some other location. If one is found, then it is removed.
+This rule causes the following behavior. Whenever a new assertion **)** is made, a Prolog search is made for an assertion that object O is located at some other location. If one is found, then it is removed.
 
-We can generalize on this rule to define a meta-predicate **function(P) **which states that the predicate whose name is **P **represents a function. That is, **P **names a relation of arity two whose first argument is the domain of the function and whose second argument is the functionís range. Whenever an assertion **P(X,Y) **is made, any old assertions matching **P(X,_) **are removed. Here is the _Pfc_ rule:
+We can generalize on this rule to define a meta-predicate **)** which states that the predicate whose name is **P** represents a function. That is, **P** names a relation of arity two whose first argument is the domain of the function and whose second argument is the function‚Äôs range. Whenever an assertion **)** is made, any old assertions matching **)** are removed. Here is the _Pfc_ rule:
 
 
 ```prolog
@@ -817,7 +817,7 @@ merge(T1,T2,N) :-
 ```
 
 
-The result is that adding the fact **function(P,N) **declares P to be the name of a relation of arity N such that only the most recent assertion of the form _P_(_a<sub>1</sub>,a<sub>2</sub>,Ö,a<sub>n-1</sub>,a<sub>n</sub>_) for a given set of constants _a<sub>1</sub>,Ö,a<sub>n-1</sub>_ will be in the database. The following examples show how we might use this to define a predicate **current_president/1 **that identifies the current U.S. president and **governor/3 **that relates state, a year and the name of its governor.
+The result is that adding the fact **)** declares P to be the name of a relation of arity N such that only the most recent assertion of the form _P_(_a<sub>1</sub>,a<sub>2</sub>,‚Ä¶,a<sub>n-1</sub>,a<sub>n</sub>_) for a given set of constants _a<sub>1</sub>,‚Ä¶,a<sub>n-1</sub>_ will be in the database. The following examples show how we might use this to define a predicate **1** that identifies the current U.S. president and **3** that relates state, a year and the name of its governor.
 
 
 ```prolog
@@ -864,7 +864,7 @@ yes
 
 #### 4.5 Spreadsheets
 
-One common kind of constraints is often found in spreadsheets in which one value is determined from a set of other values in which the size of the set can vary. This is typically found in spread sheets where one cell can be defined as the sum of a column of cells. This example shows how this kind of constraint can be defined in _Pfc_ as well. Suppose we have a relation **income/4 **which records a personís income for a year by source. For example, we might have assertions like:
+One common kind of constraints is often found in spreadsheets in which one value is determined from a set of other values in which the size of the set can vary. This is typically found in spread sheets where one cell can be defined as the sum of a column of cells. This example shows how this kind of constraint can be defined in _Pfc_ as well. Suppose we have a relation **4** which records a person‚Äôs income for a year by source. For example, we might have assertions like:
 
 
 ```prolog
@@ -875,7 +875,7 @@ income(smith,consulting,1989,2000).
 ```
 
 
-We might also with to have a relation **total_income/3 **which records a personís total income for each year. Given the database above, this should be:
+We might also with to have a relation **3** which records a person‚Äôs total income for each year. Given the database above, this should be:
 
 
 ```prolog
@@ -932,9 +932,9 @@ prove_by_contradiction(P) :-
 ```
 
 
-This procedure works as follows. In trying to prove P, succeed immediately if P is a know fact. Otherwise, providing that **not(P) **is not a know fact, add it as a fact and see if this gives rise to a proof for **(**P). if it did, then we have derived a contradiction from assuming that **not(P) **is true and **P **must be true. In any case, remove the temporary assertion **not(P)**.
+This procedure works as follows. In trying to prove P, succeed immediately if P is a know fact. Otherwise, providing that **)** is not a know fact, add it as a fact and see if this gives rise to a proof for **(**t** not(P) **d** P **n** not(P)**.
 
-In order to do the example above, we need to add the following rule or **or **and a rule for general implication (encoded using the infix operator **==ø**) which generates a regular forward chaining rule and its counterfactual rule.
+In order to do the example above, we need to add the following rule or **r** and a rule for general implication (encoded using the infix operator **==¬ø**) which generates a regular forward chaining rule and its counterfactual rule.
 
 
 ```prolog
@@ -978,7 +978,7 @@ Adding not(x)==>not(q)
 ```
 
 
-Then, we can call **prove_by_contradiction/1 **to show that **p **must be true:
+Then, we can call **1** to show that **p** must be true:
 
 
 ```prolog
@@ -1031,8 +1031,4 @@ Dislike having tons of forks that are several commits behind the main git repo?
 
 Be old school - Please ask to be added to logicmoo and Contribute directly !
 Still, we wont stop you from doing it the Fork+PullRequest method
-
-
-
-
 
