@@ -1795,15 +1795,19 @@ pfcSelectJustificationNode(Js,Index,Step) :-
   nth0(StepNo,Justification,Step).
  
 
-:-source_location(S,_),prolog_load_context(module,FM),
+:- 
+ source_location(S,_),
+ prolog_load_context(module,FM),
  forall(source_file(M:H,S),
   ignore((functor(H,F,A),
    \+ atom_concat('$',_,F),
-      M:export(M:F/A),
+   upcase_atom(F,U), \+ downcase_atom(F,U),
+   M:export(M:F/A),
+   \+ atom_concat('__aux',_,F),
    \+ predicate_property(M:H,transparent),
-%    dra_w(M:H),
-   % (format(user_error,'~N~q.~n',[FM:module_transparent(M:F/A)]),
-   \+ atom_concat('__aux',_,F), FM:module_transparent(M:F/A)))).
+   % dra_w(M:H),
+   % format(user_error,'~N~q.~n',[FM:module_transparent(M:F/A)]),
+   FM:module_transparent(M:F/A)))).
 
 
 %= fcTmsMode is one of {none,local,cycles} and controles the tms alg.
@@ -1813,11 +1817,11 @@ pfcSelectJustificationNode(Js,Index,Step) :-
 :- pfcDefault(pfcSearch(_), pfcSearch(direct)).
 
 
-:- multifile(term_expansion/2).
-:- module_transparent(term_expansion/2).
+:- multifile(system:term_expansion/2).
+:- module_transparent(system:term_expansion/2).
 %:- meta_predicate(term_expansion(:,-)).
-:- export(term_expansion/2).
-term_expansion(MIn, Out):- 
+%:- export(system:term_expansion/2).
+system:term_expansion(MIn, Out):- 
    notrace(strip_module(MIn,MM,In)),
    notrace(nonvar(In)), 
    (MIn==In->prolog_load_context(module, M);MM=M),

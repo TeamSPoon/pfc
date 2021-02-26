@@ -55,15 +55,25 @@ expects_dialect/1:
 % pfc_debug(Info):- ignore(notrace((debug(pfc(dialect),'~N% ~p.',[Info])))).
 pfc_debug(_):-!.
 pfc_debug(I):- ignore(notrace(pfc_debug0(I))).
-pfc_debug0(state):-!,prolog_load_context(dialect,D),
-  G=pfctmp:module_dialect_pfc(_,_,_,M,_),predicate_property(G,number_of_clauses(NC)),
-  pfc_debug(prolog_load_context(dialect,D,NC)),
-  forall((G,current_op(X,fy,(M:'-'))), pfc_debug(current_op(X,fy,(M:'-'))+G)),
-  current_op(X,fy,-),
-  pfc_debug(current_op(X,fy,-)),!.
 
-pfc_debug0(X):- format(user_error,'~N% PFC_DEBUG: ~q.~n',[X]),flush_output(user_error).
-  
+pfc_debug0(state):- !, pfc_state.
+pfc_debug0(X):- format(user_error,'~N% PFC_DEBUG: ~p.~n',[X]),flush_output(user_error).
+
+show_all_debug_pfc(G):- ignore(((G *-> pfc_debug0(G);pfc_debug0(failed(G))),fail)).
+
+
+pfc_state:-!,
+  show_all_debug_pfc(prolog_load_context(dialect,_)),
+  G = pfctmp:module_dialect_pfc(_,_,_,M,_),
+  OP = current_op(_,fy,(M:'-')),
+  show_all_debug_pfc((G,OP)),
+  show_all_debug_pfc(predicate_property(G,number_of_clauses(_))),
+  M = user, show_all_debug_pfc((OP)).
+
+:- export(pfc:pfc_state/0).
+:- system:import(pfc:pfc_state/0).
+
+
 
 %%	pfc_dialect_expansion(+In, +Out)
 %
@@ -216,7 +226,7 @@ pfc:setup_dialect:- pfc_expects_dialect(pfc).
    
 
 pfc_operators(M,[
-%op(300,fy,(M:'-')),
+op(300,fy,(M:'-')),
 %op(1200,xfx,(M:('=-=>'))),              
 op(500,fx, M: ('~')),
 op(1050,xfx,M: ('==>')),
@@ -305,11 +315,10 @@ user:goal_expansion(In, Out) :-
     pfc_dialect_expansion(In, Out).
 
 
-:- multifile(term_expansion/2).
-:- module_transparent(term_expansion/2).
-%:- meta_predicate(term_expansion(:,-)).
-%:- export(term_expansion/2).
-term_expansion(MIn, Out):- 
+:- multifile(system:term_expansion/2).
+:- module_transparent(system:term_expansion/2).
+% :- export(system:term_expansion/2).
+system:term_expansion(MIn, Out):- 
    notrace(strip_module(MIn,MM,In)),
    notrace(nonvar(In)), 
    (MIn==In->prolog_load_context(module, M);MM=M),
