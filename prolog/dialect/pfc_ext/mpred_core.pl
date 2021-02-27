@@ -210,6 +210,21 @@ nr_lc_ex(G):- no_repeats(loop_check(G,trace_or_throw(looped(G)))).
 :- system:use_module(library(ordsets)).
 :- system:use_module(library(oset)).
 
+pfcReset :- mpred_reset.
+add_PFC(P) :- mpred_ain(   P).
+rem_PFC(P) :- mpred_ain(\+ P).
+add_PFC(P,S) :- mpred_ain(   P,S).
+rem_PFC(P,S) :- mpred_ain(\+ P,S).
+
+rem2_PFC(P) :- mpred_remove2(P).
+remove_PFC(P) :- mpred_remove(P).
+
+% rem2_PFC(P,S) :- mpred_remove2(P,S).
+% remove_PFC(P,S) :- mpred_remove(P,S).
+
+
+
+
 %:- include(library(pfc_test)).
 :- meta_predicate
       %call_mp(+,*,+),
@@ -4212,6 +4227,11 @@ mpred_load_term(:- module(_,L)):-!, call_u_no_bc(maplist(export,L)).
 mpred_load_term(:- TermO):- call_u_no_bc(TermO).
 mpred_load_term(TermO):-mpred_ain_object(TermO).
 
+:- export(why_was_true/1).
+
+why_was_true((A,B)):- !,mpred_why(A),mpred_why(B).
+why_was_true(P):- predicate_property(P,dynamic),mpred_why(P),!.
+why_was_true(P):- dmsg_pretty(justfied_true(P)),!.
 
 %
 %  These control whether or not warnings are printed at all.

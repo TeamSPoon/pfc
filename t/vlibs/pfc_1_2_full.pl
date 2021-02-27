@@ -2,48 +2,38 @@
 %   Author : Tim Finin, finin@umbc.edu
 %   Updated: 10/11/87, ...
 %   Purpose: consult system file for ensure
-:- module(pfc_1_8,[call_PFC/1, add_PFC/1, decl_module/1, mpred_why/1 ]).
-% 
-% , add_PFC/2, ('<==>')/2, ('==>')/2, pfcType/2
-pfcVersion(1.8).
+% :- module(baseKB,[add_PFC/1, add_PFC/2]).
 
+pfcVersion(1.2).
 
-mpred_positive_literal(P):- pfcPositiveLiteral(P).
-mpred_trace_exec:- pfcWatch.
-mpred_notrace_exec:- pfcNoWatch.
-
-only_support1.
-use_old_names:- fail.
-dmiles_pfc.
+only_support1:- fail.
+use_old_names.
 
     :- volatile(pfctmp:module_dialect_pfc/5).
 :- thread_local(pfctmp:module_dialect_pfc/5).
 
-:- meta_predicate(call_SYS(+, *)).
-:- meta_predicate(sys_assert(+,:)).
-:- meta_predicate(sys_clause(+,:,?)).
-:- meta_predicate(sys_clause_0(+,:,?)).
-:- meta_predicate(sys_clause(+,:,?,-)).
-:- meta_predicate(sys_asserta(+,:)).
-:- meta_predicate(sys_assertz(+,:)).
-:- meta_predicate(sys_retract(+,:)).
-:- meta_predicate(sys_retractall(+,:)).
-
-call_SYS(Type,H):-  check_type(Type,H), call(H).
-dynamic_SYS(MP):- check_type(_T,MP), notrace((strip_module(MP,M,P),(P=(F/A)->true;functor(P,F,A)), M:dynamic(F/A))).
-sys_clause_0(Type,H,B):- check_type(Type,H), clause(H,B).
-sys_clause(Type,H,B):-  check_type(Type,H), notrace(predicate_property(H,number_of_clauses(_))), clause(H,B).
-sys_clause(Type,H,B,R):-  check_type(Type,H), clause(H,B,R).
-sys_asserta(Type,H):- check_type(Type,H), asserta(H).
-sys_assertz(Type,H):- check_type(Type,H), assertz(H).
-sys_assert(Type,H):- check_type(Type,H), assert(H).
-sys_retract(Type,H):- check_type(Type,H), retract(H).
-sys_retractall(Type,H):- check_type(Type,H), retractall(H).
-bagof_PFC(T,C,L):- check_type(_Type,C), bagof(T,C,L)*->true;L=[].
-setof_PFC(T,C,L):- check_type(_Type,C), bagof(T,C,L)*->true;L=[].
-
-
-check_type(Expected,MP):- strip_module(MP,M,P), pfcType(P,Type), ((Type\=rule(_),Expected=Type) -> true; (trace, throw(M:check_type(Type->Expected,P)))).
+:- meta_predicate(call_SYS(*)).
+:- meta_predicate(call_u(*)).
+:- meta_predicate(sys_assert(:)).
+:- meta_predicate(sys_clause(:,?)).
+:- meta_predicate(sys_clause_0(:,?)).
+:- meta_predicate(sys_clause(:,?,-)).
+:- meta_predicate(sys_asserta(:)).
+:- meta_predicate(sys_assertz(:)).
+:- meta_predicate(sys_retract(:)).
+:- meta_predicate(sys_retractall(:)).
+call_u(H):- call(H).
+call_SYS(H):- call(H).
+dynamic_SYS(MP):- notrace((strip_module(MP,M,P),(P=(F/A)->true;functor(P,F,A)), M:dynamic(F/A))).
+sys_clause_0(H,B):- clause(H,B).
+sys_clause(H,B):- notrace(predicate_property(H,number_of_clauses(_))), clause(H,B).
+sys_clause(H,B,R):- clause(H,B,R).
+sys_asserta(H):- asserta(H).
+sys_assertz(H):- assertz(H).
+sys_assert(H):- assert(H).
+sys_retract(H):- retract(H).
+sys_retractall(H):- retractall(H).
+bagof_PFC(T,C,L):- bagof(T,C,L)*->true;L=[].
 
 %   File   : pfcsyntax.pl
 %   Author : Tim Finin, finin@prc.unisys.com
@@ -63,20 +53,22 @@ check_type(Expected,MP):- strip_module(MP,M,P), pfcType(P,Type), ((Type\=rule(_)
 :- op(1100,fx,('=>')).
 :- endif.
 */
-:- module_transparent('term_expansion_PFC'/3).
-:- use_module(library(dialect/pfc)).
+:- module_transparent('term_expansion_PFC'/2).
+
 is_external_directive(module(_,_)).
 is_external_directive(encoding(_)).
 is_external_directive(trace).
 is_exernal_term(begin_of_file).
 is_exernal_term(end_of_file).
 %term_expansion_PFC('==>'(P,Q),(:- add_PFC(('<-'(Q,P))))).  % speed-up attempt
-term_expansion_PFC(_, P, _):- notrace(var(P)), !, fail.
+term_expansion_PFC(MP, O):- strip_module(MP,M,P), term_expansion_PFC(M,P,O).
 term_expansion_PFC(_, P, _):- is_exernal_term(P), !, fail.
-term_expansion_PFC(M, Term, (:- M:add_PFC(Term))):- pfcType(Term,rule(_)), !.
+term_expansion_PFC(M, Term,(:- M:add_PFC(Term))):- pfcType(Term,rule(_)),!.
+
+
+term_expansion_PFC(M, _, _):- \+ pfctmp:module_dialect_pfc(_,_,M,_,_), !, fail.
 term_expansion_PFC(_, _, _):- \+ prolog_load_context(dialect, pfc), !, fail.
-term_expansion_PFC(M, (:- P), (:- M:call_PFC(P))):- !, fail, \+ is_external_directive(P).
-term_expansion_PFC(M, P, _):- \+ expecting_pfc_dialect, !, fail, print_message(warn, term_expansion_PFC(M, P, _)), !, fail.
+term_expansion_PFC(M, (:- P),(:- M:call_PFC(P))):- !, \+ is_external_directive(P).
 term_expansion_PFC(M, P, (:- M:add_PFC(P))).
 %   File   : pfccore.pl
 %   Author : Tim Finin, finin@prc.unisys.com
@@ -88,42 +80,54 @@ term_expansion_PFC(M, P, (:- M:add_PFC(P))).
 
 :- use_module(library(lists)).
 
+%:- dynamic ('==>')/2.
+%:- dynamic ('::::')/2.
+%:- dynamic '<==>'/2.
+'==>'(P,Q):- throw(illegal_PFC('==>'(P,Q))).
+'<==>'(P,Q):- throw(illegal_PFC('<==>'(P,Q))).
+'<-'(P,Q):- throw(illegal_PFC('<-'(P,Q))).
+'::::'(P,Q):- throw(illegal_PFC('::::'(P,Q))).
+'==>'(P):- throw(illegal_PFC('==>'(P))).
 
-system:'==>'(P,Q):- throw(illegal_PFC('==>'(P,Q))).
-system:'<==>'(P,Q):- throw(illegal_PFC('<==>'(P,Q))).
-system:'<-'(P,Q):- throw(illegal_PFC('<-'(P,Q))).
-system:'::::'(P,Q):- throw(illegal_PFC('::::'(P,Q))).
-system:'==>'(P):- throw(illegal_PFC('==>'(P))).
-
+:- dynamic 'pt'/2.
+:- dynamic 'nt'/3.
+:- dynamic 'bt'/2.
+:- dynamic fcUndoMethod/2.
+:- dynamic fcAction/2.
+:- dynamic fcTmsMode/1.
+:- dynamic pfcQueue/1.
+:- dynamic pfcDatabase/1.
+:- dynamic pfcHaltSignal/0.
+:- dynamic pfcDebugging/0.
+:- dynamic pfcSelect/1.
+:- dynamic pfcSearch/1.
 
 %=% initialization of global assertons 
 
-%= pfcDefault/2 initialized a global assertion.
+%= pfcDefault/1 initialized a global assertion.
 %=  pfcDefault(P,Q) - if there is any fact unifying with P, then do 
 %=  nothing, else assert Q.
 
 pfcDefault(GeneralTerm,Default) :-
-  pfcType(GeneralTerm,Type),
-  (sys_clause(Type,GeneralTerm,true) -> true ; sys_assert(Type,Default)).
+  sys_clause(GeneralTerm,true) -> true ; sys_assert(Default).
 
+%= fcTmsMode is one of {none,local,cycles} and controles the tms alg.
+:- pfcDefault(fcTmsMode(_), fcTmsMode(cycles)).
+
+% Pfc Search strategy. pfcSearch(X) where X is one of {direct,depth,breadth}
+:- pfcDefault(pfcSearch(_), pfcSearch(direct)).
 
 
 % 
 :- if(use_old_names).
 add(X) :- add_PFC(X).
 :- endif.
-%= add_PFC/2 and post_PFC/2 are the main ways to assert new clauses into the
+%= add_PFC/2 and post_PFC/2 are the main ways to sys_assert new clauses into the
 %= database and have forward reasoning done.
 
 %= add_PFC(P,S) asserts P into the dataBase with support from S.
 
-add_PFC(P) :- get_user_why(module,UWhy), add_PFC(P,UWhy).
-
-get_user_PFC(module,mod(M)):- !, prolog_load_context(module,M).
-get_user_PFC(check, mod(_)).
-get_user_why(Check,(User, User)):- get_user_PFC(Check,User).
-
-get_god_why((god, god)).
+add_PFC(P) :- add_PFC(P,(user,user)).
 
 :- if(use_old_names).
 add_PFC(('=>'(P)),S) :- add_PFC(P,S).
@@ -165,11 +169,10 @@ post1(P,S) :- post1_PFC(P,S).
 post1_PFC(P,S) :- 
   %= db pfcAddDbToHead(P,P2),
   % removeOldVersion_PFC(P),
+  dynamic_SYS(P),
   pfcAddSupport(P,S),
-  pfcAdd(P),
-  /*
-  pfcUnique(Type,P),
-  sys_assert(meta,P),*/
+  pfcUnique(P),
+  sys_assert(P),
   pfcTraceAdd(P,S),
   !,
   pfcEnqueue(P,S),
@@ -183,31 +186,29 @@ post1_PFC(_,_).
 %= (P:-C) and adds the Db context.
 %=
 
+:- dynamic(pfcCurrentDb/1).
 pfcAddDbToHead(P,NewP) :-
-  call_SYS(meta, pfcCurrentDb(Db)),
+  pfcCurrentDb(Db),
   (Db=true        -> NewP = P;
    P=(Head:-Body) -> NewP = (Head :- (Db,Body));
    true   -> NewP = (P :- Db)).
 % was otherwise
 
-% pfcUnique(Type,X) is true if there is no assertion X in the prolog db.
-pfcUnique(Type,P):- dmiles_pfc, !, \+ pfc_clause(Type,P).
-pfcUnique(Type,(Head:-Tail)) :- 
+% pfcUnique(X) is true if there is no sys_assertion X in the prolog db.
+
+pfcUnique((Head:-Tail)) :- 
   !, 
-  \+ sys_clause(Type,Head,Tail).
-pfcUnique(Type,P) :-
+  \+ sys_clause(Head,Tail).
+pfcUnique(P) :-
   !,
-  \+ sys_clause(Type,P,true).
+  \+ sys_clause(P,true).
 
-
-current_search_pfc(Mode):- call_SYS(meta, pfcSearch(Mode)),!.
-current_search_pfc(direct).
 
 pfcEnqueue(P,S) :-
-  current_search_pfc(Mode)
+  pfcSearch(Mode) 
     -> (Mode=direct  -> fc_PFC(P) ;
-	Mode=depth   -> pfcAsserta(meta,pfcQueue(P),S) ;
-	Mode=breadth -> pfcAssertZ(meta,pfcQueue(P),S) ;
+	Mode=depth   -> pfcAsserta(pfcQueue(P),S) ;
+	Mode=breadth -> pfcAssert(pfcQueue(P),S) ;
 	true/*otehrwise*/  -> pfcWarn("Unrecognized pfcSearch mode: ~q", Mode))
      ; pfcWarn("No pfcSearch mode").
 
@@ -224,7 +225,7 @@ removeOldVersion_PFC('::::'(Identifier,Body)) :-
   
 removeOldVersion_PFC('::::'(Identifier,Body)) :-
   nonvar(Identifier),
-  sys_clause(meta,'::::'(Identifier,OldBody),_),
+  sys_clause('::::'(Identifier,OldBody),_),
   \+(Body=OldBody),
   rem_PFC('::::'(Identifier,OldBody)),
   !.
@@ -234,13 +235,13 @@ removeOldVersion_PFC(_).
 
 % 
 
-% pfcRun compute the deductive closure of the module database. 
+% pfcRun compute the deductive closure of the current database. 
 % How this is done depends on the searching mode:
 %    direct -  fc has already done the job.
 %    depth or breadth - use the pfcQueue mechanism.
 
 pfcRun :-
-  (\+ current_search_pfc(direct)),
+  (\+ pfcSearch(direct)),
   pfcStep,
   pfcRun.
 pfcRun.
@@ -281,26 +282,25 @@ remove_selection_PFC(P) :-
 %  the default mechanism.
 
 select_next_fact_PFC(P) :- 
-  call_SYS(meta,pfcSelect(P)),
+  pfcSelect(P),
   !.  
 select_next_fact_PFC(P) :- 
   defaultpfcSelect(P),
   !.  
 
 % the default selection predicate takes the item at the froint of the queue.
-defaultpfcSelect(P) :- call_SYS(meta,pfcQueue(P)),!.
+defaultpfcSelect(P) :- pfcQueue(P),!.
 
 % pfcHalt stops the forward chaining.
 pfcHalt :-  pfcHalt("",[]).
 
-pfcHalt(Format,Args) :- 
-  sformat(S,Format,Args),
-  pfcHalt(S).
+pfcHalt(Format) :- pfcHalt(Format,[]).
 
-pfcHalt(S) :-
-  call_SYS(meta,pfcHaltSignal(Was)) -> 
-       pfcWarn("pfcHalt(~q) finds pfcHaltSignal already set: ~p ",[S, Was])
-     ; sys_assert(meta,pfcHaltSignal(S)).
+pfcHalt(Format,Args) :- 
+  format(Format,Args),
+  pfcHaltSignal -> 
+       pfcWarn("pfcHalt finds pfcHaltSignal already set")
+     ; sys_assert(pfcHaltSignal).
 
 
 %=
@@ -313,7 +313,7 @@ pfcAddTrigger(pt(Trigger,Body),Support) :-
   !,
   pfc_trace_msg('~n      Adding positive trigger ~q~n',
 		[pt(Trigger,Body)]),
-  pfcAssert(trigger,pt(Trigger,Body),Support),
+  pfcAssert(pt(Trigger,Body),Support),
   copy_term(pt(Trigger,Body),Tcopy),
   call_PFC(Trigger),
   fcEvalLHS(Body,(Trigger,Tcopy)),
@@ -325,13 +325,13 @@ pfcAddTrigger(nt(Trigger,Test,Body),Support) :-
   pfc_trace_msg('~n      Adding negative trigger: ~q~n       test: ~q~n       body: ~q~n',
 		[Trigger,Test,Body]),
   copy_term(Trigger,TriggerCopy),
-  pfcAssert(trigger,nt(TriggerCopy,Test,Body),Support),
+  pfcAssert(nt(TriggerCopy,Test,Body),Support),
   \+Test,
   fcEvalLHS(Body,((\+Trigger),nt(TriggerCopy,Test,Body))).
 
 pfcAddTrigger(bt(Trigger,Body),Support) :-
   !,
-  pfcAssert(trigger,bt(Trigger,Body),Support),
+  pfcAssert(bt(Trigger,Body),Support),
   pfcBtPtCombine(Trigger,Body,Support).
 
 pfcAddTrigger(X,_Support) :-
@@ -346,7 +346,7 @@ pfcBtPtCombine(Head,Body,Support) :-
   fail.
 pfcBtPtCombine(_,_,_) :- !.
 
-pfcGetTriggerQuick(Trigger) :-  sys_clause_0(trigger,Trigger,true).
+pfcGetTriggerQuick(Trigger) :-  sys_clause_0(Trigger,true).
 
 %=
 %=
@@ -358,7 +358,7 @@ pfcAddActionTrace(Action,Support) :-
   pfcAddSupport(pfcAction(Action),Support).
 
 pfcRemActionTrace(pfcAction(A)) :-
-  call_SYS(meta,fcUndoMethod(A,M)),
+  fcUndoMethod(A,M),
   M,
   !.
 
@@ -376,15 +376,15 @@ pfcRetract(X) :-
 
 pfcRetractType(fact,X) :-   
   %= db pfcAddDbToHead(X,X2), sys_retract(X2). 
-  sys_retract(fact,X).
+  sys_retract(X).
 
 pfcRetractType(rule(_),X) :- 
   %= db  pfcAddDbToHead(X,X2),  sys_retract(X2).
-  sys_retract(fact, pfc_meta(X)).
+  sys_retract(X).
 pfcRetractType(trigger,X) :- 
-  sys_retract(trigger,X)
+  sys_retract(X)
     -> unFc(X)
-     ; pfcWarn("Trigger not found to retract: ~q",[X]).
+     ; pfcWarn("Trigger not found to sys_retract: ~q",[X]).
 
 pfcRetractType(action,X) :- pfcRemActionTrace(X).
   
@@ -398,13 +398,13 @@ pfcAdd(X) :-
   pfcAddType(Type,X).
 
 pfcAddType(fact,X) :- 
-  pfcUnique(fact,X), 
-  sys_assert(fact,X),!.
+  pfcUnique(X), 
+  sys_assert(X),!.
 pfcAddType(rule(_),X) :- 
-  pfcUnique(fact, pfc_meta(X)), 
-  sys_assert(fact, pfc_meta(X)),!.
+  pfcUnique(X), 
+  sys_assert(X),!.
 pfcAddType(trigger,X) :- 
-  sys_assert(trigger,(X)).
+  sys_assert(X).
 pfcAddType(action,_Action) :- !.
 
 
@@ -425,15 +425,14 @@ rem_PFC(List) :-
   
 rem_PFC(P) :- 
   % rem_PFC/1 is the user's interface - it withdraws user support for P.
-  get_user_why(check,Why),rem_PFC(P,Why).
+  rem_PFC(P,(user,user)).
 
 :- if(use_old_names).
 remlist(X) :- remlist_PFC(X).
 :- endif.
 remlist_PFC([H|T]) :-
   % rem each element in the list.
-  get_user_why(check,UWhy),
-  rem_PFC(H,UWhy),
+  rem_PFC(H,(user,user)),
   remlist_PFC(T).
 
 :- if(use_old_names).
@@ -449,7 +448,7 @@ rem_PFC(P,S) :-
 
 %=
 %= rem2 is like rem_PFC, but if P is still in the DB after removing the
-%= user's support, it is retracted by more forceful means (e.g. remove_PFC).
+%= user's support, it is sys_retracted by more forceful means (e.g. remove_PFC).
 %=
 
 :- if(use_old_names).
@@ -457,8 +456,7 @@ rem2(X) :- rem2_PFC(X).
 :- endif.
 rem2_PFC(P) :- 
   % rem2_PFC/1 is the user's interface - it withdraws user support for P.
-  get_user_why(check,UWhy),
-  rem2_PFC(P,UWhy).
+  rem2_PFC(P,(user,user)).
 
 :- if(use_old_names).
 rem2(P,S) :- rem2_PFC(P,S).
@@ -506,20 +504,20 @@ fcUndo(pt(Key,Head,Body)) :-
   % undo a positive trigger.
   %
   !,
-  (sys_retract(trigger,pt(Key,Head,Body))
+  (sys_retract(pt(Key,Head,Body))
     -> unFc(pt(Head,Body))
-     ; pfcWarn("Trigger not found to retract: ~q",[pt(Head,Body)])).
+     ; pfcWarn("Trigger not found to sys_retract: ~q",[pt(Head,Body)])).
 
 fcUndo(nt(Head,Condition,Body)) :-  
   % undo a negative trigger.
   !,
-  (sys_retract(trigger,nt(Head,Condition,Body))
+  (sys_retract(nt(Head,Condition,Body))
     -> unFc(nt(Head,Condition,Body))
-     ; pfcWarn("Trigger not found to retract: ~q",[nt(Head,Condition,Body)])).
+     ; pfcWarn("Trigger not found to sys_retract: ~q",[nt(Head,Condition,Body)])).
 
 fcUndo(Fact) :-
   % undo a random fact, printing out the trace, if relevant.
-  sys_retract(fact,Fact),
+  sys_retract(Fact),
   pfcTraceRem(Fact),
   unFc1(Fact).
   
@@ -544,7 +542,7 @@ unFc1(F) :-
 pfcUnFcCheckTriggers(F) :-
   pfcType(F,fact),
   copy_term(F,Fcopy),
-  call_SYS(trigger,nt(Fcopy,Condition,Action)),
+  nt(Fcopy,Condition,Action),
   (\+ Condition),
   fcEvalLHS(Action,((\+F),nt(F,Condition,Action))),
   fail.
@@ -619,16 +617,16 @@ wflist_PFC([X|Rest],L) :-
 % supports_PFC(+F,-ListofSupporters) where ListOfSupports is a list of the
 % supports for one justification for fact F -- i.e. a list of facts which,
 % together allow one to deduce F.  One of the facts will typically be a rule.
-% The supports for a user-defined fact are: [User].
+% The supports for a user-defined fact are: [user].
 
 supports_PFC(F,[Fact|MoreFacts]) :-
   pfcGetSupport(F,(Fact,Trigger)),
-  triggerSupports_PFC(Trigger,MoreFacts).
+  triggerSupports(Trigger,MoreFacts).
 
-triggerSupports_PFC(User,[]) :- get_user_PFC(check, User), !.
-triggerSupports_PFC(Trigger,[Fact|MoreFacts]) :-
+triggerSupports(user,[]) :- !.
+triggerSupports(Trigger,[Fact|MoreFacts]) :-
   pfcGetSupport(Trigger,(Fact,AnotherTrigger)),
-  triggerSupports_PFC(AnotherTrigger,MoreFacts).
+  triggerSupports(AnotherTrigger,MoreFacts).
 
 
 %=
@@ -700,8 +698,8 @@ fcpt(_,_).
 %  fail.
 
 fcnt1(_Fact,F) :-
-  call_SYS(support,support1(X,_,nt(F,Condition,Body))),
-  call_SYS(_, Condition),
+  support1(X,_,nt(F,Condition,Body)),
+  call_u(Condition),
   rem_PFC(X,(_,nt(F,Condition,Body))),
   fail.
 fcnt1(_,_).
@@ -731,10 +729,9 @@ pfcDefineBcRule(Head,_Body,ParentRule) :-
 pfcDefineBcRule(Head,Body,ParentRule) :-
   copy_term(ParentRule,ParentRuleCopy),
   buildRhs_PFC(Head,Rhs),
-  get_user_PFC(module,User),
   foreach_PFC(pfc_nf(Body,Lhs),
           (buildTrigger_PFC(Lhs,rhs(Rhs),Trigger),
-           add_PFC(bt(Head,Trigger),(ParentRuleCopy,User)))).
+           add_PFC(bt(Head,Trigger),(ParentRuleCopy,user)))).
  
 
 
@@ -746,7 +743,7 @@ pfcDefineBcRule(Head,Body,ParentRule) :-
  
 fcEvalLHS((Test->Body),Support) :-  
   !, 
-  (call_SYS(support, Test) -> fcEvalLHS(Body,Support)),
+  (call_u(Test) -> fcEvalLHS(Body,Support)),
   !.
 
 fcEvalLHS(rhs(X),Support) :-
@@ -795,7 +792,7 @@ pfc_eval_rhs1([X|Xrest],Support) :-
  pfc_eval_rhs([X|Xrest],Support).
 
 pfc_eval_rhs1(Assertion,Support) :-
- % an assertion to be added.
+ % an sys_assertion to be added.
  post1_PFC(Assertion,Support).
 
 
@@ -808,7 +805,7 @@ pfc_eval_rhs1(X,_) :-
 %=
 
 fcEvalAction(Action,Support) :-
-  call_SYS(support, Action), 
+  call_u(Action), 
   (undoable_PFC(Action) 
      -> pfcAddActionTrace(Action,Support) 
       ; true).
@@ -826,7 +823,7 @@ trigger_trigger_PFC(_,_,_).
 %trigger_trigger_PFC1(presently(Trigger),Body) :-
 %  !,
 %  copy_term(Trigger,TriggerCopy),
-%  call_SYS(trigger, Trigger),
+%  call_PFC(Trigger),
 %  fcEvalLHS(Body,(presently(Trigger),pt(presently(TriggerCopy),Body))),
 %  fail.
 
@@ -849,25 +846,25 @@ pfc(X) :- call_PFC(X).
 
 call_PFC(P) :-
   % trigger any bc rules.
-  call_SYS(trigger,bt(P,Trigger)),
+  bt(P,Trigger),
   pfcGetSupport(bt(P,Trigger),S),
   fcEvalLHS(Trigger,S),
   fail. 
   % keep going ...
-call_PFC(P) :- predicate_property(P, built_in), !, call_SYS(_,P).
+call_PFC(P) :- predicate_property(P, built_in), !, call_SYS(P).
 call_PFC(F) :-
   %= this is probably not advisable due to extreme inefficiency.
   var(F)    ->  pfcFact(F) ;
-  /*otherwise*/ true -> sys_clause(_,F,Condition),call_SYS(_, Condition).
+  /*otherwise*/ true ->  sys_clause(F,Condition),call_u(Condition).
 
 %=call_PFC(F) :- 
 %=  %= we really need to check for system predicates as well.
-%=  % current_predicate(_,F) -> call_SYS(support, F).
-%=  sys_clause(meta,F,Condition),call_SYS(support, Condition).
+%=  % current_predicate(_,F) -> call_u(F).
+%=  sys_clause(F,Condition),call_u(Condition).
 
 
 % an action is undoable if there exists a method for undoing it.
-undoable_PFC(A) :- call_SYS(meta, fcUndoMethod(A,_)).
+undoable_PFC(A) :- fcUndoMethod(A,_).
 
 
 
@@ -1005,9 +1002,9 @@ pfcNegatedLiteral(P) :-
   pfc_negation(P,Q),
   pfcPostiveLiteral(Q).
 
-%:- if(use_old_names).
+:- if(use_old_names).
 pfcAtom(X) :- pfcLiteral(X).
-%:- endif. 
+:- endif. 
 pfcLiteral(X) :- pfcNegatedLiteral(X).
 pfcLiteral(X) :- pfcPostiveLiteral(X).
 
@@ -1030,9 +1027,8 @@ pfcConnective('\\+').
 processRule_PFC(Lhs,Rhs,ParentRule) :-
   copy_term(ParentRule,ParentRuleCopy),
   buildRhs_PFC(Rhs,Rhs2),
-  get_user_PFC(module, User),
   foreach_PFC(pfc_nf(Lhs,Lhs2), 
-          buildRule_PFC(Lhs2,rhs(Rhs2),(ParentRuleCopy,User))).
+          buildRule_PFC(Lhs2,rhs(Rhs2),(ParentRuleCopy,user))).
 
 buildRule_PFC(Lhs,Rhs,Support) :-
   buildTrigger_PFC(Lhs,Rhs,Trigger),
@@ -1098,76 +1094,52 @@ buildTest_PFC(Test,Test).
 
 
 %= simple typeing for pfc objects
-pfcType(P, Type):- pfcType_01(P, VType), !, VType=Type.
-pfcType((P :- _), Type):- !, pfcType(P, Type).
-pfcType(_, fact) :-
-  %= if it's not one of the above, it must be a fact!
-  !.
-
-pfcType_01(P, Type):- pfcType_0(P, Type).
-pfcType_01(P, Type):- pfcType_1(P, Type).
-
+pfcType(P, Type):- pfcType_0(P, VType), !, VType=Type.
 
 pfcType_0(('==>'(_, _)), rule(_)).
 pfcType_0(('<==>'(_, _)), rule(_)).
 pfcType_0(('<-'(_, _)), rule(_)).
-pfcType_0(pt3(_, _, _), trigger).
+pfcType_0(pt(_, _, _), trigger).
 pfcType_0(pt(_, _), trigger).
 pfcType_0(nt(_, _, _), trigger).
 pfcType_0(bt(_, _), trigger).
 pfcType_0(pfcAction(_), action).
-pfcType_0((('::::'(_, X))), Type) :- nonvar(X), !,  pfcType_0(X, Type).
+pfcType_0((('::::'(_, X))), Type) :- !,  pfcType_0(X, Type).
+pfcType_0(_, fact) :-
+  %= if it's not one of the above, it must be a fact!
+  !.
 
-pfcType_1(pfc_meta(_), fact).
-pfcType_1(support1(_,_,_), support).
-
-pfcType_1(fcUndoMethod(_,_), meta).
-pfcType_1(fcAction(_,_), meta).
-pfcType_1(fcTmsMode(_), meta).
-pfcType_1(pfcQueue(_), meta).
-pfcType_1(pfcCurrentDb(_), meta).
-pfcType_1(pfcHaltSignal(_), meta).
-pfcType_1(pfcSelect(_), meta).
-pfcType_1(pfcSearch(_), meta).
-
-pfcType_1(pfcTraced(_), debug).
-pfcType_1(pfcSpied(_,_), debug).
-pfcType_1(pfcTraceExecution, debug).
-pfcType_1(pfcWarnings(_), debug).
-
-decl_module(M):- forall((pfcType_01(P,T),T\=rule(_)),(functor(P,F,A),M:dynamic(F/A))).
-
-
-pfcAssert(Type,P,Support) :- 
-  (pfc_clause(Type,P) ; sys_assert(Type,P)),
+pfcAssert(P,Support) :- 
+  (pfc_clause(P) ; sys_assert(P)),
   !,
   pfcAddSupport(P,Support).
 
-pfcAsserta(Type,P,Support) :-
-  (pfc_clause(Type,P) ; sys_asserta(Type,P)),
+pfcAsserta(P,Support) :-
+  (pfc_clause(P) ; sys_asserta(P)),
   !,
   pfcAddSupport(P,Support).
 
-pfcAssertZ(Type,P,Support) :-
-  (pfc_clause(Type,P) ; sys_assertz(Type,P)),
+pfcAssertz(P,Support) :-
+  (pfc_clause(P) ; sys_assertz(P)),
   !,
   pfcAddSupport(P,Support).
 
-pfc_clause(Type,(Head :- Body)) :-
+pfc_clause((Head :- Body)) :-
   !,
-  sys_clause(Type,Head,Body, Ref),
-  clause(Head_copy,Body_copy, Ref), 
+  copy_term(Head,Head_copy),
+  copy_term(Body,Body_copy),
+  sys_clause(Head,Body),
   variant(Head,Head_copy),
   variant(Body,Body_copy).
 
-pfc_clause(Type,Head) :-
-  % find a unit clause identical to Head by finding one which unifies,
+pfc_clause(Head) :-
+  % find a unit sys_clause identical to Head by finding one which unifies,
   % and then checking to see if it is identical
-  sys_clause(Type, Head, true, Ref),
-  clause(Head_copy,_, Ref), 
+  copy_term(Head,Head_copy),
+  sys_clause(Head_copy,true),
   variant(Head,Head_copy).
 
-foreach_PFC(Binder,Body) :- call_SYS(_, Binder),pfcdo(Body),fail.
+foreach_PFC(Binder,Body) :- call_u(Binder),pfcdo(Body),fail.
 foreach_PFC(_,_).
 
 % pfcdo(X) executes X once and always succeeds.
@@ -1212,23 +1184,22 @@ pfcDatabaseTerm(support1/3).
 pfcDatabaseTerm(support2/3).
 pfcDatabaseTerm(support3/3).
 :- endif.
-pfcDatabaseTerm(pt/2).
-pfcDatabaseTerm(bt/2).
-pfcDatabaseTerm(nt/3).
-pfcDatabaseTerm(pfc_meta/1).
-%pfcDatabaseTerm('==>'/2).
-%pfcDatabaseTerm('<==>'/2).
-%pfcDatabaseTerm('<-'/2).
+pfcDatabaseTerm(pt/3).
+pfcDatabaseTerm(bt/3).
+pfcDatabaseTerm(nt/4).
+pfcDatabaseTerm('==>'/2).
+pfcDatabaseTerm('<==>'/2).
+pfcDatabaseTerm('<-'/2).
 pfcDatabaseTerm(pfcQueue/1).
 
 % removes all forward chaining rules and justifications from db.
 
 pfcReset :-
-  sys_clause(meta,support1(P,F,Trigger),true),
-  pfcRetractOrWarn(support,P),
-  pfcRetractOrWarn(support,support1(P,F,Trigger)),
-  pfcRetractOrWarn(support,support2(F,Trigger,P)),
-  pfcRetractOrWarn(support,support3(Trigger,P,F)),
+  sys_clause(support1(P,F,Trigger),true),
+  pfcRetractOrWarn(P),
+  pfcRetractOrWarn(support1(P,F,Trigger)),
+  pfcRetractOrWarn(support2(F,Trigger,P)),
+  pfcRetractOrWarn(support3(Trigger,P,F)),
   fail.
 pfcReset :-
   pfcDatabaseItem(T),
@@ -1239,11 +1210,11 @@ pfcReset.
 pfcDatabaseItem(Term) :-
   pfcDatabaseTerm(P/A),
   functor(Term,P,A),
-  sys_clause(meta,Term,_).
+  sys_clause(Term,_).
 
-pfcRetractOrWarn(support,X) :-  sys_retract(support, X), !.
-pfcRetractOrWarn(support,X) :- 
-  pfcWarn("Couldn't retract ~p.",[X]).
+pfcRetractOrWarn(X) :-  sys_retract(X), !.
+pfcRetractOrWarn(X) :- 
+  pfcWarn("Couldn't sys_retract ~p.",[X]).
 
 
 
@@ -1254,6 +1225,10 @@ pfcRetractOrWarn(support,X) :-
 %   Purpose: provides predicates for examining the database and debugginh 
 %   for Pfc.
 
+:- dynamic pfcTraced/1.
+:- dynamic pfcSpied/2.
+:- dynamic pfcTraceExecution/0.
+:- dynamic   pfcWarnings/1.
 
 :- pfcDefault(pfcWarnings(_), pfcWarnings(true)).
 
@@ -1297,8 +1272,7 @@ pfcClassifyFacts([H|T],User,Pfc,[H|Rule]) :-
   pfcClassifyFacts(T,User,Pfc,Rule).
 
 pfcClassifyFacts([H|T],[H|User],Pfc,Rule) :-
-  get_user_why(check,UWhy),
-  pfcGetSupport(H,UWhy),
+  pfcGetSupport(H,(user,user)),
   !,
   pfcClassifyFacts(T,User,Pfc,Rule).
 
@@ -1306,11 +1280,11 @@ pfcClassifyFacts([H|T],User,[H|Pfc],Rule) :-
   pfcClassifyFacts(T,User,Pfc,Rule).
 
 pfcPrintRules :-
-  bagof_PFC('==>'(P,Q),sys_clause(fact,pfc_meta('==>'(P,Q)),true),R1),
+  bagof_PFC('==>'(P,Q),sys_clause('==>'(P,Q),true),R1),
   pfcPrintitems(R1),
-  bagof_PFC('<==>'(P,Q),sys_clause(fact,pfc_meta('<==>'(P,Q)),true),R2),
+  bagof_PFC('<==>'(P,Q),sys_clause('<==>'(P,Q),true),R2),
   pfcPrintitems(R2),
-  bagof_PFC('<-'(P,Q),sys_clause(fact,pfc_meta('<-'(P,Q)),true),R3),
+  bagof_PFC('<-'(P,Q),sys_clause('<-'(P,Q),true),R3),
   pfcPrintitems(R3).
 
 pfcPrintTriggers :-
@@ -1328,14 +1302,14 @@ pfcGetTrigger(Trigger):- call_PFC(Trigger).
 
 pfcPrintSupports :- 
   % temporary hack.
-  setof_PFC((S > P), pfcGetSupport(P,S),L),
+  setof((S > P), pfcGetSupport(P,S),L),
   pfcPrintitems(L).
 
-%= pfcFact(P) is true if fact P was asserted into the database via add_PFC.
+%= pfcFact(P) is true if fact P was sys_asserted into the database via add_PFC.
 
 pfcFact(P) :- pfcFact(P,true).
 
-%= pfcFact(P,C) is true if fact P was asserted into the database via
+%= pfcFact(P,C) is true if fact P was sys_asserted into the database via
 %= add and contdition C is satisfied.  For example, we might do:
 %= 
 %=  pfcFact(X,pfcUserFact(X))
@@ -1344,7 +1318,7 @@ pfcFact(P) :- pfcFact(P,true).
 pfcFact(P,C) :- 
   pfcGetSupport(P,_),
   pfcType(P,fact),
-  call_SYS(fact, C).
+  call_u(C).
 
 %= pfcFacts(-ListofPfcFacts) returns a list of facts added.
 
@@ -1354,7 +1328,7 @@ pfcFacts(P,L) :- pfcFacts(P,true,L).
 
 %= pfcFacts(Pattern,Condition,-ListofPfcFacts) returns a list of facts added.
 
-pfcFacts(P,C,L) :- setof_PFC(P,pfcFact(P,C),L).
+pfcFacts(P,C,L) :- setof(P,pfcFact(P,C),L).
 
 :- if(use_old_names).
 brake(X) :- brake_PFC(X).
@@ -1383,12 +1357,11 @@ pfcTraceAdd(P,S) :-
    
 
 pfcTraceAddPrint(P,S) :-
-  call_SYS(debug,pfcTraced(P)),
+  pfcTraced(P),
   !,
-  copy_term_nat(P,Pcopy),
+  copy_term(P,Pcopy),
   numbervars(Pcopy,0,_),
-  get_user_why(check,UWhy),
-  (S=UWhy
+  (S=(user,user)
        -> format("~nAdding (u) ~q",[Pcopy])
         ; format("~nAdding ~q",[Pcopy])).
 
@@ -1396,7 +1369,7 @@ pfcTraceAddPrint(_,_).
 
 
 pfcTraceBreak(P,_S) :-
-  call_SYS(debug,pfcSpied(P,add)) -> 
+  pfcSpied(P,add) -> 
    (copy_term(P,Pcopy),
     numbervars(Pcopy,0,_),
     format("~nBreaking on add(~q)",[Pcopy]),
@@ -1411,10 +1384,10 @@ pfcTraceRem(nt(_,_)) :-
   !.
 
 pfcTraceRem(P) :-
-  (call_SYS(debug,pfcTraced(P)) 
+  (pfcTraced(P) 
      -> format('~nRemoving ~q.',[P])
       ; true),
-  (call_SYS(debug,pfcSpied(P,rem))
+  (pfcSpied(P,rem)
    -> (format("~nBreaking on rem(~q)",[P]),
        break)
    ; true).
@@ -1423,10 +1396,10 @@ pfcTraceRem(P) :-
 pfcTrace :- pfcTrace(_).
 
 pfcTrace(Form) :-
-  sys_assert(debug,pfcTraced(Form)).
+  sys_assert(pfcTraced(Form)).
 
 pfcTrace(Form,Condition) :- 
-  sys_assert(debug,(pfcTraced(Form) :- call_SYS(built_in,Condition))).
+  sys_assert((pfcTraced(Form) :- call_SYS(Condition))).
 
 pfcSpy(Form) :- pfcSpy(Form,[add,rem],true).
 
@@ -1441,35 +1414,35 @@ pfcSpy(Form,Mode,Condition) :-
   pfcSpy1(Form,Mode,Condition).
 
 pfcSpy1(Form,Mode,Condition) :-
-  sys_assert(debug,(pfcSpied(Form,Mode) :- call_SYS(built_in,Condition))).
+  sys_assert((pfcSpied(Form,Mode) :- call_SYS(Condition))).
 
 pfcNospy :- pfcNospy(_,_,_).
 
 pfcNospy(Form) :- pfcNospy(Form,_,_).
 
 pfcNospy(Form,Mode,Condition) :- 
-  sys_clause(meta,pfcSpied(Form,Mode), call_SYS(built_in,Condition), Ref),
+  sys_clause(pfcSpied(Form,Mode), call_SYS(Condition), Ref),
   erase(Ref),
   fail.
 pfcNospy(_,_,_).
 
 pfcNoTrace :- pfcUntrace.
 pfcUntrace :- pfcUntrace(_).
-pfcUntrace(Form) :- sys_retractall(debug,pfcTraced(Form)).
+pfcUntrace(Form) :- sys_retractall(pfcTraced(Form)).
 
 % needed:  pfcTraceRule(Name)  ...
 
 
 % if the correct flag is set, trace exection of Pfc
 pfc_trace_msg(Msg,Args) :-
-    call_SYS(debug,pfcTraceExecution),
+    pfcTraceExecution,
     !,
     format(user_output, Msg, Args).
 pfc_trace_msg(_Msg,_Args).
 
-pfcWatch :- sys_assert(meta,pfcTraceExecution).
+pfcWatch :- sys_assert(pfcTraceExecution).
 
-pfcNoWatch :-  sys_retractall(meta,pfcTraceExecution).
+pfcNoWatch :-  sys_retractall(pfcTraceExecution).
 
 pfcError(Msg) :-  pfcError(Msg,[]).
 
@@ -1489,12 +1462,12 @@ pfcError(Msg,Args) :-
 %=
 
 pfcWarn :- 
-  sys_retractall(meta,pfcWarnings(_)),
-  sys_assert(meta,pfcWarnings(true)).
+  sys_retractall(pfcWarnings(_)),
+  sys_assert(pfcWarnings(true)).
 
 nopfcWarn :-
-  sys_retractall(meta,pfcWarnings(_)),
-  sys_assert(meta,pfcWarnings(false)).
+  sys_retractall(pfcWarnings(_)),
+  sys_assert(pfcWarnings(false)).
  
 pfcWarn(Msg) :-  pfcWarn(Msg,[]).
 
@@ -1511,11 +1484,11 @@ pfcWarn(_,_).
 %=
 
 pfcWarnings :- 
-  sys_retractall(meta,pfcWarnings(_)),
-  sys_assert(meta,pfcWarnings(true)).
+  sys_retractall(pfcWarnings(_)),
+  sys_assert(pfcWarnings(true)).
 
 pfcNoWarnings :- 
-  sys_retractall(meta,pfcWarnings(_)).
+  sys_retractall(pfcWarnings(_)).
 
 %   File   : pfcjust.pl
 %   Author : Tim Finin, finin@prc.unisys.com
@@ -1528,21 +1501,7 @@ pfcNoWarnings :-
 %= *** predicates for exploring supports of a fact *****
 
 
-:- system:use_module(library(prolog_stack)).
-:- system:use_module(library(listing)).
-:- system:use_module(library(lists)).
-
-:- use_module(library(prolog_stack)).
-:- use_module(library(listing)).
 :- use_module(library(lists)).
-:- use_module(library(backcomp)).
-:- use_module(library(debug)).
-:- use_module(library(occurs)).
-:- use_module(library(check)).
-%:- use_module(library(edinburgh)).
-:- use_module(library(debug)).
-:- use_module(library(prolog_stack)).
-:- use_module(library(make)).
 
 justification_PFC(F,J) :- supports_PFC(F,J).
 
@@ -1573,10 +1532,8 @@ bases_PFC([X|Rest],L) :-
   pfcUnion(Bx,Br,L).
 	
 axiom_PFC(F) :- 
-  get_user_why(check,UWhy),
-  pfcGetSupport(F,UWhy); 
-  (get_god_why(GWhy),
-   pfcGetSupport(F,GWhy)).
+  pfcGetSupport(F,(user,user)); 
+  pfcGetSupport(F,(god,god)).
 
 %= an assumption is a failed goal, i.e. were assuming that our failure to 
 %= prove P is a proof of not(P)
@@ -1639,17 +1596,15 @@ pfcDescendants(P,L) :-
 %=
 
 %= pfcAddSupport(+Fact,+Support)
-pfcAddSupport(P,(Fact,Trigger)) :- only_support1, !, sys_assert(support, support1(P,Fact,Trigger)).
-
+pfcAddSupport(P,(Fact,Trigger)) :- only_support1, !, sys_assert(support1(P,Fact,Trigger)).
 :- if( \+ only_support1 ).
 pfcAddSupport(P,(Fact,Trigger)) :-
-  sys_assert(meta,support1(P,Fact,Trigger)),
-  sys_assert(meta,support2(Fact,Trigger,P)),
-  sys_assert(meta,support3(Trigger,P,Fact)).
+  sys_assert(support1(P,Fact,Trigger)),
+  sys_assert(support2(Fact,Trigger,P)),
+  sys_assert(support3(Trigger,P,Fact)).
 :- endif.
 
-pfcGetSupport(P,(Fact,Trigger)) :- only_support1, !, call_SYS(support, support1(P,Fact,Trigger)).
-
+pfcGetSupport(P,(Fact,Trigger)) :- only_support1, !, support1(P,Fact,Trigger).
 :- if( \+ only_support1 ).
 pfcGetSupport(P,(Fact,Trigger)) :-
    nonvar(P)         -> support1(P,Fact,Trigger) 
@@ -1661,27 +1616,27 @@ pfcGetSupport(P,(Fact,Trigger)) :-
 
 % There are three of these to try to efficiently handle the cases
 % where some of the arguments are not bound but at least one is.
-pfcRemSupport(P,(Fact,Trigger)) :- only_support1, !, pfcRetractOrWarn(support,support1(P,Fact,Trigger)).
+pfcRemSupport(P,(Fact,Trigger)) :- only_support1, !, pfcRetractOrWarn(support1(P,Fact,Trigger)).
 
 :- if( \+ only_support1 ).
 pfcRemSupport(P,(Fact,Trigger)) :-
   nonvar(P),
   !,
-  pfcRetractOrWarn(support,support1(P,Fact,Trigger)),
-  pfcRetractOrWarn(support,support2(Fact,Trigger,P)),
-  pfcRetractOrWarn(support,support3(Trigger,P,Fact)).
+  pfcRetractOrWarn(support1(P,Fact,Trigger)),
+  pfcRetractOrWarn(support2(Fact,Trigger,P)),
+  pfcRetractOrWarn(support3(Trigger,P,Fact)).
 
 pfcRemSupport(P,(Fact,Trigger)) :-
   nonvar(Fact),
   !,
-  pfcRetractOrWarn(support,support2(Fact,Trigger,P)),
-  pfcRetractOrWarn(support,support1(P,Fact,Trigger)),
-  pfcRetractOrWarn(support,support3(Trigger,P,Fact)).
+  pfcRetractOrWarn(support2(Fact,Trigger,P)),
+  pfcRetractOrWarn(support1(P,Fact,Trigger)),
+  pfcRetractOrWarn(support3(Trigger,P,Fact)).
 
 pfcRemSupport(P,(Fact,Trigger)) :-
-  pfcRetractOrWarn(support,support3(Trigger,P,Fact)),
-  pfcRetractOrWarn(support,support1(P,Fact,Trigger)),
-  pfcRetractOrWarn(support,support2(Fact,Trigger,P)).
+  pfcRetractOrWarn(support3(Trigger,P,Fact)),
+  pfcRetractOrWarn(support1(P,Fact,Trigger)),
+  pfcRetractOrWarn(support2(Fact,Trigger,P)).
 :- endif.
 
 
@@ -1691,7 +1646,7 @@ pfc_collect_supports(Tripples) :-
 pfc_collect_supports([]).
 
 pfc_support_relation((P,F,T)) :-
-  call_SYS(support, support1(P,F,T)).
+  call_u(support1(P,F,T)).
 
 pfc_make_supports((P,S1,S2)) :- 
   pfcAddSupport(P,(S1,S2)),
@@ -1703,7 +1658,7 @@ pfc_make_supports((P,S1,S2)) :-
 %= Arg1 is a trigger.  Key is the best term to index it on.
 
 pfcTriggerKey(pt(Key,_),Key).
-pfcTriggerKey(pt3(Key,_,_),Key).
+pfcTriggerKey(pt(Key,_,_),Key).
 pfcTriggerKey(nt(Key,_,_),Key).
 pfcTriggerKey(Key,Key).
 
@@ -1726,10 +1681,11 @@ pfc_trigger_key(X,X).
 
 % ***** predicates for brousing justifications *****
 
+:- use_module(library(lists)).
 
 :- thread_local(whymemory_PFC/2).
 
-%:- dynamic(support1/3).
+:- dynamic(support1/3).
 :- if( \+ only_support1 ).
 :- dynamic(support2/3).
 :- dynamic(support3/3).
@@ -1747,8 +1703,8 @@ pfcWhy(N) :-
 
 pfcWhy(P) :-
   justifications_PFC(P,Js),
-  sys_retractall(meta,whymemory_PFC(_,_)),
-  sys_assert(meta,whymemory_PFC(P,Js)),
+  sys_retractall(whymemory_PFC(_,_)),
+  sys_assert(whymemory_PFC(P,Js)),
   pfcWhyBrouse(P,Js).
 
 pfcWhy1(P) :-
@@ -1791,9 +1747,6 @@ pfcCommand(X,_,_) :-
  format("~n~w is an unrecognized command, enter h. for help.",[X]),
  fail.
 
-begin_pfc:- expects_dialect(pfc).
-
-mpred_why(P):- ignore(why_PFC(P)).
 why_PFC(P):- 
   justifications_PFC(P,Js),
   pfcShowJustifications(P,Js), !.
@@ -1831,35 +1784,19 @@ pfcSelectJustificationNode(Js,Index,Step) :-
   nth0(StepNo,Justification,Step).
  
 
-:- 
- source_location(S,_),
- prolog_load_context(module,FM),
+:-source_location(S,_),prolog_load_context(module,FM),
  forall(source_file(M:H,S),
   ignore((functor(H,F,A),
    \+ atom_concat('$',_,F),
-   upcase_atom(F,U), \+ downcase_atom(F,U),
-   M:export(M:F/A),
-   \+ atom_concat('__aux',_,F),
+      M:export(M:F/A),
    \+ predicate_property(M:H,transparent),
-   % dra_w(M:H),
-   % format(user_error,'~N~q.~n',[FM:module_transparent(M:F/A)]),
-   FM:module_transparent(M:F/A)))).
+%    dra_w(M:H),
+   % (format(user_error,'~N~q.~n',[FM:module_transparent(M:F/A)]),
+   \+ atom_concat('__aux',_,F), FM:module_transparent(M:F/A)))).
 
 
-%= fcTmsMode is one of {none,local,cycles} and controles the tms alg.
-:- pfcDefault(fcTmsMode(_), fcTmsMode(cycles)).
+:- multifile('term_expansion'/2).
+:- module_transparent('term_expansion'/2).
+term_expansion(I, PosIn, O, PosOut):- notrace(nonvar(I)), term_expansion_PFC(I,O), PosOut=PosIn.
 
-% Pfc Search strategy. pfcSearch(X) where X is one of {direct,depth,breadth}
-:- pfcDefault(pfcSearch(_), pfcSearch(direct)).
-
-
-:- multifile(system:term_expansion/2).
-:- module_transparent(system:term_expansion/2).
-%:- meta_predicate(term_expansion(:,-)).
-%:- export(system:term_expansion/2).
-system:term_expansion(MIn, Out):- 
-   notrace(strip_module(MIn,MM,In)),
-   notrace(nonvar(In)), 
-   (MIn==In->prolog_load_context(module, M);MM=M),
-   term_expansion_PFC(M,In,Out).
 

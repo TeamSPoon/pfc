@@ -259,9 +259,9 @@ pfc_expects_dialect(Next,StreamNow,Was,M):- pfctmp:module_dialect_pfc(Next,Strea
 pfc_expects_dialect(pfc,Source,Was,M):-
    %notrace(M:ensure_loaded(library(pfc_lib))),
    M:use_module(library(dialect/pfc)),
-  ( ( \+ current_prolog_flag(pfc_version,2.0)) 
-   -> (M:ensure_loaded(library('../t/vlibs/pfc_1_8_full')),M:decl_module(M));
-      (M:use_module(library(pfc_lib)),M:set_fileAssertMt(M))),
+  (  ((false, \+ (current_prolog_flag(pfc_version,v(2,0,_))))) -> 
+      (M:ensure_loaded(library('../t/vlibs/pfc_1_8_full')),M:decl_module(M));
+      (set_prolog_flag(pfc_version,v(2,0,0)),M:use_module(library(pfc_lib)))),
    % dynamic(Was:'=-=>'/2),
    pfc_operators(M, Ops),
    push_operators(M:Ops, Undo),

@@ -13,7 +13,7 @@
 :- module(pfc_lib,[]).
 :- set_module(class(library)).
 
-:- if(current_prolog_flag(pfc_version,2.0)).
+:- if(( (current_prolog_flag(pfc_version, v(2,0,_))))).
 
 :- multifile(user:prolog_load_file/2).
 :- dynamic(user:prolog_load_file/2).      

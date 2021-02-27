@@ -21,8 +21,10 @@ a11.
 :- listing(a11).
 
 % :- pp_DB.
+:- mpred_why(b11).
 
 :- mpred_test(b11).
+
 
 end_of_file.
 

@@ -51,11 +51,6 @@ mpred_test(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(umt(PFC))*->true;
 mpred_why2(MPRED):- must(mpred_to_pfc(MPRED,PFC)),!,(show_call(mpred_why(PFC))*->true;(test_red_lined(mpred_why(MPRED)),!,fail)).
 :- endif.
 
-:- export(why_was_true/1).
-
-why_was_true((A,B)):- !,mpred_why(A),mpred_why(B).
-why_was_true(P):- predicate_property(P,dynamic),mpred_why(P),!.
-why_was_true(P):- dmsg_pretty(justfied_true(P)),!.
 
 % mpred_test_fok(G):- source_file(_,_),!,mpred_test_fok0(G),!.
 :- meta_predicate(mpred_test_fok(:)).
