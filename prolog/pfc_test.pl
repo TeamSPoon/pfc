@@ -11,7 +11,7 @@
 % ===================================================================
 */
 :- if((prolog_load_context(source,File),prolog_load_context(file,File));current_prolog_flag(xref,true)).
-:- module(pfc_test,[why_was_true/1,mpred_test/1]).
+:- module(pfc_test,[mpred_test/1]).
 :- endif.                             
 
 :- system:use_module(library(prolog_stack)).
