@@ -1,0 +1,287 @@
+\Chapter{Running a program\label{chap:running}}
+
+
+%-------------------------------------------------------------------------------
+\Section{Loading the interpreter\label{sec:loading-dra}}%
+\index{loading the interpreter}
+
+The interpreter is written in Prolog.  It is distributed in source
+form.%
+%\footnote{
+%  Please see the ``README'' files in the distribution tree: they will help you
+%  find your way around.}
+
+The interpreter is known to run on \Eclipse{}~6.0, \Sicstus{}~4.0 and
+SWI~Prolog~5~7.  If you plan to run programs that take advantage of
+coinductive programming, you might prefer to avoid \Eclipse{}, which has
+somewhat inadequate support for cyclic terms.
+
+The simplest way to proceed is to:
+\begin{Enumerate}
+\item
+  start your logic programming system;
+\item
+  If you are using \Eclipse{} or \Sicstus{}, type in the following directive:\\
+  \ind\prog{:-~[~'\patt{Path}/tabling/dra'~].}\\
+  where \about{Path} is the path to the root of the distribution
+  tree.
+  If you are using SWI Prolog, the directive is:\footnote{You can use also\\
+    \ind\prog{:-~[~'\patt{Path}/tabling/drapf'~].}\\
+      if the interpreted program does not use cyclic terms (i.e., in
+      particular if there are no coinductive predicates).  This version could
+      be significantly faster, even faster than \Sicstus{}.
+  }\\
+  \ind\prog{:-~[~'\patt{Path}/tabling/drap'~].}
+\end{Enumerate}
+
+This will just load the interpreter, but you will still be interacting with
+the host logic programming system.  \Secref{sec:loading-prog} describes how
+to start the interpreter.
+
+The interpreter is encapsulated in its own module, called \about{dra} (or
+\about{drap} in the case of SWI Prolog).  So if
+you are running \Eclipse{}, you will probably find it more convenient to import
+the module by writing\\
+\ind\prog{:- import dra.}\label{import-dra}\progidxonly{import}\\
+immediately after loading the interpreter.
+
+It may well be that things have been installed differently on your site.
+This might be because the interpreter has been modified to run with a
+different Prolog system, or because an immediately-loadable version has been
+made available in some standard directory. The person responsible for the
+local installation of the interpreter will provide you with more details.
+
+
+%-------------------------------------------------------------------------------
+\Section{Loading a program\label{sec:loading-prog}}%
+\index{loading a program}
+
+Once you have loaded the interpreter into your logic programing system, you
+may want to load and run a program in the interpreter. This is done by
+writing\\
+\ind\prog{prog(~\patt{filename}~).}\progidxonly{prog}%
+\footnote{
+  If you are running in \Eclipse{}, and have not imported the module \about{dra}
+  (as explained in \Secref{import-dra}), you must write \prog{dra:prog}
+  instead of \prog{prog}.
+}\\
+\patt{filename} should be the name of the file that contains your program.
+If the name is given with no extension, it will be automatically extended
+with \prog{.tlp}.%
+\index{default extension}%
+\index{extension of file name!default}\index{file!name!default extension}
+If the name should have a different extension, you must type in the entire
+name, enclosed in single quotes, e.g.,\\
+\ind\prog{prog(~'myfile.pl'~).}\\
+Quotes must also be used if the file is not in the current directory and you
+are providing an absolute or relative path.
+
+As the file is being read and loaded, directives and queries are interpreted
+on-the-fly. Each query is evaluated to give all solutions (i.e., as if the
+user kept responding with a semicolon): to avoid that you can use the
+built-in predicate \predidx{once/1} in the queries.
+
+You should be aware that loading a program obliterates all traces of
+previously loaded programs, including the contents of the answer table.  If
+you are interested in re-running your program from scratch (so that it does
+not take advantage of answers that were already tabled), you can just load it
+again.
+
+
+
+%-------------------------------------------------------------------------------
+\Section{Interacting with a loaded program\label{sec:interacting}}
+
+%%%
+\Subsection{The interactive mode\label{sec:interactive-mode}}%
+\index{interactive mode}
+
+After the file is loaded (and all the directives and queries it contains are
+executed), the interpreter enters interactive mode.  This is very much like
+the usual top-level loop, except that it is the interpreter---and not the
+underlying logic programming system---that evaluates queries and executes
+directives.
+
+In the interactive mode the interpreter will read your input and act on it.
+Input consists of a term, terminated by a fullstop (i.e., the period
+character) and immediately followed by a newline (i.e., you must press the
+\prog{ENTER} key).\footnote{
+  You cannot input more than one term per line. On \Sicstus{} all characters
+  between the fullstop and the newline will be ignored.  On \Eclipse{}, if the
+  answer to your query is ``\prog{Yes~~(more?)~}'', the remainder of the
+  previous line will be treated as your input and the interpreter will seem
+  to cease responding.  To get out of this state type in a fullstop followed
+  by a newline.}
+If a query succeeds, you will get a printout that looks like this:\\
+\ind\prog{Yes~~(more?)~}\\
+You should then type in a semicolon immediately followed by a newline (if you
+want more answers), or just a newline (if you don't).
+
+When you type in a term of the form ``\prog{:-~\patt{...}.}'', it will be
+treated as a directive\index{directive}; when you type in a term of the form
+``\prog{?-~\patt{...}.}'', it will be treated as a query\index{query}; when
+you type in a term that does not begin with \prog{:-} or \prog{?-}, it will
+also be treated as a query.
+
+The difference between directives and queries is quite crucial, because the
+names of the directives do not occupy the same name space\index{name space}
+as the names of predicates.  If you type in, say,\\
+\ind\prog{answers(~\_,~\_~).}\\
+this will have nothing to do with the directive\\
+\ind\prog{:-~answers(~\_,~\_~).}\\
+and the interpreter will try to invoke the predicate \pred{answers/2} in your
+program.  This may be a little confusing, but the good news is that you don't
+have to worry about potential conflicts between the names in your program and
+the names of the interpreter's directives.
+
+Neither do you have to worry about conflicts between your program and the
+interpreter itself. The interpreted program is loaded into a separate module
+called \progidx{interpreted}.  If there is a support layer, it is loaded into
+the module \progidx{support}.  I mention these names, because the host system
+may show them in error messages if something goes horribly wrong.
+
+
+%%%%
+\Subsection{Resuming the interactive mode\label{sec:resuming-interactive}}%
+\index{interactive mode!resuming}
+
+To just enter interactive mode (without loading a new program)
+invoke\footnote{
+  Again, \prog{dra:top} in \Eclipse{}, if you have not imported\about{dra}.}\\
+\ind\prog{top.}\progidxonly{top}
+
+The interpreter does not allow you to input clauses directly from your
+terminal, but it's good to have recourse to this call if you have exited
+interactive mode (see below) or if the execution of the interpreter was
+interrupted (either because of a fatal error, or because you pressed Ctrl-C
+on your keyboard). The program that was most recently loaded is still there,
+the answer table might have been populated, so you might want to resume
+interactive mode.
+
+
+%%%%
+\Subsection{Exiting the interactive mode\label{sec:exiting-interactive}}%
+\index{interactive mode!exiting}
+
+To exit the interactive mode enter the end of file character
+(\about{Ctrl-D}),%
+\footnote{
+  \about{Ctrl-D} appears not to work with tkeclipse.}
+or just write\\
+\ind\prog{quit.}\progidxonly{quit}
+
+
+%%%%
+\Subsection{Statistics\label{sec:statistics}}%
+\index{statistics}
+
+Just before the result of a query is reported, the interpreter produces a
+printout with statistics\index{statistics} accumulated since the previous
+such printout (or since the beginning, if this is the first printout during
+the current session with the interpreted program). The printout looks like
+this:\\
+\ind\prog{[\patt{K}~steps,~\patt{M}~new~answers~tabled~(\patt{N}~in~all)]}\\
+\patt{K},\patt{M} and \patt{N} are natural numbers. \patt{K} is the number of
+evaluated goals, \patt{M} is the number of new additions to the answer table,
+and \patt{N} is the current size of the answer table.
+
+Please note that you might sometimes see new answers tabled in 0 steps: this
+may happen when you ask for more results (by typing a semicolon) and the last
+goal to be activated has still not completed its task.  You might also see
+that new answers were added even though the final response is \prog{No}: this
+only means that some auxiliary goals were successful, while the main one was
+not.
+
+
+%%%%
+\Subsection{Print depth\label{sec:print-depth}}%
+\index{print depth}
+
+When a query succeeds, the instantiations of its variables should be printed
+upto a certain maximum depth.  The default value in the distributed version
+of the interpreter is 10.  The maximum depth can be changed from the
+interpreted program (or interactively from the top-level) by invoking\\
+\ind\prog{set\_print\_depth(~\patt{N}~)}\predidxonly{set\_print\_depth/1}\\
+where \patt{N} is a positive integer.
+
+Please note that with some Prolog implementations this might not prevent a
+loop if the printed term is cyclic (as will often happen for coinductive
+programs).
+
+Note also that the foregoing does not apply to invocations of built-in
+predicates in the interpreted program.  It is up to the user to apply the
+built-in that is appropriate for the host logic programming system.  For
+example, in the case of \Sicstus{}, use
+\prog{write\_term(~T,~[~max\_depth(~10~)~]~)}, rather than just \prog{write(
+  T )}, if you expect the instantiation of \prog{T} to be cyclic.
+
+
+
+%-------------------------------------------------------------------------------
+\Section{Including other files\label{sec:including}%
+\index{including a file}\index{file!inclusion}}
+
+To include files (interactively or from other files) you can use the usual
+Prolog syntax:\\
+\ind
+\prog{:-~[~\patt{filename1},~\patt{filename2},~\patt{...}~].}%
+\label{dir:include}\\
+The default extension is \prog{.tlp}.%
+\index{default extension}%
+\index{extension of file name!default}\index{file!name!default extension}
+
+Please note that including a file with \prog{:-~[~\patt{filename}~].}  and
+loading a program with \prog{prog(~\patt{filename}~).} are very different
+actions. When the interpreter includes a file, the contents are just
+added to its memory. When it loads a program, it first (re)initializes
+itself, wiping out the previously loaded program, all included files and the
+answer table.
+
+
+
+%-------------------------------------------------------------------------------
+\Section{Inspecting the answer table\label{sec:answer-table}}%
+\index{answer table}
+
+In principle, the answer table is an auxiliary data structure that is, in
+effect, accessed by normal queries.
+
+However, the interpreter gives you the possibility of looking ``under the
+hood'' by accessing the table directly.  This might be useful for assessing
+the efficacy of your tabling declarations, or simply for satisfying your
+curiosity.
+
+To print out subsets of the current answer table, use\\
+\ind\prog{:-~answers(~\patt{Goal},~\patt{Pattern}~).}%
+\label{dir:answers}\progidxonly{answers}\\
+where \patt{Goal} and \patt{Pattern} are terms.
+This will print all those tabled answers that are associated with a variant
+of the goal and unifiable with the pattern.  If the first argument is a
+variable, the pattern will be used as a filter for all the answers in the
+table.
+
+To produce a dump of the entire table, just use\\
+\ind\prog{:-~answers(~\_,~\_~).}
+
+
+
+%-------------------------------------------------------------------------------
+\Section{The ``wallpaper'' trace\label{sec:walpaper-trace}}
+
+The interpreter does not incorporate an interactive debugger, but it can
+produce a long trace of what happens during the execution of an interpreted
+program.  This facility is useful mainly for helping to diagnose problems
+with the interpreter: some of the information in the trace will not be easy
+to understand for someone who does not know the details of the DRA
+method~\cite{guo-gupta-dra}, and I will not try to explain it all here.
+Still, you might sometimes be able to get some useful information from the
+trace, e.g, about how new answers are added to the table.
+
+To produce a wallpaper trace of what happens to some chosen predicates, use a
+directive similar to the following:\\
+\ind\prog{:-~trace~p/3,~q/0,~r/1.}\label{dir:trace}\progidxonly{trace}\\
+If you want to trace all predicates, use\\
+\ind\prog{:-~trace~all.}\\
+These directives are cumulative.
+
+

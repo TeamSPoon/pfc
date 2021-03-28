@@ -1,0 +1,122 @@
+\begin{theindex}
+
+  \item \pred{!/2}\dotfill \hyperpage{7}
+
+  \indexspace
+
+  \item answer\dotfill \hyperpage{4}
+  \item answer table\dotfill \hyperpage{4}, \hyperpage{16}
+  \item \texttt  {answers}\dotfill \hyperpage{16}
+
+  \indexspace
+
+  \item built-in predicates\dotfill \hyperpage{7}
+
+  \indexspace
+
+  \item \emph  {call/1}\dotfill \hyperpage{7}
+  \item \texttt  {coinductive}\dotfill \hyperpage{5}
+  \item coinductive predicate\dotfill \hyperpage{5}
+  \item \texttt  {coinductive1}\dotfill \hyperpage{6}
+  \item conditional construct\dotfill \hyperpage{7}
+  \item cut\dotfill \hyperpage{7}
+
+  \indexspace
+
+  \item default extension\dotfill \hyperpage{9}, \hyperpage{12}, 
+		\hyperpage{15}
+  \item directive\dotfill \hyperpage{13}
+  \item duplicate     results\dotfill \hyperpage{3}
+  \item \texttt  {dynamic}\dotfill \hyperpage{9}
+
+  \indexspace
+
+  \item \emph  {essence\_hook/2}\dotfill \hyperpage{9}
+  \item extension of file name
+    \subitem default\dotfill \hyperpage{9}, \hyperpage{12}, 
+		\hyperpage{15}
+
+  \indexspace
+
+  \item file
+    \subitem inclusion\dotfill \hyperpage{15}
+    \subitem name
+      \subsubitem default extension\dotfill \hyperpage{9}, 
+		\hyperpage{12}, \hyperpage{15}
+
+  \indexspace
+
+  \item goal\dotfill \hyperpage{3}
+    \subitem tabled\dotfill \hyperpage{3}
+
+  \indexspace
+
+  \item hook\dotfill \hyperpage{9}
+
+  \indexspace
+
+  \item \texttt  {import}\dotfill \hyperpage{12}
+  \item including a file\dotfill \hyperpage{15}
+  \item interactive mode\dotfill \hyperpage{13}
+    \subitem exiting\dotfill \hyperpage{14}
+    \subitem resuming\dotfill \hyperpage{14}
+  \item \texttt  {interpreted}\dotfill \hyperpage{14}
+
+  \indexspace
+
+  \item \texttt  {load\_support}\dotfill \hyperpage{9}
+  \item loading a program\dotfill \hyperpage{12}
+  \item loading the interpreter\dotfill \hyperpage{11}
+
+  \indexspace
+
+  \item name space\dotfill \hyperpage{13}
+  \item new     result\dotfill \hyperpage{4}
+
+  \indexspace
+
+  \item \texttt  {old\_first}\dotfill \hyperpage{3}
+  \item \emph  {once/1}\dotfill \hyperpage{7}, \hyperpage{12}
+  \item order of results\dotfill \hyperpage{3}
+
+  \indexspace
+
+  \item predicate
+    \subitem coinductive\dotfill \hyperpage{5}
+    \subitem dynamic\dotfill \hyperpage{9}
+    \subitem tabled\dotfill \hyperpage{4}
+  \item print depth\dotfill \hyperpage{15}
+  \item \texttt  {prog}\dotfill \hyperpage{12}
+
+  \indexspace
+
+  \item query\dotfill \hyperpage{13}
+  \item \texttt  {quit}\dotfill \hyperpage{14}
+
+  \indexspace
+
+  \item result\dotfill \hyperpage{3}
+    \subitem duplicate\dotfill \hyperpage{3}
+    \subitem new\dotfill \hyperpage{4}
+    \subitem order\dotfill \hyperpage{3}
+
+  \indexspace
+
+  \item \emph  {set\_print\_depth/1}\dotfill \hyperpage{15}
+  \item statistics\dotfill \hyperpage{14}
+  \item \texttt  {support}\dotfill \hyperpage{8}, \hyperpage{14}
+
+  \indexspace
+
+  \item table\dotfill \see{answer table}{4}
+  \item \texttt  {tabled}\dotfill \hyperpage{4}
+  \item tabled goal\dotfill \hyperpage{3}
+  \item tabled predicate\dotfill \hyperpage{4}
+  \item \texttt  {top}\dotfill \hyperpage{9}, \hyperpage{14}
+  \item \texttt  {trace}\dotfill \hyperpage{17}
+
+  \indexspace
+
+  \item variable     literal\dotfill \hyperpage{7}
+
+\end{theindex}

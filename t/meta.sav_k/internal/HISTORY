@@ -1,0 +1,164 @@
+-------------------------------------------------------------------------------
+
+4 Feb 2009:  First "internal public" release.
+
+             Known problems:
+               - mixed/dra still not available;
+               - tabling/eager_tabling has some minor problems in comments
+                 as well as some unnecessary inefficiencies;
+               - a very limited set of examples.
+
+5 Feb 2009:  Second "internal public" release:
+
+               Fixed:
+                 - trace did not work in the Eclipse version of
+                   "eager_tabling";
+                 - removed one source of inefficiency (and disparity between
+                   the code and the associated comment) in "eager_tabling".
+
+6 Feb 2009:  Third "internal public" release:
+
+               Fixed:
+                 - In "eager_tabling" trace also internal events (e.g.,
+                   adding a pioneer).
+                 - The sanity-checking functions of the LTL interpreter
+                   were unable to report an error when run in the tabling
+                   interpreter.
+                 - "translate_colp" had a spurious choice point which caused
+                   a false error message if the user asked for more
+                   solutions.
+                 - Wrong permissions on many files.
+
+13 Feb 2009:  Fourth "internal public" release:
+
+                 - Added "dra".
+                 - Deleted "eager_tabling", as superseded.
+                 - Deleted "mixed", everything is now in "tabling".
+                 - More small examples.
+
+16 Feb 2009:   Fourth "internal public" release:
+
+                 - Really deleted "eager_tabling" ;-).
+                 - Found a couple of errors in "dra".
+                 - "dra" checks consistency of declarations with definitions.
+                 - "dra" gives priority to new answers (this can be changed
+                    by using ":- old_first ...").
+                 - The wallpaper trace is more informative.
+
+19 Feb 2009:   Fifth "internal public" release:
+
+                 - "dra" is in its own module.
+                 - "bottom" renamed to "support" in "translate_colp".
+                 - "support" and "load_support" implemented in "top_level".
+                 - "dra" can now handle "support".
+
+24 Feb 2009:   Sixth "internal public" release:
+
+                 - Various incompatibilies between the Eclipse and Sicstus
+                   versions of programs ameliorated.  Was able to remove
+                   several .ecl files, as their .pl versions can be run on
+                   both systems.
+                 - Suppressed a few minor errors caused by changed
+                   conventions.
+                 - Added checking for singleton variables.
+                 - Improved the format of longer diagnostic messages.
+
+27 Feb 2009:   Seventh "internal public" release:
+
+                 - "dra" now has common code for both systems, only tiny
+                   shell files remain.
+                 - Queries are no longer checked for singleton variables.
+                 - Implemented checks for undefined predicates and predicates
+                   that are defined but not called: gave meaning to
+                   ":- top ...".
+                 - Updated a number of examples with top declarations, to
+                   suppress the new warnings.
+                 - Brought the LTL examples in line with the latest
+                   improvements (particularly "support").
+                 - Various small improvements.
+
+ 2 Mar 2009:   Eighth "internal public" release:
+
+                 - The LTL example has been improved with a check for
+                   well-formedness of the formula.
+                 - The check for singleton variables takes into account \+/1
+                   and fail/0.
+                 - Various small improvements.
+
+ 3 Mar 2009:   Ninth "internal public" release:
+
+                 - Fixed a problem with user interaction on Sicstus.
+
+13 Mar 2009:   Tenth "internal public" release:
+
+                 - In "dra" activated "essence_hook" for matching with
+                   coinductive hypotheses.
+
+                 - Fixed the LTL verifier to take care of the error
+                   discovered by Brian DeVries.  The verifier now produces
+                   counterexamples.
+
+                 - Introduced an LTL verifier in straight Prolog (for
+                   comparison). This is still experimental and incomplete.
+
+31 Mar 2009 :  Eleventh "internal public" release:
+
+                 - Fixed several errors.
+
+                 - The LTL verifier in straight Prolog has been rewritten.
+                   It now works on all examples, but there is no proof that
+                   the rewrite rules need no extension.  The program is
+                   tabling/examples/LTL/v.pl.
+
+                 - Improved the LTL coinductive/tabling verifier: no looping
+                   when printing counterexample, better consistency checking,
+                   less duplication of code.
+
+                 - A new directive added to "dra": the user can now inspect
+                   the answer table.
+
+                 - A minor extension of "dra": statistics about the number of
+                   steps and about the size and growth of the answer table
+                   are now produced after every query.
+
+                 - The declarations of allowed built-in predicates in "dra"
+                   have been factored out from the interpreters into separate
+                   files, to facilitate extension.  findall/3 has been added.
+
+                 - The stack of tabled ancestors and the set of coinductive
+                   hypotheses have been factored out of "dra_common.pl" to
+                   allow a change to a more efficient representation.  The
+                   representation has been changed to open binary trees.  The
+                   hope is that this will make performance degradation more
+                   graceful as applications get larger.
+
+                 - The top level now checks for contiguity of predicates,
+                   stores predicates in "defined/1".
+
+                 - The program files have been prefixed with a standard
+                   copyright notice and disclaimer.
+
+                 - "dra" prints out its version when loaded.
+
+                 - A separate user manual for "dra" is now available.
+
+                 - We are now ready for a real public release, pending a
+                   review and a sanity check by a second person.  We also
+                   need more hefty examples of tabling programs from othe
+                   places.
+
+2 Apr 2009 :  Twelfth "internal public" release:
+
+                 - Added copyright/disclaimer notice to "DRA User Manual".
+
+                 - Tweaked XSB examples.
+
+                 - Fixed two errors in program analysis.
+
+                 - Added term expansion to allow processing of DCG rules.
+
+                 - Added Gopal Gupta's mini-language example.
+
+                 - Releasing this as a beta candidate (Version 0.9 (beta)).
+
+-------------------------------------------------------------------------------

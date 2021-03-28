@@ -1,0 +1,34 @@
+\begin{thebibliography}{1}
+
+\bibitem{guo-gupta-dra}
+Hai-Feng Guo and Gopal Gupta.
+\newblock Tabled logic programming with dynamic ordering of alternatives.
+\newblock In Philippe Codognet, editor, {\em Logic Programming, 17th
+  International Conference, ICLP 2001, Paphos, Cyprus, November 26 - December
+  1, 2001, Proceedings}, volume 2237 of {\em Lecture Notes in Computer
+  Science}. Springer, 2001.
+
+\bibitem{gupta-coinductive-personal}
+Richard Min and Gopal Gupta.
+\newblock There is often no need to use clauses if coinductive hypotheses match
+  the goal.
+\newblock Personal communication, 7 May 2009.
+
+\bibitem{co-LP}
+Luke Simon, Ajay Bansal, Ajay Mallya, and Gopal Gupta.
+\newblock Co-logic programming.
+\newblock In Lars Arge, Christian Cachin, Tomasz Jurdzi{\'n}ski, and Andrzej
+  Tarlecki, editors, {\em Automata, Languages and Programming, 34th
+  International Colloquium, ICALP 2007, Wroc{\l}aw, Poland, July 9-13, 2007,
+  Proceedings}, volume 4596 of {\em Lecture Notes in Computer Science}.
+  Springer, 2007.
+
+\bibitem{coinductive}
+Luke Simon, Ajay Mallya, Ajay Bansal, and Gopal Gupta.
+\newblock Coinductive logic programming.
+\newblock In Sandro Etalle and Miros{\l}aw Truszczy{\'n}ski, editors, {\em
+  Logic Programming, 22nd International Conference, ICLP 2006, Seattle, WA,
+  USA, August 17-20, 2006, Proceedings}, volume 4079 of {\em Lecture Notes in
+  Computer Science}. Springer, 2006.
+
+\end{thebibliography}

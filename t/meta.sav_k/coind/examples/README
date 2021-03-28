@@ -1,0 +1,27 @@
+--------------------------------------------------------------------------------
+
+This directory includes the following files:
+
+automaton.clp:
+        An example of an omega-automaton, due to Horst Reichel of Technical
+        University at Dresden, Germany.
+
+comember.clp:
+
+        A modified version of Example 2 from Luke Simon's Ph.D. thesis.
+
+comember_comp.ecl:
+        This is comember.clp translated into Prolog.  The translation
+        was done by hand, so it is more readable, but essentially the
+        same as an automatic translation performed by
+        "../translate_colp".
+
+conditional.clp:
+        A wholly uninteresting example, designed to test that "../colp"
+        handles conditionals correctly.
+
+
+NOTE: Other examples of programs that use coinduction (as well as
+      tabling) can be found in ../../mixed/examples.
+
+--------------------------------------------------------------------------------

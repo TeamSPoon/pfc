@@ -1,0 +1,153 @@
+\Chapter{The interpreted programs\label{chap:programs}}
+
+
+
+%-------------------------------------------------------------------------------
+\Section{Limitations\label{sec:limitations}}
+
+The interpreter does not support full Prolog.  Here are the main limitations
+of the interpreted language:
+\begin{Enumerate}
+
+\item
+  The interpreted program must not contain cuts\index{cut} (i.e., occurrences
+  of \pred{!/2}\index{"!/2@\pred{"!/2}}).  Use of the conditional
+  construct\index{conditional construct} is permitted, as is the use of
+  \predidx{once/1}.
+
+\item
+  The interpreted program must not contain variable literals\index{variable
+    literal}.  It may contain invocations of \predidx{call/1}, but if the
+  argument of \pred{call/1} is not properly instantiated at runtime, you will
+  get an error message and the interpreter will quit.\footnote{
+    In some cases the interpreter can verify beforehand (i.e., at
+    ``compile-time'') that the argument of an occurrence of \pred{call/1}
+    cannot be instantiated at run-time, and it will then raise a fatal error.
+    The check is quite conservative, so the absence of such an error message
+    does not mean that the program is safe in that respect.}
+
+\item
+  The repertoire of built-in predicates\index{built-in predicates} recognized
+  by the interpreter is somewhat limited.  This is done by design, mostly to
+  facilitate porting to different Prolog systems.
+
+  The recognized built-ins are declared in the file \prog{dra\_builtins.pl},
+  and new declarations can be added as the need arises.  For most built-ins
+  just adding another line to the file will suffice, but a few might
+  require special treatment by the interpreter.\footnote{
+    Having a file wherein you specify the names of built-in predicates you
+    actually want to use does have its advantages.  Some logic programming
+    systems (e.g., \Eclipse{}) support a very extensive set of libraries that
+    define built-in predicates whose names are treated as reserved even if
+    you don't use the libraries.  As a result, many names that you might
+    reasonably want to use in your programs are not available to you.}
+\end{Enumerate}
+
+If these limitations seem too strict, you may in some cases get around them
+by separating your program into two layers: see \Secref{sec:support}.
+
+
+%-------------------------------------------------------------------------------
+\Section{The notion of ``support''\label{sec:support}}
+
+The interpreter provides you with an opportunity to divide your program into
+two layers: an upper layer which makes use of the special facilities provided
+by the interpreter (i.e., tabling and/or coinduction), and a lower layer of
+``support'' software that requires only standard Prolog.  This can be useful
+for increasing efficiency: the support layer will be compiled just as all
+other ``normal'' Prolog programs.  An additional advantage is that the
+support layer can use the full range of built-in predicates available in the
+host logic programming system, and in particular the cut.
+
+The interface between the two layers consists of a handful of entry-point
+predicates, each of which is  declared by a directive similar to the
+following one:\\
+\ind\prog{:- support check\_consistency/1.}%
+\label{dir:support}\progidxonly{support}\\
+Please note that this directive cannot be entered interactively: it must be
+included in the text of the upper layer part of your program.
+
+The support declaration means that the metainterpreter should treat the
+declared predicate as a built-in, i.e., just let Prolog execute it.
+
+The support layer cannot invoke the upper layer, so there is no need to
+declare those predicates in the support layer that are not directly invoked
+by the upper layer.
+
+Predicates that are declared as ``support'' (and those that are---directly or
+indirectly---called by them) must be defined in other files.
+To compile and load such a file, use the following directive in the text of
+your program:\\
+\ind\prog{:- load\_support(~\patt{filename}~).}%
+\label{dir:load-support}\progidxonly{load\_support}\\
+In this context, the default extension of the \patt{filename} will be the
+default extension used by the host logic programming system for names
+of files that contain Prolog code.%
+\index{default extension}%
+\index{extension of file name!default}%
+\index{file!name!default extension}
+
+
+
+%-------------------------------------------------------------------------------
+\Section{Declaring ``entry points''\label{sec:entry-points}}
+
+Before execution begins, the interpreted program is subjected to a number of
+sanity checks.  One of these is a check whether every defined predicate is
+actually called from somewhere (i.e., whether there is no dead code).
+
+Since it is not unusual for a program to contain a handful of such predicates
+on purpose (they are intended as ``entry points'' that are to be invoked from
+a query),
+the user can declare them by using a directive similar to the following:\\
+\ind\prog{:-~top~p/1,~q/2.}\label{dir:top}\progidxonly{top}\\
+The declaration is given only to suppress warnings.  However, it is an error
+for an undefined predicate or a support predicate to be so declared.
+
+
+
+%-------------------------------------------------------------------------------
+\Section{Declaring dynamic predicates\label{sec:dynamic}}
+
+To declare a predicate whose clauses are asserted and/or retracted by the
+interpreted program, use\index{predicate!dynamic}\\
+\ind\prog{:-~ dynamic~p/k.}\label{dir:dynamic}\progidxonly{dynamic}
+
+
+
+%-------------------------------------------------------------------------------
+\Section{Hooks\label{sec:hooks}}\index{hook}
+
+The program may contain clauses that modify the definition of the
+interpreter's predicate \predidx{essence\_hook/2} (the clauses will be
+asserted at the front of the predicate, and will thus override the default
+definition for some cases).  The interpreter's default definition is\\
+\ind\prog{essence\_hook(~T,~T~).}
+
+This predicate is invoked, in certain contexts, when:
+\begin{LightItemize}
+  \item
+    two terms are about to be compared (either for equality or to check
+    whether they are variants of each other);
+  \item
+    an answer is tabled;
+  \item
+    an answer is retrieved from the table.
+\end{LightItemize}
+
+The primary intended use is to allow suppression of arguments that carry only
+administrative information and that may differ in two terms that are
+considered to be ``semantically'' equal or variants of each other.
+
+For example, the presence of\\
+\ind\prog{essence\_hook(~p(~A,~B,~\_~),~~p(~A,~B~)~).}\\
+will result in \prog{p(~a,~b,~c~)} and \prog{p(~a,~b,~d~)} being treated as
+identical: each of them will be translated to \prog{p(~a,~b~)} before
+comparison.
+
+\begin{Warning}
+This facility should be used with the utmost caution, as it may drastically
+affect the semantics of the interpreted program in a fashion that could be
+hard to understand for someone who is not familiar with the details of the
+interpreter.
+\end{Warning}

@@ -1,0 +1,7 @@
+This is makeindex, version 2.15 [20-Nov-2007] (kpathsea + Thai support).
+Scanning style file ./index_style.ist...done (3 attributes redefined, 0 ignored).
+Scanning input file manual.idx....done (69 entries accepted, 0 rejected).
+Sorting entries....done (494 comparisons).
+Generating output file manual.ind....done (122 lines written, 0 warnings).
+Output written in manual.ind.
+Transcript written in manual.ilg.

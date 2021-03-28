@@ -1,0 +1,54 @@
+--------------------------------------------------------------------------------
+
+This directory includes the following files:
+
+dra.ecl:
+        A wrapping of dra_common.pl for Eclipse.
+
+dra.pl:
+        A wrapping of dra_common.pl for Sicstus.
+
+drap.pl:
+        A wrapping of dra_common.pl for SWI Prolog.  Safe for cyclic terms, but
+        DRA can be 2.5 times slower than with Sicstus (examples/XSB/ham.tlp).
+
+drapf.pl:
+        A wrapping of dra_common.pl for SWI Prolog: this one makes DRA
+        significantly faster than with Sicstus (on examples/XSB/ham.tlp).
+        HOWEVER, it cannot handle cyclic terms, so is not to be used for
+        programs with coinduction.
+
+dra_builtins.pl:
+        This file contains declarations of built-in predicates that are
+        allowed by the "dra" interpreter.  Support for many new predicates
+        can be obtained simply by extending the table, but some may require
+        special support from the interpreter.  In particular, addition of the
+        cut would be non-trivial (and probably ill-advised).
+
+dra_common.pl:
+        The code for an interpreter that implements tabling by using "Dynamic
+        Reordering of Alternatives".  This interpreter can handle programs
+        that use not only tabling, but also co-logic programming (even when
+        the same predicate is both coinductive and tabled).
+
+        Just load 'dra' into Eclipse or Sicstus!  The head comment (better
+        yet, the manual in "../doc/manual.pdf") explains how to use it.
+
+dra_table_assert.pl:
+        An implementation of the table of answers for DRA: answers are stored as
+        clauses.
+
+dra_table_record.pl:
+        An implementation of the table of answers for DRA: answers are stored in
+        the internal database.
+
+ex.tlp:
+ex2.tlp:
+        Two trivial prototypical examples.  See how ex.tlp gives only one
+        answer, because of the combination of coinduction with tabling.
+
+examples:
+        Some examples of tabled programs, all with the extension
+        ".tlp".
+
+--------------------------------------------------------------------------------

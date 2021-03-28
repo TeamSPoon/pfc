@@ -1,0 +1,17 @@
+--------------------------------------------------------------------------------
+
+This directory includes the following files:
+
+colp.ecl:
+        A very simple interpreter for co-logic programming, almost
+        exactly as it appeared in Luke Simon's Ph.D. thesis.
+
+        It can be executed by loading in an example that includes it.
+
+example2.clp:
+        Example 2 from that same thesis.  Just load it into your
+        favourite logic programming system, then issue some queries.
+        File "../examples/comember.clp", which is essentially the same
+        example, contains some example queries.
+
+--------------------------------------------------------------------------------

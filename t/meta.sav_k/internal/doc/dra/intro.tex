@@ -1,0 +1,164 @@
+\Chapter{Introduction\label{sec:intro}}
+
+\Section{Overview\label{sec:overview}}
+
+This document is a user manual for \about{dra}, an interpreter for tabled
+logic programming with coinduction.  The manual has been written for users of
+various versions of Unix: if you are running another system, various small
+details (such as the way to enter the end-of-file character) may be
+different.
+
+The interpreter implements ``top-down tabled programming'' via so called
+``Dynamic Reordering of Alternatives'' \cite{guo-gupta-dra}.  It also
+supports ``co-logic programming'', i.e., logic programs that contain
+coinductive predicates \cite{coinductive}, \cite{co-LP}.
+
+
+Apart from support for coinduction, there are two significant changes with
+respect to the original description \cite{guo-gupta-dra}:
+\begin{Enumerate}
+
+\item
+  A tabled goal will never produce the same result twice.\footnote{
+  In this document \Defconcept{goal} means an instance of a procedure call
+  (i.e., an invocation of a predicate).  A \Defconcept{tabled
+    goal}\index{goal!tabled} is a goal that invokes a tabled predicate. A
+  \Defconcept{result} is the instantiation of a goal when it succeeds.}
+
+  More precisely: a tabled goal will not succeed twice with instantiations
+  that are variants of each other.\index{duplicate
+    results}\index{result!duplicate}
+
+\item
+  By default, new results for a tabled goal will be produced before old
+  answers.\index{order of results}\index{result!order}
+  The user can reverse the order by issuing the directive\\
+  \ind\prog{:-~old\_first.}\label{dir:old-first}\progidxonly{old\_first}
+
+  A ``new result for a tabled goal''\label{new-result}\index{new
+    result}\index{result!new} is a result that has not yet been tabled for
+  this goal.  (More precisely: a result such that the table does not yet
+  contain a variant of this result associated with a variant of this goal.)
+
+  The default behaviour is intended to help computations converge more
+  quickly.  The user is given an option to change it, because some predicates
+  may produce a very large (even infinite) set of answers on backtracking,
+  and the application might not require those answers.
+\end{Enumerate}
+
+
+%-------------------------------------------------------------------------------
+\Section{Tabling\label{sec:tabling}}%
+\index{tabled predicate}%
+\index{predicate!tabled}
+
+By default, each predicate that is defined in the interpreted program is a
+``normal'' Prolog predicate.  If you want a predicate (\pred{p/2}, say) to be
+tabled, you must put an appropriate declaring directive in your
+program:%
+\footnote{
+    In literature about logic programming with tabling one often
+    encounters the form \prog{:- table p/2}.  Since the directive is
+    almost universally called a declaration (and not a command), the word
+    \about{tabled} is obviously more appropriate.}\\
+\ind\prog{:-~tabled~p/2.}\label{dir:tabled}\progidxonly{tabled}
+
+When you declare a predicate as tabled, there will be
+two consequences:
+\begin{Enumerate}
+\item
+  Every time a goal with this predicate symbol (i.e., an invocation of this
+  predicate) succeeds, the result (i.e., the resulting instantiation of the
+  goal) is stored in a special table called the \Defconcept{answer
+    table}\index{table|see{answer table}}.  Such a tabled result is commonly
+  referred to as an \Defconcept{answer}.\index{answer}
+
+  Once all the possible results have been so stored, subsequent invocations
+  can draw upon the tabled answers, instead of recomputing them all over
+  again. This is all done in a way that does not affect the semantics of the
+  program, except perhaps for the order in which results are reported and the
+  number of repetitions of the same result. (Of course, if your program is
+  not sufficiently close to pure Prolog, e.g., if it relies on and/or
+  produces side-effects, then all bets are off.)
+
+\item
+  When a goal that invokes a tabled predicate is found to be a variant of one
+  of its ancestors on the recursion stack, the goal is not
+  expanded.\footnote{
+    Instead, it succeeds with results that have already been put into the
+    table (or fails if there are none).  Things are arranged so that no
+    results are lost.}
+  This allows you to write your predicates in a more declarative fashion,
+  without worrying, e.g., about the danger of left recursion.
+\end{Enumerate}
+
+
+Tabling is not always as advantageous as one might think, for two reasons:
+  \begin{Enumerate}
+  \item
+    If the number of results is large, and goals are seldom repeated, the
+    main effect might be a significantly increased demand for memory, which
+    is not offset by a shorter processing time.
+
+  \item It so happens that in order to preserve the semantics of the program
+    the tabled answers must be associated with the goal that produced them,
+    and are accessible only to variant goals.  Other goals that invoke the
+    same predicate will require recomputation, and the computed results will
+    increase the size of the table, even if they are the same as those that
+    have already been stored.
+  \end{Enumerate}
+
+
+A more extensive discussion of tabling is well outside the scope of this user
+manual.
+
+
+
+%-------------------------------------------------------------------------------
+\Section{Coinduction\label{sec:coindution}}%
+\index{coinductive predicate}%
+\index{predicate!coinductive}
+
+The interpreter supports ``old style'' coinduction (see \cite{coinductive}
+and \cite{co-LP}), as well as ``new style'' coinduction
+\cite{gupta-coinductive-personal}.
+
+If you want a predicate (\pred{p/2}, say) to be treated as an ``old style''
+coinductive predicate, you must put the following declaring directive in your
+program:\\
+\ind\prog{:-~coinductive~p/2.}%
+\label{dir:coinductive}\progidxonly{coinductive}
+
+Such a declaration has one effect:
+\begin{Itemize}
+  \item
+    If a goal that invokes a coinductive predicate is found to be unifiable
+    with an ancestor on the recursion stack, the goal is unified with the
+    ancestor and succeeds.  Upon backtracking it is unified---one by
+    one\footnote{
+      In \about{dra} this is done in reverse chronological order, i.e.,
+      the more immediate ancestors are used first.
+    }---with other such ancestors;
+    it is expanded in the normal way (i.e., by
+    using clauses) only when all the unifiable ancestors have been taken
+    advantage of in this manner.
+\end{Itemize}
+
+If you want \pred{p/2} to be treated as a ``new style'' coinductive predicate,
+use the declaration:\\
+\ind\prog{:-~coinductive1~p/2.}%
+\label{dir:coinductive1}\progidxonly{coinductive1}\\
+This causes the predicate to be treated as above, except that clauses are used
+only when there are no unifiable ancestors.\footnote{%
+  The mnemonic value of our particular convention is that the ``new style''
+  coinductive predicates give you only one way to satisfy a goal.}
+
+The declaration \prog{:-~coinductive~p/2.} subsumes \prog{:-~coinductive1~p/2.}
+if both are present in the same program.  If a predicate is declared as both
+coinductive in the new style and tabled, then tabled answers are used even for
+goals that have unifiable ancestors.
+
+Declaring a predicate as coinductive gives it a radically new meaning, which is
+often the appropriate one for operations on ``infinite'' terms (represented by
+cyclic terms).  Again, further discussion of the concept is outside the scope of
+this document.

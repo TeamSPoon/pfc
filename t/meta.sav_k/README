@@ -1,0 +1,115 @@
+--------------------------------------------------------------------------------
+
+     Please direct all queries, error reports, suggestions for
+     improvement and other comments to Feliks Kluzniak at
+
+         feliks.kluzniak@utdallas.edu
+
+..................
+
+
+This directory contains interpreters and/or translators for various
+extensions of logic programming.
+
+The code has originally been written in Eclipse Prolog.  No attempt has
+at that time been made to make it portable to different versions of
+Prolog, since such porting should be possible with only moderate
+effort. The main difficulties are:
+
+1. Use has been made of the "string" data type that can be used in
+   Eclipse for input, output, naming files etc. etc.
+
+2. In order to avoid name conflicts, interpreted programs are stored in
+   a special module.  The module facility of Eclipse is quite advanced,
+   and different from that found in some other Prolog systems.
+   To port, one could simply remove all references to modules (in
+   particular, occurrences of "@interpreted") and either live with the
+   possibility of name conflicts, or solve the problem in a different
+   way (e.g., by adding "i_" at the beginning of each interpreted
+   predicate).
+
+3. Eclipse has many convenient built-ins that might not be present in
+   other Prolog systems (and that might, therefore, require
+   implementation in Prolog in terms of the available built-ins).
+
+(It should be noted that in principle porting is not necessary.  Eclipse
+is freely available from  http://www.eclipse-clp.org .)
+
+
+Most of the code has then been (somewhat hastily) converted to Sicstus Prolog
+(version 4.0).  Conversion to other Prolog systems may require some work.  In
+particular, Sicstus Prolog's module facility is used to store interpreted
+programs (watch for the prefix "interpreted :" in the code).  If you don't
+have access to such a facility, you will either have to live with the
+possibility of name clashes (not recommended!), or just store the interpreted
+clauses as facts of a dynamic predicate, say rule/2 (i.e., access via
+"rule( Head, Body )" instead of via "clause( Head, Body )"), which might mean
+a slight decrease in efficiency due to loss of indexing on the first argument
+of a clause head.
+
+NOTE: At the time of this writing Eclipse tends to behave quite
+      unreasonably when presented with cyclic terms.  It is therefore
+      advisable to use the Sicstus version for coinductive programs,
+      especially when they are coupled with tabling.
+
+LATER ADDITION:  The programs have now been ported to SWI Prolog.  SWI Prolog
+                 is now our standard Prolog system.  Sicstus is supported
+                 marginally (we don't have access to the latest version), and
+                 support for Eclipse has essentially been dropped, mostly
+                 because of its brittleness in the presence of cyclic terms.
+
+
+
+..................
+
+
+Here is a short description of the sub-directories:
+
+coind
+-----
+Directory "coind" contains "colp", a simple interpreter for "co-logic
+programming", i.e., logic programming that allows coinductive
+interpretation of selected predicates.
+
+It also contains "translate_colp", a simple translator that will
+transform a program that includes coinductive predicates to a
+straightforward logic program (conceptually, the translated version can
+be seen as a result of partially evaluating the program together with
+the interpreter).
+
+The subdirectory "examples" contains a handful of simple examples to
+exercise the interpreter and the translator.
+
+
+doc
+---
+Directory "doc" contains documentation.
+
+
+general
+-------
+Directory "general" contains utility code that is used by the other
+programs.
+
+
+tabling
+-------
+Directory "tabling" is intended to contain interpreters that illustrate
+various approaches to logic programming with tabling.
+
+All tabling interpreters can be used to run programs that mix tabling with
+coinduction, as long as they contain no predicates that are both tabled and
+coinductive.  To run such a program one should first translate it with
+"translate_colp" (see the description of directory "coind").
+
+The interpreter "dra" implements tabling by using "Dynamic Reordering of
+Alternatives".  This interpreter can handle programs that use not only
+tabling, but also co-logic programming (even when the same predicate is both
+coinductive and tabled).
+
+The subdirectory "examples" contains a handful of simple examples to
+exercise the interpreters.  In particular, sub-subdirectory "LTL" contains a
+version of Gopal Gupta's elegant interpreter for Linear Temporal Logic, as
+well as some examples to exercise it.
+
+--------------------------------------------------------------------------------

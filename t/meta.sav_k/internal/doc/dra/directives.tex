@@ -1,0 +1,77 @@
+\chapter*{Summary of directives\label{directives}}%
+\addcontentsline{toc}{chapter}{Summary of directives}
+
+
+{\small
+An argument specified as \patt{PredSpec} can take three forms:
+\begin{LightEnumerate}
+\item
+  A predicate specification written as \pred{name/arity}: for example
+  \prog{foo/3} (in the short descriptions below we will assume this is the form
+  that is used);
+\item
+  A sequence of such specifications, separated by commas: for example\\
+  \prog{p/2,~q/1,~r/3};
+\item
+  The word \prog{all}, which specifies all predicates. (This cannot be used
+  for \prog{support} and \prog{dynamic}!)
+\end{LightEnumerate}
+If the same kind of directive occurs a number of times, specifying different
+predicates, the results are cumulative.  In particular, \prog{all} subsumes all
+other predicate specifications.
+
+\newlength{\DescWidth}
+\setlength{\DescWidth}{16em}
+\begin{tabular}{llr}
+\emph{Directive:}      & \emph{Short description:}   \\
+
+\prog{:-~[~\patt{filename}~].}
+                   & \parbox[t]{\DescWidth}{
+                        load a part of the program (\Pageref{dir:include})}\\
+
+\prog{:-~answers(~\patt{Goal},~\patt{Pattern}~).}
+                  & \parbox[t]{\DescWidth}{
+                       inspect the answer table (\Pageref{dir:answers})}\\
+
+\prog{:-~coinductive~\patt{PredSpec}.}
+                   & \parbox[t]{\DescWidth}{
+                       predicate is coinductive (old style)
+                       (\Pageref{dir:coinductive})}\\
+
+\prog{:-~coinductive1~\patt{PredSpec}.}
+                   & \parbox[t]{\DescWidth}{
+                       predicate is coinductive (new style)
+                       (\Pageref{dir:coinductive1})}\\
+
+\prog{:-~dynamic~\patt{PredSpec}.}
+                  & \parbox[t]{\DescWidth}{
+                        predicate is dynamic (\Pageref{dir:dynamic})}\\
+
+\prog{:- load\_support(~\patt{filename}~).}
+                   & \parbox[t]{\DescWidth}{
+                      load (a part of) the support layer
+                                                (\Pageref{dir:load-support})}\\
+
+\prog{:-~old\_first.} &  \parbox[t]{\DescWidth}{
+                                 change the order in which results are produced
+                                 (\Pageref{dir:old-first})
+                                 }\\
+
+\prog{:- support~\patt{PredSpec}}
+                   & \parbox[t]{\DescWidth}{
+                       predicate is an entry point to the support layer
+                                                   (\Pageref{dir:support})}\\
+
+\prog{:-~tabled~\patt{PredSpec}.}
+                   & \parbox[t]{\DescWidth}{
+                            predicate is tabled (\Pageref{dir:tabled})}\\
+
+\prog{:-~top~\patt{PredSpec}}
+                   & \parbox[t]{\DescWidth}{
+                        predicate is an entry point (\Pageref{dir:top})}\\
+
+\prog{:-~trace~\patt{PredSpec}.}
+                  & \parbox[t]{\DescWidth}{
+                        trace the predicate (\Pageref{dir:trace})}
+\end{tabular}
+} % small

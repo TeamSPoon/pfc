@@ -1,0 +1,25 @@
+\BOOKMARK [0][-]{chapter.1}{Introduction}{}
+\BOOKMARK [1][-]{section.1.1}{Overview}{chapter.1}
+\BOOKMARK [1][-]{section.1.2}{Tabling}{chapter.1}
+\BOOKMARK [1][-]{section.1.3}{Coinduction}{chapter.1}
+\BOOKMARK [0][-]{chapter.2}{The interpreted programs}{}
+\BOOKMARK [1][-]{section.2.1}{Limitations}{chapter.2}
+\BOOKMARK [1][-]{section.2.2}{The notion of ``support''}{chapter.2}
+\BOOKMARK [1][-]{section.2.3}{Declaring ``entry points''}{chapter.2}
+\BOOKMARK [1][-]{section.2.4}{Declaring dynamic predicates}{chapter.2}
+\BOOKMARK [1][-]{section.2.5}{Hooks}{chapter.2}
+\BOOKMARK [0][-]{chapter.3}{Running a program}{}
+\BOOKMARK [1][-]{section.3.1}{Loading the interpreter}{chapter.3}
+\BOOKMARK [1][-]{section.3.2}{Loading a program}{chapter.3}
+\BOOKMARK [1][-]{section.3.3}{Interacting with a loaded program}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.3.1}{The interactive mode}{section.3.3}
+\BOOKMARK [2][-]{subsection.3.3.2}{Resuming the interactive mode}{section.3.3}
+\BOOKMARK [2][-]{subsection.3.3.3}{Exiting the interactive mode}{section.3.3}
+\BOOKMARK [2][-]{subsection.3.3.4}{Statistics}{section.3.3}
+\BOOKMARK [2][-]{subsection.3.3.5}{Print depth}{section.3.3}
+\BOOKMARK [1][-]{section.3.4}{Including other files}{chapter.3}
+\BOOKMARK [1][-]{section.3.5}{Inspecting the answer table}{chapter.3}
+\BOOKMARK [1][-]{section.3.6}{The ``wallpaper'' trace}{chapter.3}
+\BOOKMARK [0][-]{chapter*.2}{Summary of directives}{}
+\BOOKMARK [0][-]{section*.4}{Bibliography}{}
+\BOOKMARK [0][-]{section*.5}{Index}{}

@@ -1,0 +1,217 @@
+\documentclass[12pt,final]{report}
+\usepackage{fancyvrb}
+\usepackage{float}
+\usepackage{varioref}
+\usepackage[nottoc]{tocbibind} % Doesn't play well with package "index" :-(
+\usepackage{makeidx}
+%\usepackage{index}  % prevents expansion in index entries, needed for progidx
+                     % Makes hyperref for index go awry, so decided to use
+                     % explicit protect instead: turned out not to be neeeded
+
+%\proofmodetrue      %  <<<< (index) suppress for the final copy <<<<<<
+
+
+\usepackage{parskip}[2001/04/09]
+%\setlength{\parindent}{0pt}
+%\setlength{\parskip}{2ex}
+
+\usepackage[colorlinks]{hyperref}
+
+\makeindex
+
+%----------------------------------------------------------------------
+%  MACROS
+
+% Facilitate transition between article and book:
+\newcommand*{\Chapter}[1]{\chapter{#1}}
+\newcommand*{\Section}[1]{\section{#1}}
+\newcommand*{\Subsection}[1]{\subsection{#1}}
+%\newcommand*{\Chapter}[1]{\section{#1}}
+%\newcommand*{\Section}[1]{\subsection{#1}}
+%\newcommand*{\Subsection}[1]{\subsubsection{#1}}
+
+% Three asterisks break the text up where even a subsection is not merited:
+% use this as a separate paragraph:
+\newcommand*{\Breakup}{\[\ast\ast\ast\]}
+
+% Definition of a new concept:
+\newcommand*{\Defconcept}[1]{\emph{#1}\index{#1}}
+% Ditto if the word is different from the index entry:
+\newcommand*{\Defconcepti}[2]{\emph{#1}\index{#2}}
+
+% A short form of a tiny \marginpar:
+\newcommand*{\mpar}[1]{\marginpar{\tiny#1}}
+
+% A word in the text that should be indexed:
+\newcommand*{\Index}[1]{#1\index{#1}}
+
+% A word that is the object of discussion:
+\newcommand*{\about}[1]{\emph{#1}}
+
+% A small piece of a concrete program etc.:
+\newcommand*{\prog}[1]{\texttt{#1}}
+
+% A ``pattern'', e.g., a generic variable within a concrete call:
+\newcommand*{\patt}[1]{\textit{#1}}
+
+% A reference to an entity in a program:
+\newcommand*{\progfrag}[1]{\about{#1}}
+
+% An example of a term in the text:
+\newcommand*{\term}[1]{\progfrag{#1}}
+
+% A predicate specification:
+\newcommand*{\pred}[1]{\about{#1}}
+
+% Ditto within an index entry:
+\newcommand*{\predidx}[1]{\about{#1}\index{#1@\pred{#1}}}
+
+% Ditto without putting into the text:
+\newcommand*{\predidxonly}[1]{\index{#1@\pred{#1}}}
+
+% An index entry for a procedure:
+\newcommand*{\progidx}[1]{\prog{#1}\index{#1@\prog{#1}}}
+
+% Ditto without putting into the text:
+\newcommand*{\progidxonly}[1]{\index{#1@\prog{#1}}}
+
+% A reference to a figure:
+\newcommand*{\Figref}[1]{Fig.~\vref{#1}}
+
+% A reference to a chapter:
+\newcommand*{\Chapref}[1]{chapter~\ref{#1}}
+
+% A reference to a section:
+\newcommand*{\Secref}[1]{Sec.~\protect\ref{#1}}
+
+% A reference to a page:
+\newcommand*{\Pageref}[1]{p.~\pageref{#1}}
+
+% An indentation
+\newcommand*{\ind}{\hbox{\hspace{2em}}}
+
+% Eclipse:
+\newcommand{\Eclipse}{ECL$^i$PS$^e$}
+
+%Sicstus:
+\newcommand{\Sicstus}{SICStus}
+
+
+
+%----------------------------------------------------------------------
+%  ENVIRONMENTS
+
+% A warning:
+\newenvironment{Warning}%
+{\begin{quote}\textbf{Warning:}\itshape}%
+{\end{quote}}
+
+% Itemize with no topsep:
+\newenvironment{Itemize}%
+{\begin{list}{$\bullet$}%
+    { \setlength{\topsep}{0pt}%
+}}%
+{\end{list}}
+
+% A lightweight itemize:
+\newenvironment{LightItemize}%
+{\begin{list}{--}%
+    { \setlength{\itemsep}{0.1ex}%
+      \setlength{\topsep}{0pt}%
+}}%
+{\end{list}}
+
+% Enumerate with no topsep:
+\newcounter{Enumcnt}
+\newenvironment{Enumerate}
+               {\begin{list}{\arabic{Enumcnt}.}%
+                   { \setlength{\topsep}{0pt}%
+                     \usecounter{Enumcnt}%
+               }}%
+               {\end{list}}
+
+% A lightweight enumerate, labeled with (a), {b):
+\newcounter{lightenumcnt}
+\newenvironment{LightEnumerate}
+               {\begin{list}{(\alph{lightenumcnt})}%
+                   {\setlength{\itemsep}{0pt}%
+                     \setlength{\topsep}{0pt}%
+                     \settowidth{\labelwidth}{(m)}%
+                     \usecounter{lightenumcnt}%
+               }}%
+               {\end{list}}
+
+%----------------------------------------------------------------------
+\title{The DRA Interpreter\\
+User Manual}
+
+\author{Feliks Klu{\'z}niak\\
+  \emph{Applied Logic, Programming Languages and Systems Lab}\\
+  \emph{Department of Computer Science}\\
+  \emph{University of Texas at Dallas}
+}
+\date{\small\today}
+
+\bibliographystyle{plain}
+
+
+%----------------------------------------------------------------------
+\begin{document}
+
+\maketitle
+
+%%% reverse of title page
+\thispagestyle{empty}
+\setcounter{page}{0}
+
+\fbox{\small
+  \begin{minipage}{\textwidth}
+    NOTICE:\\
+
+    \copyright 2009 University of Texas at Dallas
+
+    \mbox{}
+
+    Developed at the Applied Logic, Programming Languages and Systems (ALPS)
+    Laboratory at UTD by Feliks Klu{\'z}niak.
+
+    \mbox{}
+
+    Permission is granted to modify this text, and to distribute its original
+    or modified contents for non-commercial purposes, on the condition that
+    this notice is included in all copies in its original form.
+
+    \mbox{}
+
+    THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+    NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR ANYONE
+    DISTRIBUTING THE SOFTWARE BE LIABLE FOR ANY DAMAGES OR OTHER LIABILITY,
+    WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+\end{minipage}
+}
+
+\vfill  %%%%%%%%%
+
+{\footnotesize
+  All comments, queries and suggestions about this manual or the software
+  are welcome. The author's e-mail address is
+  \prog{feliks.kluzniak@utdallas.edu}.}
+%%% end reverse of title page
+
+\tableofcontents
+
+\include{intro}
+\include{programs}
+\include{running}
+\include{directives}
+
+\newpage
+\bibliography{bibliography}
+
+\newpage
+\printindex
+\end{document}

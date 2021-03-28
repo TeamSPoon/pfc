@@ -1,0 +1,19 @@
+% An example from "Linear Tabling Strategies and Optimizations" by
+% Neng-Fa Zhou, Taisuke Sato and Yi-Dong Shen.
+
+:- tabled p/2 .
+
+p( X, Y ) :-  p( X, Z ),  q( Z, Y ).
+p( b, c ) :-  p( X, Y ).
+p( a, b ).
+
+
+:- tabled q/2 .
+
+q( c, d ) :-  p( X, Y ),  t( X, Y ).
+
+
+t( a, b ).
+
+
+?- p( X, Y ).     % expected:  p( a, b ),  p( b, c ),  p( b, d )

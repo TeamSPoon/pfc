@@ -1,0 +1,84 @@
+-------------------------------------------------------------------------------
+
+ 2 Apr 2009 :  Version 0.9 (beta).
+
+29 Apr 2009:   Corrected two errors, added earlier detection of completion.
+
+11 Apr 2009:   "New style" coinduction.
+
+16 Apr 2009:   - "New style" coinduction should not be the default, so
+                 instead of ":- coinductive." and ":- coinductive2." we now
+                 have ":- coinductive1." and ":- coinductive.", respectively.
+               - Corrected a major error in the choice of data structures.
+
+31 August 2009 (version 0.93 (beta)):
+               - Various minor corrections, mostly cosmetic.
+               - Making things acceptable to SWI Prolog:
+                  1) Made the convention for partial application (as an
+                     argument to apply/2) compatible with that of SWI Prolog,
+                     which has apply/2 as a built-in.
+                  2) Commented out mode declarations.
+                  3) Renamed set_to_list/2 to list_from_set/2.
+                  4) Some operators had to be put between parentheses.
+                - Refactoring DRA files in order to facilitate porting to
+                  SWI Prolog.
+                - A version of DRA for SWI Prolog ("drap.pl").  The manual
+                  was updated accordingly.
+                - The process of porting to SWI Prolog uncovered an error in
+                  DRA that did not manifest itself before only because both
+                  Sicstus and Eclipse provide logical update semantics for
+                  assert/1. The error is now fixed.
+                - Avoided potential errors due to inadequate implementations
+                  of variant/2 in the three Prolog systems (results are
+                  undefined if the arguments share variables).
+                - Addition of three examples by Brian W. DeVries. The
+                  examples bring to light shortcomings of the current simple
+                  LTL verifier.
+                - Modified the LTL verifier to take care of one of these
+                  examples (modification suggested by Brian W. DeVries).
+
+4 September 2009 (version 0.94 (beta)):
+                - Fixed a subtle error in the represantation of the some
+                  tables in DRA (including the answer table).  The error
+                  could lead to missing answers for programs that used
+                  essence_hook/2.
+                - Made the SWI Prolog version faster: examples/XSB/ham.tlp is
+                  now 2.2 times slower than with Sicstus.  This was done by
+                  more clever encoding of the data.
+                - Made the SWI Prolog version even faster: it turns out using
+                  the recorded data base is even more expensive than frequent
+                  decompilation of clauses (especially for the auxiliary
+                  data).  The code that uses the internal database is still
+                  available, in case it should come in handy in future
+                  porting efforts.
+                - Used essence_hook/2 to make verifier.tlp run the difficult
+                  examples due to Brian W. DeVries.
+
+10 September 2009 (same version, i.e., 0.94 (beta))
+                - The previous release was not good for cyclic terms, because
+                  the new implementation of variant/2 did not handle them
+                  correctly.  This has been fixed, but Eclipse essentially
+                  cannot handle cyclic terms now.
+                - SWI Prolog must use the recorded database if it is to handle
+                  cyclic terms.  This makes it 2.5 times slower than Sicstus
+                  on XSB/ham.
+
+28 September 2009, version 0.95 (beta)
+                - Take advantage of variant/2 in SWI Prolog (which is
+                  correctly implemented since version 5.7.15).
+                - Various small changes to bring DRA up on YAP.
+
+30 November 2009, version 0.96 (beta):
+                - Improved treatment of variants and instances (thanks to advice
+                  by Ulrich Neumerkel).
+
+ 8 June 2010 (same version):
+                - Fixed an error in clause checker (found by Abramo Bagnara).
+                  Proper checking of singletons in DCG rules (not used in these
+                  metainterpreters).  A few other minor improvements, not worth
+                  bumping the version counter.
+
+June 2011 version 0.97 (beta):
+                - Added Ronald de Haan's display of cyclic terms as equations.
+
+-------------------------------------------------------------------------------

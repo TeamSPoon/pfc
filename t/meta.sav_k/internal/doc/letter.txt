@@ -1,0 +1,157 @@
+     NOTE: I have access only to Sicstus 4.0, a fairly old release.  It
+            may well be that my remarks do not apply to more recent
+            releases.
+
+I am using Sicstus, Eclipse and SWI Prolog to run a metainterpreter that
+supports coinduction and tabling (using the DRA method of Gupta and
+Guo).  The interpreter must very frequently test whether two terms are
+variants of each other.
+
+I was therefore surprised to notice that both Sicstus and Eclipse
+guarantee the proper functioning of variant/2 only in the event when the
+arguments do not share variables.  Both Eclipse and SWI Prolog may give
+wrong results when the arguments do share variables.  (I am not sure
+about Sicstus).  Details can be found below.
+
+This is very disappointing, as implementing a correct version of
+variant/2 seems to present no conceptual difficulties.  If one has a
+predicate mk_ground/1 that grounds its argument (e.g., by calling
+numbervars/3), then of course the trick will be done by:
+
+    subsumes_chk(  General, Specific ) :-
+        \+ \+ (mk_ground( Specific ), General = Specific).
+
+    variant( A, B ) :-
+        subsumes_chk( A, B ),  subsumes_chk( B, A ).
+
+One would hope that an implementation of Prolog  would provide a very
+quick way of achieving the same result.
+
+Instead, the three systems provide only a half-solution.  And this is
+more dangerous than no solution at all.  The user can very easily miss
+the caveats in the documentation (I know I did), and wind up with a
+program whose lack of correctness may be difficult to detect.
+
+I would therefore like to appeal to all implementors of Prolog systems:
+if you cannot quickly provide a good solution, please, provide at least
+a correct one (or none at all).  Adding a caveat to the documentation
+does not really solve any problems.
+
+
+REMARKS: 1. I was unable to find the counterpart of numbervars/3 in
+            Eclipse, though it does have facilities for handling the
+            results when writing terms.  It is, of course, not difficult
+            to roll one's own in Prolog.
+
+         2. As Jan Wielemaker pointed out, the question may be a little
+            more involved when one considers the interaction of
+            variant/2 with constraints.  My comments are made in the
+            context of pure logic programming.
+
+         3. Of course, subsumes_chk/2 (subsumeschk/2 in Sicstus) should
+            be called subsumes/2, and subsumes/2 should be called
+            subsume/2, because it actually performs the action of
+            subsuming.  I realise it is probably too late to correct the
+            names. :-(
+
+
+
+...........................................................................
+Sicstus 4.0:
+------------
+
+subsumeschk(+General, +Specific)
+    is true when Specific is an instance of General. It does not bind
+    any variables.
+
+subsumes(+General, +Specific)
+    is true when Specific is an instance of General. It will bind
+    variables in General (but not those in Specific) so that General
+    becomes identical to Specific.
+
+variant(+Term, +Variant)
+    is true when Term and Variant are identical modulo renaming of
+    variables, provided Term and Variant have no variables in common.
+
+Test:
+
+   I was not able to produce an example of a wrong answer.
+
+
+COMMENT:
+   variant/2 is implemented in "library( terms )" as:
+
+      variant(Term, Variant) :-
+           subsumeschk(Term, Variant),
+           subsumeschk(Variant, Term).
+
+   So either subsumeschk/2 is not sufficiently documented or the caveat
+   in  variant/2 should have been removed.
+
+
+
+...........................................................................
+Eclipse:
+--------
+
+variant(?Term1, ?Term2)
+
+   ....
+
+   Succeeds if the given terms are equal in the sense that all ground
+   instantiations in Term1 are also instantiations in Term2 and vice
+   versa. The result is undefined if Term1 and Term2 share variables. No
+   unification is performed.
+
+Test:
+
+   l> eclipse
+   ECLiPSe Constraint Logic Programming System [kernel]
+   Kernel and basic libraries copyright Cisco Systems, Inc.
+   and subject to the Cisco-style Mozilla Public Licence 1.1
+   (see legal/cmpl.txt or www.eclipse-clp.org/licence)
+   Source available at www.sourceforge.org/projects/eclipse-clp
+   GMP library copyright Free Software Foundation, see legal/lgpl.txt
+   For other libraries see their individual copyright notices
+   Version 6.0 #96 (i386_linux), Mon Aug 17 14:29 2009
+   [eclipse 1]: variant( a( X, Y ), a( X, X ) ).
+
+   X = X
+   Y = Y
+   Yes (0.00s cpu)
+   [eclipse 2]: variant( a( X, Y ), a( Y, Y ) ).
+
+   X = X
+   Y = Y
+   Yes (0.00s cpu)
+   [eclipse 3]:
+
+
+...........................................................................
+SWI Prolog:
+-----------
+
+No caveats in the documentation.  (I understand this will change in the
+next release, as a stopgap measure before variant/2 is fixed.)
+
+Test:
+
+   > pl
+   % library(swi_hooks) compiled into pce_swi_hooks 0.00 sec, 2,060 bytes
+   Welcome to SWI-Prolog (Multi-threaded, 32 bits, Version 5.7.14)
+   Copyright (c) 1990-2009 University of Amsterdam.
+   SWI-Prolog comes with ABSOLUTELY NO WARRANTY. This is free software,
+   and you are welcome to redistribute it under certain conditions.
+   Please visit http://www.swi-prolog.org for details.
+
+   For help, use ?- help(Topic). or ?- apropos(Word).
+
+   ?- variant( a( X, Y ), a( X, X ) ).
+   false.
+
+   ?- variant( a( X, Y ), a( Y, Y ) ).
+   true.
+
+   ?-
+
+...........................................................................

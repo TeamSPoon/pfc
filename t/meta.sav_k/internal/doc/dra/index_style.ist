@@ -1,0 +1,13 @@
+%%
+%% Big letters before each group:
+%%
+% heading_prefix "{\\bfseries\\hfil "         % in front of letter
+% heading_suffix "\\hfil}\\nopagebreak\n"     % after letter
+% headings_flag 1                             % turn on letter headings
+
+%%
+%% Right-adjust page numbers, filling with dots:
+%%
+delim_0 "\\dotfill "
+delim_1 "\\dotfill "
+delim_2 "\\dotfill "

@@ -1,0 +1,83 @@
+--------------------------------------------------------------------------------
+
+This directory includes the following files:
+
+boolean_operations.pl:
+        Evaluation of simple boolean expressions.
+
+clause_verification.pl:
+        Utilities for checking whether clauses are well-formed.
+
+checker.pl:
+        This is a general utility for checking a file with a Prolog program.
+        It is tailored to SWI Prolog.
+        It could be improved to take into account modules and inclusion of
+        files.  DCGs are not properly checked, either.
+
+compatibility_utilities.ecl:
+compatibility_utilities.pl:
+        Predicates that hide some incompatibilities between Eclipse and
+        Sicstus.
+
+dlist.pl:
+        Basic operations on difference lists.
+
+errors_and_warnings.pl:
+        Utilities for producing diagnostics (and aborting execution in the
+        case of errors).
+
+goal_table_in_tree.pl:
+        A data structure for keeping Prolog goals, implemented as an open
+        tree of open lists.
+
+goal_table_simple.pl:
+        A data structure for keeping Prolog goals, implemented as an open
+        list.
+
+higher_order.pl:
+        A few predicates for higher order operations (simulating some basic
+        operations known from functional programming).
+
+io_utilities.pl:
+        Utilities that have to do with input and output.
+
+Makefile:
+        Creates a stand-alone clause checker (advanced checking for singleton
+        variables).
+
+olist.pl:
+        Basic operations on open lists.
+
+open_set_in_tree.pl:
+        Simple operations on open sets, used by utilities.
+
+otree.pl:
+        Basic operations on open trees.
+
+program_consistency.pl:
+        An auxiliary of top_level: checks general consistency of the loaded
+        program.
+
+output_equation.pl:
+        Ronald de Haan's predicates for converting a cyclic term to a set
+        of equations (used in top_level.pl).
+
+README:
+        This file.
+
+set_in_list.pl:
+        Simple operations on smallish sets, used by utilities.
+
+top_level.pl:
+        A simple top level (i.e., code that reads and stores programs,
+        executes queries etc.).  It is loaded automatically by those
+        metainterpreters that need it.
+
+utilities.pl:
+        A set of useful predicates, loaded and called by the other programs.
+        Loads also most of the other utility files in this directory.
+
+vardict_utilities.pl:
+        Utilities that have to do with variable dictionaries.
+
+--------------------------------------------------------------------------------

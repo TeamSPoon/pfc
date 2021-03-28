@@ -1,0 +1,69 @@
+\indexentry{duplicate     results|hyperpage}{3}
+\indexentry{result!duplicate|hyperpage}{3}
+\indexentry{order of results|hyperpage}{3}
+\indexentry{result!order|hyperpage}{3}
+\indexentry{old\_first@\texttt  {old\_first}|hyperpage}{3}
+\indexentry{goal|hyperpage}{3}
+\indexentry{tabled goal|hyperpage}{3}
+\indexentry{goal!tabled|hyperpage}{3}
+\indexentry{result|hyperpage}{3}
+\indexentry{new     result|hyperpage}{4}
+\indexentry{result!new|hyperpage}{4}
+\indexentry{tabled predicate|hyperpage}{4}
+\indexentry{predicate!tabled|hyperpage}{4}
+\indexentry{tabled@\texttt  {tabled}|hyperpage}{4}
+\indexentry{answer table|hyperpage}{4}
+\indexentry{table|see{answer table}}{4}
+\indexentry{answer|hyperpage}{4}
+\indexentry{answer|hyperpage}{4}
+\indexentry{coinductive predicate|hyperpage}{5}
+\indexentry{predicate!coinductive|hyperpage}{5}
+\indexentry{coinductive@\texttt  {coinductive}|hyperpage}{5}
+\indexentry{coinductive1@\texttt  {coinductive1}|hyperpage}{6}
+\indexentry{cut|hyperpage}{7}
+\indexentry{"!/2@\pred{"!/2}|hyperpage}{7}
+\indexentry{conditional construct|hyperpage}{7}
+\indexentry{once/1@\emph  {once/1}|hyperpage}{7}
+\indexentry{variable     literal|hyperpage}{7}
+\indexentry{call/1@\emph  {call/1}|hyperpage}{7}
+\indexentry{built-in predicates|hyperpage}{7}
+\indexentry{support@\texttt  {support}|hyperpage}{8}
+\indexentry{load\_support@\texttt  {load\_support}|hyperpage}{9}
+\indexentry{default extension|hyperpage}{9}
+\indexentry{extension of file name!default|hyperpage}{9}
+\indexentry{file!name!default extension|hyperpage}{9}
+\indexentry{top@\texttt  {top}|hyperpage}{9}
+\indexentry{predicate!dynamic|hyperpage}{9}
+\indexentry{dynamic@\texttt  {dynamic}|hyperpage}{9}
+\indexentry{hook|hyperpage}{9}
+\indexentry{essence\_hook/2@\emph  {essence\_hook/2}|hyperpage}{9}
+\indexentry{loading the interpreter|hyperpage}{11}
+\indexentry{import@\texttt  {import}|hyperpage}{12}
+\indexentry{loading a program|hyperpage}{12}
+\indexentry{prog@\texttt  {prog}|hyperpage}{12}
+\indexentry{default extension|hyperpage}{12}
+\indexentry{extension of file name!default|hyperpage}{12}
+\indexentry{file!name!default extension|hyperpage}{12}
+\indexentry{once/1@\emph  {once/1}|hyperpage}{12}
+\indexentry{interactive mode|hyperpage}{13}
+\indexentry{directive|hyperpage}{13}
+\indexentry{query|hyperpage}{13}
+\indexentry{name space|hyperpage}{13}
+\indexentry{interpreted@\texttt  {interpreted}|hyperpage}{14}
+\indexentry{support@\texttt  {support}|hyperpage}{14}
+\indexentry{interactive mode!resuming|hyperpage}{14}
+\indexentry{top@\texttt  {top}|hyperpage}{14}
+\indexentry{interactive mode!exiting|hyperpage}{14}
+\indexentry{quit@\texttt  {quit}|hyperpage}{14}
+\indexentry{statistics|hyperpage}{14}
+\indexentry{statistics|hyperpage}{14}
+\indexentry{print depth|hyperpage}{15}
+\indexentry{set\_print\_depth/1@\emph  {set\_print\_depth/1}|hyperpage}{15}
+\indexentry{including a file|hyperpage}{15}
+\indexentry{file!inclusion|hyperpage}{15}
+\indexentry{default extension|hyperpage}{15}
+\indexentry{extension of file name!default|hyperpage}{15}
+\indexentry{file!name!default extension|hyperpage}{15}
+\indexentry{answer table|hyperpage}{16}
+\indexentry{answers@\texttt  {answers}|hyperpage}{16}
+\indexentry{trace@\texttt  {trace}|hyperpage}{17}
