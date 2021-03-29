@@ -374,7 +374,7 @@ ensure_abox(M):-
   dynamic(M:defaultTBoxMt/1),
   must(ensure_abox_support(M,baseKB)),!.
 
-%setup_database_term(_:F/A):- F\==spft, current_predicate(system:F/A),!.
+%setup_database_term(_:F/A):- F\=='$spft', current_predicate(system:F/A),!.
 setup_database_term(_:(==>)/1):- !.
 setup_database_term(M:F/A):-  
   dynamic(M:F/A),multifile(M:F/A),public(M:F/A),module_transparent(M:F/A),
@@ -747,7 +747,7 @@ baseKB:hybrid_support(predicateConventionMt,2).
 baseKB:hybrid_support(functorDeclares,1).
 baseKB:hybrid_support(arity,2).
 
-%baseKB:hybrid_support(spft,3).
+%baseKB:hybrid_support('$spft',4).
 
 baseKB:hybrid_support(mtHybrid,1).
 baseKB:hybrid_support(mtCycLBroad,1).

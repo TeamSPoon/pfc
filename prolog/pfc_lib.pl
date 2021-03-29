@@ -13,6 +13,21 @@
 :- module(pfc_lib,[]).
 :- set_module(class(library)).
 
+:- dynamic(baseKB:'$spft'/4).
+:- export(baseKB:'$spft'/4).
+:- system:multifile(baseKB:'$spft'/4).
+:- system:import(baseKB:'$spft'/4).
+
+
+:- dynamic(baseKB:'$pt'/3).
+:- export(baseKB:'$pt'/3).
+:- system:multifile(baseKB:'$pt'/3).
+:- system:import(baseKB:'$pt'/3).
+:- system:export(baseKB:'$pt'/3).
+
+wdmsg_pfc((X:-Y)):- !, pprint_ecp_cmt(yellow,(X:-Y)),!.
+wdmsg_pfc(X):- with_output_to(string(S),print_tree(X)), pprint_ecp_cmt(yellow,S),!.
+wdmsg_pfc(X,Y):- wdmsg_pretty(X,Y),!.
 %:- if(( (current_prolog_flag(pfc_version, v(2,0,_))))).
 
 :- multifile(user:prolog_load_file/2).
@@ -204,10 +219,10 @@ kb_global_w(M:F/A):-
 :- kb_global_w(baseKB:tms/1).
 
 :- kb_global_w(baseKB:do_and_undo/2).
-:- kb_global_w(baseKB:bct/2).
-:- kb_global_w(baseKB:nt/3).
-:- kb_global_w(baseKB:pt/2).
-:- kb_global_w(baseKB:spft/3).
+:- kb_global_w(baseKB:'$bt'/2).
+:- kb_global_w(baseKB:'$nt'/3).
+:- kb_global_w(baseKB:'$pt'/3).
+:- kb_global_w(baseKB:'$spft'/4).
 
 WILL BE ..
 :- kb_global_w(baseKB:tpky/4).
@@ -220,7 +235,7 @@ WILL BE ..
 :- kb_shared(baseKB:bkch/3).
 :- kb_shared(baseKB:tneg/4).
 :- kb_shared(baseKB:tpos/3).
-:- kb_shared(baseKB:spft/4).
+:- kb_shared(baseKB:'$spft'/4).
 */
 
 :- kb_shared(baseKB:never_assert_u/1).
@@ -550,18 +565,21 @@ notrace_ex(X):- catch(notrace(X),_,rtrace(X)).
 
 %:- fixup_exports.
 
+get_mz(MZ):- strip_module(_,MZ,_).
+
 sub_atom(F,C):- sub_atom(F,_,_,_,C).
 
 only_expand(':-'(I), ':-'(M)):- !,in_dialect_pfc,fully_expand(I,M),!.
-only_expand(I,OO):- notrace_ex(must_pfc(I,M)),  
+only_expand(I,OO):- notrace_ex(must_pfc(I,M)), 
+  Module=MZ,
   % current_why(S),!,
   S= mfl4(_VarNameZ,Module, File, Line),source_location(File,Line),prolog_load_context(module,Module),
   conjuncts_to_list(M,O), !, %  [I]\=@=O,
-  make_load_list(O,S,OO).
+  make_load_list(MZ,O,S,OO).
 
-make_load_list([C|O],S,[spft(C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):- clause_asserted(C),!, make_load_list(O,S,OO).
-make_load_list([C|O],S,[C, spft(C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):-  is_loadin(C),!,make_load_list(O,S,OO).
-make_load_list(_,_,[]):-!.  
+make_load_list(MZ,[C|O],S,['$spft'(MZ,C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):- clause_asserted(C),!, make_load_list(MZ,O,S,OO).
+make_load_list(MZ,[C|O],S,[C, '$spft'(MZ,C,S,ax), :- mpred_enqueue_w_mode(S,direct,C)|OO]):-  is_loadin(C),!,make_load_list(MZ,O,S,OO).
+make_load_list(_MZ,_,_,[]):-!.  
 
 cna_functor_safe(P,F,A):- compound(P) -> compound_name_arity(P,F,A) ; functor(P,F,A).
 
@@ -843,12 +861,11 @@ pfc_may_see_module(M):- import_module(M,pfc_lib).
 %:- endif.
 
 
-nt(A,B,C):- throw(nt(A,B,C)).
-pt(A,B):- throw(pt(A,B)).
-bct(A,B):- throw(bct(A,B)).
-:- lock_predicate('nt'/3).
-:- lock_predicate('pt'/2).
-:- lock_predicate('bct'/2).
+'$nt'(A,B,C):- throw('$nt'(A,B,C)).
+'$bt'(A,B):- throw('$bt'(A,B)).
+:- lock_predicate('$nt'/3).
+%:- lock_predicate('$pt'/3).
+:- lock_predicate('$bt'/2).
 
 
 :-hook_database:export(pfc_lib:mpred_ain/1).

@@ -310,7 +310,7 @@ mreq(G):- if_defined(call_u(G),fail).
 /*
 
 LogicMOO is mixing Mark Stickel's PTTP (prolog techn theorem prover) to create horn clauses that 
- PFC forwards and helps maintain in visible states )  in prolog knowledge baseable.. We use spft/3 to track deductions
+ PFC forwards and helps maintain in visible states )  in prolog knowledge baseable.. We use '$spft'/4 to track deductions
 Research~wise LogicMOO has a main purpose is to prove that grounded negations (of contrapostives) are of first class in importance in helping
 with Wff checking/TMS 
 Also alows an inference engine constrain search.. PFC became important since it helps memoize and close off (terminate) transitive closures
@@ -645,7 +645,7 @@ pfc_provide_storage_op(change(retract,all),FactOrRule):- loop_check_nr(mpred_rem
 %
 % Get Generation Of Proof.
 %
-get_why(_,CL,R,asserted(R,CL:-U)):- clause_u(spft(CL, U, ax),true),!.
+get_why(_,CL,R,asserted(R,CL:-U)):- get_mz(MZ), clause_u('$spft'(MZ,CL, U, ax),true),!.
 get_why(H,CL,R,deduced(R,WHY)):- (mpred_get_support(H,WH)*->WHY=(H=WH);(mpred_get_support(CL,WH),WHY=(CL=WH))).
 
 
@@ -736,11 +736,11 @@ mpred_rule_hb_0((Ante1 , Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> !
 mpred_rule_hb_0((Outcome<==>Ante1),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0((Ante1<==>Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0(_::::Outcome,OutcomeO,Ante2):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb_0(Outcome,OutcomeO,Ante2).
-mpred_rule_hb_0(bct(Outcome,Ante1),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
-mpred_rule_hb_0(pt(Ante1,Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
+mpred_rule_hb_0('$bt'(Outcome,Ante1),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
+mpred_rule_hb_0('$pt'(MZ,Ante1,Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0(pk(Ante1a,Ante1b,Outcome),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
-mpred_rule_hb_0(nt(Ante1a,Ante1b,Outcome),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
-mpred_rule_hb_0(spft(Outcome,Ante1a,Ante1b),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true),mpred_rule_hb(Outcome,OutcomeO,Ante2).
+mpred_rule_hb_0('$nt'(Ante1a,Ante1b,Outcome),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
+mpred_rule_hb_0('$spft'(_MZ,Outcome,Ante1a,Ante1b),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true),mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0(que(Outcome,_),OutcomeO,Ante2):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 % mpred_rule_hb_0(pfc Default(Outcome),OutcomeO,Ante2):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0((Outcome:-Ante),Outcome,Ante):-(nonvar(Outcome)-> ! ; true).
@@ -768,9 +768,9 @@ ain_minfo(How,((A;B):-INFOC)):-mpred_is_info(INFOC),(is_ftNonvar(A);is_ftNonvar(
 ain_minfo(How,(-(A):-infoF(C))):-is_ftNonvar(C),is_ftNonvar(A),!,ain_minfo(How,((A):-infoF((C)))). % attvar_op(How,(-(A):-infoF(C))).
 ain_minfo(How,(~(A):-infoF(C))):-is_ftNonvar(C),is_ftNonvar(A),!,ain_minfo(How,((A):-infoF((C)))). % attvar_op(How,(-(A):-infoF(C))).
 ain_minfo(How,(A:-INFOC)):- is_ftNonvar(INFOC), get_bc_clause(A,AA,INFOCC),A=AA,INFOC==INFOCC,!,attvar_op(How,(A:-INFOC)),!.
-ain_minfo(How,bct(_ABOX,H,_)):-!,get_bc_clause(H,Post),attvar_op(How,Post).
-ain_minfo(How,nt(H,Test,Body)):-!,attvar_op(How,(H:-fail,nt(H,Test,Body))).
-ain_minfo(How,pt(H,Body)):-!,attvar_op(How,(H:-fail,pt(H,Body))).
+ain_minfo(How,'$bt'(H,_)):-!,get_bc_clause(H,Post),attvar_op(How,Post).
+ain_minfo(How,'$nt'(H,Test,Body)):-!,attvar_op(How,(H:-fail,'$nt'(H,Test,Body))).
+ain_minfo(How,'$pt'(MZ,H,Body)):-!,attvar_op(How,(H:-fail,'$pt'(MZ,H,Body))).
 ain_minfo(How,(A0:-INFOC0)):- mpred_is_info(INFOC0), copy_term_and_varnames((A0:-INFOC0),(A:-INFOC)),!,must((mpred_rewrap_h(A,AA),imploded_copyvars((AA:-INFOC),ALLINFO), attvar_op(How,(ALLINFO)))),!.
 %ain_minfo(How,G):-mpred_trace_msg(skipped_add_meta_facts(How,G)).
 ain_minfo(_,_).
@@ -933,7 +933,7 @@ mpred_update_literal(P,N,Q,R):-
     replace_arg(Q,N,NEW,R).
 
 
-% spft(5,5,5).
+% '$spft'(MZ,5,5,5).
 
 %% update_single_valued_arg(+Module, +P, ?N) is semidet. 
 %
@@ -970,7 +970,7 @@ update_single_valued_arg(M,P,N):-
   same_functors(P,Q),
   % current_why(U),
   must_det_l((
-     % rtrace(attvar_op(assert_if_new,M:spft(P,U,ax))),
+     % rtrace(attvar_op(assert_if_new,M:'$spft'(MZ,P,U,ax))),
      % (call_u(P)->true;(assertz_mu(P))),
      assertz_mu(M,P),
      doall((
@@ -1093,10 +1093,10 @@ correctify_support(U,(U,ax)).
 % Clause Asserted Local. 
 %
 clause_asserted_local(MCL):-
-  strip_module(MCL,_,CL),
-  must(CL=spft(P,Fact,Trigger )),!,
-  clause_u(spft(P,Fact,Trigger),true,Ref),
-  clause_u(spft(UP,UFact,UTrigger),true,Ref),
+  strip_mz(MCL,MZ,CL),
+  must(CL='$spft'(MZ,P,Fact,Trigger )),!,
+  clause_u('$spft'(MZ,P,Fact,Trigger),true,Ref),
+  clause_u('$spft'(MZ,UP,UFact,UTrigger),true,Ref),
   (((UP=@=P,UFact=@=Fact,UTrigger=@=Trigger))).
 
 
@@ -1105,8 +1105,8 @@ clause_asserted_local(MCL):-
 %
 % If Is A Already Supported.
 %
-is_already_supported(P,(S,T),(S,T)):- clause_asserted_local(spft(P,S,T)),!.
-is_already_supported(P,_S,UU):- clause_asserted_local(spft(P,US,UT)),must(get_source_uu(UU)),UU=(US,UT).
+is_already_supported(P,(S,T),(S,T)):- clause_asserted_local('$spft'(_MZ,P,S,T)),!.
+is_already_supported(P,_S,UU):- clause_asserted_local('$spft'(_MZ,P,US,UT)),must(get_source_uu(UU)),UU=(US,UT).
 
 % TOO UNSAFE 
 % is_already_supported(P,_S):- copy_term_and_varnames(P,PC),sp ftY(PC,_,_),P=@=PC,!.
@@ -1174,9 +1174,10 @@ without_running(G):- (t_l:mpred_run_paused->G;locally_tl(mpred_run_pause,G)).
 
 %mpred_remove_file_support(_File):- !.
 mpred_remove_file_support(File):- 
+ get_mz(MZ),
   forall((must((filematch(File,File0),atom(File),freeze(Match,contains_var(File0,Match))))),
-      forall(lookup_u(spft( W, Match, AX),Ref),
-         (wdmsg(removing(spft( W, Match, AX))), erase(Ref),remove_if_unsupported(W)))).
+      forall(lookup_u('$spft'(MZ, W, Match, AX),Ref),
+         (wdmsg(removing('$spft'(MZ, W, Match, AX))), erase(Ref),remove_if_unsupported(W)))).
 
 
 
@@ -1289,8 +1290,8 @@ mpred_call_only_facts(Clause) :-
 % Call Using Backchaining Triggers.
 %
 call_with_bc_triggers(MP) :- strip_module(MP,_,P), functor(P,F,A), \+ t_l:infBackChainPrevented(F/A), 
-  lookup_u(bct(P,Trigger)),
-  no_repeats(mpred_get_support(bct(P,Trigger),S)),
+  lookup_u('$bt'(P,Trigger)),
+  no_repeats(mpred_get_support('$bt'(P,Trigger),S)),
   once(no_side_effects(P)),
   locally_tl(infBackChainPrevented(F/A),mpred_eval_lhs(Trigger,S)).
 
@@ -1414,8 +1415,8 @@ pfcBC_NoFacts_TRY(F) :- no_repeats(ruleBackward(F,Condition,Support)),
 
 maybe_support_bt(P,_,_):-mpred_ignored_bt(P),!.
 maybe_support_bt(F,Condition,Support):-  
-  doall((no_repeats(Why,call_u(bct(F,pt(A,Why)))) *-> mpred_add_support_fast(F,(A,Why)))),
-  doall((no_repeats(Why,call_u(bct(F,Why))) *-> mpred_add_support_fast(F,(bct(F,Why),Support)))),
+  doall((no_repeats(Why,call_u('$bt'(F,'$pt'(MZ,A,Why)))) *-> mpred_add_support_fast(F,(A,Why)))),
+  doall((no_repeats(Why,call_u('$bt'(F,Why))) *-> mpred_add_support_fast(F,('$bt'(F,Why),Support)))),
   ignore((maybeSupport(F,(Condition,Support)))).
 
 :- meta_predicate mpred_why_all(*).
@@ -1630,9 +1631,9 @@ is_relative(*(X)):- \+ is_ftVar(X).
 %=
 %= Arg1 is a trigger.  Key is the best term to index it on.
 
-mpred_get_trigger_key(pt(Key,_),Key).
+mpred_get_trigger_key('$pt'(MZ,Key,_),Key).
 mpred_get_trigger_key(pk(Key,_,_),Key).
-mpred_get_trigger_key(nt(Key,_,_),Key).
+mpred_get_trigger_key('$nt'(Key,_,_),Key).
 mpred_get_trigger_key(Key,Key).
 */
 
@@ -1716,11 +1717,11 @@ no_side_effects(P):-  (\+ is_side_effect_disabled->true;(get_functor(P,F,_),a(pr
 %
 compute_resolve(NewerP,OlderQ,SU,SU,(mpred_blast(OlderQ),mpred_ain(NewerP,S),mpred_withdraw(conflict(NewerP)))):-
   must(correctify_support(SU,S)),
-  wdmsg_pretty(compute_resolve(newer(NewerP-S)>older(OlderQ-S))).
+  wdmsg_pfc(compute_resolve(newer(NewerP-S)>older(OlderQ-S))).
 compute_resolve(NewerP,OlderQ,S1,[U],Resolve):-compute_resolve(OlderQ,NewerP,[U2],S1,Resolve),match_source_ref1(U),match_source_ref1(U2),!.
 compute_resolve(NewerP,OlderQ,SU,S2,(mpred_blast(OlderQ),mpred_ain(NewerP,S1),mpred_withdraw(conflict(NewerP)))):-
   must(correctify_support(SU,S1)),
-  wdmsg_pretty(compute_resolve((NewerP-S1)>(OlderQ-S2))).
+  wdmsg_pfc(compute_resolve((NewerP-S1)>(OlderQ-S2))).
 
 
 
@@ -1771,10 +1772,10 @@ pred_head_all(P):- pred_head(pred_all,P).
 % Nonfact Metawrapper.
 %
 nonfact_metawrapper(~(_)).
-nonfact_metawrapper(pt(_,_)).
-nonfact_metawrapper(bct(_,_,_)).
-nonfact_metawrapper(nt(_,_)).
-nonfact_metawrapper(spft(_,_,_)).
+nonfact_metawrapper('$pt'(_,_,_)).
+nonfact_metawrapper('$bt'(_,_)).
+nonfact_metawrapper('$nt'(_,_,_)).
+nonfact_metawrapper('$spft'(_,_,_,_)).
 nonfact_metawrapper(added(_)).
 % we use the arity 1 forms is why 
 nonfact_metawrapper(term_expansion(_,_)).
@@ -1852,10 +1853,10 @@ has_db_clauses(PI):-modulize_head(PI,P),
 % Predicate True Stucture Primary Helper.
 %
 pred_t0(P):-mreq('==>'(P)).
-pred_t0(P):-mreq(pt(P,_)).
-pred_t0(P):-mreq(bct(P,_)).
-pred_t0(P):-mreq(nt(P,_,_)).
-pred_t0(P):-mreq(spft(P,_,_)).
+pred_t0(P):-mreq('$pt'(_,P,_)).
+pred_t0(P):-mreq('$bt'(P,_)).
+pred_t0(P):-mreq('$nt'(P,_,_)).
+pred_t0(P):-mreq('$spft'(_,P,_,_)).
 
 %pred_r0(-(P)):- call_u(-(P)).
 %pred_r0(~(P)):- mreq(~(P)).
@@ -2072,7 +2073,7 @@ assert_mu(M,Pred,_,_):- assertz_mu(M,Pred).
 
 assertz_mu(_,X):- check_never_assert(X),fail.
 %assertz_mu(M,M2:Pred,F,A):- M == M2,!, assertz_mu(M,Pred,F,A).
-%assertz_mu(M,spft(P,mfl4(VarNameZ,KB,F,L),T)):-M\==KB,!,assertz_mu(KB,spft(P,mfl4(VarNameZ,KB,F,L),T)).
+%assertz_mu(M,'$spft'(MZ,P,mfl4(VarNameZ,KB,F,L),T)):-M\==KB,!,assertz_mu(KB,'$spft'(MZ,P,mfl4(VarNameZ,KB,F,L),T)).
 assertz_mu(M,X):- strip_module(X,_,P), %sanity(check_never_assert(M:P)), 
     must((expire_tabled_list(M:P),show_failure(attvar_op(db_op_call(assertz,assertz_i),M:P)))).
    %(clause_asserted_u(M:P)-> true; must((expire_tabled_list(M:P),show_failure(attvar_op(db_op_call(assertz,assertz_i),M:P))))).

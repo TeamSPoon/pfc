@@ -1529,7 +1529,7 @@ db_expand_0(Op,typeProps(A,F),EXP):-expand_props(_Prefix,Op,props(I,F),OO),!,ful
 % covered db_expand_0(_,arity(F,A),arity(F,A)):-atom(F),!.
 db_expand_0(Op,IN,OUT):- 
    cnas(IN,F,Args),
-   % wdmsg_pretty(db_expand_0(Op,IN)),
+   % wdmsg_pfc(db_expand_0(Op,IN)),
    sanity(F \== isa),
    must_maplist(db_expand_0(Op),Args,ArgsO),
    map_f(F,FO),OUT  univ_safe  [FO|ArgsO].
@@ -2343,12 +2343,12 @@ exact_args_f(install_converter).
 exact_args_f(installed_converter).
 exact_args_f(actn).
 exact_args_f(wid).
-exact_args_f(wdmsg_pretty).
+exact_args_f(wdmsg_pfc).
 exact_args_f(fol_to_pkif).
 exact_args_f(ftListFn).
 exact_args_f(vtActionTemplate).
 exact_args_f(txtConcatFn).
-exact_args_f(spft).
+exact_args_f('$spft').
 exact_args_f(skip_expand_fa).
 exact_args_f(sformat).
 exact_args_f(second_order).

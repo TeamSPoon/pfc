@@ -73,11 +73,11 @@ mpred_info0(O):-
  dmsg_pretty("=======================================================================")))).
 
 mp_printAll(S,call(O)):- !, subst(O,S,s,NAME),nl,flush_output,fmt("==================\n"),
-  doall(((flush_output,deterministically_must(catch(call_u(O),E,(fmt9(error(E)),fail))),flush_output)*->true;wdmsg_pretty(fail=NAME))),nl.
+  doall(((flush_output,deterministically_must(catch(call_u(O),E,(fmt9(error(E)),fail))),flush_output)*->true;wdmsg_pfc(fail=NAME))),nl.
 
 mp_printAll(S,+(O)):- subst(O,v,V,CALL), CALL\==O,!,
   subst(O,S,s,NAME),safe_functor(O,F,_),!,
-  nl,flush_output, fmt("==================\n"),%wdmsg_pretty(NAME),wdmsg_pretty("---"),flush_output,!,
+  nl,flush_output, fmt("==================\n"),%wdmsg_pfc(NAME),wdmsg_pfc("---"),flush_output,!,
   doall(((flush_output,call_u(CALL),flush_output)*->fmt9(F=V);(fmt9(fail=NAME)))),fresh_line,fmt("==================\n"),flush_output.
 
 mp_printAll(S,(O)):- subst(O,v,V,CALL),CALL\==O,!, subst(O,S,s,NAME),safe_functor(O,F,_),
@@ -86,9 +86,9 @@ mp_printAll(S,(O)):- subst(O,v,V,CALL),CALL\==O,!, subst(O,S,s,NAME),safe_functo
 
 mp_printAll(S,(O)):-  !,  safe_functor(O,F,A),mp_nnvv(S,O,F,A),flush_output.
 
-mp_nnvv(_,(O),F,1):- !, doall(((flush_output,deterministically_must(call_u(O)),flush_output)*->wdmsg_pretty(+F);wdmsg_pretty(-F))).
+mp_nnvv(_,(O),F,1):- !, doall(((flush_output,deterministically_must(call_u(O)),flush_output)*->wdmsg_pfc(+F);wdmsg_pfc(-F))).
 mp_nnvv(S,(O),_,_):- !, subst(O,S,s,NAME), !,
-  doall(((flush_output,deterministically_must(call_u(O)),flush_output)*->wdmsg_pretty(-NAME);wdmsg_pretty(+NAME))).
+  doall(((flush_output,deterministically_must(call_u(O)),flush_output)*->wdmsg_pfc(-NAME);wdmsg_pfc(+NAME))).
 
 
 
@@ -226,48 +226,41 @@ bagof_or_nil(T,G,B):- (bagof_nr(T,G,B) *-> true; B=[]).
 
 :- meta_predicate(sanity_check(0,0)).
 sanity_check(When,Must):- notrace(catch((When,Must),_,fail)),!.
-sanity_check(When,Must):- show_call(When),!,must_or_rtrace(Must),!.
+sanity_check(When,Must):- show_call(must_or_rtrace(When)),!,must_or_rtrace(Must),!.
 
 %
 %  predicates for manipulating support relationships
 %
 
-notify_if_neg_trigger(spft(P,Fact,Trigger)):- 
-  (Trigger= nt(F,Condition,Action) ->
+notify_if_neg_trigger('$spft'(_MZ,P,Fact,Trigger)):- 
+  (Trigger= '$nt'(F,Condition,Action) ->
     (mpred_trace_msg('~N~n\tAdding NEG mpred_do_fcnt via support~n\t\ttrigger: ~p~n\t\tcond: ~p~n\t\taction: ~p~n\t from: ~p~N',
       [F,Condition,Action,mpred_add_support_fast(P,(Fact,Trigger))]));true).
 
 %  mpred_add_support(+Fact,+Support)
 mpred_add_support(P,(Fact,Trigger)):-
-  MSPFT = spft(P,Fact,Trigger),
-   fix_mp("mpred_add
-
-
-
-
-
-
-
-   _support",MSPFT,M,SPFT),
+  MSPFT = '$spft'(MZ,P,Fact,Trigger),
+   fix_mp("mpred_add_support",MSPFT,M,SPFT),
+   must(MZ=M),
    M:notify_if_neg_trigger(SPFT),
-  M:(clause_asserted_u(SPFT)-> true; sanity_check(assertz_mu(M:SPFT),call(M:clause_asserted(M:SPFT)))),!.
+  M:(clause_asserted_u(SPFT)-> true; 
+  sanity_check(assertz_mu(M:SPFT),call(M:clause_asserted(M:SPFT)))),!.
 
 %  mpred_add_support_fast(+Fact,+Support)
 mpred_add_support_fast(P,(Fact,Trigger)):-
-  must_or_rtrace(( MSPFT = spft(P,Fact,Trigger),      
-      % copy_term(MSPFT,SPFTC),
-       fix_mp("mpred_add_support3",MSPFT,M,SPFT),
+  must_or_rtrace((    
+   fix_mp("mpred_add_support_fast",MSPFT,M,SPFT),
+   MSPFT = '$spft'(M,P,Fact,Trigger),
    M:notify_if_neg_trigger(SPFT),
-   must_or_rtrace((
-   M:sanity_check(must_or_rtrace((M:assertz_mu(M:SPFT))),call(M:clause_asserted(M:SPFT))))))),!.
+   sanity_check(M:assertz_mu(M:SPFT),call(M:clause_asserted(M:SPFT))))),!.
 
 
                                                                 
 :- meta_predicate(mpred_get_support(*,-)).
 
 mpred_get_support((H:-B),(Fact,Trigger)):- 
-   lookup_u(spft((H <- B),_,_),Ref),
-   clause(spft(HH<-BB,Fact,Trigger),true,Ref),
+   lookup_u('$spft'(MZ,(H <- B),_,_),Ref),
+   clause('$spft'(MZ,HH<-BB,Fact,Trigger),true,Ref),
    clause_ref_module(Ref),   
    H=@=HH,B=@=BB.
 mpred_get_support(P,(Fact,Trigger)):-
@@ -282,8 +275,8 @@ mpred_get_support_perfect(P,(Fact,Trigger)):-
    lookup_spft_match_first(P,Fact,Trigger).
 
 mpred_get_support_deeper((H:-B),(Fact,Trigger)):- (nonvar(H) -> ! ; true),
- lookup_u(spft((H <- B),_,_),Ref),
-  clause(spft(HH<-BB,Fact,Trigger),true,Ref),
+ lookup_u('$spft'(MZ,(H <- B),_,_),Ref),
+  clause('$spft'(MZ,HH<-BB,Fact,Trigger),true,Ref),
   H=@=HH,B=@=BB.
 
 mpred_get_support_deeper(P,(Fact,Trigger)):-
@@ -302,20 +295,20 @@ lookup_spft_match_first(A,B,C):- nonvar(A),!,
 lookup_spft_match_first(A,B,C):- lookup_spft(A,B,C).
 
 
-lookup_spft(A,B,C):- !, lookup_u(spft(A,B,C)).
+lookup_spft(A,B,C):- !, get_mz(MZ), lookup_u('$spft'(MZ,A,B,C)).
 % cutted above
 /*
 lookup_spft(A,B,C):- nonvar(A),!,lookup_spft_p(A,B,C).
 lookup_spft(A,B,C):- var(B),!,lookup_spft_t(A,B,C).
 lookup_spft(A,B,C):- lookup_spft_f(A,B,C).
 
-lookup_spft_p(A,B,C):- with_some_vars_locked(A,lookup_u(spft(A,B,C))).
-% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_p(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,show_mpred_success(baseKB:spft(AA,B,C)).
+lookup_spft_p(A,B,C):- with_some_vars_locked(A,lookup_u('$spft'(MZ,A,B,C))).
+% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_p(A,B,C):- full_transform(lookup,A,AA),!,A\=@=AA,!,show_mpred_success(baseKB:'$spft'(MZ,AA,B,C)).
 
-lookup_spft_f(A,B,C):- with_some_vars_locked(B,lookup_u(spft(A,B,C))).
-% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_f(A,B,C):- full_transform(lookup,B,BB),!,B\=@=BB,!,show_mpred_success(baseKB:spft(A,BB,C)).
+lookup_spft_f(A,B,C):- with_some_vars_locked(B,lookup_u('$spft'(MZ,A,B,C))).
+% TODO UNCOMMENT MAYBE IF NEEDED lookup_spft_f(A,B,C):- full_transform(lookup,B,BB),!,B\=@=BB,!,show_mpred_success(baseKB:'$spft'(MZ,A,BB,C)).
 
-lookup_spft_t(A,B,C):- lookup_u(spft(A,B,C)).
+lookup_spft_t(A,B,C):- lookup_u('$spft'(MZ,A,B,C)).
 */
 /*
 %  TODO MAYBE
@@ -326,14 +319,17 @@ mpred_get_support(F,J):-
 
 mpred_rem_support_if_exists(P,(Fact,Trigger)):-
   lookup_spft(P,Fact,Trigger),
-  mpred_retract_i_or_warn(spft(P,Fact,Trigger)).
+  get_mz(MZ),
+  mpred_retract_i_or_warn('$spft'(MZ,P,Fact,Trigger)).
 
 
 mpred_rem_support(P,(Fact,Trigger)):-
-  closest_u(spft(P,Fact,Trigger),spft(P,FactO,TriggerO)),
-  mpred_retract_i_or_warn_1(spft(P,FactO,TriggerO)).
+  get_mz(MZ),
+  closest_u('$spft'(MZ,P,Fact,Trigger),'$spft'(MZ,P,FactO,TriggerO)),
+  mpred_retract_i_or_warn_1('$spft'(MZ,P,FactO,TriggerO)).
 mpred_rem_support(P,S):-
-  mpred_retract_i_or_warn(spft(P,Fact,Trigger)),
+  get_mz(MZ),
+  mpred_retract_i_or_warn('$spft'(MZ,P,Fact,Trigger)),
   ignore((Fact,Trigger)=S).
 
 
@@ -589,8 +585,8 @@ pfcShowSingleJust(JustNo,StepNo,[P|T]):-!,
   pfcShowSingleJust(JustNo,StepNo,P),
   pfcShowSingleJust(JustNo,StepNo,T).
 
-pfcShowSingleJust(JustNo,StepNo,pt(P,Body)):- !, 
-  pfcShowSingleJust1(JustNo,StepNo,pt(P)),  
+pfcShowSingleJust(JustNo,StepNo,'$pt'(MZ,P,Body)):- !, 
+  pfcShowSingleJust1(JustNo,StepNo,'$pt'(MZ,P)),  
   pfcShowSingleJust(JustNo,StepNo,Body).
 
 pfcShowSingleJust(JustNo,StepNo,C):- 
@@ -602,7 +598,7 @@ unwrap_litr(C,CCC+VS):- copy_term(C,CC,VS),
   numbervars(CC+VS,0,_),
   unwrap_litr0(CC,CCC),!.
 unwrap_litr0(call(C),CC):-unwrap_litr0(C,CC).
-unwrap_litr0(pt(C),CC):-unwrap_litr0(C,CC).
+unwrap_litr0('$pt'(_,C),CC):-unwrap_litr0(C,CC).
 unwrap_litr0(body(C),CC):-unwrap_litr0(C,CC).
 unwrap_litr0(head(C),CC):-unwrap_litr0(C,CC).
 unwrap_litr0(C,C).
@@ -647,7 +643,7 @@ mpred_why_maybe(F,P):-wdmsgl(F:-P),!.
 mpred_why_maybe(_,P):-ignore(mpred_why_1(P)).
 
 mpred_why_sub(P):- nop(trace), loop_check(mpred_why_sub0(P),true).
-mpred_why_sub0(P):- mpred_why_2(P,Why),!,wdmsg_pretty(:-mpred_why_1(P)),wdmsgl(mpred_why_maybe(P),Why).
+mpred_why_sub0(P):- mpred_why_2(P,Why),!,wdmsg_pfc(:-mpred_why_1(P)),wdmsgl(mpred_why_maybe(P),Why).
 mpred_why_sub0(P):-loop_check(mpred_why_sub_lc(P),trace_or_throw_ex(mpred_why_sub_lc(P)))-> \+ \+ call(t_l:whybuffer(_,_)),!.
 mpred_why_sub_lc(P):- 
   justifications(P,Js),
@@ -908,7 +904,7 @@ mpred_deep_support(How,M):-mpred_deep_support_how(How,M).
 %
 mpred_deep_support_how(user_atom(U),(U,ax)):-user_atom(U),!.
 mpred_deep_support_how(How,(A==>_)):-!,mpred_deep_support(How,A).
-mpred_deep_support_how(pt(HowA,HowB),pt(A,B)):-!,mpred_deep_support(HowA,A),mpred_deep_support(HowB,B).
+mpred_deep_support_how('$pt'(MZ,HowA,HowB),'$pt'(MZ,A,B)):-!,mpred_deep_support(HowA,A),mpred_deep_support(HowB,B).
 mpred_deep_support_how(HowA->HowB,(A->B)):-!,mpred_deep_support(HowA,A),mpred_deep_support(HowB,B).
 mpred_deep_support_how(HowA/HowB,(A/B)):-!,mpred_deep_support(HowA,A),mpred_deep_support(HowB,B).
 mpred_deep_support_how((HowA,HowB),(A,B)):-!,mpred_deep_support(HowA,A),mpred_deep_support(HowB,B).

@@ -42,8 +42,8 @@ expects_dialect/1:
 :- multifile
 	user:goal_expansion/2,
 	user:file_search_path/2,
-	user:prolog_file_type/2,
-	pfc_dialect_expansion/2.
+	user:prolog_file_type/2.
+	% pfc_dialect_expansion/2.
 	
 :- dynamic
 	user:goal_expansion/2,
@@ -317,8 +317,7 @@ term_expansion_pfc_eof(M):-
 
 :- system:import(term_expansion_pfc_eof/1).
 
-user:goal_expansion(In, Out) :-    
-    pfc_dialect_expansion(In, Out), In\=@=Out.
+% user:goal_expansion(In, Out) :-    pfc_dialect_expansion(In, Out), In\=@=Out.
 
 
 :- multifile(system:term_expansion/2).

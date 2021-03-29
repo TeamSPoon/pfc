@@ -368,7 +368,7 @@ genlPreds(prologSideEffects,rtNotForUnboundPredicates).
 :- kb_shared(warningsAbout/2).
 
 ==>prologHybrid(warningsAbout/2,rtArgsVerbatum).
-warningsAbout(Msg,Why)==>{wdmsg_pretty(error(warningsAbout(Msg,Why))),break}.
+warningsAbout(Msg,Why)==>{wdmsg_pfc(error(warningsAbout(Msg,Why))),break}.
 
 %% t( ?CALL) is semidet.
 %
@@ -471,7 +471,7 @@ arity(F,1):- cwc,((call_u(ttRelationType(F)))). % current_predicate(F/1)).  % is
 
 arity(rtArgsVerbatum,1).
 arity(quasiQuote,1).
-rtArgsVerbatum(spft).
+rtArgsVerbatum('$spft').
 
 
 % this mean to leave terms at EL:  foo('xQuoteFn'([cant,touch,me])).
@@ -515,8 +515,8 @@ rtArgsVerbatum(second_order).
 
 %prologBuiltin(resolveConflict/1).
 
-% :- kb_shared(bct/2).
-(bct(P,_)/(nonvar(P),must(get_bc_clause(P,Post)))) ==> ({ignore(kb_shared(P))},Post).
+% :- kb_shared('$bt'/2).
+('$bt'(P,_)/(nonvar(P),must(get_bc_clause(P,Post)))) ==> ({ignore(kb_shared(P))},Post).
 
 %redundantMaybe ==> ((prologHybrid(F),arity(F,A))==>mpred_prop(M,F,A,pfcVisible)).
 %redundantMaybe ==> (mpred_prop(M,F,A,pfcVisible)==>prologHybrid(F),arity(F,A)).
@@ -636,7 +636,9 @@ never_retract_u(X):- cwc, loop_check(never_retract_u(X,_)).
 P/mpred_positive_fact(P) ==> \+ ~P.
 (~P)/mpred_positive_fact(P) ==> (\+ P, nesc(~P)).
 (nesc(~P)/mpred_positive_fact(P)) ==> (~P, (P ==> \+ P)).
+%:- rtrace.
 (nesc(P) /mpred_positive_fact(P) ==>  ( P, (~P ==> \+ ~P))).
+%:- break.
 
  nesc(P)==>P.
 
