@@ -610,10 +610,10 @@ instTypePropsToType(instTypeProps,ttSpatialType222).
 %
 % Reduce Clause.
 %
-reduce_clause(Op,C,HB):-must(nonvar(C)),quietly_must(demodulize(Op,C,CB)),CB\=@=C,!,reduce_clause(Op,CB,HB).
+%reduce_clause(Op,C,HB):-must(nonvar(C)),quietly_must(demodulize(Op,C,CB)),CB\=@=C,!,reduce_clause(Op,CB,HB).
 reduce_clause(_,C,C):- t_l:into_goal_code,!.
-reduce_clause(Op,clause(C, B),HB):-!,reduce_clause(Op,(C :- B),HB).
-reduce_clause(Op,(C:- B),HB):- is_src_true(B),!,reduce_clause(Op,C,HB).
+% reduce_clause(Op,clause(C, B),HB):-!,reduce_clause(Op,(C :- B),HB).
+%reduce_clause(Op,(C:- B),HB):- is_src_true(B),!,reduce_clause(Op,C,HB).
 reduce_clause(_,C,C).
 
 
@@ -773,7 +773,7 @@ fully_expand(X,Y):- must((fully_expand(clause(unknown,cuz),X,Y))).
 
 %fully_expand(_,Var,Var):- \+ compound(Var),!.
 %fully_expand(Op,Sent,SentO):- safe_functor(Sent,F,A),should_fully_expand(F,A),!,must(fully_expand_real(Op,Sent,SentO)),!.
-fully_expand(Op,Sent,SentO):- quietly(fully_expand_real(Op,==>Sent,SentO)),!.
+fully_expand(Op,Sent,SentO):- fully_expand_real(Op,Sent,SentO),!.
 % fully_expand(Op,Sent,Sent):- sanity((ignore((fully_expand_real(Op,Sent,SentO)->sanity((Sent=@=SentO)))))).
 
 /*
@@ -1012,13 +1012,13 @@ do_renames_expansion(Sent,SentM):- if_defined(do_renames(Sent,SentM),=(Sent,Sent
 maybe_correctArgsIsa(_ ,SentO,SentO):-!.
 maybe_correctArgsIsa(Op,SentM,SentO):- locally_tl(infMustArgIsa,correctArgsIsa(Op,SentM,SentO)),!.
 
+fully_expand_clause(Op,':-'(Sent),Out):-!,fully_expand_goal(Op,Sent,SentO),!,must(Out=':-'(SentO)).
 fully_expand_clause(Op,Sent,SentO):- sanity(is_ftNonvar(Op)),sanity(var(SentO)),var(Sent),!,Sent=SentO.
 fully_expand_clause(Op,'==>'(Sent),(SentO)):-!,fully_expand_clause(Op,Sent,SentO),!.
 fully_expand_clause(Op,'=>'(Sent),(SentO)):-!,fully_expand_clause(Op,Sent,SentO),!.
 fully_expand_clause(Op,(B,H),Out):- !,must((fully_expand_clause(Op,H,HH),fully_expand_clause(Op,B,BB))),!,must(Out=(BB,HH)).
 fully_expand_clause(Op,Sent,SentO):- is_list(Sent),!,must_maplist(fully_expand_clause(Op),Sent,SentO).
 % fully_expand_clause(_,(:-(Sent)),(:-(Sent))):-!.
-fully_expand_clause(Op,':-'(Sent),Out):-!,fully_expand_goal(Op,Sent,SentO),!,must(Out=':-'(SentO)).
 
 fully_expand_clause(_,Sent,SentO):- t_l:infSkipFullExpand,!,must(Sent=SentO).
 

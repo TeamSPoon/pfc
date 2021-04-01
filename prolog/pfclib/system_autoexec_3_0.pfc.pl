@@ -62,6 +62,8 @@
 
 :- set_prolog_flag(runtime_debug, 1). % 2 = important but dont sacrifice other features for it
 
+:- expects_dialect(pfc).
+
 :- if((current_prolog_flag(runtime_debug,D),D>1)).
 :- endif.
 %:- '$def_modules'([clause_expansion/2],O),dmsg_pretty('$def_modules'([clause_expansion/2],O)),nl.
@@ -710,6 +712,7 @@ prologBuiltin(var/1).
 
 :- pfc_unload_file.
 
+:- expects_dialect(pfc).
 :- file_begin(pfc).
 
 :- sanity(is_pfc_file).

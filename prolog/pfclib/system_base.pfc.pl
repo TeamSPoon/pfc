@@ -76,7 +76,9 @@ pfcSanityA ==> pfcSanityB.
 pfcSanityA.
 %:- listing(pfcSanityA).
 %:- listing(pfcSanityB).
+%:- rtrace.
 :- clause(pfcSanityB,true).
+%:- nortrace.
 % :- kb_shared( ('~') /1).
 :- kb_shared(mtExact/1).
 % :- kb_shared(arity/2).

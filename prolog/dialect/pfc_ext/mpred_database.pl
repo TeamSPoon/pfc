@@ -737,7 +737,7 @@ mpred_rule_hb_0((Outcome<==>Ante1),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> 
 mpred_rule_hb_0((Ante1<==>Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0(_::::Outcome,OutcomeO,Ante2):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb_0(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0('$bt'(Outcome,Ante1),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
-mpred_rule_hb_0('$pt'(MZ,Ante1,Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
+mpred_rule_hb_0('$pt'(_MZ,Ante1,Outcome),OutcomeO,(Ante1,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0(pk(Ante1a,Ante1b,Outcome),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0('$nt'(Ante1a,Ante1b,Outcome),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true), mpred_rule_hb(Outcome,OutcomeO,Ante2).
 mpred_rule_hb_0('$spft'(_MZ,Outcome,Ante1a,Ante1b),OutcomeO,(Ante1a,Ante1b,Ante2)):- (nonvar(Outcome)-> ! ; true),mpred_rule_hb(Outcome,OutcomeO,Ante2).
@@ -1415,7 +1415,7 @@ pfcBC_NoFacts_TRY(F) :- no_repeats(ruleBackward(F,Condition,Support)),
 
 maybe_support_bt(P,_,_):-mpred_ignored_bt(P),!.
 maybe_support_bt(F,Condition,Support):-  
-  doall((no_repeats(Why,call_u('$bt'(F,'$pt'(MZ,A,Why)))) *-> mpred_add_support_fast(F,(A,Why)))),
+  doall((no_repeats(Why,call_u('$bt'(F,'$pt'(_MZ,A,Why)))) *-> mpred_add_support_fast(F,(A,Why)))),
   doall((no_repeats(Why,call_u('$bt'(F,Why))) *-> mpred_add_support_fast(F,('$bt'(F,Why),Support)))),
   ignore((maybeSupport(F,(Condition,Support)))).
 

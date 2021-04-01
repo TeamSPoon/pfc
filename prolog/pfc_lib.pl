@@ -497,8 +497,8 @@ in_goal_expansion:- prolog_current_frame(F),
 
 in_clause_expand(I):-  nb_current('$goal_term',Was),same_terms(I, Was),!,fail.
 in_clause_expand(I):-  
-   (nb_current_or_nil('$source_term',TermWas),\+ same_terms(TermWas, I)),
-   (nb_current_or_nil('$term',STermWas),\+ same_terms(STermWas, I)),!,
+   (nb_current_or_nil('$source_term',TermWas) -> \+ same_terms(TermWas, I) ; true),
+   (nb_current_or_nil('$term',STermWas)-> \+ same_terms(STermWas, I) ; true),!,
    fail.
 in_clause_expand(_).
 
@@ -542,8 +542,9 @@ is_pfc_file_notrace:- notrace(( prolog_load_context(source, SFile),
               is_pfc_filename(File,SFile),!.
 
 is_pfc_file_notrace:- current_source_file(FileL),(FileL=File:_),!,is_pfc_file(File),!.
+is_pfc_file_notrace:- prolog_load_context(dialect,pfc).
 
- %is_pfc_file_notrace:- \+ , prolog_load_context(module, M),M\==baseKB,is_pfc_module(M),!,clause_b(mtHybrid(M)).
+%is_pfc_file_notrace:- \+ , prolog_load_context(module, M),M\==baseKB,is_pfc_module(M),!,clause_b(mtHybrid(M)).
 :- system:import(pfc_lib:is_pfc_file_notrace/0).
 
 :- dynamic(lmcache:mpred_directive_value/3).
@@ -560,7 +561,7 @@ is_pfc_filename(_,File):- check_how_virtualize_file(heads,File),!.
 is_pfc_filename(_,File):- check_how_virtualize_file(false,File),!,fail.
 %is_pfc_filename(_,File):- atom_concat(_,'.pfc.pl',File);atom_concat(_,'.clif',File);atom_concat(_,'.plmoo',File);atom_concat(_,'.pfc',File),!.
 
-notrace_ex(X):- !,X,!.
+notrace_ex(X):- !,catch((X),_,rtrace(X)).
 notrace_ex(X):- catch(notrace(X),_,rtrace(X)).
 
 %:- fixup_exports.
@@ -658,6 +659,7 @@ pfc_hybrid_type(pfcTrigger).
 
 
 :- module_transparent(base_clause_expansion/2).
+:- module_transparent(base_clause_expansion/3).
 
 % module prefixed clauses for sure should be non pfc?
 is_never_pfc(Var):- \+ callable(Var),!.
@@ -698,33 +700,38 @@ make_ain(ASSERT,Out) :- get_source_uu(S),Out = ':-'(mpred_ain(ASSERT,S)).
 simple_IM(IM):- \+ callable(IM),!, \+ var(IM).
 simple_IM(IM):- atomic(IM),(sub_atom(IM,';');sub_atom(IM,'(');sub_atom(IM,' ')).
 
-% base_clause_expansion(Var,Var):- current_prolog_flag(mpred_te,false),!.
-base_clause_expansion(Var,Var):-var(Var),!.
-base_clause_expansion( :- module(W,List), [:- writetln(module(W,List)), :- set_fileAssertMt(W)]):- in_dialect_pfc,!.
-base_clause_expansion('?=>'(I), ':-'('?=>'(I))):- !.
-base_clause_expansion(':-'(In),':-'(Out)):- in_dialect_pfc,fully_expand(In,Out),!.
-base_clause_expansion(':-'(I),':-'(I)):- !.
+% base_clause_expansion(MZ,Var,Var):- current_prolog_flag(mpred_te,false),!.
+%base_clause_expansion(:-(I),O):- strip_module(I,MZ,II), I\=II,!, fail,  base_clause_expansion(MZ,':-'(II),OO),!,O=MZ:(OO).
+%base_clause_expansion(I,O):- strip_module(I,MZ,II), I\=II,!, base_clause_expansion(MZ,II,OO),!,O=MZ:(OO).
+%base_clause_expansion(I,O):- strip_mz(I,MZ,II), !, base_clause_expansion(MZ,II,O),!.
+base_clause_expansion(I,O):- strip_mz(I,MZ,_), !, base_clause_expansion(MZ,I,O),!.
 
-base_clause_expansion(':-'(H,(CWC,B)),(H:-B)):- atom(CWC),arg(_,v(cwc),CWC), \+ in_dialect_pfc, !.
-base_clause_expansion(IN, Out):- notrace_ex(must_pfc(IN,ASSERT)),!,make_ain(ASSERT,Out).
-%base_clause_expansion(IN, Out):- simple_IM(IN),!,make_ain(==>(IN),Out). 
+base_clause_expansion(_MZ,Var,Var):-var(Var),!.
+base_clause_expansion(_MZ, :- module(W,List), [:- writetln(module(W,List)), :- set_fileAssertMt(W)]):- in_dialect_pfc,!.
+base_clause_expansion(_MZ,'?=>'(I), ':-'('?=>'(I))):- !.
+base_clause_expansion(_MZ,':-'(In),':-'(Out)):- in_dialect_pfc,fully_expand(In,Out),!.
+base_clause_expansion(_MZ,':-'(I),':-'(I)):- !.
+
+base_clause_expansion(_MZ,':-'(H,(CWC,B)),(H:-B)):- atom(CWC),arg(_,v(cwc),CWC), \+ in_dialect_pfc, !.
+base_clause_expansion(_MZ,IN, Out):- notrace_ex(must_pfc(IN,ASSERT)),!,make_ain(ASSERT,Out).
+%base_clause_expansion(MZ,IN, Out):- simple_IM(IN),!,make_ain(==>(IN),Out). 
 
 % @TODO 
-% base_clause_expansion(NeverPFC, EverPFC):- mpred_prop(baseKB, mtHybrid, 1, pfcWatches), in_dialect_pfc.
+% base_clause_expansion(MZ,NeverPFC, EverPFC):- mpred_prop(baseKB, mtHybrid, 1, pfcWatches), in_dialect_pfc.
 
-base_clause_expansion(NeverPFC, EverPFC):- is_never_pfc(NeverPFC),!,NeverPFC=EverPFC.
-base_clause_expansion(In,Out):- in_dialect_pfc,dmsg(warning(in_dialect_pfc+base_clause_expansion(In))), fully_expand(In,Out),!.
-base_clause_expansion(M:In,M:Out):- !,base_clause_expansion(In,Out).
-%base_clause_expansion(In,Out):- fully_expand(In,Out),!.
+base_clause_expansion(_MZ,NeverPFC, EverPFC):- is_never_pfc(NeverPFC),!,NeverPFC=EverPFC.
+base_clause_expansion(MZ,In,Out):- in_dialect_pfc,dmsg(warning(in_dialect_pfc+base_clause_expansion(MZ,In))), fully_expand(In,Out),!.
+%base_clause_expansion(MZ,M:In,M:Out):- !,base_clause_expansion(MZ,In,Out).
+%base_clause_expansion(MZ,In,Out):- fully_expand(In,Out),!.
 
 /*
 
 
 % Checks if **should** be doing base_expansion or not      
-:- module_transparent(base_clause_expansion_fa/4).
-base_clause_expansion_fa(_,_,F,A):- clause_b(mpred_prop(M,F,A,prologBuiltin)),!,fail.
-base_clause_expansion_fa(I,O,F,A):- (needs_pfc(F,A) -> true ; base_kb_dynamic(F,A)),
-  base_clause_expansion('==>'(I),O).
+:- module_transparent(base_clause_expansion(MZ,_fa/4).
+base_clause_expansion(MZ,_fa(_,_,F,A):- clause_b(mpred_prop(M,F,A,prologBuiltin)),!,fail.
+base_clause_expansion(MZ,_fa(I,O,F,A):- (needs_pfc(F,A) -> true ; base_kb_dynamic(F,A)),
+  base_clause_expansion(MZ,'==>'(I),O).
 
 :- module_transparent(needs_pfc/2).
 needs_pfc(F,_):- (clause_b(functorIsMacro(F));clause_b(functorDeclares(F))).
@@ -763,8 +770,9 @@ term_expansion_UNUSED(:-module(M,List),Pos,ExportList,Pos):- nonvar(Pos),
 %:- thread_local t_l:side_effect_ok/0.
 
 
-
+% (prolog_load_context(module,M),pfc_may_see_module(M)).
 pfc_clause_expansion(I,O):- 
+  % ((in_dialect_pfc)),
   nonvar(I), I\==end_of_file,  I\==begin_of_file,  
   base_clause_expansion(I,M),!,I\=@=M,
    ((
@@ -909,6 +917,12 @@ system:goal_expansion(I,P,O,PO):- pfc_goal_expansion(I,P,O,PO).
 system:clause_expansion(I,O):-
  % ((in_dialect_pfc;prolog_load_context(module,M),pfc_may_see_module(M))),
   pfc_clause_expansion(I,O).
+
+system:term_expansion(I,PI,O,PO):-
+ % ((in_dialect_pfc;prolog_load_context(module,M),pfc_may_see_module(M))),
+  pfc_clause_expansion(I,O),
+  I\=@=O,
+  PI=PO,!.
 
 % :- current_predicate(system:F/A),cna_functor_safe(PI,F,A),
 % \+ predicate_property(system:PI,imported_from(_)).

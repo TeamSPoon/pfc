@@ -278,10 +278,10 @@ remove_PFC(P) :- mpred_remove(P).
 
 :- module_transparent lookup_u/1,lookup_u/2,mpred_unfwc_check_triggers0/1,mpred_unfwc1/1,mpred_why1/1,mpred_blast/1.
 
-quietly_must_ex(G):- !, must(G).
+quietly_must_ex(G):- !, must_or_rtrace(G).
 quietly_must_ex(G):- tracing -> (notrace,call_cleanup(must_ex(G),trace)); quietly_must(G).
 
-must_ex(G):- !, call(G).
+must_ex(G):- !, must_or_rtrace(G).
 must_ex(G):- !, must(G).
 must_ex(G):- !, (catch(G,Error,(wdmsg(error_must_ex(G,Error)),fail))*->true;(wdmsg_pfc(must_ex(G)),if_interactive((ignore(rtrace(G)),wdmsg_pfc(must_ex(G)), break)))).
 must_ex(G):- (catch(quietly(G),Error,(wdmsg(error_must_ex(G,Error)),fail))*->true;(wdmsg_pfc(must_ex(G)),if_interactive((ignore(rtrace(G)),wdmsg_pfc(must_ex(G)), break)))).
@@ -839,7 +839,7 @@ full_transform(Why,MH,MHH):- has_skolem_attrvars(MH),!,
 %full_transform(Op,==> CI,SentO):- nonvar(CI),!, full_transform(Op,CI,SentO).
 %full_transform(Op,isa(I,C),SentO):- nonvar(C),!,must_ex(fully_expand_real(Op,isa(I,C),SentO)),!.
 %full_transform(_,CI,SentO):- CI univ_safe [_C,I], atom(I),!,if_defined(do_renames(CI,SentO),CI=SentO),!.
-full_transform(Why,M:H,M:HH):- atom(M), !, notrace(full_transform(Why,H,HH)).
+full_transform(Why,M:H,M:HH):- atom(M), !, full_transform(Why,H,HH).
 full_transform(Why,MH,MHH):-
  must_det(fully_expand_real(change(assert,Why),MH,MHH)),!,
  nop(sanity(on_f_debug(same_modules(MH,MHH)))).
@@ -1665,7 +1665,7 @@ mpred_post_update4(Was,P0,S,What):-
   strip_mz(P0,MZ,P),
   not_not_ignore_quietly_ex(( % (get_mpred_is_tracing(P);get_mpred_is_tracing(S)),
   fix_mp(change(assert,post),P,M,PP),
-  must_ex(S=(F,T)),mpred_trace_msg(call_mpred_post4:- (Was,post1=PP,fix_mp=M,mz=MZ,p0=P0,sf=F,trig=T,What)))),
+  must_ex(S=(F,T)),mpred_trace_msg(call_mpred_post4:- (Was is assertion_status,post1=PP,fix_mp=M,mz=MZ,p0=P0,support_fact=F,support_trig=T,What is support_status)))),
   fail.
 
 mpred_post_update4(identical,_P,_S,exact):-!.

@@ -143,12 +143,12 @@ pp_item(MM,(H:-B)):- B ==true,pp_item(MM,H).
 pp_item(MM,H):- flag(show_asserions_offered,X,X+1),find_and_call(get_print_mode(html)), ( \+ \+ if_defined(pp_item_html(MM,H))),!.
 
 
-pp_item(MM,'$spft'(_MZ,W0,U,ax)):- W = (_KB:W0),!,pp_item(MM,U:W).
-pp_item(MM,'$spft'(_MZ,W0,F,U)):- W = (_KB:W0),atom(U),!,    fmt('~N%~n',[]),pp_item(MM,U:W), fmt('rule: ~p~n~n', [F]),!.
-pp_item(MM,'$spft'(_MZ,W0,F,U)):- W = (_KB:W0),         !,   fmt('~w~nd:       ~p~nformat:    ~p~n', [MM,W,F]),pp_item(MM,U).
-pp_item(MM,'$nt'(Trigger0,Test,Body)) :- Trigger = (_KB:Trigger0), !, fmt('~w n-trigger: ~p~ntest: ~p~nbody: ~p~n', [MM,Trigger,Test,Body]).
-pp_item(MM,'$pt'(MZ,F0,Body)):- F = (_KB:F0),             !,fmt('~w p-trigger:~n', [MM]), pp_item('',(F:-Body)).
-pp_item(MM,'$bt'(F0,Body)):- F = (_KB:F0),             !,fmt('~w b-trigger:~n', [MM]), pp_item('',(F:-Body)).
+pp_item(MM,'$spft'(MZ,W0,U,ax)):- W = (MZ:W0),!,pp_item(MM,U:W).
+pp_item(MM,'$spft'(MZ,W0,F,U)):- W = (MZ:W0),atom(U),!,    fmt('~N%~n',[]),pp_item(MM,U:W), fmt('rule: ~p~n~n', [F]),!.
+pp_item(MM,'$spft'(MZ,W0,F,U)):- W = (MZ:W0),         !,   fmt('~w~nd:       ~p~nformat:    ~p~n', [MM,W,F]),pp_item(MM,U).
+pp_item(MM,'$nt'(Trigger0,Test,Body)) :- Trigger = (Trigger0), !, fmt('~w n-trigger: ~p~ntest: ~p~nbody: ~p~n', [MM,Trigger,Test,Body]).
+pp_item(MM,'$pt'(MZ,F0,Body)):- F = (MZ:F0),             !,fmt('~w p-trigger:~n', [MM]), pp_item('',(F:-Body)).
+pp_item(MM,'$bt'(F0,Body)):- F = (F0),             !,fmt('~w b-trigger:~n', [MM]), pp_item('',(F:-Body)).
 
 
 pp_item(MM,U:W):- !,format(string(S),'~w  ~w:',[MM,U]),!, pp_item(S,W).
